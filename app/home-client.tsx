@@ -11,6 +11,20 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase/client";
+import {
+  fetchChats,
+  fetchConversation,
+  fetchExplorePosts,
+  fetchFeedPosts,
+  fetchPeopleAndFollowing,
+  fetchProfile,
+  fetchProfileStats,
+  fetchReels,
+  fetchSavedPostIds,
+  fetchStories,
+  fetchUnreadActivityCount,
+  markConversationRead,
+} from "../features/social/data/queries";
 import ActivityPanel from "../features/social/components/activity-panel";
 import AvatarImage from "../features/social/components/avatar-image";
 import UserMediaImage from "../features/social/components/user-media-image";
@@ -108,70 +122,35 @@ export default function HomeClient({
   }, []);
 
   async function loadProfile() {
-    const { data } = await supabase
-      .from("profiles")
-      .select("id,username,display_name,bio,avatar_url,created_at")
-      .eq("id", initialProfile.id)
-      .single();
-
-    if (data) setProfile(data);
+    const nextProfile = await fetchProfile(supabase, initialProfile.id);
+    if (nextProfile) setProfile(nextProfile);
   }
 
   async function loadUnreadActivity() {
-    const { count } = await supabase
-      .from("notifications")
-      .select("id", { count: "exact", head: true })
-      .eq("recipient_id", initialProfile.id)
-      .is("read_at", null);
-
-    setUnreadActivity(count || 0);
+    setUnreadActivity(
+      await fetchUnreadActivityCount(supabase, initialProfile.id)
+    );
   }
 
   async function loadStats() {
-    const [postsCount, followersCount, followingCount] = await Promise.all([
-      supabase
-        .from("posts")
-        .select("id", { count: "exact", head: true })
-        .eq("author_id", initialProfile.id),
-      supabase
-        .from("follows")
-        .select("follower_id", { count: "exact", head: true })
-        .eq("following_id", initialProfile.id),
-      supabase
-        .from("follows")
-        .select("following_id", { count: "exact", head: true })
-        .eq("follower_id", initialProfile.id),
-    ]);
-
-    setStats({
-      posts: postsCount.count || 0,
-      followers: followersCount.count || 0,
-      following: followingCount.count || 0,
-    });
+    setStats(await fetchProfileStats(supabase, initialProfile.id));
   }
 
   async function loadPeople() {
-    const [{ data }, { data: followRows }] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("id,username,display_name,bio,avatar_url,created_at")
-        .neq("id", initialProfile.id)
-        .order("created_at", { ascending: false })
-        .limit(80),
-      supabase
-        .from("follows")
-        .select("following_id")
-        .eq("follower_id", initialProfile.id),
-    ]);
+    const result = await fetchPeopleAndFollowing(
+      supabase,
+      initialProfile.id
+    );
 
-    const nextPeople = (data || []) as Profile[];
-    setPeople(nextPeople);
-    setFollowed((followRows || []).map((row: { following_id: string }) => row.following_id));
+    setPeople(result.people);
+    setFollowed(result.followed);
 
     if (initialChatUsername) {
-      const requested = nextPeople.find(
-        (person) => person.username.toLowerCase() === initialChatUsername
+      const requested = result.people.find(
+        (person) =>
+          person.username.toLowerCase() === initialChatUsername
       );
+
       if (requested) {
         setScreen("messages");
         await openChat(requested);
@@ -179,389 +158,79 @@ export default function HomeClient({
     }
   }
 
-  async function hydratePosts(
-    rows: Array<{
-      id: string;
-      author_id: string;
-      caption: string;
-      media_path: string | null;
-      media_type: "image" | "video" | null;
-      media_width?: number | null;
-      media_height?: number | null;
-      created_at: string;
-    }>
-  ) {
-    const authorIds = [...new Set(rows.map((post) => post.author_id))];
-    const postIds = rows.map((post) => post.id);
-
-    const [{ data: authors }, { data: likes }, { data: comments }] =
-      await Promise.all([
-        authorIds.length
-          ? supabase
-              .from("profiles")
-              .select("id,username,display_name,bio,avatar_url,created_at")
-              .in("id", authorIds)
-          : Promise.resolve({ data: [] }),
-        postIds.length
-          ? supabase.from("likes").select("post_id,user_id").in("post_id", postIds)
-          : Promise.resolve({ data: [] }),
-        postIds.length
-          ? supabase
-              .from("comments")
-              .select("id,post_id,user_id,body,created_at")
-              .in("post_id", postIds)
-              .order("created_at", { ascending: true })
-          : Promise.resolve({ data: [] }),
-      ]);
-
-    const authorMap = new Map(
-      ((authors || []) as Profile[]).map((author) => [author.id, author])
-    );
-
-    const commentRows = (comments || []) as Array<{
-      id: string;
-      post_id: string;
-      user_id: string;
-      body: string;
-      created_at: string;
-    }>;
-
-    const commentUserIds = [...new Set(commentRows.map((comment) => comment.user_id))];
-    const { data: commentUsers } = commentUserIds.length
-      ? await supabase
-          .from("profiles")
-          .select("id,username,display_name,bio,avatar_url,created_at")
-          .in("id", commentUserIds)
-      : { data: [] };
-
-    const commentUserMap = new Map(
-      ((commentUsers || []) as Profile[]).map((user) => [user.id, user])
-    );
-
-    const likeRows = (likes || []) as Array<{ post_id: string; user_id: string }>;
-
-    return rows.map((post) => ({
-      ...post,
-      profile: authorMap.get(post.author_id),
-      likeCount: likeRows.filter((like) => like.post_id === post.id).length,
-      liked: likeRows.some(
-        (like) =>
-          like.post_id === post.id && like.user_id === initialProfile.id
-      ),
-      commentCount: commentRows.filter(
-        (comment) => comment.post_id === post.id
-      ).length,
-      comments: commentRows
-        .filter((comment) => comment.post_id === post.id)
-        .map((comment) => ({
-          ...comment,
-          profile: commentUserMap.get(comment.user_id),
-        })),
-    })) as Post[];
-  }
-
   async function loadSavedPosts() {
-    const { data } = await supabase
-      .from("saved_posts")
-      .select("post_id")
-      .eq("user_id", initialProfile.id);
-
-    setSaved(
-      ((data || []) as Array<{ post_id: string }>).map((row) => row.post_id)
-    );
+    setSaved(await fetchSavedPostIds(supabase, initialProfile.id));
   }
 
   async function loadPosts() {
-    const { data: followRows } = await supabase
-      .from("follows")
-      .select("following_id")
-      .eq("follower_id", initialProfile.id);
-
-    const feedAuthors = [
-      initialProfile.id,
-      ...(followRows || []).map(
-        (row: { following_id: string }) => row.following_id
-      ),
-    ];
-
-    const { data } = await supabase
-      .from("posts")
-      .select("*")
-      .in("author_id", feedAuthors)
-      .order("created_at", { ascending: false })
-      .limit(60);
-
-    setPosts(
-      await hydratePosts(
-        (data || []) as Array<{
-          id: string;
-          author_id: string;
-          caption: string;
-          media_path: string | null;
-          media_type: "image" | "video" | null;
-          created_at: string;
-        }>
-      )
-    );
+    setPosts(await fetchFeedPosts(supabase, initialProfile.id));
   }
 
   async function loadExplorePosts() {
-    const { data } = await supabase
-      .from("posts")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(60);
-
     setExplorePosts(
-      await hydratePosts(
-        (data || []) as Array<{
-          id: string;
-          author_id: string;
-          caption: string;
-          media_path: string | null;
-          media_type: "image" | "video" | null;
-          created_at: string;
-        }>
-      )
+      await fetchExplorePosts(supabase, initialProfile.id)
     );
   }
 
   async function loadReels() {
-    const { data } = await supabase
-      .from("reels")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(60);
-
-    const rows = (data || []) as Array<{
-      id: string;
-      author_id: string;
-      caption: string;
-      media_path: string;
-      media_type: "video";
-      created_at: string;
-    }>;
-
-    const reelIds = rows.map((reel) => reel.id);
-    const authorIds = [...new Set(rows.map((reel) => reel.author_id))];
-
-    const [{ data: authors }, { data: likes }, { data: comments }, { data: savedRows }] =
-      await Promise.all([
-        authorIds.length
-          ? supabase
-              .from("profiles")
-              .select("id,username,display_name,bio,avatar_url,created_at")
-              .in("id", authorIds)
-          : Promise.resolve({ data: [] }),
-        reelIds.length
-          ? supabase.from("reel_likes").select("reel_id,user_id").in("reel_id", reelIds)
-          : Promise.resolve({ data: [] }),
-        reelIds.length
-          ? supabase
-              .from("reel_comments")
-              .select("id,reel_id,user_id,body,created_at")
-              .in("reel_id", reelIds)
-              .order("created_at", { ascending: true })
-          : Promise.resolve({ data: [] }),
-        supabase
-          .from("saved_reels")
-          .select("reel_id")
-          .eq("user_id", initialProfile.id),
-      ]);
-
-    const authorMap = new Map(
-      ((authors || []) as Profile[]).map((author) => [author.id, author])
-    );
-
-    const commentRows = (comments || []) as Array<{
-      id: string;
-      reel_id: string;
-      user_id: string;
-      body: string;
-      created_at: string;
-    }>;
-
-    const commentUserIds = [...new Set(commentRows.map((comment) => comment.user_id))];
-    const { data: commentUsers } = commentUserIds.length
-      ? await supabase
-          .from("profiles")
-          .select("id,username,display_name,bio,avatar_url,created_at")
-          .in("id", commentUserIds)
-      : { data: [] };
-
-    const commentUserMap = new Map(
-      ((commentUsers || []) as Profile[]).map((user) => [user.id, user])
-    );
-    const likeRows = (likes || []) as Array<{ reel_id: string; user_id: string }>;
-
-    setReels(
-      rows.map((reel) => ({
-        ...reel,
-        profile: authorMap.get(reel.author_id),
-        likeCount: likeRows.filter((like) => like.reel_id === reel.id).length,
-        liked: likeRows.some(
-          (like) =>
-            like.reel_id === reel.id && like.user_id === initialProfile.id
-        ),
-        commentCount: commentRows.filter(
-          (comment) => comment.reel_id === reel.id
-        ).length,
-        comments: commentRows
-          .filter((comment) => comment.reel_id === reel.id)
-          .map((comment) => ({
-            id: comment.id,
-            body: comment.body,
-            user_id: comment.user_id,
-            created_at: comment.created_at,
-            profile: commentUserMap.get(comment.user_id),
-          })),
-      }))
-    );
-
-    setSavedReels(
-      ((savedRows || []) as Array<{ reel_id: string }>).map((row) => row.reel_id)
-    );
+    const result = await fetchReels(supabase, initialProfile.id);
+    setReels(result.reels);
+    setSavedReels(result.savedReels);
   }
 
   async function loadStories() {
-    const now = new Date().toISOString();
-    const { data } = await supabase
-      .from("stories")
-      .select("*")
-      .gt("expires_at", now)
-      .order("created_at", { ascending: false });
-
-    const rows = (data || []) as Array<{
-      id: string;
-      author_id: string;
-      media_path: string;
-      media_type: "image" | "video";
-      media_width?: number | null;
-      media_height?: number | null;
-      created_at: string;
-      expires_at: string;
-    }>;
-
-    const authorIds = [...new Set(rows.map((story) => story.author_id))];
-    const { data: authors } = authorIds.length
-      ? await supabase
-          .from("profiles")
-          .select("id,username,display_name,bio,avatar_url,created_at")
-          .in("id", authorIds)
-      : { data: [] };
-
-    const authorMap = new Map(
-      ((authors || []) as Profile[]).map((author) => [author.id, author])
-    );
-
-    setStories(
-      rows.map((story) => ({
-        ...story,
-        profile: authorMap.get(story.author_id),
-      }))
-    );
+    setStories(await fetchStories(supabase));
   }
 
   const loadChats = useCallback(async () => {
-    const filter = `sender_id.eq.${initialProfile.id},recipient_id.eq.${initialProfile.id}`;
-    const { data } = await supabase
-      .from("messages")
-      .select("*")
-      .or(filter)
-      .order("created_at", { ascending: false })
-      .limit(300);
-
-    const rows = (data || []) as Message[];
-    const otherIds = [
-      ...new Set(
-        rows.map((item) =>
-          item.sender_id === initialProfile.id
-            ? item.recipient_id
-            : item.sender_id
-        )
-      ),
-    ];
-
-    const { data: profiles } = otherIds.length
-      ? await supabase
-          .from("profiles")
-          .select("id,username,display_name,bio,avatar_url,created_at")
-          .in("id", otherIds)
-      : { data: [] };
-
-    const profileMap = new Map(
-      ((profiles || []) as Profile[]).map((item) => [item.id, item])
-    );
-
-    const latest = new Map<string, Message>();
-    rows.forEach((item) => {
-      const other =
-        item.sender_id === initialProfile.id
-          ? item.recipient_id
-          : item.sender_id;
-      if (!latest.has(other)) latest.set(other, item);
-    });
-
-    const nextChats: Chat[] = [];
-    for (const [id, latestMessage] of latest.entries()) {
-      const otherProfile = profileMap.get(id);
-      if (!otherProfile) continue;
-
-      nextChats.push({
-        profile: otherProfile,
-        last: latestMessage.body,
-        updated: latestMessage.created_at,
-        unread: rows.filter(
-          (item) =>
-            item.sender_id === id &&
-            item.recipient_id === initialProfile.id &&
-            !item.read_at
-        ).length,
-      });
-    }
-
-    setChats(nextChats);
+    setChats(await fetchChats(supabase, initialProfile.id));
   }, [supabase, initialProfile.id]);
 
   async function refreshEverything() {
-    await Promise.all([
-      loadProfile(),
-      loadPeople(),
-      loadPosts(),
-      loadExplorePosts(),
-      loadReels(),
-      loadStories(),
-      loadSavedPosts(),
-      loadChats(),
-      loadStats(),
-      loadUnreadActivity(),
-    ]);
-    setLoading(false);
+    try {
+      await Promise.all([
+        loadProfile(),
+        loadPeople(),
+        loadPosts(),
+        loadExplorePosts(),
+        loadReels(),
+        loadStories(),
+        loadSavedPosts(),
+        loadChats(),
+        loadStats(),
+        loadUnreadActivity(),
+      ]);
+    } catch {
+      showToast(
+        "Some AVENZO data could not be loaded. Refresh to try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function openChat(other: Profile) {
     setSelected(other);
 
-    const filter =
-      `and(sender_id.eq.${initialProfile.id},recipient_id.eq.${other.id}),` +
-      `and(sender_id.eq.${other.id},recipient_id.eq.${initialProfile.id})`;
+    try {
+      setMessages(
+        await fetchConversation(
+          supabase,
+          initialProfile.id,
+          other.id
+        )
+      );
 
-    const { data } = await supabase
-      .from("messages")
-      .select("*")
-      .or(filter)
-      .order("created_at", { ascending: true });
+      await markConversationRead(
+        supabase,
+        initialProfile.id,
+        other.id
+      );
 
-    setMessages((data || []) as Message[]);
-
-    await supabase
-      .from("messages")
-      .update({ read_at: new Date().toISOString() })
-      .eq("sender_id", other.id)
-      .eq("recipient_id", initialProfile.id)
-      .is("read_at", null);
-
-    await loadChats();
+      await loadChats();
+    } catch {
+      showToast("This conversation could not be loaded right now.");
+    }
   }
 
   useEffect(() => {
