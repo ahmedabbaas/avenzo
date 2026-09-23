@@ -1206,11 +1206,13 @@ export default function HomeClient({
               .slice(0, 4)
               .map((person) => (
                 <div className="mini-person" key={person.id}>
-                  <img src={avatarFor(person)} alt="" />
-                  <div>
-                    <b>{person.display_name}</b>
-                    <small>@{person.username}</small>
-                  </div>
+                  <Link className="mini-person-link" href={"/u/" + encodeURIComponent(person.username)}>
+                    <img src={avatarFor(person)} alt="" />
+                    <div>
+                      <b>{person.display_name}</b>
+                      <small>@{person.username}</small>
+                    </div>
+                  </Link>
                   <button onClick={() => void toggleFollow(person)}>Follow</button>
                 </div>
               ))}
@@ -1406,12 +1408,14 @@ function PersonCard({
 }) {
   return (
     <article className="person-card">
-      <img className="person-avatar" src={avatarFor(person)} alt="" />
-      <div className="person-copy">
-        <b>{person.display_name}</b>
-        <span>@{person.username}</span>
-        <p>{person.bio || "New to AVENZO."}</p>
-      </div>
+      <Link className="person-profile-link" href={"/u/" + encodeURIComponent(person.username)}>
+        <img className="person-avatar" src={avatarFor(person)} alt="" />
+        <div className="person-copy">
+          <b>{person.display_name}</b>
+          <span>@{person.username}</span>
+          <p>{person.bio || "New to AVENZO."}</p>
+        </div>
+      </Link>
       <div className="person-actions">
         <button className="btn small" onClick={onFollow}>
           {following ? "Following" : "Follow"}
@@ -1450,15 +1454,28 @@ function PostCard({
   return (
     <article className="post-card">
       <div className="post-head">
-        <div className="person-line">
-          <img src={author ? avatarFor(author) : initialsAvatar(authorName)} alt="" />
-          <div>
-            <b>{authorName}</b>
-            <small>
-              @{author?.username || "user"} · {formatRelativeTime(post.created_at)}
-            </small>
+        {author ? (
+          <Link
+            className="person-line person-link"
+            href={"/u/" + encodeURIComponent(author.username)}
+          >
+            <img src={avatarFor(author)} alt="" />
+            <div>
+              <b>{authorName}</b>
+              <small>
+                @{author.username} · {formatRelativeTime(post.created_at)}
+              </small>
+            </div>
+          </Link>
+        ) : (
+          <div className="person-line">
+            <img src={initialsAvatar(authorName)} alt="" />
+            <div>
+              <b>{authorName}</b>
+              <small>@user · {formatRelativeTime(post.created_at)}</small>
+            </div>
           </div>
-        </div>
+        )}
         {own && (
           <button className="post-delete" onClick={onDelete} aria-label="Delete post">
             Delete
