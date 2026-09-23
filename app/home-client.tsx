@@ -1628,6 +1628,15 @@ export default function HomeClient({
                 void loadProfile();
                 showToast("Profile updated.");
               }}
+              onUnblocked={() => {
+                void Promise.all([
+                  loadPeople(),
+                  loadPosts(),
+                  loadExplorePosts(),
+                  loadReels(),
+                  loadStories(),
+                ]);
+              }}
             />
           )}
 
@@ -2706,12 +2715,14 @@ function Settings({
   supabase,
   signOut,
   onSaved,
+  onUnblocked,
 }: {
   profile: Profile;
   setProfile: (profile: Profile) => void;
   supabase: SupabaseClient;
   signOut: () => void;
   onSaved: () => void;
+  onUnblocked: () => void;
 }) {
   const [name, setName] = useState(profile.display_name);
   const [bio, setBio] = useState(profile.bio);
@@ -2719,6 +2730,79 @@ function Settings({
   const [saving, setSaving] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState("");
+  const [blockedAccounts, setBlockedAccounts] = useState<
+    Array<{
+      id: string;
+      username: string;
+      display_name: string;
+      avatar_url: string | null;
+      blocked_at: string;
+    }>
+  >([]);
+  const [blockedLoading, setBlockedLoading] = useState(true);
+  const [unblockingId, setUnblockingId] = useState<string | null>(null);
+
+  async function loadBlockedAccounts() {
+    setBlockedLoading(true);
+
+    const { data, error } = await supabase.rpc("get_blocked_accounts");
+
+    if (error) {
+      setNotice("Could not load blocked accounts.");
+      setBlockedLoading(false);
+      return;
+    }
+
+    setBlockedAccounts(
+      ((data || []) as Array<{
+        id: string;
+        username: string;
+        display_name: string;
+        avatar_url: string | null;
+        blocked_at: string;
+      }>)
+    );
+    setBlockedLoading(false);
+  }
+
+  async function unblockAccount(account: {
+    id: string;
+    username: string;
+  }) {
+    if (unblockingId) return;
+
+    const confirmed = window.confirm(
+      `Unblock @${account.username}? They can appear in your AVENZO experience again.`
+    );
+
+    if (!confirmed) return;
+
+    setUnblockingId(account.id);
+    setNotice("");
+
+    const { error } = await supabase
+      .from("blocks")
+      .delete()
+      .eq("blocker_id", profile.id)
+      .eq("blocked_id", account.id);
+
+    if (error) {
+      setNotice("Could not unblock this account right now.");
+      setUnblockingId(null);
+      return;
+    }
+
+    setBlockedAccounts((current) =>
+      current.filter((item) => item.id !== account.id)
+    );
+    setNotice(`@${account.username} has been unblocked.`);
+    setUnblockingId(null);
+    onUnblocked();
+  }
+
+  useEffect(() => {
+    void loadBlockedAccounts();
+  }, [supabase, profile.id]);
 
   function chooseAvatar(event: ChangeEvent<HTMLInputElement>) {
     const picked = event.target.files?.[0] || null;
@@ -2862,6 +2946,54 @@ function Settings({
         </button>
 
         {notice && <p className="settings-notice">{notice}</p>}
+
+        <section className="blocked-settings">
+          <div className="settings-section-head">
+            <div>
+              <b>Blocked accounts</b>
+              <span>
+                Manage people you have blocked. Unblocking does not automatically follow them again.
+              </span>
+            </div>
+            <strong>{blockedAccounts.length}</strong>
+          </div>
+
+          {blockedLoading ? (
+            <p className="blocked-empty">Loading blocked accounts…</p>
+          ) : blockedAccounts.length === 0 ? (
+            <p className="blocked-empty">You have not blocked anyone.</p>
+          ) : (
+            <div className="blocked-list">
+              {blockedAccounts.map((account) => (
+                <div className="blocked-row" key={account.id}>
+                  <img
+                    src={
+                      account.avatar_url ||
+                      initialsAvatar(account.display_name)
+                    }
+                    alt=""
+                  />
+                  <div>
+                    <b>{account.display_name}</b>
+                    <span>@{account.username}</span>
+                  </div>
+                  <button
+                    className="btn secondary small"
+                    disabled={unblockingId === account.id}
+                    onClick={() =>
+                      void unblockAccount({
+                        id: account.id,
+                        username: account.username,
+                      })
+                    }
+                  >
+                    {unblockingId === account.id ? "Unblocking…" : "Unblock"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
 
         <div className="danger-zone">
           <div>
