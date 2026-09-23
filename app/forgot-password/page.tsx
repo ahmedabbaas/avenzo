@@ -2,6 +2,10 @@
 
 import { FormEvent, useState } from "react";
 import AuthBrandPanel from "../_components/auth-brand-panel";
+import TurnstileWidget, {
+  readTurnstileToken,
+  resetTurnstile,
+} from "../_components/turnstile-widget";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -18,12 +22,16 @@ export default function ForgotPasswordPage() {
       const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          turnstileToken: readTurnstileToken(),
+        }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
+        resetTurnstile();
         setStatus(
           response.status === 503
             ? "Account services are temporarily unavailable."
@@ -68,6 +76,8 @@ export default function ForgotPasswordPage() {
             autoComplete="email"
             required
           />
+
+          <TurnstileWidget action="password_reset" />
 
           {status && (
             <div className="auth-message" role="status">
