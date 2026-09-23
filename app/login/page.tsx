@@ -4,10 +4,10 @@ import { FormEvent, useEffect, useState } from "react";
 import AuthBrandPanel from "../_components/auth-brand-panel";
 import PasswordField from "../_components/password-field";
 import TurnstileWidget, {
-import SiteFooter from "../_components/site-footer";
   readTurnstileToken,
   resetTurnstile,
 } from "../_components/turnstile-widget";
+import SiteFooter from "../_components/site-footer";
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState("");
