@@ -1,3 +1,40 @@
-import type { Metadata } from "next";import "./globals.css";
-export const metadata:Metadata={title:"AVENZO — Connect. Share. Belong.",description:"AVENZO is a social platform for people, moments and conversations."};
-export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="en"><body>{children}</body></html>}
+import type { Metadata, Viewport } from "next";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  applicationName: "AVENZO",
+  title: {
+    default: "AVENZO — Connect. Share. Belong.",
+    template: "%s · AVENZO",
+  },
+  description:
+    "AVENZO is a private-first social platform for real people, posts and conversations.",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/avenzo-mark.svg",
+    shortcut: "/avenzo-mark.svg",
+    apple: "/avenzo-mark.svg",
+  },
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  colorScheme: "dark",
+  themeColor: "#06080a",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
+}
