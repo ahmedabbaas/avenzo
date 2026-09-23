@@ -14,7 +14,7 @@ export default function LoginPage() {
     if (error === "verify") setStatus("Verify your email before signing in.");
     if (error === "profile") setStatus("Your profile could not be loaded.");
     if (error === "confirmation") setStatus("That confirmation link is invalid or expired.");
-    if (error === "backend") setStatus("AVENZO backend is not configured yet.");
+    if (error === "backend") setStatus("Account services are temporarily unavailable. Please try again shortly.");
     if (params.get("registered") === "1") setStatus("Account created. Check your email, then sign in.");
     if (params.get("reset") === "1") setStatus("Password updated. Sign in with your new password.");
   }, []);
@@ -33,7 +33,7 @@ export default function LoginPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        setStatus(result.error || "Unable to sign in.");
+        setStatus(response.status === 503 ? "Account services are temporarily unavailable. Please try again shortly." : (result.error || "Unable to sign in."));
         return;
       }
 
