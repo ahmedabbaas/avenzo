@@ -111,6 +111,6 @@ export async function POST(request: Request) {
       avatarWarning,
     });
   } catch {
-    return NextResponse.json({ error: "AVENZO backend is not fully configured." }, { status: 503 });
+    return NextResponse.json({ error: "Account services are temporarily unavailable. Please try again shortly." }, { status: 503 });
   }
 }
