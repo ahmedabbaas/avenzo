@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function NotFound() {
   return (
     <main className="system-page">
@@ -6,9 +8,9 @@ export default function NotFound() {
         <div className="eyebrow">404</div>
         <h1>This page isn’t on AVENZO.</h1>
         <p>The link may be outdated, private, or simply never existed.</p>
-        <a className="btn" href="/">
+        <Link className="btn" href="/">
           Back to AVENZO
-        </a>
+        </Link>
       </div>
     </main>
   );
