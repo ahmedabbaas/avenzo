@@ -18,6 +18,7 @@ export default function PrivacyPage() {
           <p><b>Social data.</b> Posts, follows, likes, comments and profile information power the social experience.</p>
           <p><b>Private messages.</b> Direct-message access is restricted to conversation participants through database policies.</p>
           <p><b>Safety data.</b> Reports and blocks may be stored to enforce safety controls.</p>
+          <p><b>Account deletion.</b> You can delete your account from Settings. Profile and social content are removed with the account, while a previously claimed username remains reserved so it cannot be impersonated or reused.</p>
         </div>
         <p className="info-note">This page describes the current product design and should be reviewed before a public commercial launch.</p>
         <Link className="btn secondary" href="/login">Back to AVENZO</Link>
