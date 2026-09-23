@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import {
+  isValidEmail,
+  normalizeEmail,
+} from "../../../../features/auth/validation";
+import {
   consumeRateLimit,
   rateLimitResponse,
 } from "../../../../lib/security/rate-limit";
@@ -7,8 +11,6 @@ import { createClient } from "../../../../lib/supabase/server";
 import { verifyTurnstile } from "../../../../lib/turnstile";
 
 export const dynamic = "force-dynamic";
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function json(body: unknown, status = 200) {
   return NextResponse.json(body, {
@@ -20,10 +22,10 @@ function json(body: unknown, status = 200) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const email = String(body.email || "").trim().toLowerCase();
+    const email = normalizeEmail(String(body.email || ""));
     const turnstileToken = String(body.turnstileToken || "");
 
-    if (!EMAIL_PATTERN.test(email) || email.length > 254) {
+    if (!isValidEmail(email)) {
       return json({ error: "Enter a valid email address." }, 400);
     }
 
