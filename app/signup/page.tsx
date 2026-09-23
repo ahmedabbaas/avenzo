@@ -9,6 +9,7 @@ import TurnstileWidget, {
 } from "../_components/turnstile-widget";
 import SiteFooter from "../_components/site-footer";
 import { useRouter } from "next/navigation";
+import AvatarImage from "../../features/social/components/avatar-image";
 import {
   AVATAR_MAX_BYTES,
   DISPLAY_NAME_MAX_LENGTH,
@@ -336,10 +337,11 @@ export default function SignupPage() {
 
           {avatarPreview && (
             <div className="signup-avatar-row">
-              <img
+              <AvatarImage
                 className="signup-avatar-preview"
                 src={avatarPreview}
                 alt="Profile preview"
+                size={156}
               />
               <button
                 type="button"
