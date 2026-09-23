@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logServerError } from "../../../../lib/observability/server";
 import {
   consumeRateLimit,
   rateLimitResponse,
@@ -99,7 +100,8 @@ export async function POST(request: Request) {
     }
 
     return json({ ok: true });
-  } catch {
+  } catch (error) {
+    logServerError({ request, route: "auth.login", error });
     return json(
       { error: "Account services are temporarily unavailable." },
       503
