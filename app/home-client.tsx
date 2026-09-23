@@ -88,7 +88,8 @@ type IconName =
   | "bookmark"
   | "send"
   | "close"
-  | "camera";
+  | "camera"
+  | "back";
 
 const NAV_ITEMS: Array<{ id: Screen; label: string; icon: IconName }> = [
   { id: "home", label: "Home", icon: "home" },
@@ -177,6 +178,12 @@ function Icon({ name, size = 19 }: { name: IconName; size?: number }) {
         <circle cx="12" cy="13" r="3.5" />
       </>
     ),
+    back: (
+      <>
+        <path d="m15 5-7 7 7 7" />
+        <path d="M8 12h12" />
+      </>
+    ),
   };
 
   return (
@@ -244,6 +251,7 @@ export default function HomeClient({
   const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [unreadActivity, setUnreadActivity] = useState(0);
   const [stats, setStats] = useState<ProfileStats>({
     posts: 0,
     followers: 0,
@@ -266,6 +274,16 @@ export default function HomeClient({
       .single();
 
     if (data) setProfile(data);
+  }
+
+  async function loadUnreadActivity() {
+    const { count } = await supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("recipient_id", initialProfile.id)
+      .is("read_at", null);
+
+    setUnreadActivity(count || 0);
   }
 
   async function loadStats() {
@@ -473,6 +491,7 @@ export default function HomeClient({
       loadPosts(),
       loadChats(),
       loadStats(),
+      loadUnreadActivity(),
     ]);
     setLoading(false);
   }
@@ -539,6 +558,7 @@ export default function HomeClient({
         },
         () => {
           if (screen !== "activity") {
+            setUnreadActivity((current) => current + 1);
             showToast("You have new activity.");
           }
         }
@@ -636,6 +656,29 @@ export default function HomeClient({
     } finally {
       setPosting(false);
     }
+  }
+
+  async function deletePost(post: Post) {
+    if (post.author_id !== initialProfile.id) return;
+    if (!window.confirm("Delete this post? This cannot be undone.")) return;
+
+    const { error } = await supabase
+      .from("posts")
+      .delete()
+      .eq("id", post.id)
+      .eq("author_id", initialProfile.id);
+
+    if (error) {
+      showToast("Could not delete post.");
+      return;
+    }
+
+    if (post.media_path) {
+      await supabase.storage.from("media").remove([post.media_path]);
+    }
+
+    showToast("Post deleted.");
+    await Promise.all([loadPosts(), loadStats()]);
   }
 
   async function toggleLike(post: Post) {
@@ -827,6 +870,9 @@ export default function HomeClient({
           aria-label="Activity"
         >
           <Icon name="activity" size={20} />
+          {unreadActivity > 0 && (
+            <i className="top-badge">{Math.min(unreadActivity, 9)}</i>
+          )}
         </button>
 
         <button
@@ -859,6 +905,9 @@ export default function HomeClient({
               <span>{item.label}</span>
               {item.id === "messages" && unreadMessages > 0 && (
                 <b className="nav-badge">{Math.min(unreadMessages, 99)}</b>
+              )}
+              {item.id === "activity" && unreadActivity > 0 && (
+                <b className="nav-badge">{Math.min(unreadActivity, 99)}</b>
               )}
             </button>
           ))}
@@ -968,6 +1017,8 @@ export default function HomeClient({
                     onLike={() => void toggleLike(post)}
                     onSave={() => void toggleSave(post)}
                     onComment={(body) => void addComment(post, body)}
+                    own={post.author_id === initialProfile.id}
+                    onDelete={() => void deletePost(post)}
                   />
                 ))
               )}
@@ -1045,7 +1096,11 @@ export default function HomeClient({
           )}
 
           {screen === "activity" && (
-            <Activity supabase={supabase} userId={initialProfile.id} />
+            <Activity
+              supabase={supabase}
+              userId={initialProfile.id}
+              onRead={() => setUnreadActivity(0)}
+            />
           )}
 
           {screen === "profile" && (
@@ -1082,6 +1137,7 @@ export default function HomeClient({
               text={message}
               setText={setMessage}
               send={() => void sendMessage()}
+              onBack={() => setSelected(null)}
             />
           )}
         </main>
@@ -1346,6 +1402,8 @@ function PostCard({
   onLike,
   onSave,
   onComment,
+  own,
+  onDelete,
 }: {
   post: Post;
   saved: boolean;
@@ -1353,6 +1411,8 @@ function PostCard({
   onLike: () => void;
   onSave: () => void;
   onComment: (value: string) => void;
+  own: boolean;
+  onDelete: () => void;
 }) {
   const [comment, setComment] = useState("");
   const author = post.profile;
@@ -1370,6 +1430,11 @@ function PostCard({
             </small>
           </div>
         </div>
+        {own && (
+          <button className="post-delete" onClick={onDelete} aria-label="Delete post">
+            Delete
+          </button>
+        )}
       </div>
 
       {post.caption && <p className="post-caption">{post.caption}</p>}
@@ -1456,6 +1521,7 @@ function Messages({
   text,
   setText,
   send,
+  onBack,
 }: {
   people: Profile[];
   chats: Chat[];
@@ -1466,6 +1532,7 @@ function Messages({
   text: string;
   setText: (value: string) => void;
   send: () => void;
+  onBack: () => void;
 }) {
   const list = chats
     .map((chat) => chat.profile)
@@ -1523,10 +1590,11 @@ function Messages({
             <div className="chat-head">
               <button
                 className="chat-back"
-                onClick={() => openChat(selected)}
-                aria-hidden="true"
-                tabIndex={-1}
-              />
+                onClick={onBack}
+                aria-label="Back to conversations"
+              >
+                <Icon name="back" size={19} />
+              </button>
               <img src={avatarFor(selected)} alt="" />
               <div>
                 <b>{selected.display_name}</b>
@@ -1580,7 +1648,15 @@ function Messages({
   );
 }
 
-function Activity({ supabase, userId }: { supabase: any; userId: string }) {
+function Activity({
+  supabase,
+  userId,
+  onRead,
+}: {
+  supabase: any;
+  userId: string;
+  onRead: () => void;
+}) {
   const [items, setItems] = useState<
     Array<{
       id: string;
@@ -1630,11 +1706,12 @@ function Activity({ supabase, userId }: { supabase: any; userId: string }) {
         .eq("recipient_id", userId)
         .is("read_at", null);
 
+      onRead();
       setLoading(false);
     }
 
     void load();
-  }, [supabase, userId]);
+  }, [supabase, userId, onRead]);
 
   return (
     <>
@@ -1743,6 +1820,7 @@ function ProfileView({
                 key={post.id}
                 src={media(post.media_path!)}
                 preload="metadata"
+                controls
                 muted
               />
             ) : (
