@@ -15,6 +15,11 @@ export const metadata: Metadata = {
     shortcut: "/avenzo-mark.svg",
     apple: "/avenzo-mark.svg",
   },
+  formatDetection: {
+    telephone: false,
+    email: false,
+    address: false,
+  },
   robots: {
     index: false,
     follow: false,
@@ -34,7 +39,12 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <a className="skip-link" href="#main-content">
+          Skip to main content
+        </a>
+        <div id="main-content">{children}</div>
+      </body>
     </html>
   );
 }
