@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../../../lib/supabase/server";
-import { createAdminClient } from "../../../../lib/supabase/admin";
+import {
+  SUPABASE_PUBLISHABLE_KEY,
+  SUPABASE_URL,
+} from "../../../../lib/supabase/config";
 import { verifyTurnstile } from "../../../../lib/turnstile";
 
 export const dynamic = "force-dynamic";
-
-const USERNAME_PATTERN = /^[a-z0-9._]{3,30}$/;
 
 function json(body: unknown, status = 200) {
   return NextResponse.json(body, {
@@ -46,46 +47,36 @@ export async function POST(request: Request) {
       );
     }
 
-    let email = identifier;
-
-    if (!identifier.includes("@")) {
-      if (!USERNAME_PATTERN.test(identifier)) {
-        return json({ error: "Invalid username/email or password." }, 401);
+    const response = await fetch(
+      SUPABASE_URL + "/functions/v1/username-login",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ identifier, password }),
+        cache: "no-store",
       }
+    );
 
-      const admin = createAdminClient();
-      const { data: profile, error: profileError } = await admin
-        .from("profiles")
-        .select("id")
-        .eq("username", identifier)
-        .maybeSingle();
+    const result = await response.json();
 
-      if (profileError || !profile) {
-        return json({ error: "Invalid username/email or password." }, 401);
-      }
-
-      const { data: userData, error: userError } =
-        await admin.auth.admin.getUserById(profile.id);
-
-      if (userError || !userData.user?.email) {
-        return json({ error: "Invalid username/email or password." }, 401);
-      }
-
-      email = userData.user.email;
+    if (!response.ok || !result.access_token || !result.refresh_token) {
+      return json(
+        { error: result.error || "Invalid username/email or password." },
+        response.status === 401 ? 401 : 503
+      );
     }
 
     const supabase = await createClient();
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    const { error } = await supabase.auth.setSession({
+      access_token: result.access_token,
+      refresh_token: result.refresh_token,
     });
 
-    if (error || !data.user) {
-      const message = error?.message?.toLowerCase().includes("confirm")
-        ? "Verify your email before signing in."
-        : "Invalid username/email or password.";
-
-      return json({ error: message }, 401);
+    if (error) {
+      return json({ error: "Unable to start your session." }, 503);
     }
 
     return json({ ok: true });
