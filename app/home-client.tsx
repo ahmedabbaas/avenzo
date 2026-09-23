@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase/client";
 import ActivityPanel from "../features/social/components/activity-panel";
 import AvatarImage from "../features/social/components/avatar-image";
+import UserMediaImage from "../features/social/components/user-media-image";
 import EmptyState from "../features/social/components/empty-state";
 import MessagesPanel from "../features/social/components/messages-panel";
 import ProfileView from "../features/social/components/profile-view";
@@ -27,6 +28,7 @@ import {
   avatarFor,
   formatRelativeTime,
 } from "../features/social/lib/profile";
+import { readImageDimensions, type MediaDimensions } from "../features/social/lib/media";
 import type {
   Chat,
   Message,
@@ -77,6 +79,8 @@ export default function HomeClient({
   const [caption, setCaption] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
+  const [mediaDimensions, setMediaDimensions] =
+    useState<MediaDimensions | null>(null);
   const [posting, setPosting] = useState(false);
   const [toast, setToast] = useState("");
   const [chats, setChats] = useState<Chat[]>([]);
@@ -182,6 +186,8 @@ export default function HomeClient({
       caption: string;
       media_path: string | null;
       media_type: "image" | "video" | null;
+      media_width?: number | null;
+      media_height?: number | null;
       created_at: string;
     }>
   ) {
@@ -430,6 +436,8 @@ export default function HomeClient({
       author_id: string;
       media_path: string;
       media_type: "image" | "video";
+      media_width?: number | null;
+      media_height?: number | null;
       created_at: string;
       expires_at: string;
     }>;
@@ -620,7 +628,7 @@ export default function HomeClient({
     supabase,
   ]);
 
-  function pickFile(event: ChangeEvent<HTMLInputElement>) {
+  async function pickFile(event: ChangeEvent<HTMLInputElement>) {
     const picked = event.target.files?.[0] || null;
 
     if (preview) URL.revokeObjectURL(preview);
@@ -628,6 +636,7 @@ export default function HomeClient({
     if (!picked) {
       setFile(null);
       setPreview("");
+      setMediaDimensions(null);
       return;
     }
 
@@ -648,6 +657,7 @@ export default function HomeClient({
 
     setFile(picked);
     setPreview(URL.createObjectURL(picked));
+    setMediaDimensions(await readImageDimensions(picked));
   }
 
   async function createContent(event: FormEvent) {
@@ -706,6 +716,8 @@ export default function HomeClient({
           author_id: initialProfile.id,
           media_path: path,
           media_type: type,
+          media_width: type === "image" ? mediaDimensions?.width || null : null,
+          media_height: type === "image" ? mediaDimensions?.height || null : null,
         });
         if (error) throw error;
         showToast("Story published for 24 hours.");
@@ -724,6 +736,8 @@ export default function HomeClient({
           caption: caption.trim(),
           media_path: path,
           media_type: type,
+          media_width: type === "image" ? mediaDimensions?.width || null : null,
+          media_height: type === "image" ? mediaDimensions?.height || null : null,
         });
         if (error) throw error;
         showToast("Post published.");
@@ -731,6 +745,7 @@ export default function HomeClient({
 
       setCaption("");
       setFile(null);
+      setMediaDimensions(null);
       if (preview) URL.revokeObjectURL(preview);
       setPreview("");
       setShowCreate(false);
@@ -1596,6 +1611,7 @@ export default function HomeClient({
                     setCreateMode(mode);
                     setCaption("");
                     setFile(null);
+                    setMediaDimensions(null);
                     if (preview) URL.revokeObjectURL(preview);
                     setPreview("");
                   }}
@@ -1659,10 +1675,13 @@ export default function HomeClient({
               (file?.type.startsWith("video/") ? (
                 <video src={preview} controls className="upload-preview" />
               ) : (
-                <img
+                <UserMediaImage
                   src={preview}
                   className="upload-preview"
                   alt={createMode === "story" ? "Story preview" : "Post preview"}
+                  width={mediaDimensions?.width}
+                  height={mediaDimensions?.height}
+                  loading="eager"
                 />
               ))}
 
@@ -1732,10 +1751,13 @@ export default function HomeClient({
                 className="story-viewer-media"
               />
             ) : (
-              <img
+              <UserMediaImage
                 src={mediaUrl(storyViewer.media_path)}
                 alt="Story"
                 className="story-viewer-media"
+                width={storyViewer.media_width}
+                height={storyViewer.media_height}
+                loading="eager"
               />
             )}
 
