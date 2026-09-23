@@ -69,7 +69,11 @@ export default function ForgotPasswordPage() {
         </p>
 
         <form className="auth-form" onSubmit={submit}>
+          <label className="auth-label" htmlFor="recovery-email">
+            Email address
+          </label>
           <input
+            id="recovery-email"
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
