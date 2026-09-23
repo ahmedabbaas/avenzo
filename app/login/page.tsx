@@ -3,6 +3,10 @@
 import { FormEvent, useEffect, useState } from "react";
 import AuthBrandPanel from "../_components/auth-brand-panel";
 import PasswordField from "../_components/password-field";
+import TurnstileWidget, {
+  readTurnstileToken,
+  resetTurnstile,
+} from "../_components/turnstile-widget";
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState("");
@@ -42,12 +46,14 @@ export default function LoginPage() {
         body: JSON.stringify({
           identifier: identifier.trim(),
           password,
+          turnstileToken: readTurnstileToken(),
         }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
+        resetTurnstile();
         setStatus(
           response.status === 503
             ? "Account services are temporarily unavailable."
@@ -104,6 +110,8 @@ export default function LoginPage() {
           <div className="auth-links">
             <a href="/forgot-password">Forgot Password?</a>
           </div>
+
+          <TurnstileWidget action="login" />
 
           {status && (
             <div className="auth-message" role="status">
