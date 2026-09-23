@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
 
 type PublicProfile = {
@@ -27,6 +28,15 @@ type Stats = {
   followers: number;
   following: number;
 };
+
+type ReportReason =
+  | "spam"
+  | "harassment"
+  | "hate"
+  | "impersonation"
+  | "sexual"
+  | "violence"
+  | "other";
 
 function fallbackAvatar(name: string) {
   const initials =
@@ -55,22 +65,33 @@ export default function PublicProfileClient({
   initialFollowing: boolean;
   stats: Stats;
 }) {
+  const router = useRouter();
+  const supabase = useMemo(() => createClient(), []);
+
   const [following, setFollowing] = useState(initialFollowing);
   const [stats, setStats] = useState(initialStats);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
-  const supabase = createClient();
+  const [showReport, setShowReport] = useState(false);
+  const [reportReason, setReportReason] = useState<ReportReason>("spam");
+  const [reportDetails, setReportDetails] = useState("");
+  const [reporting, setReporting] = useState(false);
 
   async function toggleFollow() {
     if (busy) return;
+
     setBusy(true);
     setNotice("");
 
     const nextFollowing = !following;
+
     setFollowing(nextFollowing);
     setStats((current) => ({
       ...current,
-      followers: Math.max(0, current.followers + (nextFollowing ? 1 : -1)),
+      followers: Math.max(
+        0,
+        current.followers + (nextFollowing ? 1 : -1)
+      ),
     }));
 
     const result = following
@@ -88,7 +109,10 @@ export default function PublicProfileClient({
       setFollowing(!nextFollowing);
       setStats((current) => ({
         ...current,
-        followers: Math.max(0, current.followers + (nextFollowing ? -1 : 1)),
+        followers: Math.max(
+          0,
+          current.followers + (nextFollowing ? -1 : 1)
+        ),
       }));
       setNotice("Could not update follow right now.");
     }
@@ -96,7 +120,61 @@ export default function PublicProfileClient({
     setBusy(false);
   }
 
-  const avatar = profile.avatar_url || fallbackAvatar(profile.display_name);
+  async function blockUser() {
+    const confirmed = window.confirm(
+      `Block @${profile.username}? You will stop following each other and they will be hidden from your AVENZO experience.`
+    );
+
+    if (!confirmed) return;
+
+    setBusy(true);
+    setNotice("");
+
+    const { error } = await supabase.from("blocks").insert({
+      blocker_id: viewerId,
+      blocked_id: profile.id,
+    });
+
+    if (error) {
+      setNotice("Could not block this account right now.");
+      setBusy(false);
+      return;
+    }
+
+    router.replace("/home?screen=explore");
+    router.refresh();
+  }
+
+  async function submitReport(event: FormEvent) {
+    event.preventDefault();
+
+    if (reporting) return;
+
+    setReporting(true);
+    setNotice("");
+
+    const { error } = await supabase.from("reports").insert({
+      reporter_id: viewerId,
+      reported_user_id: profile.id,
+      reason: reportReason,
+      details: reportDetails.trim().slice(0, 1000),
+    });
+
+    if (error) {
+      setNotice("Could not submit this report right now.");
+      setReporting(false);
+      return;
+    }
+
+    setShowReport(false);
+    setReportDetails("");
+    setReportReason("spam");
+    setReporting(false);
+    setNotice("Report submitted. Thank you for helping keep AVENZO safer.");
+  }
+
+  const avatar =
+    profile.avatar_url || fallbackAvatar(profile.display_name);
   const mediaPosts = posts.filter((post) => post.media_path);
 
   return (
@@ -106,6 +184,7 @@ export default function PublicProfileClient({
           <i />
           AVENZO
         </Link>
+
         <Link className="btn secondary small" href="/home">
           Back to feed
         </Link>
@@ -136,18 +215,49 @@ export default function PublicProfileClient({
             </div>
 
             <div className="public-profile-actions">
-              <button className="btn" disabled={busy} onClick={toggleFollow}>
+              <button
+                className="btn"
+                disabled={busy}
+                onClick={toggleFollow}
+              >
                 {following ? "Following" : "Follow"}
               </button>
+
               <Link
                 className="btn secondary"
-                href={"/home?chat=" + encodeURIComponent(profile.username)}
+                href={
+                  "/home?chat=" +
+                  encodeURIComponent(profile.username)
+                }
               >
                 Message
               </Link>
+
+              <details className="profile-safety-menu">
+                <summary aria-label="More profile actions">•••</summary>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setShowReport(true)}
+                  >
+                    Report account
+                  </button>
+                  <button
+                    type="button"
+                    className="danger"
+                    onClick={blockUser}
+                  >
+                    Block @{profile.username}
+                  </button>
+                </div>
+              </details>
             </div>
 
-            {notice && <small className="public-profile-notice">{notice}</small>}
+            {notice && (
+              <small className="public-profile-notice" role="status">
+                {notice}
+              </small>
+            )}
           </div>
         </div>
 
@@ -183,10 +293,80 @@ export default function PublicProfileClient({
           <div className="empty">
             <span className="empty-mark">A</span>
             <b>No media posts yet.</b>
-            <p>This profile’s photo and video posts will appear here.</p>
+            <p>
+              This profile’s photo and video posts will appear here.
+            </p>
           </div>
         )}
       </section>
+
+      {showReport && (
+        <div
+          className="modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Report account"
+        >
+          <form
+            className="modal-box report-modal"
+            onSubmit={submitReport}
+          >
+            <div className="eyebrow">SAFETY</div>
+            <h2>Report @{profile.username}</h2>
+            <p>
+              Reports are private. Choose the closest reason and add
+              context if useful.
+            </p>
+
+            <label htmlFor="report-reason">Reason</label>
+            <select
+              id="report-reason"
+              value={reportReason}
+              onChange={(event) =>
+                setReportReason(event.target.value as ReportReason)
+              }
+            >
+              <option value="spam">Spam</option>
+              <option value="harassment">Harassment or bullying</option>
+              <option value="hate">Hateful conduct</option>
+              <option value="impersonation">Impersonation</option>
+              <option value="sexual">Sexual content</option>
+              <option value="violence">Violence or threats</option>
+              <option value="other">Something else</option>
+            </select>
+
+            <label htmlFor="report-details">
+              Additional details <small>optional</small>
+            </label>
+            <textarea
+              id="report-details"
+              value={reportDetails}
+              onChange={(event) =>
+                setReportDetails(event.target.value.slice(0, 1000))
+              }
+              placeholder="Add context for the report…"
+              maxLength={1000}
+            />
+
+            <div className="report-count">
+              {reportDetails.length}/1000
+            </div>
+
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="btn secondary"
+                onClick={() => setShowReport(false)}
+              >
+                Cancel
+              </button>
+              <button className="btn" disabled={reporting}>
+                {reporting ? "Submitting…" : "Submit report"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </main>
   );
 }
