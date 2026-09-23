@@ -709,3 +709,12 @@ button,a{-webkit-tap-highlight-color:transparent}
 @media (hover:hover){.auth-submit:not(:disabled):hover,.btn:not(:disabled):hover{transform:translateY(-1px)}.person-card:hover,.post-card:hover{border-color:#303943}}
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
 @media(max-width:760px){.auth-shell{min-height:100svh;padding-bottom:max(22px,env(safe-area-inset-bottom))}.auth-card{border-radius:22px}.auth-brand-panel{min-height:auto}}
+
+/* Trust + information surfaces */
+.site-footer{grid-column:1/-1;position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:18px;margin-top:8px;padding:16px 4px;color:#6f7780;font-size:11px}.site-footer nav{display:flex;flex-wrap:wrap;gap:14px}.site-footer a{color:#8f98a1;text-decoration:none}.site-footer a:hover{color:var(--accent)}
+.info-shell{min-height:100svh;display:grid;place-items:center;padding:48px 22px;background:radial-gradient(circle at 15% 10%,rgba(223,255,99,.07),transparent 26%),radial-gradient(circle at 90% 20%,rgba(120,144,255,.07),transparent 28%),#07090b}
+.info-card{width:min(860px,100%);border:1px solid var(--line);background:rgba(12,16,19,.94);border-radius:28px;padding:clamp(26px,5vw,54px);box-shadow:0 30px 120px rgba(0,0,0,.34)}
+.info-card h1{margin:10px 0 18px;font:700 clamp(38px,6vw,66px)/.98 "Space Grotesk";letter-spacing:-.055em}.info-card>p{color:#a3abb3;line-height:1.7;max-width:720px}
+.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:28px 0}.info-grid article,.info-list p{border:1px solid var(--line);background:#0f1418;border-radius:16px;padding:17px}.info-grid b,.info-grid span{display:block}.info-grid span{margin-top:7px;color:#8e969f;font-size:13px;line-height:1.55}
+.info-list{display:grid;gap:10px;margin:26px 0}.info-list p{margin:0;color:#a8b0b7;line-height:1.65}.info-list b{color:#f6f7f8}.info-note{font-size:12px!important;color:#727b84!important}
+@media(max-width:760px){.site-footer{display:block;text-align:center;margin-top:18px}.site-footer nav{justify-content:center;margin-bottom:10px}.info-grid{grid-template-columns:1fr}.info-card{border-radius:22px}.info-card h1{font-size:40px}}
