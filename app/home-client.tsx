@@ -12,6 +12,19 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase/client";
 import {
+  createMessage,
+  createPostComment,
+  createReelComment,
+  publishContent,
+  removePost,
+  removeReel,
+  setFollowing,
+  setPostLike,
+  setPostSaved,
+  setReelLike,
+  setReelSaved,
+} from "../features/social/data/mutations";
+import {
   fetchChats,
   fetchConversation,
   fetchExplorePosts,
@@ -350,67 +363,22 @@ export default function HomeClient({
     setPosting(true);
 
     try {
-      let path: string | null = null;
-      let type: "image" | "video" | null = null;
+      await publishContent({
+        supabase,
+        userId: initialProfile.id,
+        mode: createMode,
+        caption,
+        file,
+        dimensions: mediaDimensions,
+      });
 
-      if (file) {
-        const extension =
-          file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") ||
-          "bin";
-
-        path =
-          initialProfile.id +
-          "/" +
-          (createMode === "reel"
-            ? "reels"
-            : createMode === "story"
-              ? "stories"
-              : "posts") +
-          "/" +
-          crypto.randomUUID() +
-          "." +
-          extension.slice(0, 8);
-
-        const upload = await supabase.storage.from("media").upload(path, file, {
-          upsert: false,
-          contentType: file.type,
-        });
-
-        if (upload.error) throw upload.error;
-        type = file.type.startsWith("video/") ? "video" : "image";
-      }
-
-      if (createMode === "story") {
-        const { error } = await supabase.from("stories").insert({
-          author_id: initialProfile.id,
-          media_path: path,
-          media_type: type,
-          media_width: type === "image" ? mediaDimensions?.width || null : null,
-          media_height: type === "image" ? mediaDimensions?.height || null : null,
-        });
-        if (error) throw error;
-        showToast("Story published for 24 hours.");
-      } else if (createMode === "reel") {
-        const { error } = await supabase.from("reels").insert({
-          author_id: initialProfile.id,
-          caption: caption.trim(),
-          media_path: path,
-          media_type: "video",
-        });
-        if (error) throw error;
-        showToast("Reel published.");
-      } else {
-        const { error } = await supabase.from("posts").insert({
-          author_id: initialProfile.id,
-          caption: caption.trim(),
-          media_path: path,
-          media_type: type,
-          media_width: type === "image" ? mediaDimensions?.width || null : null,
-          media_height: type === "image" ? mediaDimensions?.height || null : null,
-        });
-        if (error) throw error;
-        showToast("Post published.");
-      }
+      showToast(
+        createMode === "story"
+          ? "Story published for 24 hours."
+          : createMode === "reel"
+            ? "Reel published."
+            : "Post published."
+      );
 
       setCaption("");
       setFile(null);
@@ -439,23 +407,13 @@ export default function HomeClient({
     if (post.author_id !== initialProfile.id) return;
     if (!window.confirm("Delete this post? This cannot be undone.")) return;
 
-    const { error } = await supabase
-      .from("posts")
-      .delete()
-      .eq("id", post.id)
-      .eq("author_id", initialProfile.id);
-
-    if (error) {
+    try {
+      await removePost(supabase, initialProfile.id, post);
+      showToast("Post deleted.");
+      await Promise.all([loadPosts(), loadExplorePosts(), loadStats()]);
+    } catch {
       showToast("Could not delete post.");
-      return;
     }
-
-    if (post.media_path) {
-      await supabase.storage.from("media").remove([post.media_path]);
-    }
-
-    showToast("Post deleted.");
-    await Promise.all([loadPosts(), loadExplorePosts(), loadStats()]);
   }
 
   async function toggleLike(post: Post) {
@@ -476,17 +434,14 @@ export default function HomeClient({
     setPosts(update);
     setExplorePosts(update);
 
-    const result = post.liked
-      ? await supabase
-          .from("likes")
-          .delete()
-          .eq("post_id", post.id)
-          .eq("user_id", initialProfile.id)
-      : await supabase
-          .from("likes")
-          .insert({ post_id: post.id, user_id: initialProfile.id });
-
-    if (result.error) {
+    try {
+      await setPostLike(
+        supabase,
+        initialProfile.id,
+        post.id,
+        post.liked
+      );
+    } catch {
       showToast("Could not update like.");
       await Promise.all([loadPosts(), loadExplorePosts()]);
     }
@@ -500,17 +455,14 @@ export default function HomeClient({
         : [...current, post.id]
     );
 
-    const result = isSaved
-      ? await supabase
-          .from("saved_posts")
-          .delete()
-          .eq("post_id", post.id)
-          .eq("user_id", initialProfile.id)
-      : await supabase
-          .from("saved_posts")
-          .insert({ post_id: post.id, user_id: initialProfile.id });
-
-    if (result.error) {
+    try {
+      await setPostSaved(
+        supabase,
+        initialProfile.id,
+        post.id,
+        isSaved
+      );
+    } catch {
       showToast("Could not update saved posts.");
       await Promise.all([loadPosts(), loadExplorePosts(), loadSavedPosts()]);
     }
@@ -520,18 +472,17 @@ export default function HomeClient({
     const clean = body.trim();
     if (!clean) return;
 
-    const { error } = await supabase.from("comments").insert({
-      post_id: post.id,
-      user_id: initialProfile.id,
-      body: clean,
-    });
-
-    if (error) {
+    try {
+      await createPostComment(
+        supabase,
+        initialProfile.id,
+        post.id,
+        clean
+      );
+      await Promise.all([loadPosts(), loadExplorePosts()]);
+    } catch {
       showToast("Could not post comment.");
-      return;
     }
-
-    await Promise.all([loadPosts(), loadExplorePosts()]);
   }
 
   async function toggleReelLike(reel: Reel) {
@@ -550,17 +501,14 @@ export default function HomeClient({
       )
     );
 
-    const result = reel.liked
-      ? await supabase
-          .from("reel_likes")
-          .delete()
-          .eq("reel_id", reel.id)
-          .eq("user_id", initialProfile.id)
-      : await supabase
-          .from("reel_likes")
-          .insert({ reel_id: reel.id, user_id: initialProfile.id });
-
-    if (result.error) {
+    try {
+      await setReelLike(
+        supabase,
+        initialProfile.id,
+        reel.id,
+        reel.liked
+      );
+    } catch {
       showToast("Could not update reel like.");
       await loadReels();
     }
@@ -575,17 +523,14 @@ export default function HomeClient({
         : [...current, reel.id]
     );
 
-    const result = isSaved
-      ? await supabase
-          .from("saved_reels")
-          .delete()
-          .eq("reel_id", reel.id)
-          .eq("user_id", initialProfile.id)
-      : await supabase
-          .from("saved_reels")
-          .insert({ reel_id: reel.id, user_id: initialProfile.id });
-
-    if (result.error) {
+    try {
+      await setReelSaved(
+        supabase,
+        initialProfile.id,
+        reel.id,
+        isSaved
+      );
+    } catch {
       showToast("Could not update saved reels.");
       await loadReels();
     }
@@ -595,38 +540,30 @@ export default function HomeClient({
     const clean = body.trim();
     if (!clean) return;
 
-    const { error } = await supabase.from("reel_comments").insert({
-      reel_id: reel.id,
-      user_id: initialProfile.id,
-      body: clean,
-    });
-
-    if (error) {
+    try {
+      await createReelComment(
+        supabase,
+        initialProfile.id,
+        reel.id,
+        clean
+      );
+      await loadReels();
+    } catch {
       showToast("Could not post reel comment.");
-      return;
     }
-
-    await loadReels();
   }
 
   async function deleteReel(reel: Reel) {
     if (reel.author_id !== initialProfile.id) return;
     if (!window.confirm("Delete this reel? This cannot be undone.")) return;
 
-    const { error } = await supabase
-      .from("reels")
-      .delete()
-      .eq("id", reel.id)
-      .eq("author_id", initialProfile.id);
-
-    if (error) {
+    try {
+      await removeReel(supabase, initialProfile.id, reel);
+      showToast("Reel deleted.");
+      await loadReels();
+    } catch {
       showToast("Could not delete reel.");
-      return;
     }
-
-    await supabase.storage.from("media").remove([reel.media_path]);
-    showToast("Reel deleted.");
-    await loadReels();
   }
 
   async function sharePost(post: Post) {
@@ -658,48 +595,38 @@ export default function HomeClient({
         : [...current, other.id]
     );
 
-    const result = isFollowing
-      ? await supabase
-          .from("follows")
-          .delete()
-          .eq("follower_id", initialProfile.id)
-          .eq("following_id", other.id)
-      : await supabase.from("follows").insert({
-          follower_id: initialProfile.id,
-          following_id: other.id,
-        });
-
-    if (result.error) {
+    try {
+      await setFollowing(
+        supabase,
+        initialProfile.id,
+        other.id,
+        isFollowing
+      );
+      await Promise.all([loadStats(), loadPosts(), loadStories()]);
+    } catch {
       showToast("Could not update follow.");
       await loadPeople();
-      return;
     }
-
-    await Promise.all([loadStats(), loadPosts(), loadStories()]);
   }
 
   async function sendMessage() {
     const clean = message.trim();
     if (!selected || !clean) return;
 
-    const { data, error } = await supabase
-      .from("messages")
-      .insert({
-        sender_id: initialProfile.id,
-        recipient_id: selected.id,
-        body: clean,
-      })
-      .select("*")
-      .single();
+    try {
+      const data = await createMessage(
+        supabase,
+        initialProfile.id,
+        selected.id,
+        clean
+      );
 
-    if (error) {
+      setMessages((current) => [...current, data]);
+      setMessage("");
+      await loadChats();
+    } catch {
       showToast("Message could not be sent.");
-      return;
     }
-
-    setMessages((current) => [...current, data as Message]);
-    setMessage("");
-    await loadChats();
   }
 
   async function signOut() {
