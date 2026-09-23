@@ -26,6 +26,32 @@ create table if not exists public.profiles (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.blocks (
+  blocker_id uuid not null references public.profiles(id) on delete cascade,
+  blocked_id uuid not null references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (blocker_id, blocked_id),
+  constraint blocks_not_self check (blocker_id <> blocked_id)
+);
+
+create table if not exists public.reports (
+  id uuid primary key default gen_random_uuid(),
+  reporter_id uuid not null references public.profiles(id) on delete cascade,
+  reported_user_id uuid references public.profiles(id) on delete cascade,
+  reported_post_id uuid,
+  reason text not null
+    check (reason in ('spam','harassment','hate','impersonation','sexual','violence','other')),
+  details text not null default ''
+    check (char_length(details) <= 1000),
+  status text not null default 'open'
+    check (status in ('open','reviewing','resolved','dismissed')),
+  created_at timestamptz not null default now(),
+  constraint report_has_one_target check (
+    (case when reported_user_id is not null then 1 else 0 end) +
+    (case when reported_post_id is not null then 1 else 0 end) = 1
+  )
+);
+
 create table if not exists public.follows (
   follower_id uuid not null references public.profiles(id) on delete cascade,
   following_id uuid not null references public.profiles(id) on delete cascade,
@@ -47,6 +73,18 @@ create table if not exists public.posts (
   constraint posts_have_content
     check (char_length(trim(caption)) > 0 or media_path is not null)
 );
+
+do $
+begin
+  alter table public.reports
+    add constraint reports_post_fk
+    foreign key (reported_post_id)
+    references public.posts(id)
+    on delete cascade;
+exception
+  when duplicate_object then null;
+end
+$;
 
 create table if not exists public.likes (
   post_id uuid not null references public.posts(id) on delete cascade,
@@ -95,6 +133,12 @@ create table if not exists public.notifications (
 
 create index if not exists profiles_username_idx
   on public.profiles(username);
+
+create index if not exists blocks_blocked_idx
+  on public.blocks(blocked_id, created_at desc);
+
+create index if not exists reports_reporter_idx
+  on public.reports(reporter_id, created_at desc);
 
 create index if not exists posts_created_at_idx
   on public.posts(created_at desc);
@@ -223,9 +267,50 @@ create trigger posts_touch_updated_at
 before update on public.posts
 for each row execute function public.touch_updated_at();
 
+create or replace function public.users_blocked(first_user uuid, second_user uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $
+  select exists (
+    select 1
+    from public.blocks
+    where
+      (blocker_id = first_user and blocked_id = second_user)
+      or
+      (blocker_id = second_user and blocked_id = first_user)
+  );
+$;
+
+create or replace function public.handle_new_block()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $
+begin
+  delete from public.follows
+  where
+    (follower_id = new.blocker_id and following_id = new.blocked_id)
+    or
+    (follower_id = new.blocked_id and following_id = new.blocker_id);
+
+  return new;
+end;
+$;
+
+drop trigger if exists on_block_cleanup on public.blocks;
+create trigger on_block_cleanup
+after insert on public.blocks
+for each row execute function public.handle_new_block();
+
 -- RLS
 alter table public.username_claims enable row level security;
 alter table public.profiles enable row level security;
+alter table public.blocks enable row level security;
+alter table public.reports enable row level security;
 alter table public.follows enable row level security;
 alter table public.posts enable row level security;
 alter table public.likes enable row level security;
@@ -239,7 +324,10 @@ create policy profiles_read
 on public.profiles
 for select
 to authenticated
-using (true);
+using (
+  id = auth.uid()
+  or not public.users_blocked(auth.uid(), id)
+);
 
 drop policy if exists profiles_update_self on public.profiles;
 create policy profiles_update_self
@@ -248,6 +336,41 @@ for update
 to authenticated
 using (id = auth.uid())
 with check (id = auth.uid());
+
+drop policy if exists blocks_read_self on public.blocks;
+create policy blocks_read_self
+on public.blocks
+for select
+to authenticated
+using (blocker_id = auth.uid());
+
+drop policy if exists blocks_insert_self on public.blocks;
+create policy blocks_insert_self
+on public.blocks
+for insert
+to authenticated
+with check (blocker_id = auth.uid());
+
+drop policy if exists blocks_delete_self on public.blocks;
+create policy blocks_delete_self
+on public.blocks
+for delete
+to authenticated
+using (blocker_id = auth.uid());
+
+drop policy if exists reports_read_self on public.reports;
+create policy reports_read_self
+on public.reports
+for select
+to authenticated
+using (reporter_id = auth.uid());
+
+drop policy if exists reports_insert_self on public.reports;
+create policy reports_insert_self
+on public.reports
+for insert
+to authenticated
+with check (reporter_id = auth.uid());
 
 drop policy if exists follows_read on public.follows;
 create policy follows_read
@@ -275,7 +398,10 @@ create policy posts_read
 on public.posts
 for select
 to authenticated
-using (true);
+using (
+  author_id = auth.uid()
+  or not public.users_blocked(auth.uid(), author_id)
+);
 
 drop policy if exists posts_insert_self on public.posts;
 create policy posts_insert_self
@@ -382,7 +508,10 @@ create policy messages_insert_sender
 on public.messages
 for insert
 to authenticated
-with check (sender_id = auth.uid());
+with check (
+  sender_id = auth.uid()
+  and not public.users_blocked(sender_id, recipient_id)
+);
 
 drop policy if exists messages_mark_read_recipient on public.messages;
 create policy messages_mark_read_recipient
