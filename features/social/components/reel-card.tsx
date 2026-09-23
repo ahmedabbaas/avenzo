@@ -5,6 +5,7 @@ import Link from "next/link";
 import Icon from "./icon";
 import { avatarFor, formatRelativeTime, initialsAvatar } from "../lib/profile";
 import type { Reel } from "../types";
+import AvatarImage from "./avatar-image";
 
 export default function ReelCard({
   reel,
@@ -36,7 +37,7 @@ export default function ReelCard({
             className="person-line person-link"
             href={"/u/" + encodeURIComponent(author.username)}
           >
-            <img src={avatarFor(author)} alt="" />
+            <AvatarImage src={avatarFor(author)} alt={author.display_name} size={80} />
             <div>
               <b>{author.display_name}</b>
               <small>
@@ -46,7 +47,7 @@ export default function ReelCard({
           </Link>
         ) : (
           <div className="person-line">
-            <img src={initialsAvatar("AVENZO user")} alt="" />
+            <AvatarImage src={initialsAvatar("AVENZO user")} alt="AVENZO user" size={80} />
             <div>
               <b>AVENZO user</b>
               <small>{formatRelativeTime(reel.created_at)}</small>
