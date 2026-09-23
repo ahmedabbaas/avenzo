@@ -736,3 +736,17 @@ button,a{-webkit-tap-highlight-color:transparent}
 @media(max-width:560px){.blocked-row{grid-template-columns:40px minmax(0,1fr)}.blocked-row img{width:40px;height:40px}.blocked-row .btn{grid-column:1/-1;width:100%}.settings-section-head{align-items:center}}
 
 /* deploy-sync: unblock-management-v1 */
+
+/* Account deletion */
+.delete-account-zone{margin-top:18px;padding-top:22px;border-top:1px solid rgba(255,100,100,.18);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center}
+.delete-account-zone>div:first-child{display:grid;gap:5px}
+.delete-account-zone b{color:#ffd4d4;font-size:13px}
+.delete-account-zone span,.delete-confirm p{color:#8f989f;font-size:12px;line-height:1.55}
+.danger-button{background:#38171a!important;border-color:#6b292f!important;color:#ffc7cb!important}
+.danger-button:hover:not(:disabled){background:#4a1d21!important;border-color:#8b343c!important}
+.delete-confirm{grid-column:1/-1;display:grid;gap:10px;padding:14px;border:1px solid rgba(255,100,100,.2);border-radius:14px;background:#120d0f}
+.delete-confirm p{margin:0}.delete-confirm strong{color:#ffd7da}
+.delete-confirm input{width:100%;border:1px solid #453034;background:#0c0b0d;color:#fff;border-radius:12px;padding:12px 13px;outline:0}
+.delete-confirm input:focus{border-color:#a64c55}
+.delete-confirm>div{display:flex;justify-content:flex-end;gap:8px}
+@media(max-width:620px){.delete-account-zone{grid-template-columns:1fr}.delete-account-zone>.btn{width:100%}.delete-confirm>div{display:grid;grid-template-columns:1fr 1fr}}
