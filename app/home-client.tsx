@@ -1221,15 +1221,6 @@ export default function HomeClient({
       .includes(query.toLowerCase().trim())
   );
 
-  const visiblePosts =
-    feedTab === "following"
-      ? posts.filter(
-          (post) =>
-            post.author_id === initialProfile.id ||
-            followed.includes(post.author_id)
-        )
-      : posts;
-
   const unreadMessages = chats.reduce((total, chat) => total + chat.unread, 0);
 
   return (
@@ -1343,74 +1334,69 @@ export default function HomeClient({
                 </button>
               </section>
 
-              <div className="stories-row" aria-label="People">
-                <button className="story story-you" onClick={() => setShowCreate(true)}>
+              <div className="stories-row" aria-label="Active stories">
+                <button
+                  className="story story-you"
+                  onClick={() => {
+                    setCreateMode("story");
+                    setShowCreate(true);
+                  }}
+                >
                   <span className="story-ring">
                     <img src={avatarFor(profile)} alt="" />
                     <i>+</i>
                   </span>
-                  <small>Your post</small>
+                  <small>Add story</small>
                 </button>
-                {people.slice(0, 8).map((person) => (
+
+                {stories.map((story) => (
                   <button
                     className="story"
-                    key={person.id}
-                    onClick={() => {
-                      setQuery(person.username);
-                      setScreen("explore");
-                    }}
+                    key={story.id}
+                    onClick={() => setStoryViewer(story)}
                   >
                     <span className="story-ring">
-                      <img src={avatarFor(person)} alt="" />
+                      <img
+                        src={avatarFor(story.profile || profile)}
+                        alt=""
+                      />
                     </span>
-                    <small>@{person.username}</small>
+                    <small>
+                      @{story.profile?.username || profile.username}
+                    </small>
                   </button>
                 ))}
               </div>
 
               <div className="feed-toolbar">
-                <div className="feed-tabs" role="tablist" aria-label="Feed">
-                  <button
-                    className={feedTab === "all" ? "active" : ""}
-                    onClick={() => setFeedTab("all")}
-                  >
-                    Latest
-                  </button>
-                  <button
-                    className={feedTab === "following" ? "active" : ""}
-                    onClick={() => setFeedTab("following")}
-                  >
-                    Following
-                  </button>
+                <div>
+                  <div className="eyebrow">HOME FEED</div>
+                  <strong>Posts from you and people you follow</strong>
                 </div>
-                <button className="quiet-button" onClick={() => void loadPosts()}>
+                <button
+                  className="quiet-button"
+                  onClick={() => void Promise.all([loadPosts(), loadStories()])}
+                >
                   Refresh
                 </button>
               </div>
 
               {loading ? (
                 <FeedSkeleton />
-              ) : visiblePosts.length === 0 ? (
+              ) : posts.length === 0 ? (
                 <EmptyState
-                  title={
-                    feedTab === "following"
-                      ? "Your following feed is quiet."
-                      : "Your feed is ready for its first post."
-                  }
-                  text={
-                    feedTab === "following"
-                      ? "Follow people in Explore or switch back to Latest."
-                      : "Publish something worth seeing or discover new people."
-                  }
-                  action={
-                    feedTab === "following"
-                      ? () => setScreen("explore")
-                      : () => setShowCreate(true)
-                  }
-                  actionLabel={feedTab === "following" ? "Explore people" : "Create post"}
+                  title="Your feed is empty."
+                  text="Create your first post or follow people to see their content."
+                  action={() => {
+                    setCreateMode("post");
+                    setShowCreate(true);
+                  }}
+                  actionLabel="Create Post"
+                  secondaryAction={() => setScreen("explore")}
+                  secondaryActionLabel="Explore people"
                 />
               ) : (
-                visiblePosts.map((post) => (
+                posts.map((post) => (
                   <PostCard
                     key={post.id}
                     post={post}
@@ -1418,6 +1404,7 @@ export default function HomeClient({
                     mediaUrl={post.media_path ? mediaUrl(post.media_path) : ""}
                     onLike={() => void toggleLike(post)}
                     onSave={() => void toggleSave(post)}
+                    onShare={() => void sharePost(post)}
                     onComment={(body) => void addComment(post, body)}
                     own={post.author_id === initialProfile.id}
                     onDelete={() => void deletePost(post)}
@@ -1431,8 +1418,8 @@ export default function HomeClient({
             <>
               <PageTitle
                 eyebrow="DISCOVER"
-                title="Explore people"
-                text="Find real AVENZO accounts and start a conversation."
+                title="Explore"
+                text="Real people and real content created inside AVENZO."
               />
 
               {query && (
@@ -1442,31 +1429,117 @@ export default function HomeClient({
                 </div>
               )}
 
-              <div className="people-grid">
-                {filteredPeople.map((person) => (
-                  <PersonCard
-                    key={person.id}
-                    person={person}
-                    following={followed.includes(person.id)}
-                    onFollow={() => void toggleFollow(person)}
-                    onMessage={() => {
-                      void openChat(person);
-                      setScreen("messages");
-                    }}
-                  />
-                ))}
-              </div>
+              <section className="explore-section">
+                <div className="section-inline-head">
+                  <div>
+                    <div className="eyebrow">PEOPLE</div>
+                    <h3>Find people</h3>
+                  </div>
+                </div>
 
-              {!loading && filteredPeople.length === 0 && (
-                <EmptyState
-                  title={query ? "No people match that search." : "No other accounts yet."}
-                  text={
-                    query
-                      ? "Try another username or display name."
-                      : "AVENZO will show registered people here as the community grows."
-                  }
-                />
-              )}
+                <div className="people-grid">
+                  {filteredPeople.map((person) => (
+                    <PersonCard
+                      key={person.id}
+                      person={person}
+                      following={followed.includes(person.id)}
+                      onFollow={() => void toggleFollow(person)}
+                      onMessage={() => {
+                        void openChat(person);
+                        setScreen("messages");
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {!loading && filteredPeople.length === 0 && (
+                  <EmptyState
+                    title={query ? "No people match that search." : "No other accounts yet."}
+                    text={
+                      query
+                        ? "Try another username or display name."
+                        : "Real registered accounts will appear here as AVENZO grows."
+                    }
+                  />
+                )}
+              </section>
+
+              <section className="explore-section">
+                <div className="section-inline-head">
+                  <div>
+                    <div className="eyebrow">REELS</div>
+                    <h3>Community reels</h3>
+                  </div>
+                  <button
+                    className="btn secondary small"
+                    onClick={() => {
+                      setCreateMode("reel");
+                      setShowCreate(true);
+                    }}
+                  >
+                    Create Reel
+                  </button>
+                </div>
+
+                {reels.length === 0 ? (
+                  <EmptyState
+                    title="No reels yet."
+                    text="Reels will appear here only after real users upload videos."
+                    action={() => {
+                      setCreateMode("reel");
+                      setShowCreate(true);
+                    }}
+                    actionLabel="Create Reel"
+                  />
+                ) : (
+                  <div className="reels-grid">
+                    {reels.map((reel) => (
+                      <ReelCard
+                        key={reel.id}
+                        reel={reel}
+                        mediaUrl={mediaUrl(reel.media_path)}
+                        saved={savedReels.includes(reel.id)}
+                        own={reel.author_id === initialProfile.id}
+                        onLike={() => void toggleReelLike(reel)}
+                        onSave={() => void toggleReelSave(reel)}
+                        onComment={(body) => void addReelComment(reel, body)}
+                        onDelete={() => void deleteReel(reel)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <section className="explore-section">
+                <div className="section-inline-head">
+                  <div>
+                    <div className="eyebrow">POSTS</div>
+                    <h3>Community posts</h3>
+                  </div>
+                </div>
+
+                {explorePosts.length === 0 ? (
+                  <EmptyState
+                    title="No posts to explore yet."
+                    text="Explore fills up naturally as real people publish posts."
+                  />
+                ) : (
+                  explorePosts.map((post) => (
+                    <PostCard
+                      key={"explore-" + post.id}
+                      post={post}
+                      saved={saved.includes(post.id)}
+                      mediaUrl={post.media_path ? mediaUrl(post.media_path) : ""}
+                      onLike={() => void toggleLike(post)}
+                      onSave={() => void toggleSave(post)}
+                      onShare={() => void sharePost(post)}
+                      onComment={(body) => void addComment(post, body)}
+                      own={post.author_id === initialProfile.id}
+                      onDelete={() => void deletePost(post)}
+                    />
+                  ))
+                )}
+              </section>
             </>
           )}
 
@@ -1485,6 +1558,7 @@ export default function HomeClient({
                   mediaUrl={post.media_path ? mediaUrl(post.media_path) : ""}
                   onLike={() => void toggleLike(post)}
                   onSave={() => void toggleSave(post)}
+                  onShare={() => void sharePost(post)}
                   onComment={(body) => void addComment(post, body)}
                   own={post.author_id === initialProfile.id}
                   onDelete={() => void deletePost(post)}
@@ -1511,9 +1585,22 @@ export default function HomeClient({
             <ProfileView
               profile={profile}
               posts={posts.filter((post) => post.author_id === profile.id)}
+              reels={reels.filter((reel) => reel.author_id === profile.id)}
               media={mediaUrl}
               stats={stats}
               onEdit={() => setScreen("settings")}
+              onCreatePost={() => {
+                setCreateMode("post");
+                setShowCreate(true);
+              }}
+              onCreateReel={() => {
+                setCreateMode("reel");
+                setShowCreate(true);
+              }}
+              onCreateStory={() => {
+                setCreateMode("story");
+                setShowCreate(true);
+              }}
             />
           )}
 
