@@ -1,6 +1,7 @@
 import EmptyState from "./empty-state";
 import { avatarFor } from "../lib/profile";
 import type { Post, Profile, ProfileStats, Reel } from "../types";
+import AvatarImage from "./avatar-image";
 
 export default function ProfileView({
   profile,
@@ -28,7 +29,7 @@ export default function ProfileView({
   return (
     <>
       <div className="profile-hero">
-        <img src={avatarFor(profile)} alt="" />
+        <AvatarImage src={avatarFor(profile)} alt={profile.display_name} size={180} />
         <div>
           <div className="profile-title-row">
             <div>
