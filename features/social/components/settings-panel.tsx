@@ -6,10 +6,17 @@ import {
   useState,
 } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
 import PageTitle from "./page-title";
 import { avatarFor, initialsAvatar } from "../lib/profile";
 import type { Profile } from "../types";
 import AvatarImage from "./avatar-image";
+import {
+  AVATAR_MAX_BYTES,
+  BIO_MAX_LENGTH,
+  DISPLAY_NAME_MAX_LENGTH,
+  isValidDisplayName,
+} from "../../auth/validation";
 
 type BlockedAccount = {
   id: string;
@@ -34,6 +41,7 @@ export default function SettingsPanel({
   onSaved: () => void;
   onUnblocked: () => void;
 }) {
+  const router = useRouter();
   const [name, setName] = useState(profile.display_name);
   const [bio, setBio] = useState(profile.bio);
   const [notice, setNotice] = useState("");
@@ -43,6 +51,9 @@ export default function SettingsPanel({
   const [blockedAccounts, setBlockedAccounts] = useState<BlockedAccount[]>([]);
   const [blockedLoading, setBlockedLoading] = useState(true);
   const [unblockingId, setUnblockingId] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteValue, setDeleteValue] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -114,7 +125,7 @@ export default function SettingsPanel({
       return;
     }
 
-    if (picked.size > 5 * 1024 * 1024) {
+    if (picked.size > AVATAR_MAX_BYTES) {
       setNotice("Profile picture must be 5 MB or smaller.");
       event.target.value = "";
       return;
@@ -129,12 +140,12 @@ export default function SettingsPanel({
     const cleanName = name.trim();
     const cleanBio = bio.trim();
 
-    if (!cleanName || cleanName.length > 80) {
+    if (!isValidDisplayName(cleanName)) {
       setNotice("Display name must be 1–80 characters.");
       return;
     }
 
-    if (cleanBio.length > 160) {
+    if (cleanBio.length > BIO_MAX_LENGTH) {
       setNotice("Bio must be 160 characters or less.");
       return;
     }
@@ -202,6 +213,32 @@ export default function SettingsPanel({
     }
   }
 
+  async function deleteAccount() {
+    if (deleting) return;
+
+    if (deleteValue.trim().toLowerCase() !== profile.username.toLowerCase()) {
+      setNotice("Type your exact username to confirm account deletion.");
+      return;
+    }
+
+    setDeleting(true);
+    setNotice("");
+
+    const { error } = await supabase.functions.invoke("delete-account", {
+      body: { confirmation: deleteValue.trim().toLowerCase() },
+    });
+
+    if (error) {
+      setNotice("Account could not be deleted right now.");
+      setDeleting(false);
+      return;
+    }
+
+    await supabase.auth.signOut();
+    router.replace("/login?deleted=1");
+    router.refresh();
+  }
+
   return (
     <>
       <PageTitle
@@ -232,17 +269,17 @@ export default function SettingsPanel({
         <label>Display name</label>
         <input
           value={name}
-          onChange={(event) => setName(event.target.value.slice(0, 80))}
-          maxLength={80}
+          onChange={(event) => setName(event.target.value.slice(0, DISPLAY_NAME_MAX_LENGTH))}
+          maxLength={DISPLAY_NAME_MAX_LENGTH}
         />
 
         <label>Bio</label>
         <textarea
           value={bio}
-          onChange={(event) => setBio(event.target.value.slice(0, 160))}
-          maxLength={160}
+          onChange={(event) => setBio(event.target.value.slice(0, BIO_MAX_LENGTH))}
+          maxLength={BIO_MAX_LENGTH}
         />
-        <small className="field-note">{bio.length}/160</small>
+        <small className="field-note">{bio.length}/{BIO_MAX_LENGTH}</small>
 
         <button className="btn" onClick={() => void save()} disabled={saving}>
           {saving ? "Saving…" : "Save changes"}
@@ -317,6 +354,69 @@ export default function SettingsPanel({
             Sign out
           </button>
         </div>
+
+        <section className="delete-account-zone" aria-labelledby="delete-account-title">
+          <div>
+            <b id="delete-account-title">Delete account</b>
+            <span>
+              Permanently delete your account, profile and social content.
+              Your username stays reserved and cannot be claimed again.
+            </span>
+          </div>
+
+          {!deleteOpen ? (
+            <button
+              className="btn danger-button"
+              type="button"
+              onClick={() => {
+                setDeleteOpen(true);
+                setNotice("");
+              }}
+            >
+              Delete account
+            </button>
+          ) : (
+            <div className="delete-confirm">
+              <p>
+                Type <strong>@{profile.username}</strong> to confirm.
+              </p>
+              <input
+                value={deleteValue}
+                onChange={(event) =>
+                  setDeleteValue(event.target.value.replace(/^@/, ""))
+                }
+                placeholder={profile.username}
+                autoComplete="off"
+                spellCheck={false}
+              />
+              <div>
+                <button
+                  type="button"
+                  className="btn secondary"
+                  disabled={deleting}
+                  onClick={() => {
+                    setDeleteOpen(false);
+                    setDeleteValue("");
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn danger-button"
+                  disabled={
+                    deleting ||
+                    deleteValue.trim().toLowerCase() !==
+                      profile.username.toLowerCase()
+                  }
+                  onClick={() => void deleteAccount()}
+                >
+                  {deleting ? "Deleting…" : "Delete permanently"}
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
       </div>
     </>
   );
