@@ -21,7 +21,8 @@ export default function AuthPage() {
     const error = new URLSearchParams(window.location.search).get("error");
     if (error === "confirmation") setStatus("That confirmation link is invalid or expired.");
     if (error === "verify") setStatus("Verify your email before entering AVENZO.");
-    if (error === "profile") setStatus("Your account profile could not be loaded. Please contact support.");\n    if (error === "backend") setStatus("AVENZO backend is being configured. The app is online, but signup and login need the database connection.");
+    if (error === "profile") setStatus("Your account profile could not be loaded. Please contact support.");
+    if (error === "backend") setStatus("AVENZO backend is being configured. The app is online, but signup and login need the database connection.");
   }, []);
 
   function getSupabase() {
