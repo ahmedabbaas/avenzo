@@ -5,6 +5,7 @@ import Link from "next/link";
 import Icon from "./icon";
 import { avatarFor, formatRelativeTime, initialsAvatar } from "../lib/profile";
 import type { Post } from "../types";
+import AvatarImage from "./avatar-image";
 
 export default function PostCard({
   post,
@@ -39,7 +40,7 @@ export default function PostCard({
             className="person-line person-link"
             href={"/u/" + encodeURIComponent(author.username)}
           >
-            <img src={avatarFor(author)} alt="" />
+            <AvatarImage src={avatarFor(author)} alt={author.display_name} size={80} />
             <div>
               <b>{authorName}</b>
               <small>
@@ -49,7 +50,7 @@ export default function PostCard({
           </Link>
         ) : (
           <div className="person-line">
-            <img src={initialsAvatar(authorName)} alt="" />
+            <AvatarImage src={initialsAvatar(authorName)} alt={authorName} size={80} />
             <div>
               <b>{authorName}</b>
               <small>@user · {formatRelativeTime(post.created_at)}</small>
