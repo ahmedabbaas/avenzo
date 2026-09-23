@@ -10,6 +10,7 @@ import {
 } from "react";
 import { createClient } from "../lib/supabase/client";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 type Screen =
   | "home"
@@ -71,6 +72,13 @@ type ProfileStats = {
   posts: number;
   followers: number;
   following: number;
+};
+
+type NotificationRow = {
+  id: string;
+  type: "follow" | "like" | "comment" | "message";
+  created_at: string;
+  actor_id: string;
 };
 
 type NotificationRow = {
