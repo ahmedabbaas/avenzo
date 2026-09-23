@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logServerError } from "../../../../lib/observability/server";
 import {
   isValidAvatar,
   isValidDisplayName,
@@ -230,7 +231,8 @@ export async function POST(request: Request) {
       requiresVerification: !data.session,
       avatarWarning,
     });
-  } catch {
+  } catch (error) {
+    logServerError({ request, route: "auth.signup", error });
     return json(
       { error: "Account services are temporarily unavailable." },
       503
