@@ -4,6 +4,9 @@ import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
+import AvatarImage from "../../../features/social/components/avatar-image";
+import UserMediaImage from "../../../features/social/components/user-media-image";
+import { initialsAvatar } from "../../../features/social/lib/profile";
 
 type PublicProfile = {
   id: string;
@@ -19,6 +22,8 @@ type PublicPost = {
   caption: string;
   media_path: string | null;
   media_type: "image" | "video" | null;
+  media_width?: number | null;
+  media_height?: number | null;
   created_at: string;
   media_url: string;
 };
@@ -37,20 +42,6 @@ type ReportReason =
   | "sexual"
   | "violence"
   | "other";
-
-function fallbackAvatar(name: string) {
-  const initials =
-    name
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase())
-      .join("") || "A";
-
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect width="160" height="160" rx="80" fill="#151a1e"/><text x="80" y="93" text-anchor="middle" font-family="Arial" font-size="48" font-weight="700" fill="#f6f7f8">${initials}</text></svg>`;
-
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
-}
 
 export default function PublicProfileClient({
   viewerId,
@@ -174,7 +165,7 @@ export default function PublicProfileClient({
   }
 
   const avatar =
-    profile.avatar_url || fallbackAvatar(profile.display_name);
+    profile.avatar_url || initialsAvatar(profile.display_name);
   const mediaPosts = posts.filter((post) => post.media_path);
 
   return (
@@ -192,7 +183,7 @@ export default function PublicProfileClient({
 
       <section className="public-profile-wrap">
         <div className="public-profile-hero">
-          <img src={avatar} alt="" />
+          <AvatarImage src={avatar} alt={profile.display_name} size={220} />
 
           <div className="public-profile-copy">
             <div className="eyebrow">@{profile.username}</div>
@@ -280,11 +271,12 @@ export default function PublicProfileClient({
                   preload="metadata"
                 />
               ) : (
-                <img
+                <UserMediaImage
                   key={post.id}
                   src={post.media_url}
                   alt={post.caption || "AVENZO post"}
-                  loading="lazy"
+                  width={post.media_width}
+                  height={post.media_height}
                 />
               )
             )}
