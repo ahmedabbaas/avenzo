@@ -108,11 +108,6 @@ export default function SignupPage() {
     event.preventDefault();
     setFormMessage("");
 
-    if (serviceUnavailable) {
-      setFormMessage(SERVICE_MESSAGE);
-      return;
-    }
-
     if (!fullName.trim() || fullName.trim().length > 80) {
       setFormMessage("Enter a valid full name.");
       return;
@@ -181,7 +176,7 @@ export default function SignupPage() {
     checking
       ? "Checking username…"
       : usernameMessage ||
-        (!serviceUnavailable ? "3–30 characters. Letters, numbers, underscores and periods only." : "");
+        "3–30 characters. Letters, numbers, underscores and periods only.";
 
   return (
     <main className="auth-shell">
@@ -201,9 +196,7 @@ export default function SignupPage() {
         <h1>Create your account.</h1>
         <p className="auth-sub">Your username is unique across AVENZO and becomes your public identifier.</p>
 
-        {serviceUnavailable && <div className="auth-message auth-service-message">{SERVICE_MESSAGE}</div>}
-
-        <form className="auth-form" onSubmit={submit}>
+                <form className="auth-form" onSubmit={submit}>
           <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name" autoComplete="name" maxLength={80} required />
 
           <div>
@@ -225,9 +218,9 @@ export default function SignupPage() {
           </label>
 
           {avatarPreview && <img className="signup-avatar-preview" src={avatarPreview} alt="Profile preview" />}
-          {formMessage && !serviceUnavailable && <div className="auth-message">{formMessage}</div>}
+          {formMessage && <div className="auth-message">{formMessage}</div>}
 
-          <button className="auth-submit" disabled={busy || checking || serviceUnavailable}>
+          <button className="auth-submit" disabled={busy || checking}>
             {busy ? "Creating account…" : "Create Account"}
           </button>
         </form>
