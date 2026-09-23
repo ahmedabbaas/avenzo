@@ -19,6 +19,7 @@ AVENZO is a production-oriented social platform built around real accounts, perm
 - Responsive desktop/mobile navigation
 - Loading, empty, error and 404 states
 - Optional Cloudflare Turnstile abuse protection
+- Database-backed login/signup/password-reset/username-check rate limiting
 - Supabase Row Level Security
 - GitHub quality gate + Vercel production deployment
 
@@ -60,6 +61,9 @@ supabase/migrations/001_avenzo.sql
 supabase/migrations/002_security_hardening.sql
 supabase/migrations/003_real_content_reels_stories.sql
 supabase/migrations/004_blocked_accounts_management.sql
+supabase/migrations/005_auth_rate_limiting.sql
+supabase/migrations/006_optimize_rls_auth_uid.sql
+supabase/migrations/007_image_media_dimensions.sql
 ```
 
 These migrations cover:
@@ -77,6 +81,9 @@ These migrations cover:
 - storage policies
 - realtime publication
 - RLS policies and security hardening
+- database-backed authentication rate limiting
+- optimized auth lookups inside RLS policies
+- stored image dimensions for stable/optimized media rendering
 
 Do not manually seed or edit production as the normal workflow. Use migrations for schema changes.
 
