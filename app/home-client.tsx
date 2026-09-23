@@ -965,11 +965,11 @@ export default function HomeClient({
     }
 
     showToast("Post deleted.");
-    await Promise.all([loadPosts(), loadStats()]);
+    await Promise.all([loadPosts(), loadExplorePosts(), loadStats()]);
   }
 
   async function toggleLike(post: Post) {
-    setPosts((current) =>
+    const update = (current: Post[]) =>
       current.map((item) =>
         item.id === post.id
           ? {
@@ -981,8 +981,10 @@ export default function HomeClient({
               ),
             }
           : item
-      )
-    );
+      );
+
+    setPosts(update);
+    setExplorePosts(update);
 
     const result = post.liked
       ? await supabase
@@ -996,7 +998,7 @@ export default function HomeClient({
 
     if (result.error) {
       showToast("Could not update like.");
-      await loadPosts();
+      await Promise.all([loadPosts(), loadExplorePosts()]);
     }
   }
 
@@ -1020,7 +1022,7 @@ export default function HomeClient({
 
     if (result.error) {
       showToast("Could not update saved posts.");
-      await loadPosts();
+      await Promise.all([loadPosts(), loadExplorePosts(), loadSavedPosts()]);
     }
   }
 
@@ -1039,7 +1041,7 @@ export default function HomeClient({
       return;
     }
 
-    await loadPosts();
+    await Promise.all([loadPosts(), loadExplorePosts()]);
   }
 
   async function toggleReelLike(reel: Reel) {
@@ -1183,7 +1185,7 @@ export default function HomeClient({
       return;
     }
 
-    await loadStats();
+    await Promise.all([loadStats(), loadPosts(), loadStories()]);
   }
 
   async function sendMessage() {
@@ -1305,7 +1307,13 @@ export default function HomeClient({
             </button>
           ))}
 
-          <button className="create-nav" onClick={() => setShowCreate(true)}>
+          <button
+            className="create-nav"
+            onClick={() => {
+              setCreateMode("post");
+              setShowCreate(true);
+            }}
+          >
             <Icon name="plus" />
             <span>Create post</span>
           </button>
@@ -1328,7 +1336,13 @@ export default function HomeClient({
                     conversations.
                   </p>
                 </div>
-                <button className="btn" onClick={() => setShowCreate(true)}>
+                <button
+                  className="btn"
+                  onClick={() => {
+                    setCreateMode("post");
+                    setShowCreate(true);
+                  }}
+                >
                   <Icon name="plus" size={17} />
                   Create post
                 </button>
@@ -1712,7 +1726,13 @@ export default function HomeClient({
           </button>
         ))}
 
-        <button className="mobile-create" onClick={() => setShowCreate(true)}>
+        <button
+          className="mobile-create"
+          onClick={() => {
+            setCreateMode("post");
+            setShowCreate(true);
+          }}
+        >
           <span className="mobile-icon-wrap">
             <Icon name="plus" />
           </span>
@@ -1817,22 +1837,35 @@ function EmptyState({
   text,
   action,
   actionLabel,
+  secondaryAction,
+  secondaryActionLabel,
 }: {
   title: string;
   text: string;
   action?: () => void;
   actionLabel?: string;
+  secondaryAction?: () => void;
+  secondaryActionLabel?: string;
 }) {
   return (
     <div className="empty">
       <span className="empty-mark">A</span>
       <b>{title}</b>
       <p>{text}</p>
-      {action && actionLabel && (
-        <button className="btn secondary" onClick={action}>
-          {actionLabel}
-        </button>
-      )}
+      {(action && actionLabel) || (secondaryAction && secondaryActionLabel) ? (
+        <div className="empty-actions">
+          {action && actionLabel && (
+            <button className="btn" onClick={action}>
+              {actionLabel}
+            </button>
+          )}
+          {secondaryAction && secondaryActionLabel && (
+            <button className="btn secondary" onClick={secondaryAction}>
+              {secondaryActionLabel}
+            </button>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -1896,6 +1929,7 @@ function PostCard({
   mediaUrl,
   onLike,
   onSave,
+  onShare,
   onComment,
   own,
   onDelete,
@@ -1905,6 +1939,7 @@ function PostCard({
   mediaUrl: string;
   onLike: () => void;
   onSave: () => void;
+  onShare: () => void;
   onComment: (value: string) => void;
   own: boolean;
   onDelete: () => void;
@@ -1976,6 +2011,13 @@ function PostCard({
             <Icon name="comment" size={20} />
             <span>{post.commentCount}</span>
           </span>
+
+          <button
+            onClick={onShare}
+            aria-label="Share post"
+          >
+            <Icon name="send" size={20} />
+          </button>
 
           <button
             className={"save-action " + (saved ? "saved" : "")}
