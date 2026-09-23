@@ -38,9 +38,9 @@ export default function SignupPage() {
           setAvailable(null);
           if (response.status === 503) {
             setServiceUnavailable(true);
-            setUsernameMessage("");
+            setUsernameMessage("Unable to check username availability right now.");
           } else {
-            setUsernameMessage("Username check is temporarily unavailable.");
+            setUsernameMessage("Unable to check username availability right now.");
           }
           return;
         }
