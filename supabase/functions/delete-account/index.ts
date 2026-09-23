@@ -15,31 +15,6 @@ function json(body: unknown, status = 200) {
   });
 }
 
-async function listUserMedia(
-  admin: ReturnType<typeof createClient>,
-  path: string
-): Promise<string[]> {
-  const { data, error } = await admin.storage
-    .from("media")
-    .list(path, { limit: 1000 });
-
-  if (error) throw error;
-
-  const files: string[] = [];
-
-  for (const item of data || []) {
-    const itemPath = path ? path + "/" + item.name : item.name;
-
-    if (item.id) {
-      files.push(itemPath);
-    } else {
-      files.push(...(await listUserMedia(admin, itemPath)));
-    }
-  }
-
-  return files;
-}
-
 Deno.serve(async (request) => {
   if (request.method !== "POST") {
     return json({ error: "Method not allowed." }, 405);
@@ -90,6 +65,28 @@ Deno.serve(async (request) => {
       }
     );
 
+    async function listUserMedia(path: string): Promise<string[]> {
+      const { data, error } = await admin.storage
+        .from("media")
+        .list(path, { limit: 1000 });
+
+      if (error) throw error;
+
+      const files: string[] = [];
+
+      for (const item of data || []) {
+        const itemPath = path ? path + "/" + item.name : item.name;
+
+        if (item.id) {
+          files.push(itemPath);
+        } else {
+          files.push(...(await listUserMedia(itemPath)));
+        }
+      }
+
+      return files;
+    }
+
     const { data: profile, error: profileError } = await admin
       .from("profiles")
       .select("username")
@@ -104,7 +101,7 @@ Deno.serve(async (request) => {
       return json({ error: "Username confirmation does not match." }, 400);
     }
 
-    const mediaFiles = await listUserMedia(admin, user.id);
+    const mediaFiles = await listUserMedia(user.id);
 
     for (let index = 0; index < mediaFiles.length; index += 100) {
       const chunk = mediaFiles.slice(index, index + 100);
