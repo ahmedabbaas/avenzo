@@ -1,6 +1,23 @@
 import type { NextConfig } from "next";
 
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  "object-src 'none'",
+  "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self' data:",
+  "img-src 'self' data: blob: https://ltlxynrssgpqgzbdpliv.supabase.co",
+  "media-src 'self' blob: https://ltlxynrssgpqgzbdpliv.supabase.co",
+  "connect-src 'self' https://ltlxynrssgpqgzbdpliv.supabase.co wss://ltlxynrssgpqgzbdpliv.supabase.co https://challenges.cloudflare.com",
+  "frame-src https://challenges.cloudflare.com",
+  "upgrade-insecure-requests",
+].join("; ");
+
 const securityHeaders = [
+  { key: "Content-Security-Policy", value: contentSecurityPolicy },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
