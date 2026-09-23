@@ -71,6 +71,7 @@ export default function ResetPasswordPage() {
             placeholder="New password"
             autoComplete="new-password"
             minLength={8}
+            label="New password"
           />
 
           <PasswordField
@@ -80,6 +81,7 @@ export default function ResetPasswordPage() {
             placeholder="Confirm new password"
             autoComplete="new-password"
             minLength={8}
+            label="Confirm new password"
           />
 
           {status && (
