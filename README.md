@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AVENZO
 
-## Getting Started
+AVENZO is a modern social platform focused on real accounts, unique permanent usernames, posts, follows, private conversations, safety controls and a polished responsive experience.
 
-First, run the development server:
+## Product foundations
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Login-first authentication flow
+- Unique permanent @usernames
+- Email verification and password recovery
+- Real profiles with avatars, bios and follower counts
+- Latest and Following feeds
+- Image/video posts, likes, comments and saves
+- Realtime direct messages with unread states
+- Activity notifications
+- Shareable in-app profile routes at `/u/[username]`
+- Follow, block and report safety controls
+- Responsive desktop/mobile navigation
+- Production loading, error and 404 states
+- Optional Cloudflare Turnstile abuse protection
+- Supabase Row Level Security model
+- Vercel deployment and GitHub quality gate
+
+## Stack
+
+- Next.js 16
+- React 19
+- TypeScript
+- Supabase Auth, Postgres, Storage and Realtime
+- Vercel
+
+## Required environment
+
+Copy `.env.example` and configure:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=
+TURNSTILE_SECRET_KEY=
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Turnstile is optional. If its site key and secret are not configured, AVENZO auth continues without the challenge layer.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Database
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The production schema lives at:
 
-## Learn More
+`supabase/migrations/001_avenzo.sql`
 
-To learn more about Next.js, take a look at the following resources:
+It includes username reservation, profiles, follows, posts, likes, comments, saves, messages, notifications, blocking, reporting, RLS policies, storage policies and realtime publications.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Local development
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm install
+npm run dev
+```
 
-## Deploy on Vercel
+Quality checks:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run lint
+npm run build
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Production
+
+The main branch is connected to Vercel. Pull requests and the premium release branch are validated with the AVENZO Quality Gate before production merge.
