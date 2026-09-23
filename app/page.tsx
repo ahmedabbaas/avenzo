@@ -5,6 +5,14 @@ import HomeClient from "./home-client";
 export const dynamic = "force-dynamic";
 
 export default async function Page() {
+  const hasBackend =
+    Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
+    Boolean(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
+
+  if (!hasBackend) {
+    redirect("/auth?error=backend");
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
