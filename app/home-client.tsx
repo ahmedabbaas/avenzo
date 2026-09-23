@@ -11,6 +11,7 @@ import {
 import Link from "next/link";
 import { createClient } from "../lib/supabase/client";
 import ActivityPanel from "../features/social/components/activity-panel";
+import AvatarImage from "../features/social/components/avatar-image";
 import EmptyState from "../features/social/components/empty-state";
 import MessagesPanel from "../features/social/components/messages-panel";
 import ProfileView from "../features/social/components/profile-view";
@@ -1069,7 +1070,7 @@ export default function HomeClient({
           onClick={() => setScreen("profile")}
           aria-label="Open profile"
         >
-          <img src={avatarFor(profile)} className="avatar" alt="" />
+          <AvatarImage src={avatarFor(profile)} className="avatar" alt={profile.display_name} size={72} />
           <span>@{profile.username}</span>
         </button>
       </header>
@@ -1077,7 +1078,7 @@ export default function HomeClient({
       <div className="social-layout">
         <aside className="left-nav" aria-label="Primary navigation">
           <div className="nav-identity">
-            <img src={avatarFor(profile)} alt="" />
+            <AvatarImage src={avatarFor(profile)} alt={profile.display_name} size={96} />
             <div>
               <strong>{profile.display_name}</strong>
               <small>@{profile.username}</small>
@@ -1151,7 +1152,7 @@ export default function HomeClient({
                   }}
                 >
                   <span className="story-ring">
-                    <img src={avatarFor(profile)} alt="" />
+                    <AvatarImage src={avatarFor(profile)} alt={profile.display_name} size={96} />
                     <i>+</i>
                   </span>
                   <small>Add story</small>
@@ -1164,9 +1165,10 @@ export default function HomeClient({
                     onClick={() => setStoryViewer(story)}
                   >
                     <span className="story-ring">
-                      <img
+                      <AvatarImage
                         src={avatarFor(story.profile || profile)}
-                        alt=""
+                        alt={story.profile?.display_name || profile.display_name}
+                        size={96}
                       />
                     </span>
                     <small>
@@ -1453,7 +1455,7 @@ export default function HomeClient({
         <aside className="right-rail">
           <div className="side-card side-profile-card">
             <div className="side-profile-top">
-              <img src={avatarFor(profile)} alt="" />
+              <AvatarImage src={avatarFor(profile)} alt={profile.display_name} size={96} />
               <div>
                 <strong>{profile.display_name}</strong>
                 <small>@{profile.username}</small>
@@ -1486,7 +1488,7 @@ export default function HomeClient({
               .map((person) => (
                 <div className="mini-person" key={person.id}>
                   <Link className="mini-person-link" href={"/u/" + encodeURIComponent(person.username)}>
-                    <img src={avatarFor(person)} alt="" />
+                    <AvatarImage src={avatarFor(person)} alt={person.display_name} size={72} />
                     <div>
                       <b>{person.display_name}</b>
                       <small>@{person.username}</small>
@@ -1592,7 +1594,7 @@ export default function HomeClient({
             </div>
 
             <div className="composer-author">
-              <img src={avatarFor(profile)} alt="" />
+              <AvatarImage src={avatarFor(profile)} alt={profile.display_name} size={96} />
               <div>
                 <b>{profile.display_name}</b>
                 <small>@{profile.username}</small>
@@ -1685,9 +1687,10 @@ export default function HomeClient({
           <div className="story-viewer" onClick={(event) => event.stopPropagation()}>
             <div className="story-viewer-head">
               <div className="person-line">
-                <img
+                <AvatarImage
                   src={avatarFor(storyViewer.profile || profile)}
-                  alt=""
+                  alt={storyViewer.profile?.display_name || profile.display_name}
+                  size={80}
                 />
                 <div>
                   <b>
