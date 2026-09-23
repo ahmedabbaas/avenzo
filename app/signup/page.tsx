@@ -263,7 +263,11 @@ export default function SignupPage() {
         </p>
 
         <form className="auth-form" onSubmit={submit}>
+          <label className="auth-label" htmlFor="signup-full-name">
+            Full name
+          </label>
           <input
+            id="signup-full-name"
             value={fullName}
             onChange={(event) => setFullName(event.target.value.slice(0, 80))}
             placeholder="Full name"
@@ -273,9 +277,13 @@ export default function SignupPage() {
           />
 
           <div>
+            <label className="auth-label" htmlFor="signup-username">
+              Username
+            </label>
             <div className="username-control">
               <span>@</span>
               <input
+                id="signup-username"
                 value={username}
                 onChange={(event) => changeUsername(event.target.value)}
                 placeholder="username"
@@ -292,7 +300,11 @@ export default function SignupPage() {
             </div>
           </div>
 
+          <label className="auth-label" htmlFor="signup-email">
+            Email
+          </label>
           <input
+            id="signup-email"
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
@@ -308,6 +320,7 @@ export default function SignupPage() {
             placeholder="Password"
             autoComplete="new-password"
             minLength={8}
+            label="Password"
           />
 
           <PasswordField
@@ -317,6 +330,7 @@ export default function SignupPage() {
             placeholder="Confirm password"
             autoComplete="new-password"
             minLength={8}
+            label="Confirm password"
           />
 
           <div className="password-hints">
