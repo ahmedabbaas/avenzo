@@ -17,21 +17,26 @@ export default function LoginPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const error = params.get("error");
+    let nextStatus = "";
 
-    if (error === "verify") setStatus("Verify your email before signing in.");
-    if (error === "profile") setStatus("Your profile could not be loaded.");
+    if (error === "verify") nextStatus = "Verify your email before signing in.";
+    if (error === "profile") nextStatus = "Your profile could not be loaded.";
     if (error === "confirmation") {
-      setStatus("That confirmation link is invalid or expired.");
+      nextStatus = "That confirmation link is invalid or expired.";
     }
     if (error === "backend") {
-      setStatus("Account services are temporarily unavailable.");
+      nextStatus = "Account services are temporarily unavailable.";
     }
     if (params.get("registered") === "1") {
-      setStatus("Account created. Check your email, then sign in.");
+      nextStatus = "Account created. Check your email, then sign in.";
     }
     if (params.get("reset") === "1") {
-      setStatus("Password updated. Sign in with your new password.");
+      nextStatus = "Password updated. Sign in with your new password.";
     }
+
+    if (!nextStatus) return;
+    const timer = window.setTimeout(() => setStatus(nextStatus), 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   async function submit(event: FormEvent) {
