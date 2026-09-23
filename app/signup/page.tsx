@@ -3,6 +3,10 @@
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import AuthBrandPanel from "../_components/auth-brand-panel";
 import PasswordField from "../_components/password-field";
+import TurnstileWidget, {
+  readTurnstileToken,
+  resetTurnstile,
+} from "../_components/turnstile-widget";
 
 const USERNAME_PATTERN = /^[a-z0-9._]{3,30}$/;
 const SERVICE_MESSAGE = "Account services are temporarily unavailable.";
@@ -195,6 +199,7 @@ export default function SignupPage() {
       form.set("password", password);
       form.set("confirmPassword", confirmPassword);
       if (avatar) form.set("avatar", avatar);
+      form.set("turnstileToken", readTurnstileToken());
 
       const response = await fetch("/api/auth/signup", {
         method: "POST",
@@ -204,6 +209,7 @@ export default function SignupPage() {
       const result = await response.json();
 
       if (!response.ok) {
+        resetTurnstile();
         if (response.status === 503) {
           setServiceUnavailable(true);
           setFormMessage(SERVICE_MESSAGE);
@@ -340,6 +346,8 @@ export default function SignupPage() {
               </button>
             </div>
           )}
+
+          <TurnstileWidget action="signup" />
 
           {formMessage && (
             <div className="auth-message" role="status">
