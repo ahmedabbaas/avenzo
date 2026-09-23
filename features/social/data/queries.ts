@@ -262,6 +262,30 @@ export async function fetchFeedPosts(
   return hydratePosts(supabase, userId, (data || []) as PostRow[]);
 }
 
+export async function fetchPostById(
+  supabase: SupabaseClient,
+  userId: string,
+  postId: string
+): Promise<Post | null> {
+  const { data, error } = await supabase
+    .from("posts")
+    .select("*")
+    .eq("id", postId)
+    .maybeSingle();
+
+  assertNoError(error);
+
+  if (!data) return null;
+
+  const posts = await hydratePosts(
+    supabase,
+    userId,
+    [data as PostRow]
+  );
+
+  return posts[0] || null;
+}
+
 export async function fetchExplorePosts(
   supabase: SupabaseClient,
   userId: string
