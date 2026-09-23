@@ -35,8 +35,26 @@ export default async function HomePage({
   const params = await searchParams;
   const initialChatUsername =
     typeof params.chat === "string" ? params.chat.toLowerCase() : "";
+  const allowedScreens = new Set([
+    "home",
+    "explore",
+    "messages",
+    "activity",
+    "saved",
+    "profile",
+    "settings",
+  ]);
   const initialScreen =
-    params.screen === "profile" ? "profile" : undefined;
+    typeof params.screen === "string" && allowedScreens.has(params.screen)
+      ? (params.screen as
+          | "home"
+          | "explore"
+          | "messages"
+          | "activity"
+          | "saved"
+          | "profile"
+          | "settings")
+      : undefined;
 
   return (
     <HomeClient
