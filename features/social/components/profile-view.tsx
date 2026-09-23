@@ -2,6 +2,7 @@ import EmptyState from "./empty-state";
 import { avatarFor } from "../lib/profile";
 import type { Post, Profile, ProfileStats, Reel } from "../types";
 import AvatarImage from "./avatar-image";
+import UserMediaImage from "./user-media-image";
 
 export default function ProfileView({
   profile,
@@ -89,11 +90,12 @@ export default function ProfileView({
                   muted
                 />
               ) : (
-                <img
+                <UserMediaImage
                   key={post.id}
                   src={media(post.media_path!)}
-                  alt="Post"
-                  loading="lazy"
+                  alt={post.caption || "AVENZO post"}
+                  width={post.media_width}
+                  height={post.media_height}
                 />
               )
             )}
