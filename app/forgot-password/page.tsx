@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import AuthBrandPanel from "../_components/auth-brand-panel";
 import TurnstileWidget, {
+import SiteFooter from "../_components/site-footer";
   readTurnstileToken,
   resetTurnstile,
 } from "../_components/turnstile-widget";
@@ -94,6 +95,7 @@ export default function ForgotPasswordPage() {
           <a href="/login">Back to Login</a>
         </div>
       </section>
+      <SiteFooter />
     </main>
   );
 }
