@@ -42,7 +42,7 @@ export default async function UserProfilePage({
   ] = await Promise.all([
     supabase
       .from("posts")
-      .select("id,caption,media_path,media_type,created_at")
+      .select("id,caption,media_path,media_type,media_width,media_height,created_at")
       .eq("author_id", target.id)
       .order("created_at", { ascending: false })
       .limit(60),
