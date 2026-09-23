@@ -1,9 +1,11 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
+import AuthBrandPanel from "../_components/auth-brand-panel";
+import PasswordField from "../_components/password-field";
 
 const USERNAME_PATTERN = /^[a-z0-9._]{3,30}$/;
-const SERVICE_MESSAGE = "Account services are temporarily unavailable. Please try again shortly.";
+const SERVICE_MESSAGE = "Account services are temporarily unavailable.";
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState("");
@@ -20,28 +22,46 @@ export default function SignupPage() {
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  const passwordReady = password.length >= 8;
+  const passwordsMatch =
+    confirmPassword.length > 0 && password === confirmPassword;
+
+  const usernameState = useMemo(() => {
+    if (!username) return "idle";
+    if (!USERNAME_PATTERN.test(username)) return "invalid";
+    if (checking) return "checking";
+    if (available === true) return "available";
+    if (available === false) return "taken";
+    if (serviceUnavailable) return "offline";
+    return "idle";
+  }, [username, checking, available, serviceUnavailable]);
+
   useEffect(() => {
     if (!username || !USERNAME_PATTERN.test(username)) {
       setAvailable(null);
       return;
     }
 
+    const controller = new AbortController();
     const timer = window.setTimeout(async () => {
       setChecking(true);
       setUsernameMessage("");
 
       try {
-        const response = await fetch("/api/auth/username?username=" + encodeURIComponent(username));
+        const response = await fetch(
+          "/api/auth/username?username=" + encodeURIComponent(username),
+          {
+            signal: controller.signal,
+            cache: "no-store",
+          }
+        );
+
         const result = await response.json();
 
         if (!response.ok) {
           setAvailable(null);
-          if (response.status === 503) {
-            setServiceUnavailable(true);
-            setUsernameMessage("Unable to check username availability right now.");
-          } else {
-            setUsernameMessage("Unable to check username availability right now.");
-          }
+          setServiceUnavailable(response.status === 503);
+          setUsernameMessage("Unable to verify username availability right now.");
           return;
         }
 
@@ -52,26 +72,38 @@ export default function SignupPage() {
             ? "Username is available."
             : "This username is already taken. Please choose another one."
         );
-      } catch {
+      } catch (error) {
+        if ((error as Error).name === "AbortError") return;
         setAvailable(null);
         setServiceUnavailable(true);
-        setUsernameMessage("");
+        setUsernameMessage("Unable to verify username availability right now.");
       } finally {
         setChecking(false);
       }
-    }, 350);
+    }, 400);
 
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
   }, [username]);
 
   function changeUsername(value: string) {
-    const clean = value.replace(/^@+/, "").toLowerCase();
+    const clean = value
+      .replace(/^@+/, "")
+      .replace(/[^a-zA-Z0-9._]/g, "")
+      .toLowerCase()
+      .slice(0, 30);
+
     setUsername(clean);
     setAvailable(null);
+    setServiceUnavailable(false);
     setFormMessage("");
 
     if (clean && !USERNAME_PATTERN.test(clean)) {
-      setUsernameMessage("Username must be 3–30 characters using letters, numbers, underscores or periods.");
+      setUsernameMessage(
+        "Use 3–30 letters, numbers, underscores or periods."
+      );
     } else {
       setUsernameMessage("");
     }
@@ -79,6 +111,7 @@ export default function SignupPage() {
 
   function chooseAvatar(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] || null;
+
     if (avatarPreview) URL.revokeObjectURL(avatarPreview);
 
     if (!file) {
@@ -108,18 +141,26 @@ export default function SignupPage() {
     event.preventDefault();
     setFormMessage("");
 
-    if (!fullName.trim() || fullName.trim().length > 80) {
+    const cleanName = fullName.trim();
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanName || cleanName.length > 80) {
       setFormMessage("Enter a valid full name.");
       return;
     }
+
     if (!USERNAME_PATTERN.test(username)) {
-      setFormMessage("Username must be 3–30 characters using letters, numbers, underscores or periods.");
+      setFormMessage(
+        "Username must be 3–30 characters using letters, numbers, underscores or periods."
+      );
       return;
     }
+
     if (serviceUnavailable) {
       setFormMessage(SERVICE_MESSAGE);
       return;
     }
+
     if (available !== true) {
       setFormMessage(
         available === false
@@ -128,10 +169,17 @@ export default function SignupPage() {
       );
       return;
     }
-    if (password.length < 8) {
+
+    if (!cleanEmail) {
+      setFormMessage("Enter your email address.");
+      return;
+    }
+
+    if (!passwordReady) {
       setFormMessage("Password must be at least 8 characters.");
       return;
     }
+
     if (password !== confirmPassword) {
       setFormMessage("Passwords do not match.");
       return;
@@ -141,14 +189,18 @@ export default function SignupPage() {
 
     try {
       const form = new FormData();
-      form.set("fullName", fullName.trim());
+      form.set("fullName", cleanName);
       form.set("username", username);
-      form.set("email", email.trim().toLowerCase());
+      form.set("email", cleanEmail);
       form.set("password", password);
       form.set("confirmPassword", confirmPassword);
       if (avatar) form.set("avatar", avatar);
 
-      const response = await fetch("/api/auth/signup", { method: "POST", body: form });
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        body: form,
+      });
+
       const result = await response.json();
 
       if (!response.ok) {
@@ -177,7 +229,7 @@ export default function SignupPage() {
   }
 
   const usernameHint =
-    checking
+    usernameState === "checking"
       ? "Checking username…"
       : usernameMessage ||
         "3–30 characters. Letters, numbers, underscores and periods only.";
@@ -187,44 +239,118 @@ export default function SignupPage() {
       <div className="auth-glow auth-glow-a" />
       <div className="auth-glow auth-glow-b" />
 
-      <section className="auth-brand">
-        <span className="brand-mark">A</span>
-        <div>
-          <strong>AVENZO</strong>
-          <span>Connect. Share. Belong.</span>
-        </div>
-      </section>
+      <AuthBrandPanel context="CREATE YOUR IDENTITY" />
 
       <section className="auth-card">
-        <div className="eyebrow">CREATE YOUR IDENTITY</div>
+        <div className="eyebrow">JOIN AVENZO</div>
         <h1>Create your account.</h1>
-        <p className="auth-sub">Your username is unique across AVENZO and becomes your public identifier.</p>
+        <p className="auth-sub">
+          Your permanent username becomes your public identity across AVENZO.
+        </p>
 
-                <form className="auth-form" onSubmit={submit}>
-          <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name" autoComplete="name" maxLength={80} required />
+        <form className="auth-form" onSubmit={submit}>
+          <input
+            value={fullName}
+            onChange={(event) => setFullName(event.target.value.slice(0, 80))}
+            placeholder="Full name"
+            autoComplete="name"
+            maxLength={80}
+            required
+          />
 
           <div>
-            <input value={username} onChange={(e) => changeUsername(e.target.value)} placeholder="@username" autoComplete="username" maxLength={30} required />
-            {usernameHint && (
-              <div className={"username-state " + (available ? "ok" : available === false ? "bad" : "")}>
-                {usernameHint}
-              </div>
-            )}
+            <div className="username-control">
+              <span>@</span>
+              <input
+                value={username}
+                onChange={(event) => changeUsername(event.target.value)}
+                placeholder="username"
+                autoComplete="username"
+                maxLength={30}
+                spellCheck={false}
+                required
+              />
+            </div>
+
+            <div className={"username-state " + usernameState}>
+              <i aria-hidden="true" />
+              <span>{usernameHint}</span>
+            </div>
           </div>
 
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" autoComplete="email" required />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" autoComplete="new-password" minLength={8} required />
-          <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm password" autoComplete="new-password" minLength={8} required />
+          <input
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="Email"
+            autoComplete="email"
+            required
+          />
+
+          <PasswordField
+            id="new-password"
+            value={password}
+            onChange={setPassword}
+            placeholder="Password"
+            autoComplete="new-password"
+            minLength={8}
+          />
+
+          <PasswordField
+            id="confirm-password"
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            placeholder="Confirm password"
+            autoComplete="new-password"
+            minLength={8}
+          />
+
+          <div className="password-hints">
+            <span className={passwordReady ? "done" : ""}>
+              <i /> 8+ characters
+            </span>
+            <span className={passwordsMatch ? "done" : ""}>
+              <i /> Passwords match
+            </span>
+          </div>
 
           <label className="auth-file">
-            <span>Profile picture <small>optional, up to 5 MB</small></span>
+            <span>
+              Profile picture <small>optional, up to 5 MB</small>
+            </span>
             <input type="file" accept="image/*" onChange={chooseAvatar} />
           </label>
 
-          {avatarPreview && <img className="signup-avatar-preview" src={avatarPreview} alt="Profile preview" />}
-          {formMessage && <div className="auth-message">{formMessage}</div>}
+          {avatarPreview && (
+            <div className="signup-avatar-row">
+              <img
+                className="signup-avatar-preview"
+                src={avatarPreview}
+                alt="Profile preview"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  URL.revokeObjectURL(avatarPreview);
+                  setAvatar(null);
+                  setAvatarPreview("");
+                }}
+              >
+                Remove
+              </button>
+            </div>
+          )}
 
-          <button className="auth-submit" disabled={busy || checking}>
+          {formMessage && (
+            <div className="auth-message" role="status">
+              {formMessage}
+            </div>
+          )}
+
+          <button
+            className="auth-submit"
+            disabled={busy || checking}
+          >
             {busy ? "Creating account…" : "Create Account"}
           </button>
         </form>
