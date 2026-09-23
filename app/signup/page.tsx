@@ -3,6 +3,7 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 
 const USERNAME_PATTERN = /^[a-z0-9._]{3,30}$/;
+const SERVICE_MESSAGE = "Account services are temporarily unavailable. Please try again shortly.";
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState("");
@@ -14,7 +15,9 @@ export default function SignupPage() {
   const [avatarPreview, setAvatarPreview] = useState("");
   const [available, setAvailable] = useState<boolean | null>(null);
   const [checking, setChecking] = useState(false);
-  const [status, setStatus] = useState("");
+  const [usernameMessage, setUsernameMessage] = useState("");
+  const [formMessage, setFormMessage] = useState("");
+  const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -25,19 +28,34 @@ export default function SignupPage() {
 
     const timer = window.setTimeout(async () => {
       setChecking(true);
+      setUsernameMessage("");
+
       try {
         const response = await fetch("/api/auth/username?username=" + encodeURIComponent(username));
         const result = await response.json();
+
         if (!response.ok) {
           setAvailable(null);
-          setStatus(result.error || "Username check is unavailable.");
+          if (response.status === 503) {
+            setServiceUnavailable(true);
+            setUsernameMessage("");
+          } else {
+            setUsernameMessage("Username check is temporarily unavailable.");
+          }
           return;
         }
+
+        setServiceUnavailable(false);
         setAvailable(Boolean(result.available));
-        setStatus(result.available ? "Username is available." : "This username is already taken. Please choose another one.");
+        setUsernameMessage(
+          result.available
+            ? "Username is available."
+            : "This username is already taken. Please choose another one."
+        );
       } catch {
         setAvailable(null);
-        setStatus("Username check is unavailable.");
+        setServiceUnavailable(true);
+        setUsernameMessage("");
       } finally {
         setChecking(false);
       }
@@ -50,10 +68,12 @@ export default function SignupPage() {
     const clean = value.replace(/^@+/, "").toLowerCase();
     setUsername(clean);
     setAvailable(null);
+    setFormMessage("");
+
     if (clean && !USERNAME_PATTERN.test(clean)) {
-      setStatus("Username must be 3–30 characters using letters, numbers, underscores or periods.");
+      setUsernameMessage("Username must be 3–30 characters using letters, numbers, underscores or periods.");
     } else {
-      setStatus("");
+      setUsernameMessage("");
     }
   }
 
@@ -68,50 +88,58 @@ export default function SignupPage() {
     }
 
     if (!file.type.startsWith("image/")) {
-      setStatus("Profile picture must be an image.");
+      setFormMessage("Profile picture must be an image.");
       event.target.value = "";
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setStatus("Profile picture must be 5 MB or smaller.");
+      setFormMessage("Profile picture must be 5 MB or smaller.");
       event.target.value = "";
       return;
     }
 
     setAvatar(file);
     setAvatarPreview(URL.createObjectURL(file));
-    setStatus("");
+    setFormMessage("");
   }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    setStatus("");
+    setFormMessage("");
+
+    if (serviceUnavailable) {
+      setFormMessage(SERVICE_MESSAGE);
+      return;
+    }
 
     if (!fullName.trim() || fullName.trim().length > 80) {
-      setStatus("Enter a valid full name.");
+      setFormMessage("Enter a valid full name.");
       return;
     }
     if (!USERNAME_PATTERN.test(username)) {
-      setStatus("Username must be 3–30 characters using letters, numbers, underscores or periods.");
+      setFormMessage("Username must be 3–30 characters using letters, numbers, underscores or periods.");
       return;
     }
     if (available !== true) {
-      setStatus(available === false
-        ? "This username is already taken. Please choose another one."
-        : "Wait for username availability to finish checking.");
+      setFormMessage(
+        available === false
+          ? "This username is already taken. Please choose another one."
+          : "Wait for username availability to finish checking."
+      );
       return;
     }
     if (password.length < 8) {
-      setStatus("Password must be at least 8 characters.");
+      setFormMessage("Password must be at least 8 characters.");
       return;
     }
     if (password !== confirmPassword) {
-      setStatus("Passwords do not match.");
+      setFormMessage("Passwords do not match.");
       return;
     }
 
     setBusy(true);
+
     try {
       const form = new FormData();
       form.set("fullName", fullName.trim());
@@ -125,7 +153,13 @@ export default function SignupPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        setStatus(result.error || "Unable to create your account.");
+        if (response.status === 503) {
+          setServiceUnavailable(true);
+          setFormMessage(SERVICE_MESSAGE);
+        } else {
+          setFormMessage(result.error || "Unable to create your account.");
+        }
+
         if (response.status === 409) setAvailable(false);
         return;
       }
@@ -136,11 +170,18 @@ export default function SignupPage() {
         window.location.assign("/home");
       }
     } catch {
-      setStatus("Unable to reach AVENZO right now.");
+      setServiceUnavailable(true);
+      setFormMessage(SERVICE_MESSAGE);
     } finally {
       setBusy(false);
     }
   }
+
+  const usernameHint =
+    checking
+      ? "Checking username…"
+      : usernameMessage ||
+        (!serviceUnavailable ? "3–30 characters. Letters, numbers, underscores and periods only." : "");
 
   return (
     <main className="auth-shell">
@@ -160,14 +201,18 @@ export default function SignupPage() {
         <h1>Create your account.</h1>
         <p className="auth-sub">Your username is unique across AVENZO and becomes your public identifier.</p>
 
+        {serviceUnavailable && <div className="auth-message auth-service-message">{SERVICE_MESSAGE}</div>}
+
         <form className="auth-form" onSubmit={submit}>
           <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name" autoComplete="name" maxLength={80} required />
 
           <div>
             <input value={username} onChange={(e) => changeUsername(e.target.value)} placeholder="@username" autoComplete="username" maxLength={30} required />
-            <div className={"username-state " + (available ? "ok" : available === false ? "bad" : "")}>
-              {checking ? "Checking username…" : status || "3–30 characters. Letters, numbers, underscores and periods only."}
-            </div>
+            {usernameHint && (
+              <div className={"username-state " + (available ? "ok" : available === false ? "bad" : "")}>
+                {usernameHint}
+              </div>
+            )}
           </div>
 
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" autoComplete="email" required />
@@ -180,9 +225,9 @@ export default function SignupPage() {
           </label>
 
           {avatarPreview && <img className="signup-avatar-preview" src={avatarPreview} alt="Profile preview" />}
-          {status && !checking && available !== true && <div className="auth-message">{status}</div>}
+          {formMessage && !serviceUnavailable && <div className="auth-message">{formMessage}</div>}
 
-          <button className="auth-submit" disabled={busy || checking}>
+          <button className="auth-submit" disabled={busy || checking || serviceUnavailable}>
             {busy ? "Creating account…" : "Create Account"}
           </button>
         </form>
