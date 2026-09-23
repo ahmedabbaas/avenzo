@@ -74,7 +74,7 @@ create table if not exists public.posts (
     check (char_length(trim(caption)) > 0 or media_path is not null)
 );
 
-do $
+do $reports_fk$
 begin
   alter table public.reports
     add constraint reports_post_fk
@@ -84,7 +84,7 @@ begin
 exception
   when duplicate_object then null;
 end
-$;
+$reports_fk$;
 
 create table if not exists public.likes (
   post_id uuid not null references public.posts(id) on delete cascade,
@@ -273,7 +273,7 @@ language sql
 security definer
 set search_path = public
 stable
-as $
+as $users_blocked$
   select exists (
     select 1
     from public.blocks
@@ -282,14 +282,14 @@ as $
       or
       (blocker_id = second_user and blocked_id = first_user)
   );
-$;
+$users_blocked$;
 
 create or replace function public.handle_new_block()
 returns trigger
 language plpgsql
 security definer
 set search_path = public
-as $
+as $handle_new_block$
 begin
   delete from public.follows
   where
@@ -299,7 +299,7 @@ begin
 
   return new;
 end;
-$;
+$handle_new_block$;
 
 drop trigger if exists on_block_cleanup on public.blocks;
 create trigger on_block_cleanup
