@@ -42,7 +42,6 @@ export default function SignupPage() {
 
   useEffect(() => {
     if (!username || !USERNAME_PATTERN.test(username)) {
-      setAvailable(null);
       return;
     }
 
