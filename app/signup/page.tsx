@@ -4,10 +4,10 @@ import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import AuthBrandPanel from "../_components/auth-brand-panel";
 import PasswordField from "../_components/password-field";
 import TurnstileWidget, {
-import SiteFooter from "../_components/site-footer";
   readTurnstileToken,
   resetTurnstile,
 } from "../_components/turnstile-widget";
+import SiteFooter from "../_components/site-footer";
 
 const USERNAME_PATTERN = /^[a-z0-9._]{3,30}$/;
 const SERVICE_MESSAGE = "Account services are temporarily unavailable.";
