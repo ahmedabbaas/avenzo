@@ -1,5 +1,13 @@
 import { NextResponse } from "next/server";
 import {
+  isValidAvatar,
+  isValidDisplayName,
+  isValidEmail,
+  isValidPassword,
+  isValidUsername,
+  normalizeEmail,
+} from "../../../../features/auth/validation";
+import {
   consumeRateLimit,
   rateLimitResponse,
 } from "../../../../lib/security/rate-limit";
@@ -8,8 +16,6 @@ import { verifyTurnstile } from "../../../../lib/turnstile";
 
 export const dynamic = "force-dynamic";
 
-const USERNAME_PATTERN = /^[a-z0-9._]{3,30}$/;
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function json(body: unknown, status = 200) {
   return NextResponse.json(body, {
@@ -40,7 +46,7 @@ export async function POST(request: Request) {
       .trim()
       .toLowerCase()
       .replace(/^@+/, "");
-    const email = String(form.get("email") || "").trim().toLowerCase();
+    const email = normalizeEmail(String(form.get("email") || ""));
     const password = String(form.get("password") || "");
     const confirmPassword = String(form.get("confirmPassword") || "");
     const turnstileToken = String(form.get("turnstileToken") || "");
@@ -51,11 +57,11 @@ export async function POST(request: Request) {
         ? avatarEntry
         : null;
 
-    if (fullName.length < 1 || fullName.length > 80) {
+    if (!isValidDisplayName(fullName)) {
       return json({ error: "Enter a valid full name." }, 400);
     }
 
-    if (!USERNAME_PATTERN.test(username)) {
+    if (!isValidUsername(username)) {
       return json(
         {
           error:
@@ -65,11 +71,11 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!EMAIL_PATTERN.test(email) || email.length > 254) {
+    if (!isValidEmail(email)) {
       return json({ error: "Enter a valid email address." }, 400);
     }
 
-    if (password.length < 8 || password.length > 1024) {
+    if (!isValidPassword(password)) {
       return json(
         { error: "Password must be at least 8 characters." },
         400
@@ -80,11 +86,7 @@ export async function POST(request: Request) {
       return json({ error: "Passwords do not match." }, 400);
     }
 
-    if (
-      avatar &&
-      (!avatar.type.startsWith("image/") ||
-        avatar.size > 5 * 1024 * 1024)
-    ) {
+    if (!isValidAvatar(avatar)) {
       return json(
         {
           error:
