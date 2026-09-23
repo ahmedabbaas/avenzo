@@ -666,3 +666,22 @@ img{max-width:100%}
   .public-profile-actions{margin-top:14px}
   .public-profile-grid{gap:4px}
 }
+
+
+/* SAFETY */
+.profile-safety-menu{position:relative}
+.profile-safety-menu summary{list-style:none;width:42px;height:42px;display:grid;place-items:center;border:1px solid var(--line);border-radius:13px;background:var(--panel-3);color:#a8b0b6;cursor:pointer;font-weight:700;letter-spacing:.08em}
+.profile-safety-menu summary::-webkit-details-marker{display:none}
+.profile-safety-menu[open] summary{border-color:#3b4650;color:#fff}
+.profile-safety-menu>div{position:absolute;z-index:25;right:0;top:49px;width:190px;display:grid;padding:6px;border:1px solid #303a42;border-radius:13px;background:#11171a;box-shadow:0 18px 60px rgba(0,0,0,.45)}
+.profile-safety-menu button{border:0;background:transparent;color:#d8dde0;text-align:left;padding:10px 11px;border-radius:9px;font-size:11px}
+.profile-safety-menu button:hover{background:#182025}
+.profile-safety-menu button.danger{color:#ff9696}
+.profile-safety-menu button.danger:hover{background:rgba(255,116,116,.08)}
+.report-modal>p{color:var(--muted);font-size:12px;line-height:1.55;margin:8px 0 17px}
+.report-modal>label{display:block;color:#aab2b8;font-size:11px;margin:12px 0 6px}
+.report-modal>label small{color:#69737b}
+.report-modal select,.report-modal textarea{width:100%;background:#101519;border:1px solid var(--line);border-radius:12px;color:#fff;padding:11px 12px;outline:0}
+.report-modal select:focus,.report-modal textarea:focus{border-color:#3e4a53}
+.report-modal textarea{min-height:115px;resize:vertical}
+.report-count{text-align:right;color:#626d75;font-size:9px;margin-top:5px}
