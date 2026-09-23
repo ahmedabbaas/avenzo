@@ -11,6 +11,7 @@ import {
   initialsAvatar,
 } from "../lib/profile";
 import type { NotificationRow, Profile } from "../types";
+import AvatarImage from "./avatar-image";
 
 export default function ActivityPanel({
   supabase,
@@ -107,13 +108,14 @@ export default function ActivityPanel({
 
             return (
               <div className="notification" key={item.id}>
-                <img
+                <AvatarImage
                   src={
                     item.actor
                       ? avatarFor(item.actor)
                       : initialsAvatar(actorName)
                   }
-                  alt=""
+                  alt={actorName}
+                  size={80}
                 />
                 <div>
                   <p>
