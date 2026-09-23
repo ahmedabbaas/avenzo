@@ -20,16 +20,16 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
   const pathname = request.nextUrl.pathname;
-  const publicPath = pathname === "/auth" || pathname.startsWith("/auth/");
+  const publicPath = pathname === "/auth" || pathname === "/auth/confirm";
 
-  if (!user && !publicPath) {
+  if ((!user || !user.email_confirmed_at) && !publicPath) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/auth";
-    redirectUrl.search = "";
+    redirectUrl.search = user ? "error=verify" : "";
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (user && pathname === "/auth") {
+  if (user && user.email_confirmed_at && pathname === "/auth") {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
