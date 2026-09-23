@@ -3,7 +3,6 @@
 import {
   ChangeEvent,
   FormEvent,
-  KeyboardEvent,
   useCallback,
   useEffect,
   useMemo,
@@ -11,8 +10,10 @@ import {
 } from "react";
 import Link from "next/link";
 import { createClient } from "../lib/supabase/client";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import ActivityPanel from "../features/social/components/activity-panel";
 import EmptyState from "../features/social/components/empty-state";
+import MessagesPanel from "../features/social/components/messages-panel";
+import ProfileView from "../features/social/components/profile-view";
 import FeedSkeleton from "../features/social/components/feed-skeleton";
 import Icon, { type IconName } from "../features/social/components/icon";
 import PersonCard from "../features/social/components/person-card";
@@ -29,7 +30,6 @@ import type {
   Chat,
   Comment,
   Message,
-  NotificationRow,
   Post,
   Profile,
   ProfileStats,
@@ -1382,7 +1382,7 @@ export default function HomeClient({
           )}
 
           {screen === "activity" && (
-            <Activity
+            <ActivityPanel
               supabase={supabase}
               userId={initialProfile.id}
               onRead={markActivityRead}
@@ -1435,7 +1435,7 @@ export default function HomeClient({
           )}
 
           {screen === "messages" && (
-            <Messages
+            <MessagesPanel
               people={filteredPeople}
               chats={chats}
               selected={selected}
@@ -1737,398 +1737,5 @@ export default function HomeClient({
         </div>
       )}
     </div>
-  );
-}
-
-function Messages({
-  people,
-  chats,
-  selected,
-  openChat,
-  messages,
-  userId,
-  text,
-  setText,
-  send,
-  onBack,
-}: {
-  people: Profile[];
-  chats: Chat[];
-  selected: Profile | null;
-  openChat: (profile: Profile) => void;
-  messages: Message[];
-  userId: string;
-  text: string;
-  setText: (value: string) => void;
-  send: () => void;
-  onBack: () => void;
-}) {
-  const list = chats
-    .map((chat) => chat.profile)
-    .concat(
-      people
-        .filter((person) => !chats.some((chat) => chat.profile.id === person.id))
-        .slice(0, 12)
-    );
-
-  const chatMap = new Map(chats.map((chat) => [chat.profile.id, chat]));
-
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      send();
-    }
-  };
-
-  return (
-    <div className="chat">
-      <div className={"chat-list " + (selected ? "mobile-hidden" : "")}>
-        <div className="chat-list-title">
-          <div>
-            <div className="eyebrow">MESSAGES</div>
-            <h3>Conversations</h3>
-          </div>
-        </div>
-
-        {list.map((person) => {
-          const chat = chatMap.get(person.id);
-          return (
-            <button
-              className={"chat-user " + (selected?.id === person.id ? "active" : "")}
-              key={person.id}
-              onClick={() => openChat(person)}
-            >
-              <img src={avatarFor(person)} alt="" />
-              <span>
-                <b>{person.display_name}</b>
-                <small>{chat?.last || "Start a conversation"}</small>
-              </span>
-              {chat?.unread ? <i className="chat-unread">{chat.unread}</i> : null}
-            </button>
-          );
-        })}
-
-        {list.length === 0 && (
-          <p className="chat-list-empty">No people to message yet.</p>
-        )}
-      </div>
-
-      <div className={"chat-main " + (!selected ? "mobile-hidden" : "")}>
-        {selected ? (
-          <>
-            <div className="chat-head">
-              <button
-                className="chat-back"
-                onClick={onBack}
-                aria-label="Back to conversations"
-              >
-                <Icon name="back" size={19} />
-              </button>
-              <img src={avatarFor(selected)} alt="" />
-              <div>
-                <b>{selected.display_name}</b>
-                <small>@{selected.username}</small>
-              </div>
-            </div>
-
-            <div className="chat-body">
-              {messages.length === 0 && (
-                <div className="conversation-start">
-                  <img src={avatarFor(selected)} alt="" />
-                  <b>{selected.display_name}</b>
-                  <span>@{selected.username}</span>
-                  <p>Start the conversation.</p>
-                </div>
-              )}
-
-              {messages.map((item) => (
-                <div
-                  key={item.id}
-                  className={"message-row " + (item.sender_id === userId ? "me" : "")}
-                >
-                  <div className="bubble">{item.body}</div>
-                  <small>{formatRelativeTime(item.created_at)}</small>
-                </div>
-              ))}
-            </div>
-
-            <div className="chat-compose">
-              <input
-                value={text}
-                onChange={(event) => setText(event.target.value.slice(0, 5000))}
-                onKeyDown={handleKeyDown}
-                placeholder="Write a message…"
-                aria-label="Message"
-              />
-              <button className="send-button" onClick={send} disabled={!text.trim()}>
-                <Icon name="send" size={18} />
-              </button>
-            </div>
-          </>
-        ) : (
-          <div className="empty chat-empty">
-            <span className="empty-mark">A</span>
-            <b>Your messages</b>
-            <p>Choose a person to start a private conversation.</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function Activity({
-  supabase,
-  userId,
-  onRead,
-}: {
-  supabase: SupabaseClient;
-  userId: string;
-  onRead: () => void;
-}) {
-  const [items, setItems] = useState<
-    Array<{
-      id: string;
-      type: "follow" | "like" | "comment" | "message";
-      created_at: string;
-      actor_id: string;
-      actor?: Profile;
-    }>
-  >([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
-
-      const { data } = await supabase
-        .from("notifications")
-        .select("id,type,created_at,actor_id")
-        .eq("recipient_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(40);
-
-      const rows = (data || []) as NotificationRow[];
-      const actorIds = [...new Set(rows.map((item) => item.actor_id))];
-
-      const { data: actors } = actorIds.length
-        ? await supabase
-            .from("profiles")
-            .select("id,username,display_name,bio,avatar_url,created_at")
-            .in("id", actorIds)
-        : { data: [] };
-
-      const actorMap = new Map(
-        ((actors || []) as Profile[]).map((actor) => [actor.id, actor])
-      );
-
-      setItems(
-        rows.map((item) => ({
-          ...item,
-          actor: actorMap.get(item.actor_id),
-        }))
-      );
-
-      await supabase
-        .from("notifications")
-        .update({ read_at: new Date().toISOString() })
-        .eq("recipient_id", userId)
-        .is("read_at", null);
-
-      onRead();
-      setLoading(false);
-    }
-
-    void load();
-  }, [supabase, userId, onRead]);
-
-  return (
-    <>
-      <PageTitle
-        eyebrow="ACTIVITY"
-        title="Notifications"
-        text="Follows, likes, comments and messages."
-      />
-
-      {loading ? (
-        <FeedSkeleton />
-      ) : items.length === 0 ? (
-        <EmptyState
-          title="No activity yet."
-          text="When people interact with you, it will appear here."
-        />
-      ) : (
-        <div className="notification-list">
-          {items.map((item) => {
-            const actorName = item.actor?.display_name || "Someone";
-            const copy =
-              item.type === "follow"
-                ? "followed you"
-                : item.type === "like"
-                  ? "liked your post"
-                  : item.type === "comment"
-                    ? "commented on your post"
-                    : "sent you a message";
-
-            return (
-              <div className="notification" key={item.id}>
-                <img
-                  src={
-                    item.actor
-                      ? avatarFor(item.actor)
-                      : initialsAvatar(actorName)
-                  }
-                  alt=""
-                />
-                <div>
-                  <p>
-                    <b>{actorName}</b> {copy}
-                  </p>
-                  <small>{formatRelativeTime(item.created_at)}</small>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </>
-  );
-}
-
-function ProfileView({
-  profile,
-  posts,
-  reels,
-  media,
-  stats,
-  onEdit,
-  onCreatePost,
-  onCreateReel,
-  onCreateStory,
-}: {
-  profile: Profile;
-  posts: Post[];
-  reels: Reel[];
-  media: (path: string) => string;
-  stats: ProfileStats;
-  onEdit: () => void;
-  onCreatePost: () => void;
-  onCreateReel: () => void;
-  onCreateStory: () => void;
-}) {
-  const mediaPosts = posts.filter((post) => post.media_path);
-
-  return (
-    <>
-      <div className="profile-hero">
-        <img src={avatarFor(profile)} alt="" />
-        <div>
-          <div className="profile-title-row">
-            <div>
-              <div className="eyebrow">@{profile.username}</div>
-              <h1>{profile.display_name}</h1>
-            </div>
-            <button className="btn secondary small" onClick={onEdit}>
-              Edit profile
-            </button>
-          </div>
-
-          <p>{profile.bio || "Welcome to AVENZO."}</p>
-
-          <div className="profile-stats">
-            <span>
-              <b>{stats.posts}</b> posts
-            </span>
-            <span>
-              <b>{stats.followers}</b> followers
-            </span>
-            <span>
-              <b>{stats.following}</b> following
-            </span>
-          </div>
-
-          <div className="profile-create-actions">
-            <button className="btn small" onClick={onCreatePost}>
-              Create Post
-            </button>
-            <button className="btn secondary small" onClick={onCreateReel}>
-              Create Reel
-            </button>
-            <button className="btn secondary small" onClick={onCreateStory}>
-              Create Story
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <section className="profile-content-section">
-        <div className="section-inline-head">
-          <div>
-            <div className="eyebrow">POSTS</div>
-            <h3>{stats.posts} posts</h3>
-          </div>
-        </div>
-
-        {mediaPosts.length > 0 ? (
-          <div className="profile-grid">
-            {mediaPosts.map((post) =>
-              post.media_type === "video" ? (
-                <video
-                  key={post.id}
-                  src={media(post.media_path!)}
-                  preload="metadata"
-                  controls
-                  muted
-                />
-              ) : (
-                <img
-                  key={post.id}
-                  src={media(post.media_path!)}
-                  alt="Post"
-                  loading="lazy"
-                />
-              )
-            )}
-          </div>
-        ) : (
-          <EmptyState
-            title="No posts yet."
-            text="Your profile starts empty. Publish your first real post when you’re ready."
-            action={onCreatePost}
-            actionLabel="Create Post"
-          />
-        )}
-      </section>
-
-      <section className="profile-content-section">
-        <div className="section-inline-head">
-          <div>
-            <div className="eyebrow">REELS</div>
-            <h3>{reels.length} reels</h3>
-          </div>
-        </div>
-
-        {reels.length > 0 ? (
-          <div className="profile-grid reel-profile-grid">
-            {reels.map((reel) => (
-              <video
-                key={reel.id}
-                src={media(reel.media_path)}
-                preload="metadata"
-                controls
-                muted
-              />
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            title="0 reels"
-            text="Your reels will appear here after you upload a real video."
-            action={onCreateReel}
-            actionLabel="Create Reel"
-          />
-        )}
-      </section>
-    </>
   );
 }
