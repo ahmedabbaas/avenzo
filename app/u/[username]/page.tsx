@@ -11,13 +11,6 @@ export default async function UserProfilePage({
 }: {
   params: Promise<{ username: string }>;
 }) {
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-  ) {
-    redirect("/login?error=backend");
-  }
-
   const { username: rawUsername } = await params;
   const username = decodeURIComponent(rawUsername).trim().toLowerCase();
 
