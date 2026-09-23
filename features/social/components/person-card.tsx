@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { avatarFor } from "../lib/profile";
 import type { Profile } from "../types";
+import AvatarImage from "./avatar-image";
 
 export default function PersonCard({
   person,
@@ -16,7 +17,7 @@ export default function PersonCard({
   return (
     <article className="person-card">
       <Link className="person-profile-link" href={"/u/" + encodeURIComponent(person.username)}>
-        <img className="person-avatar" src={avatarFor(person)} alt="" />
+        <AvatarImage className="person-avatar" src={avatarFor(person)} alt={person.display_name} size={80} />
         <div className="person-copy">
           <b>{person.display_name}</b>
           <span>@{person.username}</span>
