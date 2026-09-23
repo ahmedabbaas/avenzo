@@ -725,6 +725,10 @@ export default function HomeClient({
       loadProfile(),
       loadPeople(),
       loadPosts(),
+      loadExplorePosts(),
+      loadReels(),
+      loadStories(),
+      loadSavedPosts(),
       loadChats(),
       loadStats(),
       loadUnreadActivity(),
@@ -840,10 +844,20 @@ export default function HomeClient({
     setPreview(URL.createObjectURL(picked));
   }
 
-  async function createPost(event: FormEvent) {
+  async function createContent(event: FormEvent) {
     event.preventDefault();
 
-    if (!caption.trim() && !file) {
+    if (createMode === "story" && !file) {
+      showToast("Choose an image or video for your story.");
+      return;
+    }
+
+    if (createMode === "reel" && (!file || !file.type.startsWith("video/"))) {
+      showToast("Reels require a video.");
+      return;
+    }
+
+    if (createMode === "post" && !caption.trim() && !file) {
       showToast("Add a caption or media before publishing.");
       return;
     }
@@ -861,7 +875,13 @@ export default function HomeClient({
 
         path =
           initialProfile.id +
-          "/posts/" +
+          "/" +
+          (createMode === "reel"
+            ? "reels"
+            : createMode === "story"
+              ? "stories"
+              : "posts") +
+          "/" +
           crypto.randomUUID() +
           "." +
           extension.slice(0, 8);
@@ -875,24 +895,51 @@ export default function HomeClient({
         type = file.type.startsWith("video/") ? "video" : "image";
       }
 
-      const { error } = await supabase.from("posts").insert({
-        author_id: initialProfile.id,
-        caption: caption.trim(),
-        media_path: path,
-        media_type: type,
-      });
-
-      if (error) throw error;
+      if (createMode === "story") {
+        const { error } = await supabase.from("stories").insert({
+          author_id: initialProfile.id,
+          media_path: path,
+          media_type: type,
+        });
+        if (error) throw error;
+        showToast("Story published for 24 hours.");
+      } else if (createMode === "reel") {
+        const { error } = await supabase.from("reels").insert({
+          author_id: initialProfile.id,
+          caption: caption.trim(),
+          media_path: path,
+          media_type: "video",
+        });
+        if (error) throw error;
+        showToast("Reel published.");
+      } else {
+        const { error } = await supabase.from("posts").insert({
+          author_id: initialProfile.id,
+          caption: caption.trim(),
+          media_path: path,
+          media_type: type,
+        });
+        if (error) throw error;
+        showToast("Post published.");
+      }
 
       setCaption("");
       setFile(null);
       if (preview) URL.revokeObjectURL(preview);
       setPreview("");
       setShowCreate(false);
-      showToast("Post published.");
-      await Promise.all([loadPosts(), loadStats()]);
+
+      await Promise.all([
+        loadPosts(),
+        loadExplorePosts(),
+        loadReels(),
+        loadStories(),
+        loadStats(),
+      ]);
     } catch (error) {
-      showToast(error instanceof Error ? error.message : "Unable to publish post.");
+      showToast(
+        error instanceof Error ? error.message : "Unable to publish content."
+      );
     } finally {
       setPosting(false);
     }
@@ -993,6 +1040,121 @@ export default function HomeClient({
     }
 
     await loadPosts();
+  }
+
+  async function toggleReelLike(reel: Reel) {
+    setReels((current) =>
+      current.map((item) =>
+        item.id === reel.id
+          ? {
+              ...item,
+              liked: !item.liked,
+              likeCount: Math.max(
+                0,
+                item.likeCount + (item.liked ? -1 : 1)
+              ),
+            }
+          : item
+      )
+    );
+
+    const result = reel.liked
+      ? await supabase
+          .from("reel_likes")
+          .delete()
+          .eq("reel_id", reel.id)
+          .eq("user_id", initialProfile.id)
+      : await supabase
+          .from("reel_likes")
+          .insert({ reel_id: reel.id, user_id: initialProfile.id });
+
+    if (result.error) {
+      showToast("Could not update reel like.");
+      await loadReels();
+    }
+  }
+
+  async function toggleReelSave(reel: Reel) {
+    const isSaved = savedReels.includes(reel.id);
+
+    setSavedReels((current) =>
+      isSaved
+        ? current.filter((id) => id !== reel.id)
+        : [...current, reel.id]
+    );
+
+    const result = isSaved
+      ? await supabase
+          .from("saved_reels")
+          .delete()
+          .eq("reel_id", reel.id)
+          .eq("user_id", initialProfile.id)
+      : await supabase
+          .from("saved_reels")
+          .insert({ reel_id: reel.id, user_id: initialProfile.id });
+
+    if (result.error) {
+      showToast("Could not update saved reels.");
+      await loadReels();
+    }
+  }
+
+  async function addReelComment(reel: Reel, body: string) {
+    const clean = body.trim();
+    if (!clean) return;
+
+    const { error } = await supabase.from("reel_comments").insert({
+      reel_id: reel.id,
+      user_id: initialProfile.id,
+      body: clean,
+    });
+
+    if (error) {
+      showToast("Could not post reel comment.");
+      return;
+    }
+
+    await loadReels();
+  }
+
+  async function deleteReel(reel: Reel) {
+    if (reel.author_id !== initialProfile.id) return;
+    if (!window.confirm("Delete this reel? This cannot be undone.")) return;
+
+    const { error } = await supabase
+      .from("reels")
+      .delete()
+      .eq("id", reel.id)
+      .eq("author_id", initialProfile.id);
+
+    if (error) {
+      showToast("Could not delete reel.");
+      return;
+    }
+
+    await supabase.storage.from("media").remove([reel.media_path]);
+    showToast("Reel deleted.");
+    await loadReels();
+  }
+
+  async function sharePost(post: Post) {
+    const url = window.location.origin + "/p/" + post.id;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: post.profile?.display_name
+            ? post.profile.display_name + " on AVENZO"
+            : "AVENZO post",
+          text: post.caption || "View this post on AVENZO",
+          url,
+        });
+      } else {
+        await navigator.clipboard.writeText(url);
+        showToast("Post link copied.");
+      }
+    } catch {
+      // User-cancelled shares do not need an error banner.
+    }
   }
 
   async function toggleFollow(other: Profile) {
