@@ -51,6 +51,11 @@ Deno.serve(async (request) => {
   }
 
   try {
+    const payload = await request.json().catch(() => ({}));
+    const confirmation = String(payload?.confirmation || "")
+      .trim()
+      .toLowerCase();
+
     const userClient = createClient(
       SUPABASE_URL,
       SUPABASE_ANON_KEY,
@@ -84,6 +89,20 @@ Deno.serve(async (request) => {
         },
       }
     );
+
+    const { data: profile, error: profileError } = await admin
+      .from("profiles")
+      .select("username")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return json({ error: "Account profile could not be verified." }, 409);
+    }
+
+    if (confirmation !== String(profile.username).toLowerCase()) {
+      return json({ error: "Username confirmation does not match." }, 400);
+    }
 
     const mediaFiles = await listUserMedia(admin, user.id);
 
