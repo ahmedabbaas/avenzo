@@ -1,6 +1,6 @@
 "use client";
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "../lib/supabase/client";
 type Profile={id:string;username:string;display_name:string;bio:string;avatar_url:string|null};
 type Post={id:string;author_id:string;caption:string;media_path:string|null;media_type:string|null;created_at:string;profile?:Profile;likeCount:number;liked:boolean;commentCount:number;comments:{id:string;body:string;profile?:Profile}[]};
 type Chat={profile:Profile;last:string;updated:string};
