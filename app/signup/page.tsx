@@ -116,6 +116,10 @@ export default function SignupPage() {
       setFormMessage("Username must be 3–30 characters using letters, numbers, underscores or periods.");
       return;
     }
+    if (serviceUnavailable) {
+      setFormMessage(SERVICE_MESSAGE);
+      return;
+    }
     if (available !== true) {
       setFormMessage(
         available === false
