@@ -180,7 +180,7 @@ export default function SignupPage() {
           </label>
 
           {avatarPreview && <img className="signup-avatar-preview" src={avatarPreview} alt="Profile preview" />}
-          {status && !checking && <div className="auth-message">{status}</div>}
+          {status && !checking && available !== true && <div className="auth-message">{status}</div>}
 
           <button className="auth-submit" disabled={busy || checking}>
             {busy ? "Creating account…" : "Create Account"}
