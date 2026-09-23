@@ -11,7 +11,6 @@ export async function GET(request: Request) {
   try {
     const supabase = await createClient();
     let error = null;
-
     if (code) {
       ({ error } = await supabase.auth.exchangeCodeForSession(code));
     } else if (tokenHash && type) {
@@ -19,7 +18,6 @@ export async function GET(request: Request) {
     } else {
       error = new Error("Missing confirmation token.");
     }
-
     if (error) throw error;
     return NextResponse.redirect(new URL("/", request.url));
   } catch {
