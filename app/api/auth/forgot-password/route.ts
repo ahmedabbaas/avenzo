@@ -1,4 +1,8 @@
 import { NextResponse } from "next/server";
+import {
+  consumeRateLimit,
+  rateLimitResponse,
+} from "../../../../lib/security/rate-limit";
 import { createClient } from "../../../../lib/supabase/server";
 import { verifyTurnstile } from "../../../../lib/turnstile";
 
@@ -23,6 +27,21 @@ export async function POST(request: Request) {
       return json({ error: "Enter a valid email address." }, 400);
     }
 
+    const supabase = await createClient();
+
+    const rate = await consumeRateLimit({
+      supabase,
+      request,
+      scope: "password-reset",
+      subject: email,
+      limit: 5,
+      windowSeconds: 30 * 60,
+    });
+
+    if (!rate.allowed) {
+      return rateLimitResponse(rate.retryAfter);
+    }
+
     const verified = await verifyTurnstile(
       request,
       turnstileToken,
@@ -36,7 +55,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabase = await createClient();
     const origin = new URL(request.url).origin;
 
     await supabase.auth.resetPasswordForEmail(email, {
