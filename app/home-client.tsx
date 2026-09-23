@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { createClient } from "../lib/supabase/client";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 type Screen =
   | "home"
@@ -70,6 +71,13 @@ type ProfileStats = {
   posts: number;
   followers: number;
   following: number;
+};
+
+type NotificationRow = {
+  id: string;
+  type: "follow" | "like" | "comment" | "message";
+  created_at: string;
+  actor_id: string;
 };
 
 type IconName =
@@ -484,7 +492,6 @@ export default function HomeClient({
   }
 
   async function refreshEverything() {
-    setLoading(true);
     await Promise.all([
       loadProfile(),
       loadPeople(),
@@ -1655,7 +1662,7 @@ function Activity({
   userId,
   onRead,
 }: {
-  supabase: any;
+  supabase: SupabaseClient;
   userId: string;
   onRead: () => void;
 }) {
@@ -1681,8 +1688,8 @@ function Activity({
         .order("created_at", { ascending: false })
         .limit(40);
 
-      const rows = data || [];
-      const actorIds = [...new Set(rows.map((item: any) => item.actor_id))];
+      const rows = (data || []) as NotificationRow[];
+      const actorIds = [...new Set(rows.map((item) => item.actor_id))];
 
       const { data: actors } = actorIds.length
         ? await supabase
@@ -1696,7 +1703,7 @@ function Activity({
       );
 
       setItems(
-        rows.map((item: any) => ({
+        rows.map((item) => ({
           ...item,
           actor: actorMap.get(item.actor_id),
         }))
@@ -1854,7 +1861,7 @@ function Settings({
 }: {
   profile: Profile;
   setProfile: (profile: Profile) => void;
-  supabase: any;
+  supabase: SupabaseClient;
   signOut: () => void;
   onSaved: () => void;
 }) {
