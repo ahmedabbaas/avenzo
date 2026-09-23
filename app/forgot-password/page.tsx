@@ -1,11 +1,13 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import AuthBrandPanel from "../_components/auth-brand-panel";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -16,10 +18,25 @@ export default function ForgotPasswordPage() {
       const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
       });
+
       const result = await response.json();
-      setStatus(result.message || result.error || "If that email exists, a reset link has been sent.");
+
+      if (!response.ok) {
+        setStatus(
+          response.status === 503
+            ? "Account services are temporarily unavailable."
+            : result.error || "Unable to send a reset link."
+        );
+        return;
+      }
+
+      setSent(true);
+      setStatus(
+        result.message ||
+          "If an account exists for that email, a reset link has been sent."
+      );
     } catch {
       setStatus("Unable to reach AVENZO right now.");
     } finally {
@@ -32,23 +49,35 @@ export default function ForgotPasswordPage() {
       <div className="auth-glow auth-glow-a" />
       <div className="auth-glow auth-glow-b" />
 
-      <section className="auth-brand">
-        <span className="brand-mark">A</span>
-        <div>
-          <strong>AVENZO</strong>
-          <span>Account recovery</span>
-        </div>
-      </section>
+      <AuthBrandPanel context="ACCOUNT RECOVERY" />
 
       <section className="auth-card">
         <div className="eyebrow">RECOVER ACCESS</div>
         <h1>Reset your password.</h1>
-        <p className="auth-sub">Enter the email linked to your account. We’ll send a secure reset link.</p>
+        <p className="auth-sub">
+          Enter the email linked to your account. We’ll send a secure reset
+          link if the account exists.
+        </p>
 
         <form className="auth-form" onSubmit={submit}>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" autoComplete="email" required />
-          {status && <div className="auth-message">{status}</div>}
-          <button className="auth-submit" disabled={busy}>{busy ? "Sending…" : "Send Reset Link"}</button>
+          <input
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="Email address"
+            autoComplete="email"
+            required
+          />
+
+          {status && (
+            <div className="auth-message" role="status">
+              {status}
+            </div>
+          )}
+
+          <button className="auth-submit" disabled={busy || sent}>
+            {busy ? "Sending…" : sent ? "Reset link sent" : "Send Reset Link"}
+          </button>
         </form>
 
         <div className="auth-links auth-links-center">
