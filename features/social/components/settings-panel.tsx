@@ -9,6 +9,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import PageTitle from "./page-title";
 import { avatarFor, initialsAvatar } from "../lib/profile";
 import type { Profile } from "../types";
+import AvatarImage from "./avatar-image";
 
 type BlockedAccount = {
   id: string;
@@ -211,9 +212,10 @@ export default function SettingsPanel({
 
       <div className="settings-card">
         <div className="settings-avatar">
-          <img
+          <AvatarImage
             src={avatarPreview || avatarFor(profile)}
             alt={profile.display_name + " profile picture"}
+            size={160}
           />
           <label className="btn secondary small">
             Change picture
@@ -274,12 +276,13 @@ export default function SettingsPanel({
             <div className="blocked-list">
               {blockedAccounts.map((account) => (
                 <div className="blocked-row" key={account.id}>
-                  <img
+                  <AvatarImage
                     src={
                       account.avatar_url ||
                       initialsAvatar(account.display_name)
                     }
-                    alt=""
+                    alt={account.display_name}
+                    size={88}
                   />
                   <div>
                     <b>{account.display_name}</b>
