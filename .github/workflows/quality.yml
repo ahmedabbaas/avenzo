@@ -1,0 +1,34 @@
+name: AVENZO Quality Gate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - upgrade/premium-social-v1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Production build
+        run: npm run build

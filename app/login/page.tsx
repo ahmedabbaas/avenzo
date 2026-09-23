@@ -1,6 +1,12 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import AuthBrandPanel from "../_components/auth-brand-panel";
+import PasswordField from "../_components/password-field";
+import TurnstileWidget, {
+  readTurnstileToken,
+  resetTurnstile,
+} from "../_components/turnstile-widget";
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState("");
@@ -11,12 +17,26 @@ export default function LoginPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const error = params.get("error");
-    if (error === "verify") setStatus("Verify your email before signing in.");
-    if (error === "profile") setStatus("Your profile could not be loaded.");
-    if (error === "confirmation") setStatus("That confirmation link is invalid or expired.");
-    if (error === "backend") setStatus("Account services are temporarily unavailable. Please try again shortly.");
-    if (params.get("registered") === "1") setStatus("Account created. Check your email, then sign in.");
-    if (params.get("reset") === "1") setStatus("Password updated. Sign in with your new password.");
+    let nextStatus = "";
+
+    if (error === "verify") nextStatus = "Verify your email before signing in.";
+    if (error === "profile") nextStatus = "Your profile could not be loaded.";
+    if (error === "confirmation") {
+      nextStatus = "That confirmation link is invalid or expired.";
+    }
+    if (error === "backend") {
+      nextStatus = "Account services are temporarily unavailable.";
+    }
+    if (params.get("registered") === "1") {
+      nextStatus = "Account created. Check your email, then sign in.";
+    }
+    if (params.get("reset") === "1") {
+      nextStatus = "Password updated. Sign in with your new password.";
+    }
+
+    if (!nextStatus) return;
+    const timer = window.setTimeout(() => setStatus(nextStatus), 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   async function submit(event: FormEvent) {
@@ -28,12 +48,22 @@ export default function LoginPage() {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier, password }),
+        body: JSON.stringify({
+          identifier: identifier.trim(),
+          password,
+          turnstileToken: readTurnstileToken(),
+        }),
       });
+
       const result = await response.json();
 
       if (!response.ok) {
-        setStatus(response.status === 503 ? "Account services are temporarily unavailable. Please try again shortly." : (result.error || "Unable to sign in."));
+        resetTurnstile();
+        setStatus(
+          response.status === 503
+            ? "Account services are temporarily unavailable."
+            : result.error || "Unable to sign in."
+        );
         return;
       }
 
@@ -50,54 +80,66 @@ export default function LoginPage() {
       <div className="auth-glow auth-glow-a" />
       <div className="auth-glow auth-glow-b" />
 
-      <section className="auth-brand">
-        <span className="brand-mark">A</span>
-        <div>
-          <strong>AVENZO</strong>
-          <span>Connect. Share. Belong.</span>
-        </div>
-      </section>
+      <AuthBrandPanel context="WELCOME TO AVENZO" />
 
       <section className="auth-card">
         <div className="eyebrow">WELCOME BACK</div>
-        <h1>Sign in to AVENZO.</h1>
-        <p className="auth-sub">Your feed, conversations and people stay behind your account.</p>
+        <h1>Sign in.</h1>
+        <p className="auth-sub">
+          Your feed, conversations and profile stay behind your account.
+        </p>
 
         <form className="auth-form" onSubmit={submit}>
-          <label className="auth-label" htmlFor="identifier">Username or email</label>
+          <label className="auth-label" htmlFor="identifier">
+            Username or email
+          </label>
           <input
             id="identifier"
             value={identifier}
             onChange={(event) => setIdentifier(event.target.value)}
             placeholder="Username or email"
             autoComplete="username"
+            spellCheck={false}
             required
           />
 
-          <label className="auth-label" htmlFor="password">Password</label>
-          <input
+          <PasswordField
             id="password"
-            type="password"
+            label="Password"
             value={password}
-            onChange={(event) => setPassword(event.target.value)}
+            onChange={setPassword}
             placeholder="Password"
             autoComplete="current-password"
-            required
           />
 
           <div className="auth-links">
             <a href="/forgot-password">Forgot Password?</a>
           </div>
 
-          {status && <div className="auth-message">{status}</div>}
+          <TurnstileWidget action="login" />
 
-          <button className="auth-submit" disabled={busy}>
+          {status && (
+            <div className="auth-message" role="status">
+              {status}
+            </div>
+          )}
+
+          <button className="auth-submit" disabled={busy || !identifier.trim() || !password}>
             {busy ? "Signing in…" : "Login"}
           </button>
         </form>
 
-        <div className="auth-divider"><span>New to AVENZO?</span></div>
-        <a className="auth-secondary-button" href="/signup">Create Account</a>
+        <p className="auth-session-note">
+          Your session stays signed in on this device until you sign out.
+        </p>
+
+        <div className="auth-divider">
+          <span>New to AVENZO?</span>
+        </div>
+
+        <a className="auth-secondary-button" href="/signup">
+          Create Account
+        </a>
       </section>
     </main>
   );
