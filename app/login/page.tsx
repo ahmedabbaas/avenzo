@@ -8,8 +8,10 @@ import TurnstileWidget, {
   resetTurnstile,
 } from "../_components/turnstile-widget";
 import SiteFooter from "../_components/site-footer";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
@@ -68,7 +70,7 @@ export default function LoginPage() {
         return;
       }
 
-      window.location.assign("/home");
+      router.replace("/home");
     } catch {
       setStatus("Unable to reach AVENZO right now.");
     } finally {
