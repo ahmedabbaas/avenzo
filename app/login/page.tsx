@@ -36,6 +36,9 @@ export default function LoginPage() {
     if (params.get("reset") === "1") {
       nextStatus = "Password updated. Sign in with your new password.";
     }
+    if (params.get("deleted") === "1") {
+      nextStatus = "Your AVENZO account has been deleted.";
+    }
 
     if (!nextStatus) return;
     const timer = window.setTimeout(() => setStatus(nextStatus), 0);
