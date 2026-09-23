@@ -1741,12 +1741,23 @@ export default function HomeClient({
       </nav>
 
       {showCreate && (
-        <div className="modal" role="dialog" aria-modal="true" aria-label="Create post">
-          <form className="modal-box create-modal" onSubmit={createPost}>
+        <div
+          className="modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label={"Create " + createMode}
+        >
+          <form className="modal-box create-modal" onSubmit={createContent}>
             <div className="modal-header">
               <div>
                 <div className="eyebrow">CREATE</div>
-                <h2>New post</h2>
+                <h2>
+                  {createMode === "post"
+                    ? "New post"
+                    : createMode === "reel"
+                      ? "New reel"
+                      : "New story"}
+                </h2>
               </div>
               <button
                 type="button"
@@ -1758,6 +1769,25 @@ export default function HomeClient({
               </button>
             </div>
 
+            <div className="create-type-tabs" role="tablist" aria-label="Content type">
+              {(["post", "reel", "story"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  className={createMode === mode ? "active" : ""}
+                  onClick={() => {
+                    setCreateMode(mode);
+                    setCaption("");
+                    setFile(null);
+                    if (preview) URL.revokeObjectURL(preview);
+                    setPreview("");
+                  }}
+                >
+                  {mode === "post" ? "Post" : mode === "reel" ? "Reel" : "Story"}
+                </button>
+              ))}
+            </div>
+
             <div className="composer-author">
               <img src={avatarFor(profile)} alt="" />
               <div>
@@ -1766,27 +1796,57 @@ export default function HomeClient({
               </div>
             </div>
 
-            <textarea
-              value={caption}
-              onChange={(event) => setCaption(event.target.value.slice(0, 2200))}
-              placeholder="What’s worth sharing?"
-              autoFocus
-            />
+            {createMode !== "story" && (
+              <textarea
+                value={caption}
+                onChange={(event) => setCaption(event.target.value.slice(0, 2200))}
+                placeholder={
+                  createMode === "reel"
+                    ? "Add a caption to your reel…"
+                    : "What’s worth sharing?"
+                }
+                autoFocus
+              />
+            )}
 
             <div className="composer-meta">
               <label className="upload-button">
                 <Icon name="camera" size={17} />
-                Add photo or video
-                <input type="file" accept="image/*,video/*" onChange={pickFile} />
+                {createMode === "reel"
+                  ? "Choose video"
+                  : createMode === "story"
+                    ? "Choose story media"
+                    : "Add photo or video"}
+                <input
+                  type="file"
+                  accept={createMode === "reel" ? "video/*" : "image/*,video/*"}
+                  onChange={pickFile}
+                />
               </label>
-              <span>{caption.length}/2200</span>
+              {createMode !== "story" && <span>{caption.length}/2200</span>}
             </div>
+
+            {createMode === "story" && (
+              <p className="create-hint">
+                Stories are visible to you and your followers for 24 hours.
+              </p>
+            )}
+
+            {createMode === "reel" && (
+              <p className="create-hint">
+                Reels are real uploaded videos. AVENZO never inserts demo reels.
+              </p>
+            )}
 
             {preview &&
               (file?.type.startsWith("video/") ? (
                 <video src={preview} controls className="upload-preview" />
               ) : (
-                <img src={preview} className="upload-preview" alt="Post preview" />
+                <img
+                  src={preview}
+                  className="upload-preview"
+                  alt={createMode === "story" ? "Story preview" : "Post preview"}
+                />
               ))}
 
             <div className="modal-actions">
@@ -1798,10 +1858,73 @@ export default function HomeClient({
                 Cancel
               </button>
               <button className="btn" disabled={posting}>
-                {posting ? "Publishing…" : "Publish"}
+                {posting
+                  ? "Publishing…"
+                  : createMode === "post"
+                    ? "Publish Post"
+                    : createMode === "reel"
+                      ? "Publish Reel"
+                      : "Publish Story"}
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {storyViewer && (
+        <div
+          className="modal story-viewer-shell"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Story"
+          onClick={() => setStoryViewer(null)}
+        >
+          <div className="story-viewer" onClick={(event) => event.stopPropagation()}>
+            <div className="story-viewer-head">
+              <div className="person-line">
+                <img
+                  src={avatarFor(storyViewer.profile || profile)}
+                  alt=""
+                />
+                <div>
+                  <b>
+                    {storyViewer.profile?.display_name || profile.display_name}
+                  </b>
+                  <small>
+                    @{storyViewer.profile?.username || profile.username} ·{" "}
+                    {formatRelativeTime(storyViewer.created_at)}
+                  </small>
+                </div>
+              </div>
+              <button
+                className="icon-button"
+                onClick={() => setStoryViewer(null)}
+                aria-label="Close story"
+              >
+                <Icon name="close" />
+              </button>
+            </div>
+
+            {storyViewer.media_type === "video" ? (
+              <video
+                src={mediaUrl(storyViewer.media_path)}
+                controls
+                autoPlay
+                playsInline
+                className="story-viewer-media"
+              />
+            ) : (
+              <img
+                src={mediaUrl(storyViewer.media_path)}
+                alt="Story"
+                className="story-viewer-media"
+              />
+            )}
+
+            <small className="story-expiry">
+              Expires {new Date(storyViewer.expires_at).toLocaleString()}
+            </small>
+          </div>
         </div>
       )}
 
@@ -2053,6 +2176,129 @@ function PostCard({
             onChange={(event) => setComment(event.target.value.slice(0, 1000))}
             placeholder="Add a comment…"
             aria-label="Add a comment"
+          />
+          <button disabled={!comment.trim()}>Post</button>
+        </form>
+      </div>
+    </article>
+  );
+}
+
+function ReelCard({
+  reel,
+  mediaUrl,
+  saved,
+  own,
+  onLike,
+  onSave,
+  onComment,
+  onDelete,
+}: {
+  reel: Reel;
+  mediaUrl: string;
+  saved: boolean;
+  own: boolean;
+  onLike: () => void;
+  onSave: () => void;
+  onComment: (value: string) => void;
+  onDelete: () => void;
+}) {
+  const [comment, setComment] = useState("");
+  const author = reel.profile;
+
+  return (
+    <article className="reel-card">
+      <div className="post-head">
+        {author ? (
+          <Link
+            className="person-line person-link"
+            href={"/u/" + encodeURIComponent(author.username)}
+          >
+            <img src={avatarFor(author)} alt="" />
+            <div>
+              <b>{author.display_name}</b>
+              <small>
+                @{author.username} · {formatRelativeTime(reel.created_at)}
+              </small>
+            </div>
+          </Link>
+        ) : (
+          <div className="person-line">
+            <img src={initialsAvatar("AVENZO user")} alt="" />
+            <div>
+              <b>AVENZO user</b>
+              <small>{formatRelativeTime(reel.created_at)}</small>
+            </div>
+          </div>
+        )}
+
+        {own && (
+          <button className="post-delete" onClick={onDelete}>
+            Delete
+          </button>
+        )}
+      </div>
+
+      <video
+        className="reel-media"
+        src={mediaUrl}
+        controls
+        playsInline
+        preload="metadata"
+      />
+
+      {reel.caption && <p className="post-caption">{reel.caption}</p>}
+
+      <div className="post-content">
+        <div className="post-actions">
+          <button
+            className={reel.liked ? "liked" : ""}
+            onClick={onLike}
+            aria-label={reel.liked ? "Unlike reel" : "Like reel"}
+          >
+            <Icon name="heart" size={20} />
+            <span>{reel.likeCount}</span>
+          </button>
+
+          <span className="post-stat">
+            <Icon name="comment" size={20} />
+            <span>{reel.commentCount}</span>
+          </span>
+
+          <button
+            className={"save-action " + (saved ? "saved" : "")}
+            onClick={onSave}
+            aria-label={saved ? "Remove saved reel" : "Save reel"}
+          >
+            <Icon name="bookmark" size={20} />
+          </button>
+        </div>
+
+        {reel.comments.length > 0 && (
+          <div className="comment-list">
+            {reel.comments.slice(-3).map((item) => (
+              <div key={item.id}>
+                <b>@{item.profile?.username || "user"}</b>
+                <span>{item.body}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <form
+          className="comment-input"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!comment.trim()) return;
+            onComment(comment);
+            setComment("");
+          }}
+        >
+          <input
+            value={comment}
+            onChange={(event) => setComment(event.target.value.slice(0, 1000))}
+            placeholder="Add a comment…"
+            aria-label="Add a reel comment"
           />
           <button disabled={!comment.trim()}>Post</button>
         </form>
@@ -2319,15 +2565,23 @@ function Activity({
 function ProfileView({
   profile,
   posts,
+  reels,
   media,
   stats,
   onEdit,
+  onCreatePost,
+  onCreateReel,
+  onCreateStory,
 }: {
   profile: Profile;
   posts: Post[];
+  reels: Reel[];
   media: (path: string) => string;
   stats: ProfileStats;
   onEdit: () => void;
+  onCreatePost: () => void;
+  onCreateReel: () => void;
+  onCreateStory: () => void;
 }) {
   const mediaPosts = posts.filter((post) => post.media_path);
 
@@ -2359,36 +2613,89 @@ function ProfileView({
               <b>{stats.following}</b> following
             </span>
           </div>
+
+          <div className="profile-create-actions">
+            <button className="btn small" onClick={onCreatePost}>
+              Create Post
+            </button>
+            <button className="btn secondary small" onClick={onCreateReel}>
+              Create Reel
+            </button>
+            <button className="btn secondary small" onClick={onCreateStory}>
+              Create Story
+            </button>
+          </div>
         </div>
       </div>
 
-      {mediaPosts.length > 0 ? (
-        <div className="profile-grid">
-          {mediaPosts.map((post) =>
-            post.media_type === "video" ? (
+      <section className="profile-content-section">
+        <div className="section-inline-head">
+          <div>
+            <div className="eyebrow">POSTS</div>
+            <h3>{stats.posts} posts</h3>
+          </div>
+        </div>
+
+        {mediaPosts.length > 0 ? (
+          <div className="profile-grid">
+            {mediaPosts.map((post) =>
+              post.media_type === "video" ? (
+                <video
+                  key={post.id}
+                  src={media(post.media_path!)}
+                  preload="metadata"
+                  controls
+                  muted
+                />
+              ) : (
+                <img
+                  key={post.id}
+                  src={media(post.media_path!)}
+                  alt="Post"
+                  loading="lazy"
+                />
+              )
+            )}
+          </div>
+        ) : (
+          <EmptyState
+            title="No posts yet."
+            text="Your profile starts empty. Publish your first real post when you’re ready."
+            action={onCreatePost}
+            actionLabel="Create Post"
+          />
+        )}
+      </section>
+
+      <section className="profile-content-section">
+        <div className="section-inline-head">
+          <div>
+            <div className="eyebrow">REELS</div>
+            <h3>{reels.length} reels</h3>
+          </div>
+        </div>
+
+        {reels.length > 0 ? (
+          <div className="profile-grid reel-profile-grid">
+            {reels.map((reel) => (
               <video
-                key={post.id}
-                src={media(post.media_path!)}
+                key={reel.id}
+                src={media(reel.media_path)}
                 preload="metadata"
                 controls
                 muted
               />
-            ) : (
-              <img
-                key={post.id}
-                src={media(post.media_path!)}
-                alt="Post"
-                loading="lazy"
-              />
-            )
-          )}
-        </div>
-      ) : (
-        <EmptyState
-          title="No media posts yet."
-          text="Your photo and video posts will build your profile grid."
-        />
-      )}
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="0 reels"
+            text="Your reels will appear here after you upload a real video."
+            action={onCreateReel}
+            actionLabel="Create Reel"
+          />
+        )}
+      </section>
     </>
   );
 }
