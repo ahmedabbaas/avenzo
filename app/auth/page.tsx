@@ -1,22 +1,28 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function AuthPage() {
   const router = useRouter();
-  const params = useSearchParams();
-  const supabase = useMemo(() => createClient(), []);
+    const supabase = useMemo(() => createClient(), []);
   const [mode, setMode] = useState<"signup"|"login">("signup");
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [status, setStatus] = useState(params.get("error") === "confirmation" ? "That confirmation link is invalid or expired." : "");
+  const [status, setStatus] = useState("");
   const [checking, setChecking] = useState(false);
   const [available, setAvailable] = useState<boolean|null>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const error = new URLSearchParams(window.location.search).get("error");
+    if (error === "confirmation") setStatus("That confirmation link is invalid or expired.");
+    if (error === "verify") setStatus("Verify your email before entering AVENZO.");
+    if (error === "profile") setStatus("Your account profile could not be loaded. Please contact support.");
+  }, []);
 
   async function checkUsername(value: string) {
     const clean = value.replace(/^@+/, "").toLowerCase();
