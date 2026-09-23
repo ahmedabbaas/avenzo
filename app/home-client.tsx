@@ -241,7 +241,7 @@ export default function HomeClient({
 }: {
   profile: Profile;
   initialChatUsername?: string;
-  initialScreen?: "profile";
+  initialScreen?: Screen;
 }) {
   const supabase = useMemo(() => createClient(), []);
 
