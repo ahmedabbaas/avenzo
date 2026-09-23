@@ -22,6 +22,6 @@ export async function POST(request: Request) {
       message: "If an account exists for that email, a password reset link has been sent.",
     });
   } catch {
-    return NextResponse.json({ error: "AVENZO backend is not configured." }, { status: 503 });
+    return NextResponse.json({ error: "Account services are temporarily unavailable. Please try again shortly." }, { status: 503 });
   }
 }
