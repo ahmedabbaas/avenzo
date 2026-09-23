@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import AuthBrandPanel from "../_components/auth-brand-panel";
 import PasswordField from "../_components/password-field";
 import { createClient } from "../../lib/supabase/client";
+import SiteFooter from "../_components/site-footer";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -90,6 +91,7 @@ export default function ResetPasswordPage() {
           </button>
         </form>
       </section>
+      <SiteFooter />
     </main>
   );
 }
