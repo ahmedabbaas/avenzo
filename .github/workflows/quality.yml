@@ -42,5 +42,8 @@ jobs:
       - name: Check Supabase Edge Functions
         run: deno check supabase/functions/**/*.ts
 
+      - name: Run unit tests
+        run: deno test tests/*.test.ts
+
       - name: Production build
         run: npm run build
