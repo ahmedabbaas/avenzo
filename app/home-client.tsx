@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase/client";
 import ActivityPanel from "../features/social/components/activity-panel";
 import AvatarImage from "../features/social/components/avatar-image";
@@ -25,11 +26,9 @@ import SettingsPanel from "../features/social/components/settings-panel";
 import {
   avatarFor,
   formatRelativeTime,
-  initialsAvatar,
 } from "../features/social/lib/profile";
 import type {
   Chat,
-  Comment,
   Message,
   Post,
   Profile,
@@ -58,6 +57,7 @@ export default function HomeClient({
   initialChatUsername?: string;
   initialScreen?: Screen;
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
 
   const [profile, setProfile] = useState(initialProfile);
@@ -94,10 +94,10 @@ export default function HomeClient({
   const mediaUrl = (path: string) =>
     supabase.storage.from("media").getPublicUrl(path).data.publicUrl;
 
-  const showToast = (message: string) => {
+  const showToast = useCallback((message: string) => {
     setToast(message);
     window.setTimeout(() => setToast(""), 3200);
-  };
+  }, []);
 
   const markActivityRead = useCallback(() => {
     setUnreadActivity(0);
@@ -454,7 +454,7 @@ export default function HomeClient({
     );
   }
 
-  async function loadChats() {
+  const loadChats = useCallback(async () => {
     const filter = `sender_id.eq.${initialProfile.id},recipient_id.eq.${initialProfile.id}`;
     const { data } = await supabase
       .from("messages")
@@ -513,7 +513,7 @@ export default function HomeClient({
     }
 
     setChats(nextChats);
-  }
+  }, [supabase, initialProfile.id]);
 
   async function refreshEverything() {
     await Promise.all([
@@ -562,6 +562,10 @@ export default function HomeClient({
     }, 0);
 
     return () => window.clearTimeout(timer);
+
+    // Initial account bootstrap is intentionally mount-only. Making the entire
+    // loader graph reactive would refetch the full social shell after each state update.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -607,7 +611,14 @@ export default function HomeClient({
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [selected, screen]);
+  }, [
+    initialProfile.id,
+    loadChats,
+    screen,
+    selected,
+    showToast,
+    supabase,
+  ]);
 
   function pickFile(event: ChangeEvent<HTMLInputElement>) {
     const picked = event.target.files?.[0] || null;
@@ -1009,7 +1020,8 @@ export default function HomeClient({
 
   async function signOut() {
     await supabase.auth.signOut();
-    window.location.href = "/login";
+    router.replace("/login");
+    router.refresh();
   }
 
   const filteredPeople = people.filter((person) =>
