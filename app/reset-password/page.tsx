@@ -5,8 +5,10 @@ import AuthBrandPanel from "../_components/auth-brand-panel";
 import PasswordField from "../_components/password-field";
 import { createClient } from "../../lib/supabase/client";
 import SiteFooter from "../_components/site-footer";
+import { useRouter } from "next/navigation";
 
 export default function ResetPasswordPage() {
+  const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [status, setStatus] = useState("");
@@ -38,7 +40,7 @@ export default function ResetPasswordPage() {
       }
 
       await supabase.auth.signOut();
-      window.location.assign("/login?reset=1");
+      router.replace("/login?reset=1");
     } catch {
       setStatus("This reset session is invalid, expired, or unavailable.");
     } finally {
