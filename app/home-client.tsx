@@ -529,7 +529,11 @@ export default function HomeClient({
   }
 
   useEffect(() => {
-    void refreshEverything();
+    const timer = window.setTimeout(() => {
+      void refreshEverything();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
