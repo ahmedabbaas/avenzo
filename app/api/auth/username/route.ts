@@ -18,6 +18,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ available: Boolean(data), valid: true });
   } catch {
-    return NextResponse.json({ error: "AVENZO backend is not configured." }, { status: 503 });
+    return NextResponse.json({ error: "Account services are temporarily unavailable. Please try again shortly." }, { status: 503 });
   }
 }
