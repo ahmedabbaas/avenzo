@@ -8,6 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import Link from "next/link";
 import { createClient } from "../lib/supabase/client";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -235,13 +236,17 @@ function formatRelativeTime(value: string) {
 
 export default function HomeClient({
   profile: initialProfile,
+  initialChatUsername = "",
+  initialScreen,
 }: {
   profile: Profile;
+  initialChatUsername?: string;
+  initialScreen?: "profile";
 }) {
   const supabase = useMemo(() => createClient(), []);
 
   const [profile, setProfile] = useState(initialProfile);
-  const [screen, setScreen] = useState<Screen>("home");
+  const [screen, setScreen] = useState<Screen>(initialScreen || "home");
   const [feedTab, setFeedTab] = useState<"all" | "following">("all");
   const [posts, setPosts] = useState<Post[]>([]);
   const [people, setPeople] = useState<Profile[]>([]);
@@ -331,8 +336,19 @@ export default function HomeClient({
         .eq("follower_id", initialProfile.id),
     ]);
 
-    setPeople(data || []);
+    const nextPeople = (data || []) as Profile[];
+    setPeople(nextPeople);
     setFollowed((followRows || []).map((row: { following_id: string }) => row.following_id));
+
+    if (initialChatUsername) {
+      const requested = nextPeople.find(
+        (person) => person.username.toLowerCase() === initialChatUsername
+      );
+      if (requested) {
+        setScreen("messages");
+        await openChat(requested);
+      }
+    }
   }
 
   async function loadPosts() {
