@@ -685,3 +685,27 @@ img{max-width:100%}
 .report-modal select:focus,.report-modal textarea:focus{border-color:#3e4a53}
 .report-modal textarea{min-height:115px;resize:vertical}
 .report-count{text-align:right;color:#626d75;font-size:9px;margin-top:5px}
+
+/* Product-quality accessibility + interaction pass */
+.skip-link{position:fixed;left:16px;top:12px;z-index:9999;transform:translateY(-180%);background:#f6f7f8;color:#080a0c;padding:10px 14px;border-radius:10px;font-weight:700;text-decoration:none;transition:transform .18s ease}.skip-link:focus{transform:translateY(0)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+a,button,input,textarea,select{touch-action:manipulation}
+button,a{-webkit-tap-highlight-color:transparent}
+.auth-card,.post-card,.side-card,.person-card,.settings-card,.modal-box,.public-profile-wrap{box-shadow:0 1px 0 rgba(255,255,255,.02) inset}
+.auth-submit,.btn,.auth-secondary-button,.left-nav button,.mobile-nav button{transition:transform .16s ease,background-color .16s ease,border-color .16s ease,opacity .16s ease}
+.auth-submit:not(:disabled):active,.btn:not(:disabled):active,.auth-secondary-button:active{transform:translateY(1px) scale(.995)}
+.auth-submit:disabled{filter:saturate(.65)}
+.auth-form input::placeholder,.chat-compose input::placeholder,.settings-card input::placeholder,.settings-card textarea::placeholder{color:#68717a}
+.username-state{display:flex;align-items:center;gap:7px;min-height:20px}
+.username-state i{width:7px;height:7px;border-radius:50%;background:#59616a;flex:none}
+.username-state.checking i{animation:avenzoPulse 1s infinite}
+.username-state.available{color:var(--accent)}.username-state.available i{background:var(--accent)}
+.username-state.taken,.username-state.invalid,.username-state.offline{color:#ff9a9a}.username-state.taken i,.username-state.invalid i,.username-state.offline i{background:#ff7b7b}
+.auth-session-note{margin:12px 0 0;text-align:center;color:#6f7780;font-size:11px;line-height:1.5}
+.system-page{min-height:100svh}
+.mobile-nav{padding-bottom:max(7px,env(safe-area-inset-bottom))}
+.top{padding-top:env(safe-area-inset-top)}
+@keyframes avenzoPulse{0%,100%{opacity:.4;transform:scale(.85)}50%{opacity:1;transform:scale(1.12)}}
+@media (hover:hover){.auth-submit:not(:disabled):hover,.btn:not(:disabled):hover{transform:translateY(-1px)}.person-card:hover,.post-card:hover{border-color:#303943}}
+@media (prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
+@media(max-width:760px){.auth-shell{min-height:100svh;padding-bottom:max(22px,env(safe-area-inset-bottom))}.auth-card{border-radius:22px}.auth-brand-panel{min-height:auto}}
