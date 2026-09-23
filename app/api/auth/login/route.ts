@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
-import { createClient } from "../../../../lib/supabase/server";
+import {
+  consumeRateLimit,
+  rateLimitResponse,
+} from "../../../../lib/security/rate-limit";
 import {
   SUPABASE_PUBLISHABLE_KEY,
   SUPABASE_URL,
 } from "../../../../lib/supabase/config";
+import { createClient } from "../../../../lib/supabase/server";
 import { verifyTurnstile } from "../../../../lib/turnstile";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +38,21 @@ export async function POST(request: Request) {
       );
     }
 
+    const supabase = await createClient();
+
+    const rate = await consumeRateLimit({
+      supabase,
+      request,
+      scope: "login",
+      subject: identifier,
+      limit: 10,
+      windowSeconds: 10 * 60,
+    });
+
+    if (!rate.allowed) {
+      return rateLimitResponse(rate.retryAfter);
+    }
+
     const verified = await verifyTurnstile(
       request,
       turnstileToken,
@@ -57,6 +76,7 @@ export async function POST(request: Request) {
         },
         body: JSON.stringify({ identifier, password }),
         cache: "no-store",
+        signal: AbortSignal.timeout(8000),
       }
     );
 
@@ -69,7 +89,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabase = await createClient();
     const { error } = await supabase.auth.setSession({
       access_token: result.access_token,
       refresh_token: result.refresh_token,
