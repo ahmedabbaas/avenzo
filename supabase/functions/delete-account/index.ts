@@ -66,22 +66,35 @@ Deno.serve(async (request) => {
     );
 
     async function listUserMedia(path: string): Promise<string[]> {
-      const { data, error } = await admin.storage
-        .from("media")
-        .list(path, { limit: 1000 });
-
-      if (error) throw error;
-
       const files: string[] = [];
+      let offset = 0;
+      const pageSize = 1000;
 
-      for (const item of data || []) {
-        const itemPath = path ? path + "/" + item.name : item.name;
+      while (true) {
+        const { data, error } = await admin.storage
+          .from("media")
+          .list(path, {
+            limit: pageSize,
+            offset,
+            sortBy: { column: "name", order: "asc" },
+          });
 
-        if (item.id) {
-          files.push(itemPath);
-        } else {
-          files.push(...(await listUserMedia(itemPath)));
+        if (error) throw error;
+
+        const page = data || [];
+
+        for (const item of page) {
+          const itemPath = path ? path + "/" + item.name : item.name;
+
+          if (item.id) {
+            files.push(itemPath);
+          } else {
+            files.push(...(await listUserMedia(itemPath)));
+          }
         }
+
+        if (page.length < pageSize) break;
+        offset += pageSize;
       }
 
       return files;
