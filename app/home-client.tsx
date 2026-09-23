@@ -2742,28 +2742,34 @@ function Settings({
   const [blockedLoading, setBlockedLoading] = useState(true);
   const [unblockingId, setUnblockingId] = useState<string | null>(null);
 
-  async function loadBlockedAccounts() {
-    setBlockedLoading(true);
+  useEffect(() => {
+    let active = true;
 
-    const { data, error } = await supabase.rpc("get_blocked_accounts");
+    void supabase.rpc("get_blocked_accounts").then(({ data, error }) => {
+      if (!active) return;
 
-    if (error) {
-      setNotice("Could not load blocked accounts.");
+      if (error) {
+        setNotice("Could not load blocked accounts.");
+        setBlockedLoading(false);
+        return;
+      }
+
+      setBlockedAccounts(
+        ((data || []) as Array<{
+          id: string;
+          username: string;
+          display_name: string;
+          avatar_url: string | null;
+          blocked_at: string;
+        }>)
+      );
       setBlockedLoading(false);
-      return;
-    }
+    });
 
-    setBlockedAccounts(
-      ((data || []) as Array<{
-        id: string;
-        username: string;
-        display_name: string;
-        avatar_url: string | null;
-        blocked_at: string;
-      }>)
-    );
-    setBlockedLoading(false);
-  }
+    return () => {
+      active = false;
+    };
+  }, [supabase, profile.id]);
 
   async function unblockAccount(account: {
     id: string;
@@ -2799,10 +2805,6 @@ function Settings({
     setUnblockingId(null);
     onUnblocked();
   }
-
-  useEffect(() => {
-    void loadBlockedAccounts();
-  }, [supabase, profile.id]);
 
   function chooseAvatar(event: ChangeEvent<HTMLInputElement>) {
     const picked = event.target.files?.[0] || null;
