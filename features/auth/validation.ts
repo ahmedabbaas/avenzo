@@ -1,6 +1,7 @@
 export const USERNAME_MIN_LENGTH = 3;
 export const USERNAME_MAX_LENGTH = 30;
 export const DISPLAY_NAME_MAX_LENGTH = 80;
+export const BIO_MAX_LENGTH = 160;
 export const PASSWORD_MIN_LENGTH = 8;
 export const PASSWORD_MAX_LENGTH = 1024;
 export const EMAIL_MAX_LENGTH = 254;
