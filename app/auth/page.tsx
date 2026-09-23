@@ -24,7 +24,11 @@ export default function AuthPage() {
     if (error === "profile") setStatus("Your account profile could not be loaded. Please contact support.");
   }, []);
 
-  function getSupabase() {\n    return createClient();\n  }\n\n  async function checkUsername(value: string) {
+  function getSupabase() {
+    return createClient();
+  }
+
+  async function checkUsername(value: string) {
     const clean = value.replace(/^@+/, "").toLowerCase();
     setUsername(clean);
     setAvailable(null);
