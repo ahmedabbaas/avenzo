@@ -1,69 +1,31 @@
-import Image from "next/image";
-
-export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
-}
+"use client";
+import {ChangeEvent,FormEvent,useEffect,useState} from "react";
+type U={name:string;username:string;email:string;bio:string;avatar:string;followers:number;following:number};
+type P={id:string;user:Pick<U,"name"|"username"|"avatar">;image?:string;text:string;likes:number;liked:boolean;comments:{user:string;text:string}[]};
+type M={from:"me"|"them";text:string};
+const me:U={name:"Ahmed Abbas",username:"ahmedabbas",email:"demo@avenzo.app",bio:"Building AVENZO. Connect, share, belong.",avatar:"https://i.pravatar.cc/160?img=12",followers:1284,following:312};
+const initial:P[]=[
+{id:"1",user:me,image:"https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=85",text:"Building AVENZO from the ground up. This is the beginning.",likes:482,liked:false,comments:[{user:"hassaan",text:"This looks clean."},{user:"sara",text:"Love the direction 🔥"}]},
+{id:"2",user:{name:"Sara Noor",username:"saran",avatar:"https://i.pravatar.cc/160?img=47"},image:"https://images.unsplash.com/photo-1497250681960-ef046c08a56e?auto=format&fit=crop&w=1200&q=85",text:"A quiet corner and a loud idea.",likes:219,liked:false,comments:[{user:"ahmedabbas",text:"The vibe is perfect."}]},
+{id:"3",user:{name:"Hassaan Khan",username:"hassaan",avatar:"https://i.pravatar.cc/160?img=68"},text:"Sometimes the caption is the whole story.",likes:96,liked:false,comments:[]}
+];
+const people=[{name:"Sara Noor",username:"saran",avatar:"https://i.pravatar.cc/160?img=47"},{name:"Hassaan Khan",username:"hassaan",avatar:"https://i.pravatar.cc/160?img=68"},{name:"Maya Ali",username:"maya",avatar:"https://i.pravatar.cc/160?img=32"}];
+const baseMsgs:Record<string,M[]>={saran:[{from:"them",text:"Hey! I saw the AVENZO preview."},{from:"me",text:"Still building it. The username system is next."}],hassaan:[{from:"them",text:"Sent a photo."}],maya:[{from:"them",text:"That works 👍"}]};
+const taken=new Set(["admin","avenzo","support","official","ahmedabbas","saran","hassaan","maya"]);
+function Auth({kind,close,done}:{kind:"login"|"signup";close:()=>void;done:(u:U)=>void}){const[n,setN]=useState("");const[e,setE]=useState("");const[p,setP]=useState("");const[u,setU]=useState("");const[s,setS]=useState("");const check=(v:string)=>{const x=v.replace(/^@+/,"").toLowerCase();setU(x);if(!x)return setS("");if(!/^[a-z0-9._]{3,24}$/.test(x))setS("3–24 letters, numbers, dots or underscores.");else if(taken.has(x))setS("Username is already taken.");else setS("✓ Username available")};const submit=(ev:FormEvent)=>{ev.preventDefault();if(kind==="signup"&&(!u||s!=="✓ Username available"))return;done({name:n||"Avenzo User",username:kind==="login"?"ahmedabbas":u,email:e||"user@avenzo.app",bio:"New to AVENZO. Let’s connect.",avatar:"https://i.pravatar.cc/160?u="+encodeURIComponent(u||"ahmedabbas"),followers:0,following:0})};return <div className="modal"><form className="box" onSubmit={submit}><div className="eyebrow">AVENZO</div><h3>{kind==="login"?"Welcome back":"Create your account"}</h3><p className="muted">{kind==="login"?"Sign in to your world.":"Claim your username and join AVENZO."}</p>{kind==="signup"&&<><input placeholder="Full name" value={n} onChange={x=>setN(x.target.value)} required/><input placeholder="@username" value={u} onChange={x=>check(x.target.value)} required/><div className="muted" style={{fontSize:12,marginTop:7}}>{s}</div></>}<input type="email" placeholder="Email" value={e} onChange={x=>setE(x.target.value)} required/><input type="password" placeholder="Password" value={p} onChange={x=>setP(x.target.value)} required/><div className="modalactions"><button type="button" className="btn secondary" onClick={close}>Cancel</button><button className="btn">{kind==="login"?"Sign in":"Create account"}</button></div></form></div>}
+function Create({close,post}:{close:()=>void;post:(t:string,img?:string)=>void}){const[t,setT]=useState("");const[img,setImg]=useState("");const pick=(e:ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];if(f){const r=new FileReader();r.onload=()=>setImg(String(r.result));r.readAsDataURL(f)}};return <div className="modal"><div className="box"><div className="eyebrow">CREATE</div><h3>Share something</h3><textarea placeholder="What's happening?" value={t} onChange={e=>setT(e.target.value)}/><input type="file" accept="image/*" onChange={pick}/>{img&&<img src={img} style={{width:"100%",marginTop:12,maxHeight:250,objectFit:"cover",borderRadius:12}}/>}<div className="modalactions"><button className="btn secondary" onClick={close}>Cancel</button><button className="btn" onClick={()=>{if(t.trim()||img)post(t.trim(),img||undefined)}}>Post</button></div></div></div>}
+function Post({p,like,comment,saved,save}:{p:P;like:()=>void;comment:(x:string)=>void;saved:boolean;save:()=>void}){const[c,setC]=useState("");return <article className="card"><div className="posthead"><div className="user"><img src={p.user.avatar}/><div><b>{p.user.name}</b><small>@{p.user.username}</small></div></div><span className="muted">•••</span></div>{p.image&&<img className="media" src={p.image}/>}<div className="body"><p className="caption">{p.text}</p><div className="actions"><button className={p.liked?"liked":""} onClick={like}>♡ {p.likes}</button><button>◌ {p.comments.length}</button><button className="save" onClick={save}>{saved?"Saved":"Save"}</button></div><div className="comments">{p.comments.map((x,i)=><div className="comment" key={i}><b>@{x.user}</b> {x.text}</div>)}<form className="commentform" onSubmit={e=>{e.preventDefault();if(c.trim()){comment(c);setC("")}}}><input placeholder="Add a comment..." value={c} onChange={e=>setC(e.target.value)}/><button>Post</button></form></div></div></article>}
+export default function App(){const[screen,setScreen]=useState("home");const[user,setUser]=useState<U>(me);const[posts,setPosts]=useState<P[]>(initial);const[auth,setAuth]=useState<"login"|"signup"|null>(null);const[create,setCreate]=useState(false);const[q,setQ]=useState("");const[saved,setSaved]=useState<string[]>([]);const[selected,setSelected]=useState("saran");const[ch,setCh]=useState<Record<string,M[]>>(baseMsgs);const[msg,setMsg]=useState("");
+useEffect(()=>{try{const u=localStorage.getItem("avenzo_user");const p=localStorage.getItem("avenzo_posts");const sv=localStorage.getItem("avenzo_saved");if(u)setUser(JSON.parse(u));if(p)setPosts(JSON.parse(p));if(sv)setSaved(JSON.parse(sv))}catch{}},[]);
+useEffect(()=>{localStorage.setItem("avenzo_user",JSON.stringify(user));localStorage.setItem("avenzo_posts",JSON.stringify(posts));localStorage.setItem("avenzo_saved",JSON.stringify(saved))},[user,posts,saved]);
+const setDone=(u:U)=>{setUser(u);setAuth(null)};const add=(t:string,img?:string)=>{setPosts(v=>[{id:Date.now().toString(),user:{name:user.name,username:user.username,avatar:user.avatar},text:t,image:img,likes:0,liked:false,comments:[]},...v]);setCreate(false)};const send=()=>{if(!msg.trim())return;setCh(v=>({...v,[selected]:[...(v[selected]||[]),{from:"me",text:msg.trim()}]}));setMsg("")};const visible=posts.filter(p=>(p.text+" "+p.user.username).toLowerCase().includes(q.toLowerCase()));
+const nav=[["home","Home"],["explore","Explore"],["messages","Messages"],["activity","Activity"],["saved","Saved"],["profile","Profile"],["settings","Settings"]];
+return <div className="app"><header className="top"><div className="brand"><i/>AVENZO</div><input className="search" placeholder="Search people, posts..." value={q} onChange={e=>setQ(e.target.value)}/><button style={{border:0,background:"transparent"}} onClick={()=>setScreen("profile")}><img className="avatar" src={user.avatar}/></button></header><div className="layout"><aside className="side"><nav className="nav">{nav.map(([id,label])=><button key={id} className={screen===id?"active":""} onClick={()=>setScreen(id)}><span>{id==="home"?"⌂":id==="explore"?"◉":id==="messages"?"◌":id==="activity"?"♡":id==="saved"?"▱":id==="profile"?"○":"⚙"}</span> <span className="label">{label}</span></button>)}<button className="create" onClick={()=>setCreate(true)}>＋ <span className="label">Create</span></button></nav><div className="mini"><img className="avatar" src={user.avatar}/><div><b>{user.name}</b><small>@{user.username}</small></div></div></aside><main>
+{screen==="home"&&<><section className="hero"><div className="eyebrow">WELCOME TO AVENZO</div><h1>Your world. Your people.</h1><p>A premium place to share photos, talk to friends, discover people and keep your moments together.</p><button className="btn" onClick={()=>setCreate(true)}>Create a post</button></section><div className="stories">{[[user.name,user.avatar],["Sara","https://i.pravatar.cc/160?img=47"],["Hassaan","https://i.pravatar.cc/160?img=68"],["Maya","https://i.pravatar.cc/160?img=32"]].map(x=><div className="story" key={x[0]}><div className="ring"><img src={x[1]}/></div><small>{x[0]}</small></div>)}</div>{visible.map(p=><Post key={p.id} p={p} like={()=>setPosts(v=>v.map(x=>x.id===p.id?{...x,liked:!x.liked,likes:x.likes+(x.liked?-1:1)}:x))} comment={c=>setPosts(v=>v.map(x=>x.id===p.id?{...x,comments:[...x.comments,{user:user.username,text:c}]}:x))} saved={saved.includes(p.id)} save={()=>setSaved(v=>v.includes(p.id)?v.filter(x=>x!==p.id):[...v,p.id])}/>)}</>}
+{screen==="explore"&&<><div className="title"><div className="eyebrow">DISCOVER</div><h2>Explore</h2><span className="muted">People, posts and moments beyond your feed.</span></div><div className="grid">{posts.filter(x=>x.image).map(x=><img key={x.id} src={x.image}/>)}</div></>}
+{screen==="saved"&&<><div className="title"><div className="eyebrow">COLLECTION</div><h2>Saved</h2></div>{posts.filter(x=>saved.includes(x.id)).map(p=><Post key={p.id} p={p} like={()=>{}} comment={()=>{}} saved save={()=>setSaved(v=>v.filter(id=>id!==p.id))}/>) }{saved.length===0&&<div className="empty">You have no saved posts yet.</div>}</>}
+{screen==="activity"&&<><div className="title"><div className="eyebrow">ACTIVITY</div><h2>Notifications</h2></div>{["Sara liked your post","Hassaan started following you","Maya commented on your photo","You have 2 new messages"].map((x,i)=><div key={i} style={{padding:"15px 0",borderBottom:"1px solid var(--line)"}}><b>{x}</b><div className="muted" style={{fontSize:12,marginTop:4}}>{i+1}h ago</div></div>)}</>}
+{screen==="profile"&&<><div className="profile"><img src={user.avatar}/><div><div className="eyebrow">@{user.username}</div><h2 style={{font:"700 32px 'Space Grotesk'",margin:"6px 0"}}>{user.name}</h2><p className="muted">{user.bio}</p><div className="stats"><span><b>{posts.filter(x=>x.user.username===user.username).length}</b> posts</span><span><b>{user.followers}</b> followers</span><span><b>{user.following}</b> following</span></div><button className="btn secondary" style={{marginTop:14}} onClick={()=>setAuth("signup")}>Edit profile</button></div></div><div className="grid" style={{marginTop:16}}>{posts.filter(x=>x.user.username===user.username&&x.image).map(x=><img key={x.id} src={x.image}/>)}</div></>}
+{screen==="settings"&&<><div className="title"><div className="eyebrow">ACCOUNT</div><h2>Settings</h2></div><div className="rightbox"><b>Username</b><p className="muted">@{user.username}</p></div><div className="rightbox"><b>Email</b><p className="muted">{user.email}</p></div><div style={{display:"flex",gap:8}}><button className="btn secondary" onClick={()=>setAuth("signup")}>Edit account</button><button className="btn" onClick={()=>{localStorage.removeItem("avenzo_user");setAuth("login")}}>Sign out</button></div></>}
+{screen==="messages"&&<div className="chat"><div className="chatlist">{people.map(x=><button className={"chatuser "+(x.username===selected?"active":"")} key={x.username} onClick={()=>setSelected(x.username)}><img src={x.avatar}/><span>{x.name}</span></button>)}</div><div className="chatmain"><div className="chathead"><img className="avatar" src={people.find(x=>x.username===selected)?.avatar}/><div><b>{people.find(x=>x.username===selected)?.name}</b><div className="muted">@{selected}</div></div></div><div className="chatbody">{(ch[selected]||[]).map((m,i)=><div key={i} className={"bubble "+(m.from==="me"?"me":"")}>{m.text}</div>)}</div><div className="composer"><input placeholder="Message..." value={msg} onChange={e=>setMsg(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")send()}}/><button className="btn" onClick={send}>Send</button></div></div></div>}
+</main><aside className="right"><div className="rightbox"><b>Suggested for you</b>{people.map(p=><div className="suggest" key={p.username}><img src={p.avatar}/><div><b>{p.name}</b><small>@{p.username}</small></div><button className="follow">Follow</button></div>)}</div><div className="rightbox"><b>Trending</b><p className="muted" style={{lineHeight:1.7}}>#AVENZO<br/>#photography<br/>#newfriends</p></div></aside></div><div className="mobile">{[["home","⌂"],["explore","◉"],["create","＋"],["messages","◌"],["profile","○"]].map(([id,ico])=><button key={id} className={screen===id?"active":""} onClick={()=>id==="create"?setCreate(true):setScreen(id)}><div style={{fontSize:18}}>{ico}</div>{id}</button>)}</div>{auth&&<Auth kind={auth} close={()=>setAuth(null)} done={setDone}/>} {create&&<Create close={()=>setCreate(false)} post={add}/>}</div>}
