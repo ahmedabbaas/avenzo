@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import AuthBrandPanel from "../_components/auth-brand-panel";
 import PasswordField from "../_components/password-field";
 import TurnstileWidget, {
+import SiteFooter from "../_components/site-footer";
   readTurnstileToken,
   resetTurnstile,
 } from "../_components/turnstile-widget";
@@ -141,6 +142,7 @@ export default function LoginPage() {
           Create Account
         </a>
       </section>
+      <SiteFooter />
     </main>
   );
 }
