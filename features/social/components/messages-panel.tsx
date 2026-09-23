@@ -4,6 +4,7 @@ import type { KeyboardEvent } from "react";
 import Icon from "./icon";
 import { avatarFor, formatRelativeTime } from "../lib/profile";
 import type { Chat, Message, Profile } from "../types";
+import AvatarImage from "./avatar-image";
 
 export default function MessagesPanel({
   people,
@@ -63,7 +64,7 @@ export default function MessagesPanel({
               key={person.id}
               onClick={() => openChat(person)}
             >
-              <img src={avatarFor(person)} alt="" />
+              <AvatarImage src={avatarFor(person)} alt={person.display_name} size={80} />
               <span>
                 <b>{person.display_name}</b>
                 <small>{chat?.last || "Start a conversation"}</small>
@@ -89,7 +90,7 @@ export default function MessagesPanel({
               >
                 <Icon name="back" size={19} />
               </button>
-              <img src={avatarFor(selected)} alt="" />
+              <AvatarImage src={avatarFor(selected)} alt={selected.display_name} size={96} />
               <div>
                 <b>{selected.display_name}</b>
                 <small>@{selected.username}</small>
@@ -99,7 +100,7 @@ export default function MessagesPanel({
             <div className="chat-body">
               {messages.length === 0 && (
                 <div className="conversation-start">
-                  <img src={avatarFor(selected)} alt="" />
+                  <AvatarImage src={avatarFor(selected)} alt={selected.display_name} size={96} />
                   <b>{selected.display_name}</b>
                   <span>@{selected.username}</span>
                   <p>Start the conversation.</p>
