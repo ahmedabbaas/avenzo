@@ -4,6 +4,7 @@ import {
   ChangeEvent,
   FormEvent,
   KeyboardEvent,
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -201,6 +202,10 @@ export default function HomeClient({
     setToast(message);
     window.setTimeout(() => setToast(""), 3200);
   };
+
+  const markActivityRead = useCallback(() => {
+    setUnreadActivity(0);
+  }, []);
 
   async function loadProfile() {
     const { data } = await supabase
@@ -1485,7 +1490,7 @@ export default function HomeClient({
             <Activity
               supabase={supabase}
               userId={initialProfile.id}
-              onRead={() => setUnreadActivity(0)}
+              onRead={markActivityRead}
             />
           )}
 
@@ -2392,7 +2397,7 @@ function Activity({
     }
 
     void load();
-  }, [supabase, userId]);
+  }, [supabase, userId, onRead]);
 
   return (
     <>
