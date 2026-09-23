@@ -1,12 +1,12 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
 
 export default function AuthPage() {
   const router = useRouter();
-    const supabase = useMemo(() => createClient(), []);
+
   const [mode, setMode] = useState<"signup"|"login">("signup");
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
@@ -24,7 +24,7 @@ export default function AuthPage() {
     if (error === "profile") setStatus("Your account profile could not be loaded. Please contact support.");
   }, []);
 
-  async function checkUsername(value: string) {
+  function getSupabase() {\n    return createClient();\n  }\n\n  async function checkUsername(value: string) {
     const clean = value.replace(/^@+/, "").toLowerCase();
     setUsername(clean);
     setAvailable(null);
@@ -33,7 +33,7 @@ export default function AuthPage() {
       return;
     }
     setChecking(true);
-    const { data, error } = await supabase.rpc("is_username_available", { candidate: clean });
+    const { data, error } = await getSupabase().rpc("is_username_available", { candidate: clean });
     setChecking(false);
     if (error) {
       setStatus("Username check is temporarily unavailable.");
@@ -53,7 +53,7 @@ export default function AuthPage() {
         setBusy(false);
         return;
       }
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error } = await getSupabase().auth.signUp({
         email: email.trim().toLowerCase(),
         password,
         options: {
@@ -70,7 +70,7 @@ export default function AuthPage() {
         setStatus("Account created. Check your email and verify your address before entering AVENZO.");
       }
     } else {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error } = await getSupabase().auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password
       });
@@ -86,7 +86,7 @@ export default function AuthPage() {
 
   async function resend() {
     if (!email) return;
-    const { error } = await supabase.auth.resend({ type: "signup", email: email.trim().toLowerCase() });
+    const { error } = await getSupabase().auth.resend({ type: "signup", email: email.trim().toLowerCase() });
     setStatus(error ? error.message : "A fresh verification email has been sent.");
   }
 
