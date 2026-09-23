@@ -11,99 +11,25 @@ import {
 import Link from "next/link";
 import { createClient } from "../lib/supabase/client";
 import type { SupabaseClient } from "@supabase/supabase-js";
-
-type Screen =
-  | "home"
-  | "explore"
-  | "messages"
-  | "activity"
-  | "saved"
-  | "profile"
-  | "settings";
-
-type Profile = {
-  id: string;
-  username: string;
-  display_name: string;
-  bio: string;
-  avatar_url: string | null;
-  created_at?: string;
-};
-
-type Comment = {
-  id: string;
-  body: string;
-  user_id: string;
-  created_at: string;
-  profile?: Profile;
-};
-
-type Post = {
-  id: string;
-  author_id: string;
-  caption: string;
-  media_path: string | null;
-  media_type: "image" | "video" | null;
-  created_at: string;
-  profile?: Profile;
-  likeCount: number;
-  liked: boolean;
-  commentCount: number;
-  comments: Comment[];
-};
-
-type Reel = {
-  id: string;
-  author_id: string;
-  caption: string;
-  media_path: string;
-  media_type: "video";
-  created_at: string;
-  profile?: Profile;
-  likeCount: number;
-  liked: boolean;
-  commentCount: number;
-  comments: Comment[];
-};
-
-type Story = {
-  id: string;
-  author_id: string;
-  media_path: string;
-  media_type: "image" | "video";
-  created_at: string;
-  expires_at: string;
-  profile?: Profile;
-};
-
-type Message = {
-  id: string;
-  sender_id: string;
-  recipient_id: string;
-  body: string;
-  created_at: string;
-  read_at?: string | null;
-};
-
-type Chat = {
-  profile: Profile;
-  last: string;
-  updated: string;
-  unread: number;
-};
-
-type ProfileStats = {
-  posts: number;
-  followers: number;
-  following: number;
-};
-
-type NotificationRow = {
-  id: string;
-  type: "follow" | "like" | "comment" | "message";
-  created_at: string;
-  actor_id: string;
-};
+import PageTitle from "../features/social/components/page-title";
+import SettingsPanel from "../features/social/components/settings-panel";
+import {
+  avatarFor,
+  formatRelativeTime,
+  initialsAvatar,
+} from "../features/social/lib/profile";
+import type {
+  Chat,
+  Comment,
+  Message,
+  NotificationRow,
+  Post,
+  Profile,
+  ProfileStats,
+  Reel,
+  Screen,
+  Story,
+} from "../features/social/types";
 
 type IconName =
   | "home"
@@ -224,38 +150,6 @@ function Icon({ name, size = 19 }: { name: IconName; size?: number }) {
       {paths[name]}
     </svg>
   );
-}
-
-function initialsAvatar(name: string) {
-  const initials = name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("") || "A";
-
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160"><rect width="160" height="160" rx="80" fill="#151a1e"/><circle cx="80" cy="80" r="78" fill="none" stroke="#dfff63" stroke-opacity=".4" stroke-width="2"/><text x="80" y="91" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" font-weight="700" fill="#f6f7f8">${initials}</text></svg>`;
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
-}
-
-function avatarFor(profile: Profile) {
-  return profile.avatar_url || initialsAvatar(profile.display_name);
-}
-
-function formatRelativeTime(value: string) {
-  const time = new Date(value).getTime();
-  const seconds = Math.max(1, Math.floor((Date.now() - time) / 1000));
-  if (seconds < 60) return "now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d`;
-  return new Date(value).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
 }
 
 export default function HomeClient({
@@ -1619,7 +1513,7 @@ export default function HomeClient({
           )}
 
           {screen === "settings" && (
-            <Settings
+            <SettingsPanel
               profile={profile}
               setProfile={setProfile}
               supabase={supabase}
@@ -1942,24 +1836,6 @@ export default function HomeClient({
           {toast}
         </div>
       )}
-    </div>
-  );
-}
-
-function PageTitle({
-  eyebrow,
-  title,
-  text,
-}: {
-  eyebrow: string;
-  title: string;
-  text?: string;
-}) {
-  return (
-    <div className="section-title">
-      <div className="eyebrow">{eyebrow}</div>
-      <h2>{title}</h2>
-      {text && <p>{text}</p>}
     </div>
   );
 }
@@ -2705,308 +2581,6 @@ function ProfileView({
           />
         )}
       </section>
-    </>
-  );
-}
-
-function Settings({
-  profile,
-  setProfile,
-  supabase,
-  signOut,
-  onSaved,
-  onUnblocked,
-}: {
-  profile: Profile;
-  setProfile: (profile: Profile) => void;
-  supabase: SupabaseClient;
-  signOut: () => void;
-  onSaved: () => void;
-  onUnblocked: () => void;
-}) {
-  const [name, setName] = useState(profile.display_name);
-  const [bio, setBio] = useState(profile.bio);
-  const [notice, setNotice] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState("");
-  const [blockedAccounts, setBlockedAccounts] = useState<
-    Array<{
-      id: string;
-      username: string;
-      display_name: string;
-      avatar_url: string | null;
-      blocked_at: string;
-    }>
-  >([]);
-  const [blockedLoading, setBlockedLoading] = useState(true);
-  const [unblockingId, setUnblockingId] = useState<string | null>(null);
-
-  useEffect(() => {
-    let active = true;
-
-    void supabase.rpc("get_blocked_accounts").then(({ data, error }) => {
-      if (!active) return;
-
-      if (error) {
-        setNotice("Could not load blocked accounts.");
-        setBlockedLoading(false);
-        return;
-      }
-
-      setBlockedAccounts(
-        ((data || []) as Array<{
-          id: string;
-          username: string;
-          display_name: string;
-          avatar_url: string | null;
-          blocked_at: string;
-        }>)
-      );
-      setBlockedLoading(false);
-    });
-
-    return () => {
-      active = false;
-    };
-  }, [supabase, profile.id]);
-
-  async function unblockAccount(account: {
-    id: string;
-    username: string;
-  }) {
-    if (unblockingId) return;
-
-    const confirmed = window.confirm(
-      `Unblock @${account.username}? They can appear in your AVENZO experience again.`
-    );
-
-    if (!confirmed) return;
-
-    setUnblockingId(account.id);
-    setNotice("");
-
-    const { error } = await supabase
-      .from("blocks")
-      .delete()
-      .eq("blocker_id", profile.id)
-      .eq("blocked_id", account.id);
-
-    if (error) {
-      setNotice("Could not unblock this account right now.");
-      setUnblockingId(null);
-      return;
-    }
-
-    setBlockedAccounts((current) =>
-      current.filter((item) => item.id !== account.id)
-    );
-    setNotice(`@${account.username} has been unblocked.`);
-    setUnblockingId(null);
-    onUnblocked();
-  }
-
-  function chooseAvatar(event: ChangeEvent<HTMLInputElement>) {
-    const picked = event.target.files?.[0] || null;
-
-    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
-
-    if (!picked) {
-      setAvatarFile(null);
-      setAvatarPreview("");
-      return;
-    }
-
-    if (!picked.type.startsWith("image/")) {
-      setNotice("Profile picture must be an image.");
-      event.target.value = "";
-      return;
-    }
-
-    if (picked.size > 5 * 1024 * 1024) {
-      setNotice("Profile picture must be 5 MB or smaller.");
-      event.target.value = "";
-      return;
-    }
-
-    setAvatarFile(picked);
-    setAvatarPreview(URL.createObjectURL(picked));
-    setNotice("");
-  }
-
-  async function save() {
-    const cleanName = name.trim();
-    const cleanBio = bio.trim();
-
-    if (!cleanName || cleanName.length > 80) {
-      setNotice("Display name must be 1–80 characters.");
-      return;
-    }
-
-    if (cleanBio.length > 160) {
-      setNotice("Bio must be 160 characters or less.");
-      return;
-    }
-
-    setSaving(true);
-    setNotice("");
-
-    try {
-      let avatarUrl = profile.avatar_url || "";
-
-      if (avatarFile) {
-        const extension =
-          avatarFile.name
-            .split(".")
-            .pop()
-            ?.toLowerCase()
-            .replace(/[^a-z0-9]/g, "") || "jpg";
-
-        const path =
-          profile.id +
-          "/avatars/" +
-          crypto.randomUUID() +
-          "." +
-          extension.slice(0, 8);
-
-        const upload = await supabase.storage
-          .from("media")
-          .upload(path, avatarFile, {
-            upsert: false,
-            contentType: avatarFile.type,
-          });
-
-        if (upload.error) throw upload.error;
-
-        avatarUrl = supabase.storage.from("media").getPublicUrl(path).data.publicUrl;
-      }
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .update({
-          display_name: cleanName,
-          bio: cleanBio,
-          avatar_url: avatarUrl,
-        })
-        .eq("id", profile.id)
-        .select("id,username,display_name,bio,avatar_url,created_at")
-        .single();
-
-      if (error) throw error;
-
-      setProfile(data);
-      setAvatarFile(null);
-      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
-      setAvatarPreview("");
-      setNotice("Profile saved.");
-      onSaved();
-    } catch (error) {
-      setNotice(error instanceof Error ? error.message : "Unable to save profile.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <>
-      <PageTitle
-        eyebrow="ACCOUNT"
-        title="Profile settings"
-        text="Control how your identity appears across AVENZO."
-      />
-
-      <div className="settings-card">
-        <div className="settings-avatar">
-          <img src={avatarPreview || avatarFor(profile)} alt="" />
-          <label className="btn secondary small">
-            Change picture
-            <input type="file" accept="image/*" onChange={chooseAvatar} />
-          </label>
-        </div>
-
-        <label>Username</label>
-        <input value={"@" + profile.username} readOnly />
-        <small className="field-note">Usernames are permanent after registration.</small>
-
-        <label>Display name</label>
-        <input
-          value={name}
-          onChange={(event) => setName(event.target.value.slice(0, 80))}
-          maxLength={80}
-        />
-
-        <label>Bio</label>
-        <textarea
-          value={bio}
-          onChange={(event) => setBio(event.target.value.slice(0, 160))}
-          maxLength={160}
-        />
-        <small className="field-note">{bio.length}/160</small>
-
-        <button className="btn" onClick={() => void save()} disabled={saving}>
-          {saving ? "Saving…" : "Save changes"}
-        </button>
-
-        {notice && <p className="settings-notice">{notice}</p>}
-
-        <section className="blocked-settings">
-          <div className="settings-section-head">
-            <div>
-              <b>Blocked accounts</b>
-              <span>
-                Manage people you have blocked. Unblocking does not automatically follow them again.
-              </span>
-            </div>
-            <strong>{blockedAccounts.length}</strong>
-          </div>
-
-          {blockedLoading ? (
-            <p className="blocked-empty">Loading blocked accounts…</p>
-          ) : blockedAccounts.length === 0 ? (
-            <p className="blocked-empty">You have not blocked anyone.</p>
-          ) : (
-            <div className="blocked-list">
-              {blockedAccounts.map((account) => (
-                <div className="blocked-row" key={account.id}>
-                  <img
-                    src={
-                      account.avatar_url ||
-                      initialsAvatar(account.display_name)
-                    }
-                    alt=""
-                  />
-                  <div>
-                    <b>{account.display_name}</b>
-                    <span>@{account.username}</span>
-                  </div>
-                  <button
-                    className="btn secondary small"
-                    disabled={unblockingId === account.id}
-                    onClick={() =>
-                      void unblockAccount({
-                        id: account.id,
-                        username: account.username,
-                      })
-                    }
-                  >
-                    {unblockingId === account.id ? "Unblocking…" : "Unblock"}
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <div className="danger-zone">
-          <div>
-            <b>Sign out</b>
-            <span>End this session on this device.</span>
-          </div>
-          <button className="btn secondary" onClick={signOut}>
-            Sign out
-          </button>
-        </div>
-      </div>
     </>
   );
 }
