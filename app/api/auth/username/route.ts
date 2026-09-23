@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logServerError } from "../../../../lib/observability/server";
 import { isValidUsername } from "../../../../features/auth/validation";
 import {
   consumeRateLimit,
@@ -48,7 +49,8 @@ export async function GET(request: Request) {
     if (error) throw error;
 
     return json({ available: Boolean(data), valid: true });
-  } catch {
+  } catch (error) {
+    logServerError({ request, route: "auth.username-availability", error });
     return json(
       { error: "Unable to check username availability right now." },
       503
