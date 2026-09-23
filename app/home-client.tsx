@@ -1084,6 +1084,8 @@ export default function HomeClient({
                   onLike={() => void toggleLike(post)}
                   onSave={() => void toggleSave(post)}
                   onComment={(body) => void addComment(post, body)}
+                  own={post.author_id === initialProfile.id}
+                  onDelete={() => void deletePost(post)}
                 />
               ))}
               {!loading && saved.length === 0 && (
@@ -1711,7 +1713,7 @@ function Activity({
     }
 
     void load();
-  }, [supabase, userId, onRead]);
+  }, [supabase, userId]);
 
   return (
     <>
