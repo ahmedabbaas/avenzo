@@ -9,13 +9,6 @@ export default async function HomePage({
 }: {
   searchParams: Promise<{ chat?: string; screen?: string }>;
 }) {
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-  ) {
-    redirect("/login?error=backend");
-  }
-
   const supabase = await createClient();
   const {
     data: { user },
