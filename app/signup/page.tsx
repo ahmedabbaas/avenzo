@@ -8,11 +8,13 @@ import TurnstileWidget, {
   resetTurnstile,
 } from "../_components/turnstile-widget";
 import SiteFooter from "../_components/site-footer";
+import { useRouter } from "next/navigation";
 
 const USERNAME_PATTERN = /^[a-z0-9._]{3,30}$/;
 const SERVICE_MESSAGE = "Account services are temporarily unavailable.";
 
 export default function SignupPage() {
+  const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -222,9 +224,9 @@ export default function SignupPage() {
       }
 
       if (result.requiresVerification) {
-        window.location.assign("/login?registered=1");
+        router.replace("/login?registered=1");
       } else {
-        window.location.assign("/home");
+        router.replace("/home");
       }
     } catch {
       setServiceUnavailable(true);
