@@ -30,6 +30,8 @@ export type Post = {
   caption: string;
   media_path: string | null;
   media_type: "image" | "video" | null;
+  media_width?: number | null;
+  media_height?: number | null;
   created_at: string;
   profile?: Profile;
   likeCount: number;
@@ -57,6 +59,8 @@ export type Story = {
   author_id: string;
   media_path: string;
   media_type: "image" | "video";
+  media_width?: number | null;
+  media_height?: number | null;
   created_at: string;
   expires_at: string;
   profile?: Profile;
