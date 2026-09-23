@@ -3,10 +3,10 @@
 import { FormEvent, useState } from "react";
 import AuthBrandPanel from "../_components/auth-brand-panel";
 import TurnstileWidget, {
-import SiteFooter from "../_components/site-footer";
   readTurnstileToken,
   resetTurnstile,
 } from "../_components/turnstile-widget";
+import SiteFooter from "../_components/site-footer";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
