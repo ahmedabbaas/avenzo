@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../../../lib/supabase/server";
-import { createAdminClient } from "../../../../lib/supabase/admin";
 import { verifyTurnstile } from "../../../../lib/turnstile";
 
 export const dynamic = "force-dynamic";
@@ -168,9 +167,8 @@ export async function POST(request: Request) {
 
     let avatarWarning = "";
 
-    if (avatar && data.user) {
+    if (avatar && data.user && data.session) {
       try {
-        const admin = createAdminClient();
         const path =
           data.user.id +
           "/avatars/" +
@@ -180,7 +178,7 @@ export async function POST(request: Request) {
 
         const bytes = new Uint8Array(await avatar.arrayBuffer());
 
-        const { error: uploadError } = await admin.storage
+        const { error: uploadError } = await supabase.storage
           .from("media")
           .upload(path, bytes, {
             contentType: avatar.type,
@@ -189,11 +187,11 @@ export async function POST(request: Request) {
 
         if (uploadError) throw uploadError;
 
-        const publicUrl = admin.storage
+        const publicUrl = supabase.storage
           .from("media")
           .getPublicUrl(path).data.publicUrl;
 
-        const { error: profileError } = await admin
+        const { error: profileError } = await supabase
           .from("profiles")
           .update({ avatar_url: publicUrl })
           .eq("id", data.user.id);
@@ -201,8 +199,11 @@ export async function POST(request: Request) {
         if (profileError) throw profileError;
       } catch {
         avatarWarning =
-          "Account created, but the profile picture could not be saved.";
+          "Account created. You can add your profile picture after verification.";
       }
+    } else if (avatar) {
+      avatarWarning =
+        "Account created. Add your profile picture after email verification.";
     }
 
     return json({
