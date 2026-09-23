@@ -4,6 +4,10 @@ import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "./config";
 
 export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  const requestId =
+    request.headers.get("x-request-id") || crypto.randomUUID();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-request-id", requestId);
   const publicPath =
     pathname === "/" ||
     pathname === "/login" ||
@@ -24,7 +28,9 @@ export async function updateSession(request: NextRequest) {
     pathname === "/signup" ||
     pathname === "/forgot-password";
 
-  let response = NextResponse.next({ request });
+  let response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
   const supabase = createServerClient(
     SUPABASE_URL,
     SUPABASE_PUBLISHABLE_KEY,
@@ -35,7 +41,9 @@ export async function updateSession(request: NextRequest) {
       },
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        response = NextResponse.next({ request });
+        response = NextResponse.next({
+          request: { headers: requestHeaders },
+        });
         cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
       },
     },
@@ -47,12 +55,19 @@ export async function updateSession(request: NextRequest) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/login";
     redirectUrl.search = user ? "error=verify" : "";
-    return NextResponse.redirect(redirectUrl);
+    const redirectResponse = NextResponse.redirect(redirectUrl);
+    redirectResponse.headers.set("x-request-id", requestId);
+    return redirectResponse;
   }
 
   if (user?.email_confirmed_at && guestOnly) {
-    return NextResponse.redirect(new URL("/home", request.url));
+    const redirectResponse = NextResponse.redirect(
+      new URL("/home", request.url)
+    );
+    redirectResponse.headers.set("x-request-id", requestId);
+    return redirectResponse;
   }
 
+  response.headers.set("x-request-id", requestId);
   return response;
 }
