@@ -6,6 +6,7 @@ import Icon from "./icon";
 import { avatarFor, formatRelativeTime, initialsAvatar } from "../lib/profile";
 import type { Post } from "../types";
 import AvatarImage from "./avatar-image";
+import UserMediaImage from "./user-media-image";
 
 export default function PostCard({
   post,
@@ -67,7 +68,13 @@ export default function PostCard({
       {post.caption && <p className="post-caption">{post.caption}</p>}
 
       {post.media_path && post.media_type === "image" && (
-        <img className="post-media" src={mediaUrl} alt="Post media" loading="lazy" />
+        <UserMediaImage
+          className="post-media"
+          src={mediaUrl}
+          alt={post.caption || "AVENZO post"}
+          width={post.media_width}
+          height={post.media_height}
+        />
       )}
 
       {post.media_path && post.media_type === "video" && (
