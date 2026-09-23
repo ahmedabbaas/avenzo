@@ -34,5 +34,13 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2.0.5
+        with:
+          deno-version: lts
+
+      - name: Check Supabase Edge Functions
+        run: deno check supabase/functions/**/*.ts
+
       - name: Production build
         run: npm run build
