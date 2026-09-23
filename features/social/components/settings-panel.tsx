@@ -260,21 +260,23 @@ export default function SettingsPanel({
           </label>
         </div>
 
-        <label>Username</label>
-        <input value={"@" + profile.username} readOnly />
+        <label htmlFor="settings-username">Username</label>
+        <input id="settings-username" value={"@" + profile.username} readOnly />
         <small className="field-note">
           Usernames are permanent after registration.
         </small>
 
-        <label>Display name</label>
+        <label htmlFor="settings-display-name">Display name</label>
         <input
+          id="settings-display-name"
           value={name}
           onChange={(event) => setName(event.target.value.slice(0, DISPLAY_NAME_MAX_LENGTH))}
           maxLength={DISPLAY_NAME_MAX_LENGTH}
         />
 
-        <label>Bio</label>
+        <label htmlFor="settings-bio">Bio</label>
         <textarea
+          id="settings-bio"
           value={bio}
           onChange={(event) => setBio(event.target.value.slice(0, BIO_MAX_LENGTH))}
           maxLength={BIO_MAX_LENGTH}
@@ -377,10 +379,11 @@ export default function SettingsPanel({
             </button>
           ) : (
             <div className="delete-confirm">
-              <p>
+              <label htmlFor="delete-account-confirmation">
                 Type <strong>@{profile.username}</strong> to confirm.
-              </p>
+              </label>
               <input
+                id="delete-account-confirmation"
                 value={deleteValue}
                 onChange={(event) =>
                   setDeleteValue(event.target.value.replace(/^@/, ""))
