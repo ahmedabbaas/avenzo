@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logServerError } from "../../../../lib/observability/server";
 import {
   isValidEmail,
   normalizeEmail,
@@ -69,7 +70,8 @@ export async function POST(request: Request) {
       message:
         "If an account exists for that email, a password reset link has been sent.",
     });
-  } catch {
+  } catch (error) {
+    logServerError({ request, route: "auth.forgot-password", error });
     return json(
       { error: "Account services are temporarily unavailable." },
       503
