@@ -9,8 +9,17 @@ import TurnstileWidget, {
 } from "../_components/turnstile-widget";
 import SiteFooter from "../_components/site-footer";
 import { useRouter } from "next/navigation";
+import {
+  AVATAR_MAX_BYTES,
+  DISPLAY_NAME_MAX_LENGTH,
+  USERNAME_PATTERN,
+  isValidDisplayName,
+  isValidEmail,
+  isValidPassword,
+  normalizeEmail,
+  normalizeUsername,
+} from "../../features/auth/validation";
 
-const USERNAME_PATTERN = /^[a-z0-9._]{3,30}$/;
 const SERVICE_MESSAGE = "Account services are temporarily unavailable.";
 
 export default function SignupPage() {
@@ -29,7 +38,7 @@ export default function SignupPage() {
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const passwordReady = password.length >= 8;
+  const passwordReady = isValidPassword(password);
   const passwordsMatch =
     confirmPassword.length > 0 && password === confirmPassword;
 
@@ -95,11 +104,7 @@ export default function SignupPage() {
   }, [username]);
 
   function changeUsername(value: string) {
-    const clean = value
-      .replace(/^@+/, "")
-      .replace(/[^a-zA-Z0-9._]/g, "")
-      .toLowerCase()
-      .slice(0, 30);
+    const clean = normalizeUsername(value);
 
     setUsername(clean);
     setAvailable(null);
@@ -132,7 +137,7 @@ export default function SignupPage() {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > AVATAR_MAX_BYTES) {
       setFormMessage("Profile picture must be 5 MB or smaller.");
       event.target.value = "";
       return;
@@ -148,9 +153,9 @@ export default function SignupPage() {
     setFormMessage("");
 
     const cleanName = fullName.trim();
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanEmail = normalizeEmail(email);
 
-    if (!cleanName || cleanName.length > 80) {
+    if (!isValidDisplayName(cleanName)) {
       setFormMessage("Enter a valid full name.");
       return;
     }
@@ -176,12 +181,12 @@ export default function SignupPage() {
       return;
     }
 
-    if (!cleanEmail) {
+    if (!isValidEmail(cleanEmail)) {
       setFormMessage("Enter your email address.");
       return;
     }
 
-    if (!passwordReady) {
+    if (!isValidPassword(password)) {
       setFormMessage("Password must be at least 8 characters.");
       return;
     }
@@ -262,7 +267,7 @@ export default function SignupPage() {
             onChange={(event) => setFullName(event.target.value.slice(0, 80))}
             placeholder="Full name"
             autoComplete="name"
-            maxLength={80}
+            maxLength={DISPLAY_NAME_MAX_LENGTH}
             required
           />
 
