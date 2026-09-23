@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
+import { isValidUsername } from "../../../../features/auth/validation";
 import {
   consumeRateLimit,
   rateLimitResponse,
 } from "../../../../lib/security/rate-limit";
 import { createClient } from "../../../../lib/supabase/server";
-
-const USERNAME_PATTERN = /^[a-z0-9._]{3,30}$/;
 
 function json(body: unknown, status = 200) {
   return NextResponse.json(body, {
@@ -21,7 +20,7 @@ export async function GET(request: Request) {
       ?.trim()
       .toLowerCase() || "";
 
-  if (!USERNAME_PATTERN.test(username)) {
+  if (!isValidUsername(username)) {
     return json({ available: false, valid: false });
   }
 
