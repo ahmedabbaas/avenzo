@@ -10,6 +10,11 @@ export async function updateSession(request: NextRequest) {
     pathname === "/signup" ||
     pathname === "/forgot-password" ||
     pathname === "/reset-password" ||
+    pathname === "/about" ||
+    pathname === "/privacy" ||
+    pathname === "/terms" ||
+    pathname === "/community-guidelines" ||
+    pathname === "/api/health" ||
     pathname === "/auth" ||
     pathname === "/auth/confirm" ||
     pathname.startsWith("/api/auth/");
