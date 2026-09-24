@@ -25,7 +25,14 @@ export default function ActivityPanel({
   const [items, setItems] = useState<
     Array<{
       id: string;
-      type: "follow" | "like" | "comment" | "message";
+      type:
+        | "follow"
+        | "like"
+        | "comment"
+        | "message"
+        | "message_request"
+        | "message_reply"
+        | "message_reaction";
       created_at: string;
       actor_id: string;
       actor?: Profile;
@@ -104,7 +111,13 @@ export default function ActivityPanel({
                   ? "liked your post"
                   : item.type === "comment"
                     ? "commented on your post"
-                    : "sent you a message";
+                    : item.type === "message_request"
+                      ? "sent you a message request"
+                      : item.type === "message_reply"
+                        ? "replied to your message"
+                        : item.type === "message_reaction"
+                          ? "reacted to your message"
+                          : "sent you a message";
 
             return (
               <div className="notification" key={item.id}>
