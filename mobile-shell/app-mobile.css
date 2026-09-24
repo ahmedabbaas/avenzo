@@ -806,3 +806,416 @@ html[data-theme="light"] .mobile-nav button:active{
 html[data-theme="light"] .modal-actions{
   background:linear-gradient(to top,#fff 82%,rgba(255,255,255,.94));
 }
+
+/* AVENZO MOBILE APP FRAME v2 */
+
+/* These overrides are injected only inside the Android app WebView. */
+@media(max-width:780px){
+  html.avenzo-android-app{
+    --app-topbar-h:58px;
+    --app-bottomnav-h:66px;
+  }
+
+  html.avenzo-android-app body{
+    width:100%;
+    max-width:100vw;
+    margin:0;
+    background:var(--bg);
+    overscroll-behavior:none;
+  }
+
+  html.avenzo-android-app #main-content{
+    width:100%;
+    max-width:100vw;
+    min-height:100dvh;
+    overflow-x:clip;
+  }
+
+  html.avenzo-android-app button,
+  html.avenzo-android-app a,
+  html.avenzo-android-app summary{
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  html.avenzo-android-app button,
+  html.avenzo-android-app .btn{
+    touch-action:manipulation;
+  }
+
+  /* Top frame */
+  html.avenzo-android-app .top{
+    position:sticky;
+    top:0;
+    z-index:70;
+    width:100%;
+    border-bottom:1px solid var(--line);
+    backdrop-filter:blur(24px) saturate(1.25);
+  }
+
+  html.avenzo-android-app .top .brand{
+    width:38px;
+  }
+
+  html.avenzo-android-app .top .search-wrap{
+    height:40px;
+    min-height:40px;
+    border-radius:14px;
+  }
+
+  /* Main feed uses the physical screen width cleanly. */
+  html.avenzo-android-app .social-layout{
+    padding-left:0;
+    padding-right:0;
+    padding-top:8px;
+  }
+
+  html.avenzo-android-app .social-main{
+    width:100%;
+    max-width:100%;
+  }
+
+  html.avenzo-android-app .welcome,
+  html.avenzo-android-app .feed-toolbar,
+  html.avenzo-android-app .section-title,
+  html.avenzo-android-app .people-grid{
+    margin-left:12px;
+    margin-right:12px;
+  }
+
+  html.avenzo-android-app .stories-row{
+    padding-left:12px;
+    padding-right:12px;
+  }
+
+  html.avenzo-android-app .post-card,
+  html.avenzo-android-app .reel-card{
+    width:auto;
+    margin:8px 8px 12px;
+    overflow:hidden;
+    border-radius:19px;
+  }
+
+  html.avenzo-android-app .post-media{
+    width:100%;
+    max-height:none;
+    object-fit:cover;
+  }
+
+  html.avenzo-android-app .reel-media{
+    width:100%;
+    aspect-ratio:9/16;
+    max-height:78dvh;
+    object-fit:cover;
+  }
+
+  html.avenzo-android-app .post-actions{
+    min-height:44px;
+    align-items:center;
+  }
+
+  html.avenzo-android-app .post-actions button,
+  html.avenzo-android-app .post-actions .post-stat{
+    min-width:40px;
+    min-height:40px;
+    justify-content:center;
+    border-radius:12px;
+  }
+
+  /* Bottom navigation: Create lives in the center group, not awkwardly at the end. */
+  html.avenzo-android-app .mobile-nav{
+    grid-template-columns:repeat(6,minmax(0,1fr));
+    height:auto;
+    min-height:calc(var(--app-bottomnav-h) + env(safe-area-inset-bottom));
+    align-items:start;
+    padding-top:6px;
+    padding-bottom:calc(6px + env(safe-area-inset-bottom));
+  }
+
+  html.avenzo-android-app .mobile-nav>button:nth-child(1){order:1}
+  html.avenzo-android-app .mobile-nav>button:nth-child(2){order:2}
+  html.avenzo-android-app .mobile-create{order:3}
+  html.avenzo-android-app .mobile-nav>button:nth-child(3){order:4}
+  html.avenzo-android-app .mobile-nav>button:nth-child(4){order:5}
+  html.avenzo-android-app .mobile-nav>button:nth-child(5){order:6}
+
+  html.avenzo-android-app .mobile-nav button{
+    height:50px;
+    min-height:50px;
+    padding:3px 1px;
+  }
+
+  html.avenzo-android-app .mobile-create .mobile-icon-wrap{
+    width:42px;
+    height:32px;
+    border-radius:12px;
+    box-shadow:0 7px 18px rgba(196,231,53,.18);
+  }
+
+  html.avenzo-android-app .mobile-create small{
+    color:var(--text-soft);
+  }
+
+  html.avenzo-android-app .mobile-nav button.active small{
+    color:inherit;
+  }
+
+  /* Own profile frame */
+  html.avenzo-android-app .profile-page{
+    padding:0 10px 16px;
+  }
+
+  html.avenzo-android-app .profile-hero{
+    align-items:start;
+    border-bottom:1px solid var(--line);
+  }
+
+  html.avenzo-android-app .profile-identity{
+    min-width:0;
+  }
+
+  html.avenzo-android-app .profile-identity h1{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    overflow-wrap:anywhere;
+  }
+
+  html.avenzo-android-app .profile-bio{
+    grid-column:1/-1;
+  }
+
+  html.avenzo-android-app .profile-stats{
+    grid-column:1/-1;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    padding:11px 0;
+  }
+
+  html.avenzo-android-app .profile-stats span{
+    display:grid;
+    justify-items:center;
+    gap:2px;
+    text-align:center;
+  }
+
+  html.avenzo-android-app .profile-stats span b{
+    font-size:15px;
+  }
+
+  html.avenzo-android-app .profile-create-panel{
+    grid-column:1/-1;
+  }
+
+  html.avenzo-android-app .profile-content-tabs{
+    border-radius:13px;
+  }
+
+  html.avenzo-android-app .profile-grid{
+    margin-left:-7px;
+    margin-right:-7px;
+    width:calc(100% + 14px);
+  }
+
+  html.avenzo-android-app .profile-grid img,
+  html.avenzo-android-app .profile-grid video,
+  html.avenzo-android-app .profile-reel-tile,
+  html.avenzo-android-app .profile-text-post{
+    aspect-ratio:1;
+    min-height:0;
+    height:auto;
+    border-radius:4px;
+  }
+
+  /* Public profile avoids a desktop-style giant card on phones. */
+  html.avenzo-android-app .public-profile-wrap{
+    padding-top:8px;
+  }
+
+  html.avenzo-android-app .public-profile-hero{
+    grid-template-columns:78px minmax(0,1fr);
+    align-items:start;
+    box-shadow:none;
+  }
+
+  html.avenzo-android-app .public-profile-copy{
+    min-width:0;
+  }
+
+  html.avenzo-android-app .public-profile-copy h1{
+    overflow-wrap:anywhere;
+  }
+
+  html.avenzo-android-app .public-profile-copy>p{
+    grid-column:1/-1;
+  }
+
+  html.avenzo-android-app .public-profile-actions{
+    grid-column:1/-1;
+  }
+
+  html.avenzo-android-app .public-profile-grid{
+    margin-left:-9px;
+    margin-right:-9px;
+    width:calc(100% + 18px);
+  }
+
+  html.avenzo-android-app .public-profile-grid img,
+  html.avenzo-android-app .public-profile-grid video,
+  html.avenzo-android-app .public-reel-tile{
+    border-radius:3px;
+  }
+
+  /* Messages fill the screen like a real chat app. */
+  html.avenzo-android-app .messages-page{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100dvh;
+    max-height:100dvh;
+    overflow:hidden;
+  }
+
+  html.avenzo-android-app .messages-page-topbar{
+    flex:none;
+    border-bottom:1px solid var(--line);
+  }
+
+  html.avenzo-android-app .dm-workspace{
+    height:calc(100dvh - 54px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    max-height:none;
+  }
+
+  html.avenzo-android-app .dm-sidebar,
+  html.avenzo-android-app .dm-chat{
+    height:100%;
+    min-height:0;
+  }
+
+  html.avenzo-android-app .dm-message-area{
+    overscroll-behavior-y:contain;
+  }
+
+  html.avenzo-android-app .dm-bubble{
+    max-width:100%;
+  }
+
+  html.avenzo-android-app .dm-composer{
+    background:var(--panel);
+    border-top:1px solid var(--line);
+  }
+
+  /* Full-screen reels account for Android system insets. */
+  html.avenzo-android-app .reels-page,
+  html.avenzo-android-app .reels-viewport,
+  html.avenzo-android-app .reel-slide{
+    width:100%;
+    max-width:100%;
+    height:100dvh;
+  }
+
+  html.avenzo-android-app .reel-slide{
+    scroll-snap-align:start;
+    border-radius:0;
+  }
+
+  html.avenzo-android-app .reel-slide-video{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+
+  html.avenzo-android-app .reel-overlay{
+    padding-bottom:calc(18px + env(safe-area-inset-bottom));
+  }
+
+  html.avenzo-android-app .reel-actions-rail button,
+  html.avenzo-android-app .reel-metric{
+    background:rgba(5,7,8,.68);
+    border:1px solid rgba(255,255,255,.08);
+  }
+
+  /* Compose/edit screens are proper bottom sheets. */
+  html.avenzo-android-app .modal{
+    height:100dvh;
+    max-height:100dvh;
+  }
+
+  html.avenzo-android-app .modal-box,
+  html.avenzo-android-app .create-upload-panel,
+  html.avenzo-android-app .dm-new-message-modal{
+    overscroll-behavior-y:contain;
+    scrollbar-width:none;
+  }
+
+  html.avenzo-android-app .modal-box::-webkit-scrollbar,
+  html.avenzo-android-app .create-upload-panel::-webkit-scrollbar,
+  html.avenzo-android-app .dm-new-message-modal::-webkit-scrollbar{
+    display:none;
+  }
+
+  html.avenzo-android-app .create-type-tabs{
+    border-radius:12px;
+  }
+
+  html.avenzo-android-app .upload-dropzone{
+    min-height:140px;
+  }
+
+  /* Settings/auth fit narrow devices without zoom jumps. */
+  html.avenzo-android-app .settings-page-shell,
+  html.avenzo-android-app .settings-main,
+  html.avenzo-android-app .settings-card{
+    max-width:100%;
+    min-width:0;
+  }
+
+  html.avenzo-android-app .auth-card input,
+  html.avenzo-android-app .auth-card textarea,
+  html.avenzo-android-app .settings-card input,
+  html.avenzo-android-app .settings-card textarea,
+  html.avenzo-android-app .settings-card select{
+    font-size:16px!important;
+  }
+
+  html.avenzo-android-app .toast{
+    z-index:120;
+  }
+}
+
+@media(max-width:430px){
+  html.avenzo-android-app .top{
+    padding-left:max(8px,env(safe-area-inset-left));
+    padding-right:max(8px,env(safe-area-inset-right));
+  }
+
+  html.avenzo-android-app .top .brand{
+    width:34px;
+  }
+
+  html.avenzo-android-app .top .brand .avenzo-brand-logo,
+  html.avenzo-android-app .top .brand .avenzo-native-logo{
+    width:32px!important;
+    height:32px!important;
+  }
+
+  html.avenzo-android-app .profile-hero{
+    grid-template-columns:72px minmax(0,1fr);
+  }
+
+  html.avenzo-android-app .profile-stats span small{
+    font-size:8px;
+  }
+
+  html.avenzo-android-app .mobile-nav small{
+    font-size:7px;
+  }
+}
+
+html.avenzo-android-app[data-theme="light"] .top,
+html.avenzo-android-app[data-theme="light"] .dm-composer{
+  background:rgba(245,247,248,.97);
+}
+
+html.avenzo-android-app[data-theme="light"] .mobile-create small{
+  color:var(--text);
+}

@@ -85,6 +85,7 @@ jobs:
               '<item name="android:navigationBarColor">#06080a</item>'
               '<item name="android:windowLightStatusBar">false</item>'
               '<item name="android:windowLightNavigationBar">false</item>'
+              '<item name="android:windowActionModeOverlay">true</item>'
           )
           if 'android:statusBarColor' not in text:
               text = re.sub(
@@ -94,6 +95,19 @@ jobs:
                   count=1
               )
           styles.write_text(text)
+
+          # Android 12+ launch splash with the exact AVENZO icon.
+          values_v31 = Path("android/app/src/main/res/values-v31")
+          values_v31.mkdir(parents=True, exist_ok=True)
+          (values_v31 / "styles.xml").write_text("""<?xml version="1.0" encoding="utf-8"?>
+          <resources>
+            <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+              <item name="windowSplashScreenBackground">#06080a</item>
+              <item name="windowSplashScreenAnimatedIcon">@drawable/avenzo_logo</item>
+              <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+            </style>
+          </resources>
+          """)
 
           gradle = Path("android/app/build.gradle")
           gradle_text = gradle.read_text()
