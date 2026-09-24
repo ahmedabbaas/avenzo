@@ -11,14 +11,18 @@ function fakeFile(type: string, size: number) {
   return { type, size } as Pick<File, "type" | "size">;
 }
 
-Deno.test("accepts supported post media within the size limit", () => {
+Deno.test("posts require images and reject video", () => {
   assert(
     validateContentFile(fakeFile("image/jpeg", 1024), "post") === null,
     "jpeg post should be accepted"
   );
   assert(
-    validateContentFile(fakeFile("video/mp4", 1024), "post") === null,
-    "mp4 post should be accepted"
+    validateContentFile(fakeFile("video/mp4", 1024), "post") !== null,
+    "video posts should be rejected"
+  );
+  assert(
+    validateContentFile(null, "post") !== null,
+    "post without an image should be rejected"
   );
 });
 
