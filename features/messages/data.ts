@@ -21,7 +21,7 @@ export async function fetchInbox(
   supabase: SupabaseClient,
   requests = false
 ): Promise<InboxConversation[]> {
-  const { data, error } = await supabase.rpc("get_dm_inbox", {
+  const { data, error } = await supabase.rpc("get_dm_inbox_v2", {
     include_requests: requests,
   });
   assertNoError(error);
@@ -512,6 +512,18 @@ export async function setConversationMuted(
   const { error } = await supabase.rpc("set_conversation_muted", {
     cid: conversationId,
     next_muted: muted,
+  });
+  assertNoError(error);
+}
+
+export async function setConversationTheme(
+  supabase: SupabaseClient,
+  conversationId: string,
+  theme: InboxConversation["theme"]
+) {
+  const { error } = await supabase.rpc("set_conversation_theme", {
+    cid: conversationId,
+    next_theme: theme,
   });
   assertNoError(error);
 }

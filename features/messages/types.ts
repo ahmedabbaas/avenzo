@@ -24,6 +24,7 @@ export type InboxConversation = {
   request_status: "pending" | "accepted" | "declined" | "deleted";
   request_incoming: boolean;
   muted: boolean;
+  theme: "violet" | "ocean" | "emerald" | "sunset" | "mono";
 };
 
 export type MessageAttachment = {
