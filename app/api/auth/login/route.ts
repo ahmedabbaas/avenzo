@@ -99,6 +99,11 @@ export async function POST(request: Request) {
       return json({ error: "Unable to start your session." }, 503);
     }
 
+    await supabase
+      .from("profiles")
+      .update({ deactivated_at: null })
+      .eq("id", result.user?.id || "");
+
     return json({ ok: true });
   } catch (error) {
     logServerError({ request, route: "auth.login", error });
