@@ -16,6 +16,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const [mfaRequired, setMfaRequired] = useState(false);
+  const [mfaCode, setMfaCode] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -38,6 +40,10 @@ export default function LoginPage() {
     }
     if (params.get("deleted") === "1") {
       nextStatus = "Your AVENZO account has been deleted.";
+    }
+    if (params.get("mfa") === "1") {
+      setMfaRequired(true);
+      nextStatus = "Enter your authenticator code to finish signing in.";
     }
 
     if (!nextStatus) return;
@@ -73,9 +79,48 @@ export default function LoginPage() {
         return;
       }
 
+      if (result.requiresMfa) {
+        setMfaRequired(true);
+        setStatus("Enter your authenticator code to finish signing in.");
+        return;
+      }
+
       router.replace("/home");
     } catch {
       setStatus("Unable to reach AVENZO right now.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function verifyMfa(event: FormEvent) {
+    event.preventDefault();
+
+    if (mfaCode.length !== 6) {
+      setStatus("Enter the 6-digit authenticator code.");
+      return;
+    }
+
+    setBusy(true);
+    setStatus("");
+
+    try {
+      const response = await fetch("/api/auth/mfa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: mfaCode }),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        setStatus(result.error || "Unable to verify authenticator code.");
+        return;
+      }
+
+      router.replace("/home");
+      router.refresh();
+    } catch {
+      setStatus("Unable to verify two-factor authentication right now.");
     } finally {
       setBusy(false);
     }
@@ -89,40 +134,74 @@ export default function LoginPage() {
       <AuthBrandPanel context="WELCOME TO AVENZO" />
 
       <section className="auth-card">
-        <div className="eyebrow">WELCOME BACK</div>
-        <h1>Sign in.</h1>
+        <div className="eyebrow">
+          {mfaRequired ? "TWO-FACTOR AUTHENTICATION" : "WELCOME BACK"}
+        </div>
+        <h1>{mfaRequired ? "Verify your sign-in." : "Sign in."}</h1>
         <p className="auth-sub">
-          Your feed, conversations and profile stay behind your account.
+          {mfaRequired
+            ? "Enter the 6-digit code from your authenticator app."
+            : "Your feed, conversations and profile stay behind your account."}
         </p>
 
-        <form className="auth-form" onSubmit={submit}>
-          <label className="auth-label" htmlFor="identifier">
-            Username or email
-          </label>
-          <input
-            id="identifier"
-            value={identifier}
-            onChange={(event) => setIdentifier(event.target.value)}
-            placeholder="Username or email"
-            autoComplete="username"
-            spellCheck={false}
-            required
-          />
+        <form
+          className="auth-form"
+          onSubmit={mfaRequired ? verifyMfa : submit}
+        >
+          {mfaRequired ? (
+            <label className="auth-label" htmlFor="mfa-code">
+              Authenticator code
+              <input
+                id="mfa-code"
+                value={mfaCode}
+                onChange={(event) =>
+                  setMfaCode(
+                    event.target.value.replace(/\D/g, "").slice(0, 6)
+                  )
+                }
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="000000"
+                maxLength={6}
+                required
+              />
+            </label>
+          ) : (
+            <>
+                        <label className="auth-label" htmlFor="identifier">
+                          Username or email
+                        </label>
+                        <input
+                          id="identifier"
+                          value={identifier}
+                          onChange={(event) => setIdentifier(event.target.value)}
+                          placeholder="Username or email"
+                          autoComplete="username"
+                          spellCheck={false}
+                          required
+                        />
+              
+                        <PasswordField
+                          id="password"
+                          label="Password"
+                          value={password}
+                          onChange={setPassword}
+                          placeholder="Password"
+                          autoComplete="current-password"
+                        />
+              
+              
+            </>
+          )}
 
-          <PasswordField
-            id="password"
-            label="Password"
-            value={password}
-            onChange={setPassword}
-            placeholder="Password"
-            autoComplete="current-password"
-          />
-
-          <div className="auth-links">
-            <a href="/forgot-password">Forgot Password?</a>
-          </div>
-
-          <TurnstileWidget action="login" />
+          {!mfaRequired && (
+            <>
+              <div className="auth-links">
+                <a href="/forgot-password">Forgot Password?</a>
+              </div>
+              <TurnstileWidget action="login" />
+            </>
+          )}
 
           {status && (
             <div className="auth-message" role="status">
@@ -130,9 +209,36 @@ export default function LoginPage() {
             </div>
           )}
 
-          <button className="auth-submit" disabled={busy || !identifier.trim() || !password}>
-            {busy ? "Signing in…" : "Login"}
+          <button
+            className="auth-submit"
+            disabled={
+              busy ||
+              (mfaRequired
+                ? mfaCode.length !== 6
+                : !identifier.trim() || !password)
+            }
+          >
+            {busy
+              ? "Please wait…"
+              : mfaRequired
+                ? "Verify & Continue"
+                : "Login"}
           </button>
+
+          {mfaRequired && (
+            <button
+              type="button"
+              className="auth-secondary-button"
+              onClick={async () => {
+                await fetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
+                setMfaRequired(false);
+                setMfaCode("");
+                setStatus("");
+              }}
+            >
+              Back to password login
+            </button>
+          )}
         </form>
 
         <p className="auth-session-note">
