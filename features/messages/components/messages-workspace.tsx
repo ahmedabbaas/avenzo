@@ -39,6 +39,7 @@ import {
   sendDirectMessage,
   sendMessageAttachment,
   setConversationMuted,
+  setConversationTheme,
   setMessageReaction,
 } from "../data";
 import type {
@@ -48,6 +49,16 @@ import type {
 } from "../types";
 
 const REACTIONS = ["❤️", "😂", "👍", "😮", "😢", "😡"];
+const CHAT_THEMES: Array<{
+  id: InboxConversation["theme"];
+  label: string;
+}> = [
+  { id: "violet", label: "Violet" },
+  { id: "ocean", label: "Ocean" },
+  { id: "emerald", label: "Emerald" },
+  { id: "sunset", label: "Sunset" },
+  { id: "mono", label: "Mono" },
+];
 const MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024;
 const ALLOWED_ATTACHMENT_TYPES = new Set([
   "image/jpeg",
@@ -140,6 +151,7 @@ export default function MessagesWorkspace({
   const [newMessageOpen, setNewMessageOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
   const [actionMessage, setActionMessage] = useState<DirectMessage | null>(null);
   const [typing, setTyping] = useState(false);
   const [otherOnline, setOtherOnline] = useState(false);
@@ -528,6 +540,7 @@ export default function MessagesWorkspace({
           request_status: ensured.requestStatus as InboxConversation["request_status"],
           request_incoming: false,
           muted: false,
+          theme: "violet" as InboxConversation["theme"],
         };
 
       setNewMessageOpen(false);
@@ -745,6 +758,25 @@ export default function MessagesWorkspace({
     await loadLists();
   }
 
+  async function changeConversationTheme(
+    theme: InboxConversation["theme"]
+  ) {
+    if (!active) return;
+
+    const previous = active.theme;
+    setActive({ ...active, theme });
+    setThemeOpen(false);
+    setMoreOpen(false);
+
+    try {
+      await setConversationTheme(supabase, active.conversation_id, theme);
+      await loadLists();
+    } catch {
+      setActive({ ...active, theme: previous });
+      setNotice("Chat theme could not be updated.");
+    }
+  }
+
   async function conversationAction(
     action: "mute" | "delete" | "block" | "restrict" | "report"
   ) {
@@ -807,7 +839,8 @@ export default function MessagesWorkspace({
   }
 
   function updateTyping(next: string) {
-    setText(next.slice(0, 5000));
+    const clean = next.slice(0, 5000);
+    setText(clean);
     if (!active) return;
 
     const channel = typingChannelRef.current;
@@ -816,7 +849,10 @@ export default function MessagesWorkspace({
     void channel.send({
       type: "broadcast",
       event: "typing",
-      payload: { userId: currentUser.id, typing: true },
+      payload: {
+        userId: currentUser.id,
+        typing: clean.trim().length > 0,
+      },
     });
 
     if (typingTimer.current) window.clearTimeout(typingTimer.current);
@@ -826,7 +862,7 @@ export default function MessagesWorkspace({
         event: "typing",
         payload: { userId: currentUser.id, typing: false },
       });
-    }, 1300);
+    }, 1200);
   }
 
   const shown = (tab === "inbox" ? inbox : requests).filter((item) =>
@@ -970,7 +1006,13 @@ export default function MessagesWorkspace({
         </div>
       </section>
 
-      <section className={"dm-chat " + (!active ? "dm-mobile-hidden" : "")}>
+      <section
+        className={
+          "dm-chat " +
+          (!active ? "dm-mobile-hidden " : "") +
+          (active ? "dm-theme-" + (active.theme || "violet") : "")
+        }
+      >
         {!active || !activeProfile ? (
           <div className="dm-chat-empty">
             <span className="empty-mark">A</span>
@@ -1004,8 +1046,12 @@ export default function MessagesWorkspace({
                 <b>{active.display_name}</b>
                 <small>
                   <span className="verified-line">@{active.username}<VerifiedBadge verified={active.verified} /></span>
-                  {otherAllowsOnline &&
-                    (otherOnline ? " · Online" : " · Offline")}
+                  {typing ? (
+                    <span className="dm-head-typing"> · Typing…</span>
+                  ) : (
+                    otherAllowsOnline &&
+                    (otherOnline ? " · Online" : " · Offline")
+                  )}
                 </small>
               </div>
               <Link
@@ -1031,6 +1077,14 @@ export default function MessagesWorkspace({
 
               {moreOpen && (
                 <div className="dm-more-menu">
+                  <button
+                    onClick={() => {
+                      setThemeOpen((value) => !value);
+                      setMoreOpen(false);
+                    }}
+                  >
+                    Chat theme
+                  </button>
                   <button onClick={() => void conversationAction("mute")}>
                     {active.muted ? "Unmute" : "Mute"}
                   </button>
@@ -1053,6 +1107,38 @@ export default function MessagesWorkspace({
               )}
             </header>
 
+            {themeOpen && (
+              <div className="dm-theme-panel" role="dialog" aria-label="Chat theme">
+                <div className="dm-theme-panel-head">
+                  <b>Chat theme</b>
+                  <button
+                    type="button"
+                    onClick={() => setThemeOpen(false)}
+                    aria-label="Close chat theme"
+                  >
+                    <Icon name="close" size={16} />
+                  </button>
+                </div>
+                <div className="dm-theme-grid">
+                  {CHAT_THEMES.map((theme) => (
+                    <button
+                      key={theme.id}
+                      type="button"
+                      className={
+                        "dm-theme-choice dm-theme-choice-" +
+                        theme.id +
+                        (active.theme === theme.id ? " active" : "")
+                      }
+                      onClick={() => void changeConversationTheme(theme.id)}
+                    >
+                      <span />
+                      <b>{theme.label}</b>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className={"dm-chat-tools " + (searchOpen ? "open" : "")}>
               <label>
                 <Icon name="search" size={15} />
@@ -1064,11 +1150,6 @@ export default function MessagesWorkspace({
                   placeholder="Search in conversation"
                 />
               </label>
-              {typing && (
-                <span className="dm-typing">
-                  {active.username} is typing…
-                </span>
-              )}
             </div>
 
             {active.request_incoming && (
@@ -1475,6 +1556,22 @@ export default function MessagesWorkspace({
                 })
               )}
             </div>
+
+            {typing && !active.request_incoming && (
+              <div className="dm-live-typing" aria-live="polite">
+                <AvatarImage
+                  src={avatarFor(activeProfile)}
+                  alt=""
+                  size={40}
+                />
+                <span className="dm-typing-bubble">
+                  <i />
+                  <i />
+                  <i />
+                </span>
+                <small>{active.display_name} is typing</small>
+              </div>
+            )}
 
             {notice && (
               <div className="dm-inline-notice dm-chat-notice" role="status" aria-live="polite">
