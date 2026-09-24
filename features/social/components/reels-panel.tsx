@@ -69,6 +69,46 @@ export default function ReelsPanel({
   }, [load]);
 
   useEffect(() => {
+    const channel = supabase
+      .channel("reels-live-metrics")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "reels",
+        },
+        (payload) => {
+          const next = payload.new as {
+            id?: string;
+            view_count?: number | string;
+            share_count?: number | string;
+            save_count?: number | string;
+          };
+          if (!next.id) return;
+
+          setReels((current) =>
+            current.map((item) =>
+              item.id === next.id
+                ? {
+                    ...item,
+                    viewCount: Number(next.view_count ?? item.viewCount),
+                    shareCount: Number(next.share_count ?? item.shareCount),
+                    saveCount: Number(next.save_count ?? item.saveCount),
+                  }
+                : item
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [supabase]);
+
+  useEffect(() => {
     if (!initialReelId || loading) return;
     const target = document.querySelector<HTMLElement>(
       '[data-reel-id="' + CSS.escape(initialReelId) + '"]'

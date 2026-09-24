@@ -29,6 +29,7 @@ type AccountProfile = {
   website: string;
   gender: string | null;
   date_of_birth: string | null;
+  verified: boolean;
   created_at: string;
 };
 
@@ -104,6 +105,7 @@ export default function AccountSettingsForm({
   const [website, setWebsite] = useState(initialProfile.website || "");
   const [gender, setGender] = useState(initialProfile.gender || "");
   const [dob, setDob] = useState(initialProfile.date_of_birth || "");
+  const [verifiedBadge, setVerifiedBadge] = useState(Boolean(initialProfile.verified));
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState("");
   const [usernameState, setUsernameState] = useState<UsernameState>("idle");
@@ -296,10 +298,11 @@ export default function AccountSettingsForm({
           website: cleanWebsite,
           gender: gender || null,
           date_of_birth: dob || null,
+          verified: verifiedBadge,
         })
         .eq("id", profile.id)
         .select(
-          "id,username,display_name,bio,avatar_url,website,gender,date_of_birth,created_at"
+          "id,username,display_name,bio,avatar_url,website,gender,date_of_birth,verified,created_at"
         )
         .single();
 
@@ -615,6 +618,21 @@ export default function AccountSettingsForm({
             onChange={(event) => setDob(event.target.value)}
           />
           <small>This is not displayed publicly by default.</small>
+        </label>
+
+        <label className="settings-toggle-row verification-toggle-row">
+          <span>
+            <b>Blue verification badge</b>
+            <small>
+              Show the blue badge beside your username across AVENZO. You can turn it off any time.
+            </small>
+          </span>
+          <input
+            type="checkbox"
+            checked={verifiedBadge}
+            onChange={(event) => setVerifiedBadge(event.target.checked)}
+          />
+          <span className="settings-switch" aria-hidden="true" />
         </label>
 
         <div className="settings-inline-action">

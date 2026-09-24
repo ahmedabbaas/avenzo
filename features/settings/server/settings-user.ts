@@ -15,7 +15,7 @@ export async function requireSettingsUser() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id,username,display_name,bio,avatar_url,website,gender,date_of_birth,created_at"
+      "id,username,display_name,bio,avatar_url,website,gender,date_of_birth,verified,created_at"
     )
     .eq("id", user.id)
     .maybeSingle();

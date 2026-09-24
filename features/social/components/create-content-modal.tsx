@@ -167,7 +167,9 @@ export default function CreateContentModal({
           <span>
             {mode === "reel"
               ? "Portrait video only · up to 25 MB"
-              : "JPEG, PNG, WebP, GIF, MP4, WebM or MOV · up to 25 MB"}
+              : mode === "post"
+                ? "Images only · JPEG, PNG, WebP or GIF · up to 25 MB"
+                : "JPEG, PNG, WebP, GIF, MP4, WebM or MOV · up to 25 MB"}
           </span>
           <button type="button" className="btn secondary small" disabled={posting}>
             Choose file
@@ -176,7 +178,13 @@ export default function CreateContentModal({
             ref={fileInput}
             type="file"
             hidden
-            accept={mode === "reel" ? "video/*" : "image/*,video/*"}
+            accept={
+              mode === "reel"
+                ? "video/*"
+                : mode === "post"
+                  ? "image/*"
+                  : "image/*,video/*"
+            }
             onChange={(event) => {
               onFileSelect(event.target.files?.[0] || null);
               event.target.value = "";

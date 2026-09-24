@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
 import AvatarImage from "../../../features/social/components/avatar-image";
@@ -76,7 +76,10 @@ export default function PublicProfileClient({
   const supabase = useMemo(() => createClient(), []);
 
   const [following, setFollowing] = useState(initialFollowing);
-  const [contentTab, setContentTab] = useState<"posts" | "reels">("posts");
+  const [contentTab, setContentTab] = useState<"posts" | "reels">(
+    reels.length > 0 && posts.length === 0 ? "reels" : "posts"
+  );
+  const [reelItems, setReelItems] = useState(reels);
   const [stats, setStats] = useState(initialStats);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
@@ -84,6 +87,45 @@ export default function PublicProfileClient({
   const [reportReason, setReportReason] = useState<ReportReason>("spam");
   const [reportDetails, setReportDetails] = useState("");
   const [reporting, setReporting] = useState(false);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("public-profile-reels-" + profile.id)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "reels",
+          filter: "author_id=eq." + profile.id,
+        },
+        (payload) => {
+          const next = payload.new as {
+            id?: string;
+            view_count?: number | string;
+            title?: string;
+          };
+          if (!next.id) return;
+
+          setReelItems((current) =>
+            current.map((item) =>
+              item.id === next.id
+                ? {
+                    ...item,
+                    view_count: Number(next.view_count ?? item.view_count),
+                    title: next.title ?? item.title,
+                  }
+                : item
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [profile.id, supabase]);
 
   async function toggleFollow() {
     if (busy) return;
@@ -290,7 +332,7 @@ export default function PublicProfileClient({
             className={contentTab === "reels" ? "active" : ""}
             onClick={() => setContentTab("reels")}
           >
-            Reels <span>{reels.length}</span>
+            Reels <span>{reelItems.length}</span>
           </button>
         </div>
 
@@ -329,7 +371,7 @@ export default function PublicProfileClient({
               <div className="empty">
                 <span className="empty-mark">A</span>
                 <b>No media posts yet.</b>
-                <p>This profile’s photo and video posts will appear here.</p>
+                <p>This profile’s image posts will appear here.</p>
               </div>
             )}
           </>
@@ -342,9 +384,9 @@ export default function PublicProfileClient({
               </div>
             </div>
 
-            {reels.length > 0 ? (
+            {reelItems.length > 0 ? (
               <div className="public-profile-grid public-reels-grid">
-                {reels.map((reel) => (
+                {reelItems.map((reel) => (
                   <Link
                     key={reel.id}
                     className="public-reel-tile"
