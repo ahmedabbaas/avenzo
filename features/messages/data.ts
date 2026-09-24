@@ -138,29 +138,22 @@ export async function getExistingConversation(
 
 export async function markMessagesRead(
   supabase: SupabaseClient,
-  conversationId: string,
-  userId: string
+  conversationId: string
 ) {
-  const now = new Date().toISOString();
-  const { error } = await supabase
-    .from("messages")
-    .update({ read_at: now, delivered_at: now })
-    .eq("conversation_id", conversationId)
-    .eq("recipient_id", userId)
-    .is("read_at", null);
+  const { error } = await supabase.rpc("mark_conversation_read", {
+    cid: conversationId,
+  });
   assertNoError(error);
+}
 
-  await supabase
-    .from("conversation_user_state")
-    .upsert(
-      {
-        conversation_id: conversationId,
-        user_id: userId,
-        last_read_at: now,
-        last_delivered_at: now,
-      },
-      { onConflict: "conversation_id,user_id" }
-    );
+export async function markMessageDelivered(
+  supabase: SupabaseClient,
+  messageId: string
+) {
+  const { error } = await supabase.rpc("mark_message_delivered", {
+    mid: messageId,
+  });
+  assertNoError(error);
 }
 
 export async function sendDirectMessage({
