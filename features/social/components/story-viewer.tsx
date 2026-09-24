@@ -11,11 +11,15 @@ export default function StoryViewer({
   fallbackProfile,
   mediaUrl,
   onClose,
+  autoplayVideo = true,
+  dataSaving = false,
 }: {
   story: Story;
   fallbackProfile: Profile;
   mediaUrl: (path: string) => string;
   onClose: () => void;
+  autoplayVideo?: boolean;
+  dataSaving?: boolean;
 }) {
   const author = story.profile || fallbackProfile;
 
@@ -55,7 +59,9 @@ export default function StoryViewer({
           <video
             src={mediaUrl(story.media_path)}
             controls
-            autoPlay
+            autoPlay={autoplayVideo}
+            muted={autoplayVideo}
+            preload={dataSaving ? "none" : "metadata"}
             playsInline
             className="story-viewer-media"
           />
