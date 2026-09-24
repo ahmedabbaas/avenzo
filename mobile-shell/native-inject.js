@@ -163,34 +163,52 @@
       buttons.forEach(function(button){
         var small = button.querySelector("small");
         if (!small) return;
-        var label = small.textContent.trim().toLowerCase();
 
-        button.classList.remove(
+        var label = small.textContent.trim().toLowerCase();
+        var wanted = "avenzo-mobile-secondary";
+        var wantedLabel = small.textContent;
+
+        if (label === "home") {
+          wanted = "avenzo-primary-home";
+          wantedLabel = "Home";
+        } else if (label === "explore" || label === "search") {
+          wanted = "avenzo-primary-search";
+          wantedLabel = "Search";
+        } else if (label === "create") {
+          wanted = "avenzo-primary-create";
+          wantedLabel = "Create";
+        } else if (label === "reels") {
+          wanted = "avenzo-primary-reels";
+          wantedLabel = "Reels";
+        } else if (label === "profile") {
+          wanted = "avenzo-primary-profile";
+          wantedLabel = "Profile";
+        }
+
+        var managed = [
           "avenzo-primary-home",
           "avenzo-primary-search",
           "avenzo-primary-create",
           "avenzo-primary-reels",
           "avenzo-primary-profile",
           "avenzo-mobile-secondary"
-        );
+        ];
 
-        if (label === "home") {
-          button.classList.add("avenzo-primary-home");
-          small.textContent = "Home";
-        } else if (label === "explore" || label === "search") {
-          button.classList.add("avenzo-primary-search");
-          small.textContent = "Search";
-        } else if (label === "create") {
-          button.classList.add("avenzo-primary-create");
-          small.textContent = "Create";
-        } else if (label === "reels") {
-          button.classList.add("avenzo-primary-reels");
-          small.textContent = "Reels";
-        } else if (label === "profile") {
-          button.classList.add("avenzo-primary-profile");
-          small.textContent = "Profile";
-        } else {
-          button.classList.add("avenzo-mobile-secondary");
+        var alreadyCorrect =
+          button.classList.contains(wanted) &&
+          managed.every(function(name){
+            return name === wanted || !button.classList.contains(name);
+          });
+
+        if (!alreadyCorrect) {
+          managed.forEach(function(name){
+            if (name !== wanted) button.classList.remove(name);
+          });
+          button.classList.add(wanted);
+        }
+
+        if (small.textContent !== wantedLabel) {
+          small.textContent = wantedLabel;
         }
       });
     }
@@ -327,16 +345,40 @@
       else restoreHomeScroll();
     });
 
+    var syncQueued = false;
+
+    function scheduleSync() {
+      if (syncQueued) return;
+      syncQueued = true;
+      window.requestAnimationFrame(function(){
+        syncQueued = false;
+        syncMobileState();
+      });
+    }
+
     syncMobileState();
 
     if (!window.__avenzoNativeBrandObserver) {
-      window.__avenzoNativeBrandObserver = new MutationObserver(syncMobileState);
-      window.__avenzoNativeBrandObserver.observe(document.documentElement, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ["class"]
+      window.__avenzoNativeBrandObserver = new MutationObserver(function(mutations){
+        var needsSync = mutations.some(function(mutation){
+          return mutation.type === "childList" &&
+            (mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0);
+        });
+        if (needsSync) scheduleSync();
       });
+
+      window.__avenzoNativeBrandObserver.observe(document.body || document.documentElement, {
+        childList: true,
+        subtree: true
+      });
+
+      document.addEventListener("click", function(){
+        window.setTimeout(scheduleSync, 0);
+        window.setTimeout(scheduleSync, 120);
+      }, true);
+
+      window.addEventListener("popstate", scheduleSync);
+      window.addEventListener("pageshow", scheduleSync);
     }
   } catch (e) {}
 })();
