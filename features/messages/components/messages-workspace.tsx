@@ -144,12 +144,18 @@ export default function MessagesWorkspace({
   const [sending, setSending] = useState(false);
   const [notice, setNotice] = useState("");
   const [viewer, setViewer] = useState("");
+  const [sharePending, setSharePending] = useState(
+    sharePostId || shareReelId || shareProfileId
+  );
   const fileRef = useRef<HTMLInputElement | null>(null);
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const typingTimer = useRef<number | null>(null);
   const activeRef = useRef<InboxConversation | null>(null);
+  const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(
+    null
+  );
 
-  const pendingShare = sharePostId || shareReelId || shareProfileId;
+  const pendingShare = sharePending;
 
   useEffect(() => {
     activeRef.current = active;
@@ -174,7 +180,13 @@ export default function MessagesWorkspace({
 
   const loadPeople = useCallback(
     async (search = "") => {
-      setPeople(await fetchMessageUsers(supabase, currentUser.id, search));
+      const next = await fetchMessageUsers(
+        supabase,
+        currentUser.id,
+        search
+      );
+      setPeople(next);
+      return next;
     },
     [supabase, currentUser.id]
   );
@@ -371,6 +383,8 @@ export default function MessagesWorkspace({
       }
     );
 
+    typingChannelRef.current = channel;
+
     channel
       .on("presence", { event: "sync" }, () => {
         const state = channel.presenceState();
@@ -396,6 +410,9 @@ export default function MessagesWorkspace({
       });
 
     return () => {
+      if (typingChannelRef.current === channel) {
+        typingChannelRef.current = null;
+      }
       void supabase.removeChannel(channel);
     };
   }, [
@@ -520,6 +537,7 @@ export default function MessagesWorkspace({
         )
       );
       setNotice("Shared in conversation.");
+      setSharePending("");
       window.history.replaceState({}, "", "/messages");
       await loadLists();
     } catch {
@@ -715,9 +733,9 @@ export default function MessagesWorkspace({
     setText(next.slice(0, 5000));
     if (!active) return;
 
-    const channel = supabase.channel(
-      "avenzo-dm-presence-" + active.conversation_id
-    );
+    const channel = typingChannelRef.current;
+    if (!channel) return;
+
     void channel.send({
       type: "broadcast",
       event: "typing",
