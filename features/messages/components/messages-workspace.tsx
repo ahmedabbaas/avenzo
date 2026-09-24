@@ -228,55 +228,58 @@ export default function MessagesWorkspace({
   useEffect(() => {
     let activeEffect = true;
 
-    void Promise.all([
-      loadLists(),
-      loadPeople(),
-      supabase
-        .from("privacy_settings")
-        .select("online_status")
-        .eq("user_id", currentUser.id)
-        .single(),
-    ])
-      .then(async ([, users, privacyResult]) => {
-        if (!activeEffect) return;
-        setOwnOnlineEnabled(privacyResult.data?.online_status ?? true);
-        setLoading(false);
+    const timer = window.setTimeout(() => {
+      void Promise.all([
+        loadLists(),
+        loadPeople(),
+        supabase
+          .from("privacy_settings")
+          .select("online_status")
+          .eq("user_id", currentUser.id)
+          .single(),
+      ])
+        .then(async ([, users, privacyResult]) => {
+          if (!activeEffect) return;
+          setOwnOnlineEnabled(privacyResult.data?.online_status ?? true);
+          setLoading(false);
 
-        if (initialUsername) {
-          const person = users.find(
-            (item) =>
-              item.username.toLowerCase() === initialUsername.toLowerCase()
-          );
-          if (person) {
-            const existingId = await getExistingConversation(
-              supabase,
-              person.id
+          if (initialUsername) {
+            const person = users.find(
+              (item) =>
+                item.username.toLowerCase() === initialUsername.toLowerCase()
             );
-            if (existingId) {
-              const all = [
-                ...(await fetchInbox(supabase, false)),
-                ...(await fetchInbox(supabase, true)),
-              ];
-              const found = all.find(
-                (item) => item.conversation_id === existingId
+            if (person) {
+              const existingId = await getExistingConversation(
+                supabase,
+                person.id
               );
-              if (found) await loadConversation(found);
-            } else {
-              setNewMessageOpen(true);
-              setQuery(person.username);
+              if (existingId) {
+                const all = [
+                  ...(await fetchInbox(supabase, false)),
+                  ...(await fetchInbox(supabase, true)),
+                ];
+                const found = all.find(
+                  (item) => item.conversation_id === existingId
+                );
+                if (found) await loadConversation(found);
+              } else {
+                setNewMessageOpen(true);
+                setQuery(person.username);
+              }
             }
           }
-        }
-      })
-      .catch(() => {
-        if (activeEffect) {
-          setNotice("Messages could not be loaded right now.");
-          setLoading(false);
-        }
-      });
+        })
+        .catch(() => {
+          if (activeEffect) {
+            setNotice("Messages could not be loaded right now.");
+            setLoading(false);
+          }
+        });
+    }, 0);
 
     return () => {
       activeEffect = false;
+      window.clearTimeout(timer);
     };
   }, [
     currentUser.id,
@@ -288,16 +291,14 @@ export default function MessagesWorkspace({
   ]);
 
   useEffect(() => {
-    if (!query.trim()) {
-      void loadPeople();
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      void loadPeople(query).catch(() =>
-        setNotice("User search is unavailable right now.")
-      );
-    }, 280);
+    const timer = window.setTimeout(
+      () => {
+        void loadPeople(query).catch(() =>
+          setNotice("User search is unavailable right now.")
+        );
+      },
+      query.trim() ? 280 : 0
+    );
 
     return () => window.clearTimeout(timer);
   }, [query, loadPeople]);
@@ -364,9 +365,11 @@ export default function MessagesWorkspace({
 
   useEffect(() => {
     if (!active) {
-      setTyping(false);
-      setOtherOnline(false);
-      return;
+      const timer = window.setTimeout(() => {
+        setTyping(false);
+        setOtherOnline(false);
+      }, 0);
+      return () => window.clearTimeout(timer);
     }
 
     const channel = supabase.channel(
