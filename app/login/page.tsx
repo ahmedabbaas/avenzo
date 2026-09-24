@@ -41,13 +41,16 @@ export default function LoginPage() {
     if (params.get("deleted") === "1") {
       nextStatus = "Your AVENZO account has been deleted.";
     }
-    if (params.get("mfa") === "1") {
-      setMfaRequired(true);
+    const needsMfa = params.get("mfa") === "1";
+    if (needsMfa) {
       nextStatus = "Enter your authenticator code to finish signing in.";
     }
 
-    if (!nextStatus) return;
-    const timer = window.setTimeout(() => setStatus(nextStatus), 0);
+    if (!nextStatus && !needsMfa) return;
+    const timer = window.setTimeout(() => {
+      if (needsMfa) setMfaRequired(true);
+      if (nextStatus) setStatus(nextStatus);
+    }, 0);
     return () => window.clearTimeout(timer);
   }, []);
 
