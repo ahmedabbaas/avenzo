@@ -31,15 +31,18 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  colorScheme: "dark",
-  themeColor: "#06080a",
+  colorScheme: "light dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f5f7f8" },
+    { media: "(prefers-color-scheme: dark)", color: "#06080a" },
+  ],
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
         <PreferencesBootstrap />
         <a className="skip-link" href="#main-content">
