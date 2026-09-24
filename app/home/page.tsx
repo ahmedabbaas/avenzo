@@ -26,6 +26,11 @@ export default async function HomePage({
   if (!profile) redirect("/login?error=profile");
 
   const params = await searchParams;
+
+  if (params.screen === "settings") {
+    redirect("/settings");
+  }
+
   const initialChatUsername =
     typeof params.chat === "string" ? params.chat.toLowerCase() : "";
   const allowedScreens = new Set([
@@ -35,7 +40,6 @@ export default async function HomePage({
     "activity",
     "saved",
     "profile",
-    "settings",
   ]);
   const initialScreen =
     typeof params.screen === "string" && allowedScreens.has(params.screen)
@@ -45,8 +49,7 @@ export default async function HomePage({
           | "messages"
           | "activity"
           | "saved"
-          | "profile"
-          | "settings")
+          | "profile")
       : undefined;
 
   return (
