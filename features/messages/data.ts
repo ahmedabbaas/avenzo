@@ -5,6 +5,7 @@ import type {
   InboxConversation,
   MessageAttachment,
   MessageReaction,
+  MessageNote,
   SharedPostPreview,
   SharedProfilePreview,
   SharedReelPreview,
@@ -603,4 +604,87 @@ export async function fetchMessagingPrivacy(
     onlineStatus: Boolean(row?.online_status),
     readReceipts: Boolean(row?.read_receipts),
   };
+}
+
+
+export async function fetchActiveNotes(
+  supabase: SupabaseClient
+): Promise<MessageNote[]> {
+  const { data: rows, error } = await supabase
+    .from("notes")
+    .select("user_id,body,audience,created_at,updated_at,expires_at")
+    .gt("expires_at", new Date().toISOString())
+    .order("updated_at", { ascending: false })
+    .limit(30);
+
+  assertNoError(error);
+  const notes = (rows || []) as Array<{
+    user_id: string;
+    body: string;
+    audience: MessageNote["audience"];
+    created_at: string;
+    updated_at: string;
+    expires_at: string;
+  }>;
+
+  const ids = [...new Set(notes.map((note) => note.user_id))];
+  if (!ids.length) return [];
+
+  const profiles = await supabase
+    .from("profiles")
+    .select("id,username,display_name,avatar_url,verified")
+    .in("id", ids);
+
+  assertNoError(profiles.error);
+
+  const profileMap = new Map(
+    (profiles.data || []).map((profile) => [profile.id, profile])
+  );
+
+  return notes.flatMap((note) => {
+    const profile = profileMap.get(note.user_id);
+    if (!profile) return [];
+    return [{
+      ...note,
+      username: profile.username,
+      display_name: profile.display_name,
+      avatar_url: profile.avatar_url,
+      verified: Boolean(profile.verified),
+    }];
+  });
+}
+
+export async function saveOwnNote(
+  supabase: SupabaseClient,
+  userId: string,
+  body: string,
+  audience: MessageNote["audience"]
+) {
+  const clean = body.trim().slice(0, 80);
+  if (!clean) throw new Error("NOTE_EMPTY");
+
+  const { error } = await supabase.from("notes").upsert(
+    {
+      user_id: userId,
+      body: clean,
+      audience,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    },
+    { onConflict: "user_id" }
+  );
+
+  assertNoError(error);
+}
+
+export async function deleteOwnNote(
+  supabase: SupabaseClient,
+  userId: string
+) {
+  const { error } = await supabase
+    .from("notes")
+    .delete()
+    .eq("user_id", userId);
+  assertNoError(error);
 }

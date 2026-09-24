@@ -106,3 +106,17 @@ export type DirectConversation = {
   inbox: InboxConversation;
   profile: Profile;
 };
+
+
+export type MessageNote = {
+  user_id: string;
+  body: string;
+  audience: "everyone" | "followers" | "close_friends";
+  created_at: string;
+  updated_at: string;
+  expires_at: string;
+  username: string;
+  display_name: string;
+  avatar_url: string | null;
+  verified: boolean;
+};
