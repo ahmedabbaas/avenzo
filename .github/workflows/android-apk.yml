@@ -145,6 +145,7 @@ jobs:
           import android.os.Bundle;
           import android.util.Base64;
           import android.view.View;
+          import android.view.WindowManager;
           import android.webkit.WebView;
           import android.widget.Toast;
           import androidx.activity.OnBackPressedCallback;
@@ -162,6 +163,14 @@ jobs:
             public void onCreate(Bundle savedInstanceState) {
               super.onCreate(savedInstanceState);
 
+              getWindow().setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+              );
+
+              WindowManager.LayoutParams params = getWindow().getAttributes();
+              params.preferredRefreshRate = 120.0f;
+              getWindow().setAttributes(params);
+
               getOnBackPressedDispatcher().addCallback(
                 this,
                 new OnBackPressedCallback(true) {
@@ -171,19 +180,32 @@ jobs:
                   }
                 }
               );
+
+              configureWebView();
             }
 
             @Override
             public void onResume() {
               super.onResume();
+              configureWebView();
 
+              if (getBridge() != null && getBridge().getWebView() != null) {
+                WebView webView = getBridge().getWebView();
+                webView.postDelayed(() -> injectAvenzoShell(webView), 120);
+                webView.postDelayed(() -> injectAvenzoShell(webView), 700);
+              }
+            }
+
+            private void configureWebView() {
               if (avenzoClientInstalled || getBridge() == null || getBridge().getWebView() == null) {
                 return;
               }
 
               final WebView webView = getBridge().getWebView();
-              webView.setOverScrollMode(WebView.OVER_SCROLL_NEVER);
+              webView.setOverScrollMode(WebView.OVER_SCROLL_IF_CONTENT_SCROLLS);
               webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+              webView.setVerticalScrollBarEnabled(false);
+              webView.setHorizontalScrollBarEnabled(false);
               webView.getSettings().setBuiltInZoomControls(false);
               webView.getSettings().setDisplayZoomControls(false);
 
@@ -192,12 +214,22 @@ jobs:
                 public void onPageFinished(WebView view, String url) {
                   super.onPageFinished(view, url);
                   injectAvenzoShell(view);
+                  view.postDelayed(() -> injectAvenzoShell(view), 180);
+                  view.postDelayed(() -> injectAvenzoShell(view), 800);
+                }
+
+                @Override
+                public void doUpdateVisitedHistory(WebView view, String url, boolean isReload) {
+                  super.doUpdateVisitedHistory(view, url, isReload);
+                  view.postDelayed(() -> injectAvenzoShell(view), 80);
+                  view.postDelayed(() -> injectAvenzoShell(view), 350);
                 }
               });
 
               avenzoClientInstalled = true;
-              webView.postDelayed(() -> injectAvenzoShell(webView), 250);
-              webView.postDelayed(() -> injectAvenzoShell(webView), 900);
+              webView.postDelayed(() -> injectAvenzoShell(webView), 100);
+              webView.postDelayed(() -> injectAvenzoShell(webView), 500);
+              webView.postDelayed(() -> injectAvenzoShell(webView), 1500);
             }
 
             private void handleAvenzoBack() {
