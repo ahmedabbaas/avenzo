@@ -25,7 +25,7 @@ const URDU: Record<string, string> = {
   "Privacy Policy": "پرائیویسی پالیسی",
   "Account": "اکاؤنٹ",
   "App": "ایپ",
-  "Other": "دیگر"
+  "Other": "دیگر",
   "Appearance": "ظاہری شکل",
   "Language": "زبان",
   "Notifications": "اطلاعات",
