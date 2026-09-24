@@ -74,7 +74,7 @@ jobs:
           if 'android:screenOrientation=' not in s:
               s = s.replace(
                   'android:name=".MainActivity"',
-                  'android:name=".MainActivity" android:screenOrientation="portrait"'
+                  'android:name=".MainActivity" android:screenOrientation="portrait" android:windowSoftInputMode="adjustResize"'
               )
           manifest.write_text(s)
 
@@ -179,12 +179,87 @@ jobs:
                 });
               }
 
-              applyBranding();
+              function isVisible(el) {
+                if (!el) return false;
+                var style = window.getComputedStyle(el);
+                return style.display !== "none" &&
+                  style.visibility !== "hidden" &&
+                  el.getClientRects().length > 0;
+              }
+
+              function syncMobileState() {
+                applyBranding();
+                var activeChat = document.querySelector(".dm-chat:not(.dm-mobile-hidden)");
+                document.documentElement.classList.toggle(
+                  "avenzo-dm-chat-active",
+                  Boolean(activeChat && isVisible(activeChat))
+                );
+              }
+
+              window.__avenzoHandleBack = function() {
+                try {
+                  var modal = document.querySelector(".modal");
+                  if (modal && isVisible(modal)) {
+                    var close = modal.querySelector(
+                      '.modal-header button[aria-label="Close"], .icon-button[aria-label="Close"], button[aria-label*="Close"]'
+                    );
+                    if (close) {
+                      close.click();
+                      return "handled";
+                    }
+                  }
+
+                  var chatBack = document.querySelector(
+                    ".dm-chat:not(.dm-mobile-hidden) .dm-back"
+                  );
+                  if (chatBack && isVisible(chatBack)) {
+                    chatBack.click();
+                    return "handled";
+                  }
+
+                  var nav = document.querySelector(".mobile-nav");
+                  if (nav && isVisible(nav)) {
+                    var active = nav.querySelector("button.active");
+                    var home = nav.querySelector("button");
+                    if (active && home && active !== home) {
+                      home.click();
+                      return "handled";
+                    }
+                  }
+
+                  var path = window.location.pathname;
+                  if (path.indexOf("/settings/") === 0) {
+                    window.location.href = "/settings";
+                    return "handled";
+                  }
+                  if (path === "/settings") {
+                    window.location.href = "/home?screen=profile";
+                    return "handled";
+                  }
+                  if (
+                    path === "/messages" ||
+                    path === "/reels" ||
+                    path.indexOf("/u/") === 0
+                  ) {
+                    window.location.href = "/home";
+                    return "handled";
+                  }
+                  if (path !== "/home" && path !== "/") {
+                    window.location.href = "/home";
+                    return "handled";
+                  }
+                } catch (e) {}
+                return "exit";
+              };
+
+              syncMobileState();
               if (!window.__avenzoNativeBrandObserver) {
-                window.__avenzoNativeBrandObserver = new MutationObserver(applyBranding);
+                window.__avenzoNativeBrandObserver = new MutationObserver(syncMobileState);
                 window.__avenzoNativeBrandObserver.observe(document.documentElement, {
                   childList: true,
-                  subtree: true
+                  subtree: true,
+                  attributes: true,
+                  attributeFilter: ["class"]
                 });
               }
             } catch (e) {}
@@ -236,6 +311,28 @@ jobs:
               avenzoClientInstalled = true;
               webView.postDelayed(() -> injectAvenzoShell(webView), 350);
               webView.postDelayed(() -> injectAvenzoShell(webView), 1200);
+            }}
+
+            @Override
+            public void onBackPressed() {{
+              if (getBridge() == null || getBridge().getWebView() == null) {{
+                super.onBackPressed();
+                return;
+              }}
+
+              final WebView webView = getBridge().getWebView();
+              webView.evaluateJavascript(
+                "(function(){try{return window.__avenzoHandleBack?window.__avenzoHandleBack():'exit';}catch(e){return 'exit';}})();",
+                result -> {{
+                  if ("\\\"exit\\\"".equals(result) || "null".equals(result)) {{
+                    if (webView.canGoBack()) {{
+                      webView.goBack();
+                    }} else {{
+                      MainActivity.super.onBackPressed();
+                    }}
+                  }}
+                }}
+              );
             }}
 
             private void injectAvenzoShell(WebView view) {{
