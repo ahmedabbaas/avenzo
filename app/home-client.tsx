@@ -56,6 +56,7 @@ import {
   formatRelativeTime,
 } from "../features/social/lib/profile";
 import { readImageDimensions, type MediaDimensions } from "../features/social/lib/media";
+import { validateContentFile } from "../features/social/lib/upload-validation";
 import type {
   Chat,
   Message,
@@ -322,18 +323,14 @@ export default function HomeClient({
       return;
     }
 
-    const validType =
-      picked.type.startsWith("image/") || picked.type.startsWith("video/");
+    const validationError = validateContentFile(picked, createMode);
 
-    if (!validType) {
-      showToast("Choose an image or video.");
+    if (validationError) {
+      showToast(validationError);
       event.target.value = "";
-      return;
-    }
-
-    if (picked.size > 25 * 1024 * 1024) {
-      showToast("Media must be 25 MB or smaller.");
-      event.target.value = "";
+      setFile(null);
+      setPreview("");
+      setMediaDimensions(null);
       return;
     }
 
@@ -345,13 +342,10 @@ export default function HomeClient({
   async function createContent(event: FormEvent) {
     event.preventDefault();
 
-    if (createMode === "story" && !file) {
-      showToast("Choose an image or video for your story.");
-      return;
-    }
+    const validationError = validateContentFile(file, createMode);
 
-    if (createMode === "reel" && (!file || !file.type.startsWith("video/"))) {
-      showToast("Reels require a video.");
+    if (validationError) {
+      showToast(validationError);
       return;
     }
 
