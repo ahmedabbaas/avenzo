@@ -252,10 +252,141 @@
       lastHomeActive = nowHome;
     }
 
+    function closeNativeDmSheet() {
+      var existing = document.querySelector(".avenzo-native-dm-action-overlay");
+      if (existing) existing.remove();
+    }
+
+    function openNativeDmSheet(row) {
+      if (!row || document.querySelector(".dm-message-action-modal")) return;
+      var source = row.querySelector(".dm-message-actions");
+      if (!source) return;
+
+      closeNativeDmSheet();
+
+      var overlay = document.createElement("div");
+      overlay.className = "modal avenzo-native-dm-action-overlay";
+
+      var sheet = document.createElement("div");
+      sheet.className = "avenzo-native-dm-sheet";
+      sheet.innerHTML =
+        '<div style="width:38px;height:4px;margin:1px auto 11px;border-radius:999px;background:#4c5056"></div>' +
+        '<div class="avenzo-native-dm-reactions"></div>' +
+        '<div class="avenzo-native-dm-actions"></div>' +
+        '<button type="button" class="avenzo-native-dm-cancel" aria-label="Close message actions">Cancel</button>';
+
+      var reactionBox = sheet.querySelector(".avenzo-native-dm-reactions");
+      ["❤️","😂","👍","😮","😢","😡"].forEach(function(emoji){
+        var button = document.createElement("button");
+        button.type = "button";
+        button.textContent = emoji;
+        button.addEventListener("click", function(){
+          var reactSource = Array.prototype.slice.call(
+            source.querySelectorAll(":scope > button")
+          ).find(function(item){
+            return item.textContent.trim() === "React";
+          });
+
+          if (!reactSource) {
+            closeNativeDmSheet();
+            return;
+          }
+
+          reactSource.click();
+          window.setTimeout(function(){
+            var pickerButtons = row.querySelectorAll(".dm-reaction-picker button");
+            var match = Array.prototype.slice.call(pickerButtons).find(function(item){
+              return item.textContent.trim() === emoji;
+            });
+            if (match) match.click();
+            closeNativeDmSheet();
+          }, 40);
+        });
+        reactionBox.appendChild(button);
+      });
+
+      var actionBox = sheet.querySelector(".avenzo-native-dm-actions");
+      Array.prototype.slice.call(source.querySelectorAll(":scope > button"))
+        .filter(function(button){
+          return button.textContent.trim() !== "React";
+        })
+        .forEach(function(sourceButton){
+          var button = document.createElement("button");
+          button.type = "button";
+          button.textContent = sourceButton.textContent.trim();
+          if (/delete|report/i.test(button.textContent)) {
+            button.style.color = "#ff6767";
+          }
+          button.addEventListener("click", function(){
+            closeNativeDmSheet();
+            sourceButton.click();
+          });
+          actionBox.appendChild(button);
+        });
+
+      overlay.addEventListener("click", closeNativeDmSheet);
+      sheet.addEventListener("click", function(event){ event.stopPropagation(); });
+      sheet.querySelector(".avenzo-native-dm-cancel")
+        .addEventListener("click", closeNativeDmSheet);
+
+      overlay.appendChild(sheet);
+      document.body.appendChild(overlay);
+    }
+
+    function enhanceLegacyDmActions() {
+      if (document.querySelector(".dm-message-menu-trigger")) return;
+
+      document.querySelectorAll(".dm-message-row").forEach(function(row){
+        if (row.dataset.avenzoDmEnhanced === "1") return;
+        if (!row.querySelector(".dm-message-actions")) return;
+
+        row.dataset.avenzoDmEnhanced = "1";
+        var timer = null;
+        var startX = 0;
+        var startY = 0;
+
+        function clearHold() {
+          if (timer) {
+            window.clearTimeout(timer);
+            timer = null;
+          }
+        }
+
+        row.addEventListener("contextmenu", function(event){
+          event.preventDefault();
+          openNativeDmSheet(row);
+        });
+
+        row.addEventListener("pointerdown", function(event){
+          startX = event.clientX;
+          startY = event.clientY;
+          clearHold();
+          timer = window.setTimeout(function(){
+            timer = null;
+            openNativeDmSheet(row);
+            if (navigator.vibrate) navigator.vibrate(18);
+          }, 420);
+        }, { passive:true });
+
+        row.addEventListener("pointermove", function(event){
+          if (
+            Math.abs(event.clientX - startX) > 10 ||
+            Math.abs(event.clientY - startY) > 10
+          ) {
+            clearHold();
+          }
+        }, { passive:true });
+
+        row.addEventListener("pointerup", clearHold, { passive:true });
+        row.addEventListener("pointercancel", clearHold, { passive:true });
+      });
+    }
+
     function syncMobileState() {
       applyBranding();
       ensureDrawer();
       normalizeBottomNav();
+      enhanceLegacyDmActions();
       syncHomeState();
 
       var activeChat = document.querySelector(".dm-chat:not(.dm-mobile-hidden)");
