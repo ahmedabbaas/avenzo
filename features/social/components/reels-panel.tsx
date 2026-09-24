@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import BrandLogo from "../../../components/brand-logo";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
@@ -222,7 +223,7 @@ export default function ReelsPanel({
       <main className="reels-page">
         <header className="reels-topbar">
           <Link href="/home" className="messages-brand">
-            <span>A</span><b>AVENZO</b>
+            <BrandLogo size={32} /><b>AVENZO</b>
           </Link>
         </header>
         <div className="reels-loading">Loading reels…</div>
@@ -234,7 +235,7 @@ export default function ReelsPanel({
     <main className="reels-page">
       <header className="reels-topbar">
         <Link href="/home" className="messages-brand">
-          <span>A</span><b>AVENZO</b>
+          <BrandLogo size={32} /><b>AVENZO</b>
         </Link>
         <div>
           <b>Reels</b>

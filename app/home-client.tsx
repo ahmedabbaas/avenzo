@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
+import BrandLogo from "../components/brand-logo";
 import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase/client";
 import { fetchInbox } from "../features/messages/data";
@@ -705,8 +706,8 @@ export default function HomeClient({
           onClick={() => setScreen("home")}
           aria-label="AVENZO home"
         >
-          <i />
-          AVENZO
+          <BrandLogo size={34} />
+          <span>AVENZO</span>
         </button>
 
         <div className="search-wrap">

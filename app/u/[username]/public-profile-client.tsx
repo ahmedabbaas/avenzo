@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import BrandLogo from "../../../components/brand-logo";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
@@ -231,8 +232,8 @@ export default function PublicProfileClient({
     <main className="public-profile-shell">
       <header className="public-profile-top">
         <Link className="public-brand" href="/home">
-          <i />
-          AVENZO
+          <BrandLogo size={34} />
+          <span>AVENZO</span>
         </Link>
 
         <Link className="btn secondary small" href="/home">

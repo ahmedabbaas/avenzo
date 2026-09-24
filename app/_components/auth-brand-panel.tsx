@@ -1,3 +1,5 @@
+import BrandLogo from "../../components/brand-logo";
+
 export default function AuthBrandPanel({
   context = "PRIVATE-FIRST SOCIAL",
 }: {
@@ -6,7 +8,7 @@ export default function AuthBrandPanel({
   return (
     <section className="auth-brand-panel">
       <div className="auth-brand">
-        <span className="brand-mark">A</span>
+        <BrandLogo size={54} priority />
         <div>
           <strong>AVENZO</strong>
           <span>Connect. Share. Belong.</span>

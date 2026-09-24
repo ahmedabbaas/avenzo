@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "../../lib/supabase/server";
+import BrandLogo from "../../components/brand-logo";
 import MessagesWorkspace from "../../features/messages/components/messages-workspace";
 
 export const metadata = { title: "Messages" };
@@ -37,7 +38,7 @@ export default async function MessagesPage({
     <main className="messages-page">
       <header className="messages-page-topbar">
         <a className="messages-brand" href="/home" aria-label="Back to AVENZO home">
-          <span>A</span>
+          <BrandLogo size={32} />
           <b>AVENZO</b>
         </a>
         <a className="btn secondary small" href="/home">
