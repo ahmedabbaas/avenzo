@@ -75,6 +75,12 @@ jobs:
                   '<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n    <application',
                   1
               )
+          if 'android.permission.RECORD_AUDIO' not in s:
+              s = s.replace(
+                  '<application',
+                  '<uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <application',
+                  1
+              )
           if 'android:hardwareAccelerated=' not in s:
               s = s.replace(
                   '<application',
@@ -231,6 +237,7 @@ jobs:
 
               createMessageNotificationChannel();
               requestNotificationPermission();
+              requestMicrophonePermission();
 
               getOnBackPressedDispatcher().addCallback(
                 this,
@@ -305,6 +312,19 @@ jobs:
                 requestPermissions(
                   new String[]{Manifest.permission.POST_NOTIFICATIONS},
                   4201
+                );
+              }
+            }
+
+            private void requestMicrophonePermission() {
+              if (
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+                  != PackageManager.PERMISSION_GRANTED
+              ) {
+                requestPermissions(
+                  new String[]{Manifest.permission.RECORD_AUDIO},
+                  4202
                 );
               }
             }

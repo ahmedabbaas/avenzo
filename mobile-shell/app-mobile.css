@@ -2846,3 +2846,90 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
     display:none!important;
   }
 }
+
+/* AVENZO ANDROID VOICE + CALL v1 */
+@media(max-width:820px){
+  html.avenzo-android-app .dm-chat-head{
+    grid-template-columns:44px 42px minmax(0,1fr) 44px 44px 44px!important;
+    gap:5px!important;
+  }
+
+  html.avenzo-android-app .dm-call-button{
+    display:grid!important;
+    place-items:center!important;
+    grid-column:4!important;
+    width:44px!important;
+    height:44px!important;
+    min-width:44px!important;
+    min-height:44px!important;
+    border:0!important;
+    border-radius:50%!important;
+    background:transparent!important;
+    color:#fff!important;
+  }
+
+  html.avenzo-android-app .dm-head-search-button{
+    grid-column:5!important;
+  }
+
+  html.avenzo-android-app .dm-more-button{
+    grid-column:6!important;
+  }
+
+  html.avenzo-android-app .dm-recording-status{
+    display:grid!important;
+    grid-template-columns:auto auto minmax(0,1fr) auto!important;
+    align-items:center!important;
+    gap:7px!important;
+    margin:0 1px 7px!important;
+    padding:6px 10px!important;
+    border-radius:12px!important;
+    background:#17191c!important;
+  }
+
+  html.avenzo-android-app .dm-voice-button{
+    width:40px!important;
+    height:40px!important;
+    min-width:40px!important;
+    min-height:40px!important;
+    border-radius:50%!important;
+  }
+
+  html.avenzo-android-app .dm-voice-button.recording{
+    background:#ff405f!important;
+    color:#fff!important;
+  }
+
+  html.avenzo-android-app .avenzo-call-overlay{
+    position:fixed!important;
+    inset:0!important;
+    z-index:500!important;
+    display:grid!important;
+    place-items:center!important;
+    padding:
+      calc(20px + env(safe-area-inset-top))
+      20px
+      calc(20px + env(safe-area-inset-bottom))!important;
+    background:
+      radial-gradient(circle at 50% 22%,rgba(128,79,255,.18),transparent 34%),
+      rgba(3,4,5,.97)!important;
+  }
+}
+
+@media(max-width:390px){
+  html.avenzo-android-app .dm-chat-head{
+    grid-template-columns:42px 38px minmax(0,1fr) 40px 40px!important;
+  }
+
+  html.avenzo-android-app .dm-head-search-button{
+    display:none!important;
+  }
+
+  html.avenzo-android-app .dm-call-button{
+    grid-column:4!important;
+  }
+
+  html.avenzo-android-app .dm-more-button{
+    grid-column:5!important;
+  }
+}
