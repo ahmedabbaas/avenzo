@@ -6,12 +6,12 @@ on:
     branches: [main]
     paths:
       - "capacitor.config.ts"
+      - "app/**"
+      - "components/**"
+      - "features/**"
+      - "lib/**"
       - "mobile-shell/**"
       - "public/avenzo-logo.webp"
-      - "app/globals.css"
-      - "app/layout.tsx"
-      - "app/manifest.ts"
-      - "components/brand-logo.tsx"
       - ".github/workflows/android-apk.yml"
 
 permissions:
