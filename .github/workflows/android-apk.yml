@@ -322,7 +322,7 @@ jobs:
 
               final WebView webView = getBridge().getWebView();
               webView.evaluateJavascript(
-                "(function(){try{return window.__avenzoHandleBack?window.__avenzoHandleBack():'exit';}catch(e){return 'exit';}})();",
+                "(function(){{try{{return window.__avenzoHandleBack?window.__avenzoHandleBack():'exit';}}catch(e){{return 'exit';}}}})();",
                 result -> {{
                   if ("\\\"exit\\\"".equals(result) || "null".equals(result)) {{
                     if (webView.canGoBack()) {{
