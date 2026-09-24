@@ -69,6 +69,12 @@ jobs:
 
           manifest = Path("android/app/src/main/AndroidManifest.xml")
           s = manifest.read_text()
+          if 'android.permission.POST_NOTIFICATIONS' not in s:
+              s = s.replace(
+                  '<application',
+                  '<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n    <application',
+                  1
+              )
           if 'android:hardwareAccelerated=' not in s:
               s = s.replace(
                   '<application',
@@ -142,10 +148,21 @@ jobs:
 
           java = r"""package com.avenzo.app;
 
+          import android.Manifest;
+          import android.app.Notification;
+          import android.app.NotificationChannel;
+          import android.app.NotificationManager;
+          import android.app.PendingIntent;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.content.pm.PackageManager;
+          import android.graphics.BitmapFactory;
+          import android.os.Build;
           import android.os.Bundle;
           import android.util.Base64;
           import android.view.View;
           import android.view.WindowManager;
+          import android.webkit.JavascriptInterface;
           import android.webkit.WebView;
           import android.widget.Toast;
           import androidx.activity.OnBackPressedCallback;
@@ -156,6 +173,7 @@ jobs:
           import java.nio.charset.StandardCharsets;
 
           public class MainActivity extends BridgeActivity {
+            private static final String MESSAGE_CHANNEL_ID = "avenzo_messages";
             private boolean avenzoClientInstalled = false;
             private long lastRootBackPress = 0L;
 
@@ -171,6 +189,9 @@ jobs:
               params.preferredRefreshRate = 120.0f;
               getWindow().setAttributes(params);
 
+              createMessageNotificationChannel();
+              requestNotificationPermission();
+
               getOnBackPressedDispatcher().addCallback(
                 this,
                 new OnBackPressedCallback(true) {
@@ -182,6 +203,14 @@ jobs:
               );
 
               configureWebView();
+              handleIntentRoute(getIntent());
+            }
+
+            @Override
+            protected void onNewIntent(Intent intent) {
+              super.onNewIntent(intent);
+              setIntent(intent);
+              handleIntentRoute(intent);
             }
 
             @Override
@@ -196,8 +225,127 @@ jobs:
               }
             }
 
+            private void createMessageNotificationChannel() {
+              if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+
+              NotificationChannel channel = new NotificationChannel(
+                MESSAGE_CHANNEL_ID,
+                "Messages",
+                NotificationManager.IMPORTANCE_HIGH
+              );
+              channel.setDescription("New AVENZO direct messages");
+              channel.enableVibration(true);
+
+              NotificationManager manager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+              manager.createNotificationChannel(channel);
+            }
+
+            private void requestNotificationPermission() {
+              if (
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                  != PackageManager.PERMISSION_GRANTED
+              ) {
+                requestPermissions(
+                  new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                  4201
+                );
+              }
+            }
+
+            private void showMessageNotification(
+              String title,
+              String body,
+              String route
+            ) {
+              if (
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                  != PackageManager.PERMISSION_GRANTED
+              ) {
+                return;
+              }
+
+              String safeRoute =
+                route != null && route.startsWith("/") ? route : "/messages";
+
+              Intent intent = new Intent(this, MainActivity.class);
+              intent.putExtra("avenzo_route", safeRoute);
+              intent.addFlags(
+                Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP
+              );
+
+              int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                flags |= PendingIntent.FLAG_IMMUTABLE;
+              }
+
+              PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                Math.abs(safeRoute.hashCode()),
+                intent,
+                flags
+              );
+
+              Notification.Builder builder =
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                  ? new Notification.Builder(this, MESSAGE_CHANNEL_ID)
+                  : new Notification.Builder(this);
+
+              builder
+                .setSmallIcon(android.R.drawable.ic_dialog_email)
+                .setLargeIcon(
+                  BitmapFactory.decodeResource(
+                    getResources(),
+                    R.drawable.avenzo_logo
+                  )
+                )
+                .setContentTitle(
+                  title == null || title.trim().isEmpty() ? "AVENZO" : title
+                )
+                .setContentText(
+                  body == null || body.trim().isEmpty()
+                    ? "New message"
+                    : body
+                )
+                .setStyle(
+                  new Notification.BigTextStyle().bigText(
+                    body == null || body.trim().isEmpty()
+                      ? "New message"
+                      : body
+                  )
+                )
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+                .setCategory(Notification.CATEGORY_MESSAGE);
+
+              NotificationManager manager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+              manager.notify(
+                (int) (System.currentTimeMillis() & 0x0fffffff),
+                builder.build()
+              );
+            }
+
+            private void handleIntentRoute(Intent intent) {
+              if (intent == null) return;
+              String route = intent.getStringExtra("avenzo_route");
+              if (route == null || !route.startsWith("/")) return;
+
+              if (getBridge() != null && getBridge().getWebView() != null) {
+                WebView webView = getBridge().getWebView();
+                String target = "https://avenzo-ivory.vercel.app" + route;
+                webView.post(() -> webView.loadUrl(target));
+              }
+            }
+
             private void configureWebView() {
-              if (avenzoClientInstalled || getBridge() == null || getBridge().getWebView() == null) {
+              if (
+                avenzoClientInstalled ||
+                getBridge() == null ||
+                getBridge().getWebView() == null
+              ) {
                 return;
               }
 
@@ -208,6 +356,10 @@ jobs:
               webView.setHorizontalScrollBarEnabled(false);
               webView.getSettings().setBuiltInZoomControls(false);
               webView.getSettings().setDisplayZoomControls(false);
+              webView.addJavascriptInterface(
+                new AvenzoNativeBridge(),
+                "AvenzoNative"
+              );
 
               webView.setWebViewClient(new BridgeWebViewClient(getBridge()) {
                 @Override
@@ -219,7 +371,11 @@ jobs:
                 }
 
                 @Override
-                public void doUpdateVisitedHistory(WebView view, String url, boolean isReload) {
+                public void doUpdateVisitedHistory(
+                  WebView view,
+                  String url,
+                  boolean isReload
+                ) {
                   super.doUpdateVisitedHistory(view, url, isReload);
                   view.postDelayed(() -> injectAvenzoShell(view), 80);
                   view.postDelayed(() -> injectAvenzoShell(view), 350);
@@ -230,6 +386,19 @@ jobs:
               webView.postDelayed(() -> injectAvenzoShell(webView), 100);
               webView.postDelayed(() -> injectAvenzoShell(webView), 500);
               webView.postDelayed(() -> injectAvenzoShell(webView), 1500);
+            }
+
+            private class AvenzoNativeBridge {
+              @JavascriptInterface
+              public void notifyMessage(
+                String title,
+                String body,
+                String route
+              ) {
+                runOnUiThread(
+                  () -> showMessageNotification(title, body, route)
+                );
+              }
             }
 
             private void handleAvenzoBack() {
@@ -279,8 +448,10 @@ jobs:
             }
 
             private String readAssetText(String path) throws Exception {
-              try (InputStream input = getAssets().open(path);
-                   ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+              try (
+                InputStream input = getAssets().open(path);
+                ByteArrayOutputStream output = new ByteArrayOutputStream()
+              ) {
                 byte[] buffer = new byte[8192];
                 int read;
                 while ((read = input.read(buffer)) != -1) {
@@ -291,14 +462,19 @@ jobs:
             }
 
             private String readAssetBase64(String path) throws Exception {
-              try (InputStream input = getAssets().open(path);
-                   ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+              try (
+                InputStream input = getAssets().open(path);
+                ByteArrayOutputStream output = new ByteArrayOutputStream()
+              ) {
                 byte[] buffer = new byte[8192];
                 int read;
                 while ((read = input.read(buffer)) != -1) {
                   output.write(buffer, 0, read);
                 }
-                return Base64.encodeToString(output.toByteArray(), Base64.NO_WRAP);
+                return Base64.encodeToString(
+                  output.toByteArray(),
+                  Base64.NO_WRAP
+                );
               }
             }
 
