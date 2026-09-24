@@ -35,6 +35,7 @@ export default async function UserProfilePage({
 
   const [
     postsResult,
+    reelsResult,
     postCountResult,
     followerCountResult,
     followingCountResult,
@@ -43,6 +44,12 @@ export default async function UserProfilePage({
     supabase
       .from("posts")
       .select("id,caption,media_path,media_type,media_width,media_height,created_at")
+      .eq("author_id", target.id)
+      .order("created_at", { ascending: false })
+      .limit(60),
+    supabase
+      .from("reels")
+      .select("id,title,caption,media_path,cover_path,view_count,created_at")
       .eq("author_id", target.id)
       .order("created_at", { ascending: false })
       .limit(60),
@@ -73,11 +80,20 @@ export default async function UserProfilePage({
       : "",
   }));
 
+  const reels = (reelsResult.data || []).map((reel) => ({
+    ...reel,
+    media_url: supabase.storage.from("media").getPublicUrl(reel.media_path).data.publicUrl,
+    cover_url: reel.cover_path
+      ? supabase.storage.from("media").getPublicUrl(reel.cover_path).data.publicUrl
+      : "",
+  }));
+
   return (
     <PublicProfileClient
       viewerId={user.id}
       profile={target}
       posts={posts}
+      reels={reels}
       initialFollowing={Boolean(followResult.data)}
       stats={{
         posts: postCountResult.count || 0,

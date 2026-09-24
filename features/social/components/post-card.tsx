@@ -7,6 +7,7 @@ import { avatarFor, formatRelativeTime, initialsAvatar } from "../lib/profile";
 import type { Post } from "../types";
 import AvatarImage from "./avatar-image";
 import UserMediaImage from "./user-media-image";
+import VerifiedBadge from "./verified-badge";
 
 export default function PostCard({
   post,
@@ -48,8 +49,10 @@ export default function PostCard({
             <AvatarImage src={avatarFor(author)} alt={author.display_name} size={80} />
             <div>
               <b>{authorName}</b>
-              <small>
-                @{author.username} · {formatRelativeTime(post.created_at)}
+              <small className="verified-line">
+                @{author.username}
+                <VerifiedBadge verified={author.verified} />
+                {" · "}{formatRelativeTime(post.created_at)}
               </small>
             </div>
           </Link>
@@ -70,6 +73,14 @@ export default function PostCard({
       </div>
 
       {post.caption && <p className="post-caption">{post.caption}</p>}
+
+      {(post.hashtags?.length || post.mentions?.length || post.location) && (
+        <div className="content-meta-line">
+          {post.hashtags?.map((tag) => <span key={"#"+tag}>#{tag}</span>)}
+          {post.mentions?.map((mention) => <span key={"@"+mention}>@{mention}</span>)}
+          {post.location && <small>⌖ {post.location}</small>}
+        </div>
+      )}
 
       {post.media_path && post.media_type === "image" && (
         <UserMediaImage
@@ -109,10 +120,7 @@ export default function PostCard({
             <span>{post.commentCount}</span>
           </span>
 
-          <button
-            onClick={onShare}
-            aria-label="Share post"
-          >
+          <button onClick={onShare} aria-label="Share post">
             <Icon name="send" size={20} />
           </button>
 
@@ -129,7 +137,10 @@ export default function PostCard({
           <div className="comment-list">
             {post.comments.slice(-3).map((item) => (
               <div key={item.id}>
-                <b>@{item.profile?.username || "user"}</b>
+                <b className="verified-line">
+                  @{item.profile?.username || "user"}
+                  <VerifiedBadge verified={item.profile?.verified} />
+                </b>
                 <span>{item.body}</span>
               </div>
             ))}
@@ -157,4 +168,3 @@ export default function PostCard({
     </article>
   );
 }
-

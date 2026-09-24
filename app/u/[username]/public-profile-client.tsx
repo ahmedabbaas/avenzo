@@ -30,6 +30,18 @@ type PublicPost = {
   media_url: string;
 };
 
+type PublicReel = {
+  id: string;
+  title: string;
+  caption: string;
+  media_path: string;
+  cover_path: string | null;
+  view_count: number | string;
+  created_at: string;
+  media_url: string;
+  cover_url: string;
+};
+
 type Stats = {
   posts: number;
   followers: number;
@@ -49,12 +61,14 @@ export default function PublicProfileClient({
   viewerId,
   profile,
   posts,
+  reels,
   initialFollowing,
   stats: initialStats,
 }: {
   viewerId: string;
   profile: PublicProfile;
   posts: PublicPost[];
+  reels: PublicReel[];
   initialFollowing: boolean;
   stats: Stats;
 }) {
@@ -62,6 +76,7 @@ export default function PublicProfileClient({
   const supabase = useMemo(() => createClient(), []);
 
   const [following, setFollowing] = useState(initialFollowing);
+  const [contentTab, setContentTab] = useState<"posts" | "reels">("posts");
   const [stats, setStats] = useState(initialStats);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
@@ -264,43 +279,95 @@ export default function PublicProfileClient({
           </div>
         </div>
 
-        <div className="public-profile-section-title">
-          <div>
-            <div className="eyebrow">POSTS</div>
-            <h2>Shared by @{profile.username}</h2>
-          </div>
+        <div className="public-profile-tabs" role="tablist" aria-label="Profile content">
+          <button
+            className={contentTab === "posts" ? "active" : ""}
+            onClick={() => setContentTab("posts")}
+          >
+            Posts <span>{posts.length}</span>
+          </button>
+          <button
+            className={contentTab === "reels" ? "active" : ""}
+            onClick={() => setContentTab("reels")}
+          >
+            Reels <span>{reels.length}</span>
+          </button>
         </div>
 
-        {mediaPosts.length > 0 ? (
-          <div className="public-profile-grid">
-            {mediaPosts.map((post) =>
-              post.media_type === "video" ? (
-                <video
-                  key={post.id}
-                  src={post.media_url}
-                  controls
-                  muted
-                  preload="metadata"
-                />
-              ) : (
-                <UserMediaImage
-                  key={post.id}
-                  src={post.media_url}
-                  alt={post.caption || "AVENZO post"}
-                  width={post.media_width}
-                  height={post.media_height}
-                />
-              )
+        {contentTab === "posts" ? (
+          <>
+            <div className="public-profile-section-title">
+              <div>
+                <div className="eyebrow">POSTS</div>
+                <h2>Shared by @{profile.username}</h2>
+              </div>
+            </div>
+
+            {mediaPosts.length > 0 ? (
+              <div className="public-profile-grid">
+                {mediaPosts.map((post) =>
+                  post.media_type === "video" ? (
+                    <video
+                      key={post.id}
+                      src={post.media_url}
+                      controls
+                      muted
+                      preload="metadata"
+                    />
+                  ) : (
+                    <UserMediaImage
+                      key={post.id}
+                      src={post.media_url}
+                      alt={post.caption || "AVENZO post"}
+                      width={post.media_width}
+                      height={post.media_height}
+                    />
+                  )
+                )}
+              </div>
+            ) : (
+              <div className="empty">
+                <span className="empty-mark">A</span>
+                <b>No media posts yet.</b>
+                <p>This profile’s photo and video posts will appear here.</p>
+              </div>
             )}
-          </div>
+          </>
         ) : (
-          <div className="empty">
-            <span className="empty-mark">A</span>
-            <b>No media posts yet.</b>
-            <p>
-              This profile’s photo and video posts will appear here.
-            </p>
-          </div>
+          <>
+            <div className="public-profile-section-title">
+              <div>
+                <div className="eyebrow">REELS</div>
+                <h2>Reels by @{profile.username}</h2>
+              </div>
+            </div>
+
+            {reels.length > 0 ? (
+              <div className="public-profile-grid public-reels-grid">
+                {reels.map((reel) => (
+                  <Link
+                    key={reel.id}
+                    className="public-reel-tile"
+                    href={"/reels?reel=" + encodeURIComponent(reel.id)}
+                  >
+                    {reel.cover_url ? (
+                      <img src={reel.cover_url} alt={reel.title || reel.caption || "AVENZO reel"} />
+                    ) : (
+                      <video src={reel.media_url} muted playsInline preload="metadata" />
+                    )}
+                    <span>{Number(reel.view_count || 0)} views</span>
+                    <b>{reel.title || "Reel"}</b>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="empty">
+                <span className="empty-mark">A</span>
+                <b>No reels yet.</b>
+                <p>This account has not uploaded a reel.</p>
+              </div>
+            )}
+          </>
         )}
       </section>
 

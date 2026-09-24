@@ -1014,6 +1014,7 @@ export default function HomeClient({
                         key={reel.id}
                         reel={reel}
                         mediaUrl={mediaUrl(reel.media_path)}
+                        coverUrl={reel.cover_path ? mediaUrl(reel.cover_path) : ""}
                         saved={savedReels.includes(reel.id)}
                         own={reel.author_id === initialProfile.id}
                         onLike={() => void toggleReelLike(reel)}
@@ -1136,7 +1137,7 @@ export default function HomeClient({
               <AvatarImage src={avatarFor(profile)} alt={profile.display_name} size={96} />
               <div>
                 <strong>{profile.display_name}</strong>
-                <small>@{profile.username}</small>
+                <small className="verified-line">@{profile.username}<VerifiedBadge verified={profile.verified} /></small>
               </div>
             </div>
             <div className="mini-stats">
