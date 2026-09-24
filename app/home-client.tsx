@@ -379,6 +379,7 @@ export default function HomeClient({
         caption,
         file,
         dimensions: mediaDimensions,
+        highQualityUploads: runtimePreferences.high_quality_uploads,
       });
 
       showToast(
