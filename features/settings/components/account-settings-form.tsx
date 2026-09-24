@@ -129,17 +129,14 @@ export default function AccountSettingsForm({
   const [dangerBusy, setDangerBusy] = useState(false);
 
   useEffect(() => {
-    if (username === initialProfile.username) {
-      setUsernameState("idle");
+    if (
+      username === initialProfile.username ||
+      !isValidUsername(username)
+    ) {
       return;
     }
 
-    if (!isValidUsername(username)) {
-      setUsernameState("invalid");
-      return;
-    }
-
-    setUsernameState("checking");
+    let active = true;
     const timer = window.setTimeout(async () => {
       try {
         const response = await fetch(
@@ -148,6 +145,8 @@ export default function AccountSettingsForm({
         );
         const result = await response.json();
 
+        if (!active) return;
+
         if (!response.ok) {
           setUsernameState("error");
           return;
@@ -155,11 +154,14 @@ export default function AccountSettingsForm({
 
         setUsernameState(result.available ? "available" : "taken");
       } catch {
-        setUsernameState("error");
+        if (active) setUsernameState("error");
       }
     }, 350);
 
-    return () => window.clearTimeout(timer);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
   }, [username, initialProfile.username]);
 
   useEffect(() => {
@@ -546,9 +548,17 @@ export default function AccountSettingsForm({
                 maxLength={30}
                 autoCapitalize="none"
                 spellCheck={false}
-                onChange={(event) =>
-                  setUsername(normalizeUsername(event.target.value))
-                }
+                onChange={(event) => {
+                  const next = normalizeUsername(event.target.value);
+                  setUsername(next);
+                  setUsernameState(
+                    next === initialProfile.username
+                      ? "idle"
+                      : isValidUsername(next)
+                        ? "checking"
+                        : "invalid"
+                  );
+                }}
               />
             </div>
             <small className={"username-check-state " + usernameState}>
