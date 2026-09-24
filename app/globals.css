@@ -1289,3 +1289,28 @@ html[data-theme="light"] .settings-save-bar{background:rgba(255,255,255,.94)}
   .blocked-row{grid-template-columns:42px minmax(0,1fr)}
   .blocked-row .btn{grid-column:1/-1;width:100%}
 }
+
+.profile-create-panel{
+  margin-top:22px;
+  padding-top:16px;
+  border-top:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+.profile-create-label{
+  flex:none;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+}
+.profile-create-panel .profile-create-actions{
+  margin-top:0!important;
+}
+@media(max-width:620px){
+  .profile-create-panel{align-items:flex-start;flex-direction:column;gap:10px}
+  .profile-create-panel .profile-create-actions{width:100%}
+  .profile-create-panel .profile-create-actions .btn{flex:1;min-width:0}
+}
