@@ -63,16 +63,19 @@ export default function ProfileView({
             </span>
           </div>
 
-          <div className="profile-create-actions" aria-label="Create content">
-            <button className="btn small" onClick={onCreatePost}>
-              Create Post
-            </button>
-            <button className="btn secondary small" onClick={onCreateReel}>
-              Create Reel
-            </button>
-            <button className="btn secondary small" onClick={onCreateStory}>
-              Create Story
-            </button>
+          <div className="profile-create-panel">
+            <span className="profile-create-label">Create</span>
+            <div className="profile-create-actions" aria-label="Create content">
+              <button className="btn small" onClick={onCreatePost}>
+                Create Post
+              </button>
+              <button className="btn secondary small" onClick={onCreateReel}>
+                Create Reel
+              </button>
+              <button className="btn secondary small" onClick={onCreateStory}>
+                Create Story
+              </button>
+            </div>
           </div>
         </div>
       </section>
