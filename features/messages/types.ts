@@ -46,6 +46,30 @@ export type MessageReaction = {
   updated_at: string;
 };
 
+export type SharedPostPreview = {
+  id: string;
+  caption: string;
+  media_path: string | null;
+  media_type: "image" | "video" | null;
+  creator_username: string;
+  creator_name: string;
+};
+
+export type SharedReelPreview = {
+  id: string;
+  caption: string;
+  media_path: string;
+  creator_username: string;
+  creator_name: string;
+};
+
+export type SharedProfilePreview = {
+  id: string;
+  username: string;
+  display_name: string;
+  avatar_url: string | null;
+};
+
 export type DirectMessage = {
   id: string;
   conversation_id: string;
@@ -66,6 +90,9 @@ export type DirectMessage = {
   attachments: MessageAttachment[];
   reactions: MessageReaction[];
   reply_to?: DirectMessage | null;
+  shared_post?: SharedPostPreview | null;
+  shared_reel?: SharedReelPreview | null;
+  shared_profile?: SharedProfilePreview | null;
 };
 
 export type DirectConversation = {
