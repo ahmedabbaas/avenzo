@@ -6,7 +6,8 @@ import { createClient } from "../../../lib/supabase/client";
 declare global {
   interface Window {
     AvenzoNative?: {
-      notifyMessage: (title: string, body: string, route: string) => void;
+      notifyMessage?: (title: string, body: string, route: string) => void;
+      registerSession?: (accessToken: string, userId: string) => void;
     };
   }
 }
@@ -73,7 +74,7 @@ export default function NativeMessageNotifications() {
               ? "/messages?user=" + encodeURIComponent(actor.username)
               : "/messages";
 
-            window.AvenzoNative.notifyMessage(title, body, route);
+            window.AvenzoNative.notifyMessage?.(title, body, route);
           }
         )
         .subscribe();
