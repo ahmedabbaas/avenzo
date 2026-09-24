@@ -58,12 +58,9 @@ export async function fetchConversationMessages(
   supabase: SupabaseClient,
   conversationId: string
 ): Promise<DirectMessage[]> {
-  const { data, error } = await supabase
-    .from("messages")
-    .select("*")
-    .eq("conversation_id", conversationId)
-    .order("created_at", { ascending: true })
-    .limit(500);
+  const { data, error } = await supabase.rpc("get_dm_messages", {
+    cid: conversationId,
+  });
 
   assertNoError(error);
   const rows = (data || []) as DirectMessage[];
@@ -422,4 +419,33 @@ export async function reportUserFromMessages(
     details: "Reported from direct messages.",
   });
   assertNoError(error);
+}
+
+export async function reportMessage(
+  supabase: SupabaseClient,
+  userId: string,
+  messageId: string
+) {
+  const { error } = await supabase.from("reports").insert({
+    reporter_id: userId,
+    reported_message_id: messageId,
+    reason: "other",
+    details: "Reported from direct messages.",
+  });
+  assertNoError(error);
+}
+
+export async function fetchMessagingPrivacy(
+  supabase: SupabaseClient,
+  otherUserId: string
+) {
+  const { data, error } = await supabase.rpc("get_dm_public_privacy", {
+    other_user: otherUserId,
+  });
+  assertNoError(error);
+  const row = Array.isArray(data) ? data[0] : data;
+  return {
+    onlineStatus: Boolean(row?.online_status),
+    readReceipts: Boolean(row?.read_receipts),
+  };
 }
