@@ -17,7 +17,10 @@ export type IconName =
   | "send"
   | "close"
   | "camera"
-  | "back";
+  | "back"
+  | "paperclip"
+  | "smile"
+  | "more";
 
 
 export default function Icon({ name, size = 19 }: { name: IconName; size?: number }) {
@@ -101,6 +104,22 @@ export default function Icon({ name, size = 19 }: { name: IconName; size?: numbe
       <>
         <path d="m15 5-7 7 7 7" />
         <path d="M8 12h12" />
+      </>
+    ),
+    paperclip: (
+      <path d="m9.5 12.5 5.8-5.8a3 3 0 1 1 4.2 4.2l-7.8 7.8a5 5 0 0 1-7.1-7.1l7.4-7.4" />
+    ),
+    smile: (
+      <>
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M9 10h.01M15 10h.01M8.5 14.5c1 1.2 2.1 1.8 3.5 1.8s2.5-.6 3.5-1.8" />
+      </>
+    ),
+    more: (
+      <>
+        <circle cx="5" cy="12" r="1" />
+        <circle cx="12" cy="12" r="1" />
+        <circle cx="19" cy="12" r="1" />
       </>
     ),
   };
