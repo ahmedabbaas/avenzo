@@ -5,6 +5,9 @@ import type {
   InboxConversation,
   MessageAttachment,
   MessageReaction,
+  SharedPostPreview,
+  SharedProfilePreview,
+  SharedReelPreview,
 } from "./types";
 
 const PROFILE_COLUMNS =
@@ -86,6 +89,101 @@ export async function fetchConversationMessages(
   const reactions = (reactionResult.data || []) as MessageReaction[];
   const byId = new Map(rows.map((message) => [message.id, message]));
 
+  const postIds = [...new Set(rows.flatMap((message) =>
+    message.shared_post_id ? [message.shared_post_id] : []
+  ))];
+  const reelIds = [...new Set(rows.flatMap((message) =>
+    message.shared_reel_id ? [message.shared_reel_id] : []
+  ))];
+  const profileIds = [...new Set(rows.flatMap((message) =>
+    message.shared_profile_id ? [message.shared_profile_id] : []
+  ))];
+
+  const [postResult, reelResult, sharedProfileResult] = await Promise.all([
+    postIds.length
+      ? supabase
+          .from("posts")
+          .select("id,author_id,caption,media_path,media_type")
+          .in("id", postIds)
+      : Promise.resolve({ data: [], error: null }),
+    reelIds.length
+      ? supabase
+          .from("reels")
+          .select("id,author_id,caption,media_path")
+          .in("id", reelIds)
+      : Promise.resolve({ data: [], error: null }),
+    profileIds.length
+      ? supabase
+          .from("profiles")
+          .select("id,username,display_name,avatar_url")
+          .in("id", profileIds)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+
+  assertNoError(postResult.error);
+  assertNoError(reelResult.error);
+  assertNoError(sharedProfileResult.error);
+
+  const contentAuthorIds = [
+    ...new Set([
+      ...(postResult.data || []).map((item) => item.author_id),
+      ...(reelResult.data || []).map((item) => item.author_id),
+    ]),
+  ];
+
+  const authorResult = contentAuthorIds.length
+    ? await supabase
+        .from("profiles")
+        .select("id,username,display_name")
+        .in("id", contentAuthorIds)
+    : { data: [], error: null };
+
+  assertNoError(authorResult.error);
+
+  const authorMap = new Map(
+    (authorResult.data || []).map((author) => [author.id, author])
+  );
+
+  const postMap = new Map<string, SharedPostPreview>(
+    (postResult.data || []).map((post) => {
+      const author = authorMap.get(post.author_id);
+      return [
+        post.id,
+        {
+          id: post.id,
+          caption: post.caption,
+          media_path: post.media_path,
+          media_type: post.media_type,
+          creator_username: author?.username || "user",
+          creator_name: author?.display_name || "AVENZO user",
+        },
+      ];
+    })
+  );
+
+  const reelMap = new Map<string, SharedReelPreview>(
+    (reelResult.data || []).map((reel) => {
+      const author = authorMap.get(reel.author_id);
+      return [
+        reel.id,
+        {
+          id: reel.id,
+          caption: reel.caption,
+          media_path: reel.media_path,
+          creator_username: author?.username || "user",
+          creator_name: author?.display_name || "AVENZO user",
+        },
+      ];
+    })
+  );
+
+  const sharedProfileMap = new Map<string, SharedProfilePreview>(
+    (sharedProfileResult.data || []).map((profile) => [
+      profile.id,
+      profile as SharedProfilePreview,
+    ])
+  );
+
   return rows.map((message) => {
     const replied = message.reply_to_id
       ? byId.get(message.reply_to_id)
@@ -105,6 +203,15 @@ export async function fetchConversationMessages(
             attachments: [],
             reactions: [],
           }
+        : null,
+      shared_post: message.shared_post_id
+        ? postMap.get(message.shared_post_id) || null
+        : null,
+      shared_reel: message.shared_reel_id
+        ? reelMap.get(message.shared_reel_id) || null
+        : null,
+      shared_profile: message.shared_profile_id
+        ? sharedProfileMap.get(message.shared_profile_id) || null
         : null,
     } as DirectMessage;
   });
