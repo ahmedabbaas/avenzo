@@ -50,7 +50,6 @@ import PersonCard from "../features/social/components/person-card";
 import PostCard from "../features/social/components/post-card";
 import ReelCard from "../features/social/components/reel-card";
 import PageTitle from "../features/social/components/page-title";
-import SettingsPanel from "../features/social/components/settings-panel";
 import CreateContentModal from "../features/social/components/create-content-modal";
 import StoryViewer from "../features/social/components/story-viewer";
 import { avatarFor } from "../features/social/lib/profile";
@@ -74,7 +73,6 @@ const NAV_ITEMS: Array<{ id: Screen; label: string; icon: IconName }> = [
   { id: "activity", label: "Activity", icon: "activity" },
   { id: "saved", label: "Saved", icon: "saved" },
   { id: "profile", label: "Profile", icon: "profile" },
-  { id: "settings", label: "Settings", icon: "settings" },
 ];
 
 export default function HomeClient({
@@ -740,6 +738,11 @@ export default function HomeClient({
             </button>
           ))}
 
+          <button onClick={() => router.push("/settings")}>
+            <Icon name="settings" />
+            <span>Settings</span>
+          </button>
+
           <button
             className="create-nav"
             onClick={() => {
@@ -1036,7 +1039,7 @@ export default function HomeClient({
               reels={profileReels}
               media={mediaUrl}
               stats={stats}
-              onEdit={() => setScreen("settings")}
+              onEdit={() => router.push("/settings/account")}
               onCreatePost={() => {
                 setCreateMode("post");
                 setShowCreate(true);
@@ -1048,29 +1051,6 @@ export default function HomeClient({
               onCreateStory={() => {
                 setCreateMode("story");
                 setShowCreate(true);
-              }}
-            />
-          )}
-
-          {screen === "settings" && (
-            <SettingsPanel
-              profile={profile}
-              setProfile={setProfile}
-              supabase={supabase}
-              signOut={signOut}
-              onSaved={() => {
-                void loadProfile();
-                showToast("Profile updated.");
-              }}
-              onUnblocked={() => {
-                void Promise.all([
-                  loadPeople(),
-                  loadPosts(),
-                  loadProfileContent(),
-                  loadExplorePosts(),
-                  loadReels(),
-                  loadStories(),
-                ]);
               }}
             />
           )}
