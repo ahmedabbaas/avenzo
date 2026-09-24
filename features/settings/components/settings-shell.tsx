@@ -69,7 +69,10 @@ export default function SettingsShell({
 
       <section className="settings-content">
         <div className="settings-mobile-head">
-          <Link href="/settings" aria-label="Back to settings">
+          <Link
+            href={pathname === "/settings" ? "/home?screen=profile" : "/settings"}
+            aria-label={pathname === "/settings" ? "Back to AVENZO" : "Back to settings"}
+          >
             <Icon name="back" size={18} />
           </Link>
           <b>Settings</b>
