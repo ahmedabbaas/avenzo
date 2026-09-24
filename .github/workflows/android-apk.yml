@@ -8,6 +8,10 @@ on:
       - "capacitor.config.ts"
       - "mobile-shell/**"
       - "public/avenzo-logo.webp"
+      - "app/globals.css"
+      - "app/layout.tsx"
+      - "app/manifest.ts"
+      - "components/brand-logo.tsx"
       - ".github/workflows/android-apk.yml"
 
 permissions:
@@ -48,18 +52,42 @@ jobs:
       - name: Sync Android project
         run: npx cap sync android
 
-      - name: Apply AVENZO launcher icon
+      - name: Apply AVENZO Android branding and phone frame
         shell: bash
         run: |
           mkdir -p android/app/src/main/res/drawable-nodpi
           cp public/avenzo-logo.webp android/app/src/main/res/drawable-nodpi/avenzo_logo.webp
           python3 - <<'PY'
           from pathlib import Path
-          p = Path("android/app/src/main/AndroidManifest.xml")
-          s = p.read_text()
+          import re
+
+          manifest = Path("android/app/src/main/AndroidManifest.xml")
+          s = manifest.read_text()
           s = s.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@drawable/avenzo_logo"')
           s = s.replace('android:roundIcon="@mipmap/ic_launcher_round"', 'android:roundIcon="@drawable/avenzo_logo"')
-          p.write_text(s)
+          if 'android:screenOrientation=' not in s:
+              s = s.replace(
+                  'android:name=".MainActivity"',
+                  'android:name=".MainActivity" android:screenOrientation="portrait"'
+              )
+          manifest.write_text(s)
+
+          styles = Path("android/app/src/main/res/values/styles.xml")
+          text = styles.read_text()
+          additions = (
+              '<item name="android:statusBarColor">#06080a</item>'
+              '<item name="android:navigationBarColor">#06080a</item>'
+              '<item name="android:windowLightStatusBar">false</item>'
+              '<item name="android:windowLightNavigationBar">false</item>'
+          )
+          if 'android:statusBarColor' not in text:
+              text = re.sub(
+                  r'(<style name="AppTheme\.NoActionBar"[^>]*>)',
+                  r'\1' + additions,
+                  text,
+                  count=1
+              )
+          styles.write_text(text)
           PY
 
       - name: Build installable debug APK
