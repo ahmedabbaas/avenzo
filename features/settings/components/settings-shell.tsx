@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Icon from "../../social/components/icon";
 import type { ReactNode } from "react";
+import { useUiTranslation } from "../lib/i18n";
 
 const NAV = [
   { href: "/settings", label: "Settings home", icon: "settings" as const },
@@ -24,13 +25,14 @@ export default function SettingsShell({
   children: ReactNode;
 }) {
   const pathname = usePathname();
+  const t = useUiTranslation();
 
   return (
     <main className="settings-page-shell">
       <aside className="settings-sidebar">
         <Link className="settings-back-home" href="/home?screen=profile">
           <Icon name="back" size={17} />
-          Back to AVENZO
+          {t("Back to AVENZO")}
         </Link>
 
         <div className="settings-sidebar-brand">
@@ -54,16 +56,16 @@ export default function SettingsShell({
               }
             >
               <Icon name={item.icon} size={18} />
-              <span>{item.label}</span>
+              <span>{t(item.label)}</span>
               <span className="settings-arrow">›</span>
             </Link>
           ))}
         </nav>
 
         <div className="settings-sidebar-links">
-          <Link href="/about">About</Link>
-          <Link href="/terms">Terms</Link>
-          <Link href="/privacy">Privacy</Link>
+          <Link href="/about">{t("About")}</Link>
+          <Link href="/terms">{t("Terms")}</Link>
+          <Link href="/privacy">{t("Privacy")}</Link>
         </div>
       </aside>
 
@@ -75,7 +77,7 @@ export default function SettingsShell({
           >
             <Icon name="back" size={18} />
           </Link>
-          <b>Settings</b>
+          <b>{t("Settings")}</b>
         </div>
 
         <header className="settings-page-header">
