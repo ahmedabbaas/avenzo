@@ -31,16 +31,17 @@ export default async function HomePage({
     redirect("/settings");
   }
 
-  if (params.screen === "messages") {
-    const chat =
-      typeof params.chat === "string"
-        ? "?user=" + encodeURIComponent(params.chat)
-        : "";
+  const requestedChat =
+    typeof params.chat === "string" ? params.chat.trim() : "";
+
+  if (params.screen === "messages" || requestedChat) {
+    const chat = requestedChat
+      ? "?user=" + encodeURIComponent(requestedChat)
+      : "";
     redirect("/messages" + chat);
   }
 
-  const initialChatUsername =
-    typeof params.chat === "string" ? params.chat.toLowerCase() : "";
+  const initialChatUsername = "";
   const allowedScreens = new Set([
     "home",
     "explore",

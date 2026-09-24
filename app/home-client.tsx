@@ -1172,7 +1172,11 @@ export default function HomeClient({
           <button
             key={item.id}
             className={screen === item.id ? "active" : ""}
-            onClick={() => setScreen(item.id)}
+            onClick={() =>
+              item.id === "messages"
+                ? router.push("/messages")
+                : setScreen(item.id)
+            }
           >
             <span className="mobile-icon-wrap">
               <Icon name={item.icon} />
