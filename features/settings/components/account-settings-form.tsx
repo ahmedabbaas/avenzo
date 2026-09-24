@@ -440,6 +440,9 @@ export default function AccountSettingsForm({
         account_private: privacy.account_private,
         who_can_follow: privacy.who_can_follow,
         who_can_message: privacy.who_can_message,
+        who_can_send_message_requests: privacy.who_can_send_message_requests,
+        read_receipts: privacy.read_receipts,
+        online_status: privacy.online_status,
         who_can_comment: privacy.who_can_comment,
         who_can_mention: privacy.who_can_mention,
         who_can_tag: privacy.who_can_tag,
@@ -744,6 +747,44 @@ export default function AccountSettingsForm({
 
         <AudienceSelect label={t("Who can follow me")} value={privacy.who_can_follow} onChange={(v) => setPrivacy((p) => ({ ...p, who_can_follow: v }))} />
         <AudienceSelect label={t("Who can message me")} value={privacy.who_can_message} onChange={(v) => setPrivacy((p) => ({ ...p, who_can_message: v }))} />
+        <AudienceSelect label="Who can send message requests" value={privacy.who_can_send_message_requests} onChange={(v) => setPrivacy((p) => ({ ...p, who_can_send_message_requests: v }))} />
+
+        <label className="settings-toggle-row">
+          <span>
+            <b>Read receipts</b>
+            <small>Allow people to see when you have seen their messages.</small>
+          </span>
+          <input
+            type="checkbox"
+            checked={privacy.read_receipts}
+            onChange={(event) =>
+              setPrivacy((current) => ({
+                ...current,
+                read_receipts: event.target.checked,
+              }))
+            }
+          />
+          <span className="settings-switch" aria-hidden="true" />
+        </label>
+
+        <label className="settings-toggle-row">
+          <span>
+            <b>Online status</b>
+            <small>Allow people you message to see when you are online.</small>
+          </span>
+          <input
+            type="checkbox"
+            checked={privacy.online_status}
+            onChange={(event) =>
+              setPrivacy((current) => ({
+                ...current,
+                online_status: event.target.checked,
+              }))
+            }
+          />
+          <span className="settings-switch" aria-hidden="true" />
+        </label>
+
         <AudienceSelect label={t("Who can comment on my posts")} value={privacy.who_can_comment} onChange={(v) => setPrivacy((p) => ({ ...p, who_can_comment: v }))} />
         <AudienceSelect label={t("Who can mention me")} value={privacy.who_can_mention} onChange={(v) => setPrivacy((p) => ({ ...p, who_can_mention: v }))} />
         <AudienceSelect label={t("Who can tag me")} value={privacy.who_can_tag} onChange={(v) => setPrivacy((p) => ({ ...p, who_can_tag: v }))} />
