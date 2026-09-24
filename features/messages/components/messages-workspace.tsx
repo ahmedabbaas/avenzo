@@ -25,6 +25,7 @@ import {
   deleteMessageRequest,
   editMessage,
   ensureConversation,
+  fetchActiveNotes,
   fetchConversationMessages,
   fetchInbox,
   fetchMessageUsers,
@@ -38,6 +39,8 @@ import {
   restrictUser,
   sendDirectMessage,
   sendMessageAttachment,
+  saveOwnNote,
+  deleteOwnNote,
   setConversationMuted,
   setConversationTheme,
   setMessageReaction,
@@ -45,6 +48,7 @@ import {
 import type {
   DirectMessage,
   InboxConversation,
+  MessageNote,
   MessageReaction,
 } from "../types";
 
@@ -149,6 +153,11 @@ export default function MessagesWorkspace({
   const [active, setActive] = useState<InboxConversation | null>(null);
   const [messages, setMessages] = useState<DirectMessage[]>([]);
   const [people, setPeople] = useState<Profile[]>([]);
+  const [notes, setNotes] = useState<MessageNote[]>([]);
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [noteBody, setNoteBody] = useState("");
+  const [noteAudience, setNoteAudience] =
+    useState<MessageNote["audience"]>("followers");
   const [query, setQuery] = useState("");
   const [messageQuery, setMessageQuery] = useState("");
   const [text, setText] = useState("");
@@ -261,6 +270,10 @@ export default function MessagesWorkspace({
     }
   }
 
+  const loadNotes = useCallback(async () => {
+    setNotes(await fetchActiveNotes(supabase));
+  }, [supabase]);
+
   const loadLists = useCallback(async () => {
     const [nextInbox, nextRequests] = await Promise.all([
       fetchInbox(supabase, false),
@@ -327,13 +340,14 @@ export default function MessagesWorkspace({
       void Promise.all([
         loadLists(),
         loadPeople(),
+        loadNotes(),
         supabase
           .from("privacy_settings")
           .select("online_status")
           .eq("user_id", currentUser.id)
           .single(),
       ])
-        .then(async ([, users, privacyResult]) => {
+        .then(async ([, users, , privacyResult]) => {
           if (!activeEffect) return;
           setOwnOnlineEnabled(privacyResult.data?.online_status ?? true);
           setLoading(false);
@@ -382,6 +396,7 @@ export default function MessagesWorkspace({
     loadConversation,
     loadLists,
     loadPeople,
+    loadNotes,
     supabase,
   ]);
 
@@ -456,12 +471,17 @@ export default function MessagesWorkspace({
         { event: "*", schema: "public", table: "message_requests" },
         () => void loadLists()
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notes" },
+        () => void loadNotes()
+      )
       .subscribe();
 
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [supabase, currentUser.id, loadLists]);
+  }, [supabase, currentUser.id, loadLists, loadNotes]);
 
   useEffect(() => {
     if (!active) {
@@ -535,6 +555,65 @@ export default function MessagesWorkspace({
       stopRecordingStream();
     };
   }, []);
+
+  function openOwnNote() {
+    const own = notes.find((note) => note.user_id === currentUser.id);
+    setNoteBody(own?.body || "");
+    setNoteAudience(own?.audience || "followers");
+    setNoteOpen(true);
+  }
+
+  async function saveNote() {
+    const clean = noteBody.trim();
+    if (!clean) {
+      setNotice("Write something before sharing your Note.");
+      return;
+    }
+
+    try {
+      await saveOwnNote(
+        supabase,
+        currentUser.id,
+        clean,
+        noteAudience
+      );
+      setNoteOpen(false);
+      await loadNotes();
+      setNotice("Note shared for 24 hours.");
+    } catch {
+      setNotice("Could not share your Note.");
+    }
+  }
+
+  async function removeNote() {
+    try {
+      await deleteOwnNote(supabase, currentUser.id);
+      setNoteOpen(false);
+      setNoteBody("");
+      await loadNotes();
+      setNotice("Note removed.");
+    } catch {
+      setNotice("Could not remove your Note.");
+    }
+  }
+
+  async function openNoteConversation(note: MessageNote) {
+    if (note.user_id === currentUser.id) {
+      openOwnNote();
+      return;
+    }
+
+    const person: Profile = {
+      id: note.user_id,
+      username: note.username,
+      display_name: note.display_name,
+      bio: "",
+      avatar_url: note.avatar_url,
+      verified: note.verified,
+    };
+
+    await startConversation(person);
+  }
 
   async function startConversation(person: Profile) {
     if (person.id === currentUser.id) return;
@@ -1066,6 +1145,12 @@ export default function MessagesWorkspace({
     }, 1200);
   }
 
+  const ownNote = notes.find((note) => note.user_id === currentUser.id);
+  const visibleNotes = [
+    ...(ownNote ? [ownNote] : []),
+    ...notes.filter((note) => note.user_id !== currentUser.id),
+  ].slice(0, 12);
+
   const shown = (tab === "inbox" ? inbox : requests).filter((item) =>
     (item.display_name + " " + item.username + " " + item.last_message)
       .toLowerCase()
@@ -1098,6 +1183,57 @@ export default function MessagesWorkspace({
             <Icon name="plus" size={16} />
             New Message
           </button>
+        </div>
+
+        <div className="dm-notes-row" aria-label="Notes">
+          <button
+            type="button"
+            className="dm-note-item own"
+            onClick={openOwnNote}
+            aria-label={ownNote ? "Edit your Note" : "Create a Note"}
+          >
+            <span className="dm-note-bubble">
+              {ownNote ? ownNote.body : "Share a note…"}
+            </span>
+            <span className="dm-note-avatar-wrap">
+              <AvatarImage
+                src={avatarFor(currentUser)}
+                alt={currentUser.display_name}
+                size={96}
+              />
+              <i>+</i>
+            </span>
+            <small>Your note</small>
+          </button>
+
+          {visibleNotes
+            .filter((note) => note.user_id !== currentUser.id)
+            .map((note) => (
+              <button
+                type="button"
+                className="dm-note-item"
+                key={note.user_id}
+                onClick={() => void openNoteConversation(note)}
+                aria-label={"Open " + note.display_name + " note"}
+              >
+                <span className="dm-note-bubble">{note.body}</span>
+                <span className="dm-note-avatar-wrap">
+                  <AvatarImage
+                    src={avatarFor({
+                      id: note.user_id,
+                      username: note.username,
+                      display_name: note.display_name,
+                      bio: "",
+                      avatar_url: note.avatar_url,
+                      verified: note.verified,
+                    })}
+                    alt={note.display_name}
+                    size={96}
+                  />
+                </span>
+                <small>{note.display_name}</small>
+              </button>
+            ))}
         </div>
 
         <div className="dm-tabs" role="tablist">
@@ -1917,6 +2053,82 @@ export default function MessagesWorkspace({
           </>
         )}
       </section>
+
+      {noteOpen && (
+        <div
+          className="modal dm-note-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Your Note"
+          onClick={() => setNoteOpen(false)}
+        >
+          <div
+            className="dm-note-sheet"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="dm-note-sheet-head">
+              <div>
+                <small>NOTE</small>
+                <h3>{ownNote ? "Edit your Note" : "Share a Note"}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setNoteOpen(false)}
+                aria-label="Close Note editor"
+              >
+                <Icon name="close" size={17} />
+              </button>
+            </div>
+
+            <textarea
+              value={noteBody}
+              maxLength={80}
+              rows={3}
+              onChange={(event) => setNoteBody(event.target.value)}
+              placeholder="Share a thought…"
+              autoFocus
+            />
+
+            <div className="dm-note-sheet-meta">
+              <span>{noteBody.length}/80</span>
+              <label>
+                Share with
+                <select
+                  value={noteAudience}
+                  onChange={(event) =>
+                    setNoteAudience(
+                      event.target.value as MessageNote["audience"]
+                    )
+                  }
+                >
+                  <option value="followers">Followers</option>
+                  <option value="close_friends">Close Friends</option>
+                  <option value="everyone">Everyone</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="dm-note-sheet-actions">
+              {ownNote && (
+                <button
+                  type="button"
+                  className="danger"
+                  onClick={() => void removeNote()}
+                >
+                  Delete
+                </button>
+              )}
+              <button
+                type="button"
+                className="primary"
+                onClick={() => void saveNote()}
+              >
+                Share
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {actionMessage && (
         <div
