@@ -56,6 +56,7 @@ import { avatarFor } from "../features/social/lib/profile";
 import { readImageDimensions, type MediaDimensions } from "../features/social/lib/media";
 import { validateContentFile } from "../features/social/lib/upload-validation";
 import { useRuntimePreferences } from "../features/settings/lib/runtime-preferences";
+import { useUiTranslation } from "../features/settings/lib/i18n";
 import type {
   Chat,
   Message,
@@ -88,6 +89,7 @@ export default function HomeClient({
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const runtimePreferences = useRuntimePreferences();
+  const t = useUiTranslation();
 
   const [profile, setProfile] = useState(initialProfile);
   const [screen, setScreen] = useState<Screen>(initialScreen || "home");
@@ -693,8 +695,8 @@ export default function HomeClient({
             onKeyDown={(event) => {
               if (event.key === "Enter" && query.trim()) setScreen("explore");
             }}
-            placeholder="Search people"
-            aria-label="Search people"
+            placeholder={t("Search people")}
+            aria-label={t("Search people")}
           />
           {query && (
             <button
@@ -745,7 +747,7 @@ export default function HomeClient({
               onClick={() => setScreen(item.id)}
             >
               <Icon name={item.icon} />
-              <span>{item.label}</span>
+              <span>{t(item.label)}</span>
               {item.id === "messages" && unreadMessages > 0 && (
                 <b className="nav-badge">{Math.min(unreadMessages, 99)}</b>
               )}
@@ -757,7 +759,7 @@ export default function HomeClient({
 
           <button onClick={() => router.push("/settings")}>
             <Icon name="settings" />
-            <span>Settings</span>
+            <span>{t("Settings")}</span>
           </button>
 
           <button
@@ -768,12 +770,12 @@ export default function HomeClient({
             }}
           >
             <Icon name="plus" />
-            <span>Create post</span>
+            <span>{t("Create post")}</span>
           </button>
 
           <button className="logout-nav" onClick={signOut}>
             <Icon name="logout" />
-            <span>Sign out</span>
+            <span>{t("Sign out")}</span>
           </button>
         </aside>
 
