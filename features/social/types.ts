@@ -33,6 +33,7 @@ export type Post = {
   media_type: "image" | "video" | null;
   media_width?: number | null;
   media_height?: number | null;
+  cover_path?: string | null;
   hashtags?: string[];
   mentions?: string[];
   location?: string;

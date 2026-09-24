@@ -1,6 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "../../../lib/supabase/config";
 import { optimizeImageForUpload, type MediaDimensions } from "../lib/media";
-import { validateContentFile } from "../lib/upload-validation";
+import {
+  validateContentFile,
+  validateCoverFile,
+  validateVerticalReelDimensions,
+} from "../lib/upload-validation";
 import type { Message, Post, Reel } from "../types";
 
 export type CreateMode = "post" | "reel" | "story";
@@ -20,19 +25,124 @@ function safeExtension(file: File) {
   );
 }
 
+type UploadProgress = (percent: number) => void;
+
+function cleanTokenList(value: string, prefix: "#" | "@") {
+  const valid = prefix === "#"
+    ? /^[a-z0-9_]{1,50}$/
+    : /^[a-z0-9._]{3,30}$/;
+
+  return [
+    ...new Set(
+      value
+        .split(/[\s,]+/)
+        .map((item) => item.trim().replace(/^[@#]+/, "").toLowerCase())
+        .filter((item) => valid.test(item))
+    ),
+  ].slice(0, 30);
+}
+
+async function uploadObjectWithProgress({
+  supabase,
+  path,
+  file,
+  onProgress,
+}: {
+  supabase: SupabaseClient;
+  path: string;
+  file: File;
+  onProgress?: UploadProgress;
+}) {
+  if (typeof XMLHttpRequest === "undefined") {
+    const { error } = await supabase.storage.from("media").upload(path, file, {
+      upsert: false,
+      contentType: file.type,
+    });
+    assertNoError(error);
+    onProgress?.(100);
+    return;
+  }
+
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  assertNoError(sessionError);
+  if (!session?.access_token) throw new Error("Your session expired. Sign in again.");
+
+  await new Promise<void>((resolve, reject) => {
+    const encodedPath = path
+      .split("/")
+      .map((part) => encodeURIComponent(part))
+      .join("/");
+    const request = new XMLHttpRequest();
+
+    request.open(
+      "POST",
+      SUPABASE_URL + "/storage/v1/object/media/" + encodedPath
+    );
+    request.setRequestHeader(
+      "Authorization",
+      "Bearer " + session.access_token
+    );
+    request.setRequestHeader("apikey", SUPABASE_PUBLISHABLE_KEY);
+    request.setRequestHeader("x-upsert", "false");
+    request.setRequestHeader(
+      "Content-Type",
+      file.type || "application/octet-stream"
+    );
+
+    request.upload.onprogress = (event) => {
+      if (!event.lengthComputable) return;
+      onProgress?.(
+        Math.max(0, Math.min(100, Math.round((event.loaded / event.total) * 100)))
+      );
+    };
+
+    request.onerror = () => reject(new Error("Upload connection failed."));
+    request.onabort = () => reject(new Error("Upload was cancelled."));
+    request.onload = () => {
+      if (request.status >= 200 && request.status < 300) {
+        onProgress?.(100);
+        resolve();
+        return;
+      }
+
+      let detail = "Upload failed.";
+      try {
+        const parsed = JSON.parse(request.responseText || "{}");
+        detail = parsed.message || parsed.error || detail;
+      } catch {
+        // Keep the safe generic message.
+      }
+      reject(new Error(detail));
+    };
+
+    request.send(file);
+  });
+}
+
 async function uploadContentMedia({
   supabase,
   userId,
   mode,
   file,
+  folderSuffix = "",
+  onProgress,
 }: {
   supabase: SupabaseClient;
   userId: string;
   mode: CreateMode;
   file: File;
+  folderSuffix?: string;
+  onProgress?: UploadProgress;
 }) {
-  const folder =
+  const baseFolder =
     mode === "reel" ? "reels" : mode === "story" ? "stories" : "posts";
+  const folder = folderSuffix
+    ? baseFolder + "/" + folderSuffix
+    : baseFolder;
 
   const path =
     userId +
@@ -43,14 +153,12 @@ async function uploadContentMedia({
     "." +
     safeExtension(file);
 
-  const { error } = await supabase.storage
-    .from("media")
-    .upload(path, file, {
-      upsert: false,
-      contentType: file.type,
-    });
-
-  assertNoError(error);
+  await uploadObjectWithProgress({
+    supabase,
+    path,
+    file,
+    onProgress,
+  });
 
   return {
     path,
@@ -67,7 +175,13 @@ export async function publishContent({
   caption,
   file,
   dimensions,
+  title = "",
+  hashtags = "",
+  mentions = "",
+  location = "",
+  coverFile = null,
   highQualityUploads = true,
+  onProgress,
 }: {
   supabase: SupabaseClient;
   userId: string;
@@ -75,18 +189,39 @@ export async function publishContent({
   caption: string;
   file: File | null;
   dimensions: MediaDimensions | null;
+  title?: string;
+  hashtags?: string;
+  mentions?: string;
+  location?: string;
+  coverFile?: File | null;
   highQualityUploads?: boolean;
+  onProgress?: UploadProgress;
 }) {
   const validationError = validateContentFile(file, mode);
+  if (validationError) throw new Error(validationError);
 
-  if (validationError) {
-    throw new Error(validationError);
+  const coverError = validateCoverFile(coverFile);
+  if (coverError) throw new Error(coverError);
+
+  if (mode === "reel") {
+    const verticalError = validateVerticalReelDimensions(dimensions);
+    if (verticalError) throw new Error(verticalError);
   }
 
+  const cleanHashtags = cleanTokenList(hashtags, "#");
+  const cleanMentions = cleanTokenList(mentions, "@");
+  const cleanLocation = location.trim().slice(0, 160);
+  const cleanCaption = caption.trim().slice(0, 2200);
+  const cleanTitle = title.trim().slice(0, 120);
+
   let uploadedPath: string | null = null;
+  let uploadedCoverPath: string | null = null;
   let mediaType: "image" | "video" | null = null;
 
   try {
+    const usesCover = Boolean(coverFile && file?.type.startsWith("video/"));
+    const mainProgressEnd = usesCover ? 82 : 100;
+
     if (file) {
       const preparedFile = await optimizeImageForUpload(
         file,
@@ -98,54 +233,94 @@ export async function publishContent({
         userId,
         mode,
         file: preparedFile,
+        onProgress: (percent) =>
+          onProgress?.(Math.round((percent / 100) * mainProgressEnd)),
       });
 
       uploadedPath = uploaded.path;
       mediaType = uploaded.type;
     }
 
+    if (usesCover && coverFile) {
+      const preparedCover = await optimizeImageForUpload(
+        coverFile,
+        highQualityUploads
+      );
+      const cover = await uploadContentMedia({
+        supabase,
+        userId,
+        mode,
+        file: preparedCover,
+        folderSuffix: "covers",
+        onProgress: (percent) =>
+          onProgress?.(
+            mainProgressEnd +
+              Math.round((percent / 100) * (100 - mainProgressEnd))
+          ),
+      });
+      uploadedCoverPath = cover.path;
+    }
+
     if (mode === "story") {
       const { error } = await supabase.from("stories").insert({
         author_id: userId,
+        caption: cleanCaption,
+        hashtags: cleanHashtags,
+        mentions: cleanMentions,
+        location: cleanLocation,
         media_path: uploadedPath,
         media_type: mediaType,
-        media_width:
-          mediaType === "image" ? dimensions?.width || null : null,
-        media_height:
-          mediaType === "image" ? dimensions?.height || null : null,
+        cover_path: uploadedCoverPath,
+        media_width: dimensions?.width || null,
+        media_height: dimensions?.height || null,
       });
 
       assertNoError(error);
+      onProgress?.(100);
       return;
     }
 
     if (mode === "reel") {
       const { error } = await supabase.from("reels").insert({
         author_id: userId,
-        caption: caption.trim(),
+        title: cleanTitle,
+        caption: cleanCaption,
+        hashtags: cleanHashtags,
+        mentions: cleanMentions,
+        location: cleanLocation,
         media_path: uploadedPath,
         media_type: "video",
+        cover_path: uploadedCoverPath,
+        media_width: dimensions?.width || null,
+        media_height: dimensions?.height || null,
       });
 
       assertNoError(error);
+      onProgress?.(100);
       return;
     }
 
     const { error } = await supabase.from("posts").insert({
       author_id: userId,
-      caption: caption.trim(),
+      caption: cleanCaption,
+      hashtags: cleanHashtags,
+      mentions: cleanMentions,
+      location: cleanLocation,
       media_path: uploadedPath,
       media_type: mediaType,
-      media_width:
-        mediaType === "image" ? dimensions?.width || null : null,
-      media_height:
-        mediaType === "image" ? dimensions?.height || null : null,
+      cover_path: uploadedCoverPath,
+      media_width: dimensions?.width || null,
+      media_height: dimensions?.height || null,
     });
 
     assertNoError(error);
+    onProgress?.(100);
   } catch (error) {
-    if (uploadedPath) {
-      await supabase.storage.from("media").remove([uploadedPath]);
+    const paths = [uploadedPath, uploadedCoverPath].filter(
+      (path): path is string => Boolean(path)
+    );
+    if (paths.length) {
+      await supabase.storage.from("media").remove(paths);
     }
     throw error;
   }
@@ -164,8 +339,11 @@ export async function removePost(
 
   assertNoError(error);
 
-  if (post.media_path) {
-    await supabase.storage.from("media").remove([post.media_path]);
+  const mediaPaths = [post.media_path, post.cover_path].filter(
+    (path): path is string => Boolean(path)
+  );
+  if (mediaPaths.length) {
+    await supabase.storage.from("media").remove(mediaPaths);
   }
 }
 
@@ -275,6 +453,17 @@ export async function createReelComment(
   assertNoError(error);
 }
 
+export async function recordReelView(
+  supabase: SupabaseClient,
+  reelId: string
+) {
+  const { data, error } = await supabase.rpc("record_reel_view", {
+    target_reel: reelId,
+  });
+  assertNoError(error);
+  return Number(data || 0);
+}
+
 export async function removeReel(
   supabase: SupabaseClient,
   userId: string,
@@ -288,7 +477,12 @@ export async function removeReel(
 
   assertNoError(error);
 
-  await supabase.storage.from("media").remove([reel.media_path]);
+  const mediaPaths = [reel.media_path, reel.cover_path].filter(
+    (path): path is string => Boolean(path)
+  );
+  if (mediaPaths.length) {
+    await supabase.storage.from("media").remove(mediaPaths);
+  }
 }
 
 export async function setFollowing(

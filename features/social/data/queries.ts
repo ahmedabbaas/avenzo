@@ -10,7 +10,7 @@ import type {
 } from "../types";
 
 const PROFILE_COLUMNS =
-  "id,username,display_name,bio,avatar_url,created_at";
+  "id,username,display_name,bio,avatar_url,verified,created_at";
 
 type PostRow = {
   id: string;
@@ -20,15 +20,29 @@ type PostRow = {
   media_type: "image" | "video" | null;
   media_width?: number | null;
   media_height?: number | null;
+  cover_path?: string | null;
+  hashtags?: string[];
+  mentions?: string[];
+  location?: string;
   created_at: string;
 };
 
 type ReelRow = {
   id: string;
   author_id: string;
+  title: string;
   caption: string;
   media_path: string;
   media_type: "video";
+  cover_path: string | null;
+  media_width?: number | null;
+  media_height?: number | null;
+  hashtags: string[];
+  mentions: string[];
+  location: string;
+  view_count: number | string;
+  share_count: number | string;
+  save_count: number | string;
   created_at: string;
 };
 
@@ -39,6 +53,11 @@ type StoryRow = {
   media_type: "image" | "video";
   media_width?: number | null;
   media_height?: number | null;
+  caption?: string;
+  hashtags?: string[];
+  mentions?: string[];
+  location?: string;
+  cover_path?: string | null;
   created_at: string;
   expires_at: string;
 };
@@ -53,7 +72,7 @@ export async function fetchProfile(
 ): Promise<Profile | null> {
   const { data, error } = await supabase
     .from("profiles")
-    .select(PROFILE_COLUMNS)
+    .select(PROFILE_COLUMNS + ",is_admin")
     .eq("id", userId)
     .single();
 
@@ -421,6 +440,13 @@ export async function fetchReels(
   return {
     reels: rows.map((reel) => ({
       ...reel,
+      title: reel.title || "",
+      hashtags: reel.hashtags || [],
+      mentions: reel.mentions || [],
+      location: reel.location || "",
+      viewCount: Number(reel.view_count || 0),
+      shareCount: Number(reel.share_count || 0),
+      saveCount: Number(reel.save_count || 0),
       profile: authorMap.get(reel.author_id),
       likeCount: likes.filter((like) => like.reel_id === reel.id).length,
       liked: likes.some(
