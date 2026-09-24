@@ -7,7 +7,11 @@ export const dynamic = "force-dynamic";
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ chat?: string; screen?: string }>;
+  searchParams: Promise<{
+    chat?: string;
+    screen?: string;
+    create?: string;
+  }>;
 }) {
   const supabase = await createClient();
   const {
@@ -58,5 +62,18 @@ export default async function HomePage({
           | "profile")
       : undefined;
 
-  return <HomeClient profile={profile} initialScreen={initialScreen} />;
+  const initialCreateMode =
+    params.create === "post" ||
+    params.create === "reel" ||
+    params.create === "story"
+      ? params.create
+      : undefined;
+
+  return (
+    <HomeClient
+      profile={profile}
+      initialScreen={initialScreen}
+      initialCreateMode={initialCreateMode}
+    />
+  );
 }

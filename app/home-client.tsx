@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ChangeEvent,
   FormEvent,
   useCallback,
   useEffect,
@@ -49,9 +48,14 @@ import ReelCard from "../features/social/components/reel-card";
 import PageTitle from "../features/social/components/page-title";
 import CreateContentModal from "../features/social/components/create-content-modal";
 import StoryViewer from "../features/social/components/story-viewer";
+import VerifiedBadge from "../features/social/components/verified-badge";
 import { avatarFor } from "../features/social/lib/profile";
-import { readImageDimensions, type MediaDimensions } from "../features/social/lib/media";
-import { validateContentFile } from "../features/social/lib/upload-validation";
+import { readMediaDimensions, type MediaDimensions } from "../features/social/lib/media";
+import {
+  validateContentFile,
+  validateCoverFile,
+  validateVerticalReelDimensions,
+} from "../features/social/lib/upload-validation";
 import { useRuntimePreferences } from "../features/settings/lib/runtime-preferences";
 import { useUiTranslation } from "../features/settings/lib/i18n";
 import type {
@@ -63,9 +67,14 @@ import type {
   Story,
 } from "../features/social/types";
 
-const NAV_ITEMS: Array<{ id: Screen; label: string; icon: IconName }> = [
+const NAV_ITEMS: Array<{
+  id: Screen | "reels";
+  label: string;
+  icon: IconName;
+}> = [
   { id: "home", label: "Home", icon: "home" },
   { id: "explore", label: "Explore", icon: "explore" },
+  { id: "reels", label: "Reels", icon: "reels" },
   { id: "messages", label: "Messages", icon: "messages" },
   { id: "activity", label: "Activity", icon: "activity" },
   { id: "saved", label: "Saved", icon: "saved" },
@@ -75,9 +84,11 @@ const NAV_ITEMS: Array<{ id: Screen; label: string; icon: IconName }> = [
 export default function HomeClient({
   profile: initialProfile,
   initialScreen,
+  initialCreateMode,
 }: {
   profile: Profile;
   initialScreen?: Screen;
+  initialCreateMode?: "post" | "reel" | "story";
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -94,18 +105,27 @@ export default function HomeClient({
   const [stories, setStories] = useState<Story[]>([]);
   const [savedReels, setSavedReels] = useState<string[]>([]);
   const [storyViewer, setStoryViewer] = useState<Story | null>(null);
-  const [createMode, setCreateMode] = useState<"post" | "reel" | "story">("post");
+  const [createMode, setCreateMode] = useState<"post" | "reel" | "story">(
+    initialCreateMode || "post"
+  );
   const [people, setPeople] = useState<Profile[]>([]);
   const [query, setQuery] = useState("");
   const [followed, setFollowed] = useState<string[]>([]);
   const [saved, setSaved] = useState<string[]>([]);
-  const [showCreate, setShowCreate] = useState(false);
+  const [showCreate, setShowCreate] = useState(Boolean(initialCreateMode));
+  const [title, setTitle] = useState("");
   const [caption, setCaption] = useState("");
+  const [hashtags, setHashtags] = useState("");
+  const [mentions, setMentions] = useState("");
+  const [location, setLocation] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState("");
   const [mediaDimensions, setMediaDimensions] =
     useState<MediaDimensions | null>(null);
   const [posting, setPosting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [toast, setToast] = useState("");
   const [unreadMessages, setUnreadMessages] = useState(0);
   const toastTimerRef = useRef<number | null>(null);
@@ -299,10 +319,37 @@ export default function HomeClient({
     supabase,
   ]);
 
-  async function pickFile(event: ChangeEvent<HTMLInputElement>) {
-    const picked = event.target.files?.[0] || null;
-
+  function clearComposerMedia() {
     if (preview) URL.revokeObjectURL(preview);
+    if (coverPreview) URL.revokeObjectURL(coverPreview);
+    setFile(null);
+    setPreview("");
+    setCoverFile(null);
+    setCoverPreview("");
+    setMediaDimensions(null);
+  }
+
+  function resetComposer(nextMode: "post" | "reel" | "story" = createMode) {
+    clearComposerMedia();
+    setCreateMode(nextMode);
+    setTitle("");
+    setCaption("");
+    setHashtags("");
+    setMentions("");
+    setLocation("");
+    setUploadProgress(0);
+  }
+
+  function openComposer(nextMode: "post" | "reel" | "story") {
+    resetComposer(nextMode);
+    setShowCreate(true);
+  }
+
+  async function pickFile(picked: File | null) {
+    if (preview) URL.revokeObjectURL(preview);
+    if (coverPreview) URL.revokeObjectURL(coverPreview);
+    setCoverFile(null);
+    setCoverPreview("");
 
     if (!picked) {
       setFile(null);
@@ -312,25 +359,55 @@ export default function HomeClient({
     }
 
     const validationError = validateContentFile(picked, createMode);
-
     if (validationError) {
       showToast(validationError);
-      event.target.value = "";
       setFile(null);
       setPreview("");
       setMediaDimensions(null);
       return;
     }
 
+    const dimensions = await readMediaDimensions(picked);
+    if (createMode === "reel") {
+      const verticalError = validateVerticalReelDimensions(dimensions);
+      if (verticalError) {
+        showToast(verticalError);
+        setFile(null);
+        setPreview("");
+        setMediaDimensions(null);
+        return;
+      }
+    }
+
     setFile(picked);
     setPreview(URL.createObjectURL(picked));
-    setMediaDimensions(await readImageDimensions(picked));
+    setMediaDimensions(dimensions);
+  }
+
+  function pickCover(picked: File | null) {
+    if (coverPreview) URL.revokeObjectURL(coverPreview);
+
+    const validationError = validateCoverFile(picked);
+    if (validationError) {
+      showToast(validationError);
+      setCoverFile(null);
+      setCoverPreview("");
+      return;
+    }
+
+    setCoverFile(picked);
+    setCoverPreview(picked ? URL.createObjectURL(picked) : "");
   }
 
   async function createContent(event: FormEvent) {
     event.preventDefault();
 
-    const validationError = validateContentFile(file, createMode);
+    const validationError =
+      validateContentFile(file, createMode) ||
+      validateCoverFile(coverFile) ||
+      (createMode === "reel"
+        ? validateVerticalReelDimensions(mediaDimensions)
+        : null);
 
     if (validationError) {
       showToast(validationError);
@@ -343,16 +420,23 @@ export default function HomeClient({
     }
 
     setPosting(true);
+    setUploadProgress(0);
 
     try {
       await publishContent({
         supabase,
         userId: initialProfile.id,
         mode: createMode,
+        title,
         caption,
+        hashtags,
+        mentions,
+        location,
         file,
+        coverFile,
         dimensions: mediaDimensions,
         highQualityUploads: runtimePreferences.high_quality_uploads,
+        onProgress: setUploadProgress,
       });
 
       showToast(
@@ -363,11 +447,7 @@ export default function HomeClient({
             : "Post published."
       );
 
-      setCaption("");
-      setFile(null);
-      setMediaDimensions(null);
-      if (preview) URL.revokeObjectURL(preview);
-      setPreview("");
+      resetComposer(createMode);
       setShowCreate(false);
 
       await Promise.all([
@@ -668,7 +748,7 @@ export default function HomeClient({
           aria-label="Open profile"
         >
           <AvatarImage src={avatarFor(profile)} className="avatar" alt={profile.display_name} size={72} />
-          <span>@{profile.username}</span>
+          <span className="verified-line">@{profile.username}<VerifiedBadge verified={profile.verified} /></span>
         </button>
       </header>
 
@@ -678,15 +758,21 @@ export default function HomeClient({
             <AvatarImage src={avatarFor(profile)} alt={profile.display_name} size={96} />
             <div>
               <strong>{profile.display_name}</strong>
-              <small>@{profile.username}</small>
+              <small className="verified-line">@{profile.username}<VerifiedBadge verified={profile.verified} /></small>
             </div>
           </div>
 
           {NAV_ITEMS.map((item) => (
             <button
               key={item.id}
-              className={screen === item.id ? "active" : ""}
-              onClick={() => item.id === "messages" ? router.push("/messages") : setScreen(item.id)}
+              className={item.id !== "reels" && screen === item.id ? "active" : ""}
+              onClick={() =>
+                item.id === "messages"
+                  ? router.push("/messages")
+                  : item.id === "reels"
+                    ? router.push("/reels")
+                    : setScreen(item.id)
+              }
             >
               <Icon name={item.icon} />
               <span>{t(item.label)}</span>
@@ -703,6 +789,13 @@ export default function HomeClient({
             <Icon name="settings" />
             <span>{t("Settings")}</span>
           </button>
+
+          {profile.is_admin && (
+            <button onClick={() => router.push("/admin/verification")}>
+              <Icon name="profile" />
+              <span>Verification Admin</span>
+            </button>
+          )}
 
           <button
             className="create-nav"
@@ -749,8 +842,7 @@ export default function HomeClient({
                 <button
                   className="story story-you"
                   onClick={() => {
-                    setCreateMode("story");
-                    setShowCreate(true);
+                    openComposer("story");
                   }}
                 >
                   <span className="story-ring">
@@ -775,6 +867,7 @@ export default function HomeClient({
                     </span>
                     <small>
                       @{story.profile?.username || profile.username}
+                      <VerifiedBadge verified={story.profile?.verified || profile.verified} />
                     </small>
                   </button>
                 ))}
@@ -889,15 +982,20 @@ export default function HomeClient({
                     <div className="eyebrow">REELS</div>
                     <h3>Community reels</h3>
                   </div>
-                  <button
-                    className="btn secondary small"
-                    onClick={() => {
-                      setCreateMode("reel");
-                      setShowCreate(true);
-                    }}
-                  >
-                    Create Reel
-                  </button>
+                  <div className="section-actions">
+                    <button
+                      className="btn secondary small"
+                      onClick={() => router.push("/reels")}
+                    >
+                      Open Reels
+                    </button>
+                    <button
+                      className="btn secondary small"
+                      onClick={() => openComposer("reel")}
+                    >
+                      Create Reel
+                    </button>
+                  </div>
                 </div>
 
                 {reels.length === 0 ? (
@@ -905,8 +1003,7 @@ export default function HomeClient({
                     title="No reels yet."
                     text="Reels will appear here only after real users upload videos."
                     action={() => {
-                      setCreateMode("reel");
-                      setShowCreate(true);
+                      openComposer("reel");
                     }}
                     actionLabel="Create Reel"
                   />
@@ -1024,18 +1121,9 @@ export default function HomeClient({
               media={mediaUrl}
               stats={stats}
               onEdit={() => router.push("/settings/account")}
-              onCreatePost={() => {
-                setCreateMode("post");
-                setShowCreate(true);
-              }}
-              onCreateReel={() => {
-                setCreateMode("reel");
-                setShowCreate(true);
-              }}
-              onCreateStory={() => {
-                setCreateMode("story");
-                setShowCreate(true);
-              }}
+              onCreatePost={() => openComposer("post")}
+              onCreateReel={() => openComposer("reel")}
+              onCreateStory={() => openComposer("story")}
             />
           )}
 
@@ -1103,6 +1191,7 @@ export default function HomeClient({
         {[
           { id: "home" as Screen, label: "Home", icon: "home" as IconName },
           { id: "explore" as Screen, label: "Explore", icon: "explore" as IconName },
+          { id: "reels" as const, label: "Reels", icon: "reels" as IconName },
           { id: "messages" as Screen, label: "Messages", icon: "messages" as IconName },
           { id: "profile" as Screen, label: "Profile", icon: "profile" as IconName },
         ].map((item) => (
@@ -1112,7 +1201,9 @@ export default function HomeClient({
             onClick={() =>
               item.id === "messages"
                 ? router.push("/messages")
-                : setScreen(item.id)
+                : item.id === "reels"
+                  ? router.push("/reels")
+                  : setScreen(item.id)
             }
           >
             <span className="mobile-icon-wrap">
@@ -1127,10 +1218,7 @@ export default function HomeClient({
 
         <button
           className="mobile-create"
-          onClick={() => {
-            setCreateMode("post");
-            setShowCreate(true);
-          }}
+          onClick={() => openComposer("post")}
         >
           <span className="mobile-icon-wrap">
             <Icon name="plus" />
@@ -1143,22 +1231,30 @@ export default function HomeClient({
         <CreateContentModal
           profile={profile}
           mode={createMode}
+          title={title}
           caption={caption}
+          hashtags={hashtags}
+          mentions={mentions}
+          location={location}
           file={file}
           preview={preview}
+          coverFile={coverFile}
+          coverPreview={coverPreview}
           dimensions={mediaDimensions}
           posting={posting}
-          onModeChange={(mode) => {
-            setCreateMode(mode);
-            setCaption("");
-            setFile(null);
-            setMediaDimensions(null);
-            if (preview) URL.revokeObjectURL(preview);
-            setPreview("");
-          }}
+          uploadProgress={uploadProgress}
+          onModeChange={(mode) => resetComposer(mode)}
+          onTitleChange={setTitle}
           onCaptionChange={setCaption}
-          onFileChange={(event) => void pickFile(event)}
-          onClose={() => setShowCreate(false)}
+          onHashtagsChange={setHashtags}
+          onMentionsChange={setMentions}
+          onLocationChange={setLocation}
+          onFileSelect={(nextFile) => void pickFile(nextFile)}
+          onCoverSelect={pickCover}
+          onClose={() => {
+            resetComposer(createMode);
+            setShowCreate(false);
+          }}
           onSubmit={(event) => void createContent(event)}
         />
       )}
