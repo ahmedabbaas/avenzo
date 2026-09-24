@@ -575,7 +575,7 @@ export default function HomeClient({
     try {
       await removeReel(supabase, initialProfile.id, reel);
       showToast("Reel deleted.");
-      await loadReels();
+      await Promise.all([loadReels(), loadProfileContent()]);
     } catch {
       showToast("Could not delete reel.");
     }
