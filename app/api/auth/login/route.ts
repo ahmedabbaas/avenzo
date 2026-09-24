@@ -104,7 +104,13 @@ export async function POST(request: Request) {
       .update({ deactivated_at: null })
       .eq("id", result.user?.id || "");
 
-    return json({ ok: true });
+    const { data: aal } =
+      await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+
+    const requiresMfa =
+      aal?.nextLevel === "aal2" && aal.currentLevel !== "aal2";
+
+    return json({ ok: true, requiresMfa });
   } catch (error) {
     logServerError({ request, route: "auth.login", error });
     return json(
