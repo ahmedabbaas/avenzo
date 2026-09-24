@@ -163,6 +163,13 @@ export default function MessagesWorkspace({
     activeRef.current = active;
   }, [active]);
 
+  useEffect(() => {
+    if (!notice) return;
+
+    const timer = window.setTimeout(() => setNotice(""), 5200);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+
   const loadLists = useCallback(async () => {
     const [nextInbox, nextRequests] = await Promise.all([
       fetchInbox(supabase, false),
@@ -498,11 +505,17 @@ export default function MessagesWorkspace({
         top: bodyRef.current.scrollHeight,
         behavior: "smooth",
       });
-    } catch {
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "";
+
       setNotice(
         active.request_status === "pending"
           ? "Wait for this message request to be accepted before sending more."
-          : "Message could not be sent."
+          : detail.includes("MESSAGING_BLOCKED")
+            ? "Messaging is unavailable because one of these accounts is blocked."
+            : detail.includes("MESSAGES_NOT_ALLOWED")
+              ? "This account is not accepting messages from you."
+              : "Couldn’t send that message. Please try again."
       );
     } finally {
       setSending(false);
@@ -821,6 +834,15 @@ export default function MessagesWorkspace({
           />
         </label>
 
+        {!active && notice && (
+          <div className="dm-inline-notice" role="status" aria-live="polite">
+            <span>{notice}</span>
+            <button onClick={() => setNotice("")} aria-label="Dismiss message">
+              <Icon name="close" size={14} />
+            </button>
+          </div>
+        )}
+
         <div className="dm-conversation-list">
           {loading ? (
             <p className="dm-list-empty">Loading conversations…</p>
@@ -929,11 +951,11 @@ export default function MessagesWorkspace({
                 View Profile
               </Link>
               <button
-                className="icon-button"
+                className="icon-button dm-more-button"
                 onClick={() => setMoreOpen((value) => !value)}
                 aria-label="Conversation options"
               >
-                •••
+                <Icon name="more" size={20} />
               </button>
 
               {moreOpen && (
@@ -1423,6 +1445,15 @@ export default function MessagesWorkspace({
               )}
             </div>
 
+            {notice && (
+              <div className="dm-inline-notice dm-chat-notice" role="status" aria-live="polite">
+                <span>{notice}</span>
+                <button onClick={() => setNotice("")} aria-label="Dismiss message">
+                  <Icon name="close" size={14} />
+                </button>
+              </div>
+            )}
+
             {!active.request_incoming && (
               <form className="dm-composer" onSubmit={send}>
                 {replyTo && (
@@ -1450,7 +1481,7 @@ export default function MessagesWorkspace({
                     onClick={() => fileRef.current?.click()}
                     aria-label="Attach image, video, audio or file"
                   >
-                    ＋
+                    <Icon name="paperclip" size={19} />
                   </button>
                   <input
                     ref={fileRef}
@@ -1465,7 +1496,7 @@ export default function MessagesWorkspace({
                     onClick={() => setText((value) => value + " ❤️")}
                     aria-label="Add emoji"
                   >
-                    ☺
+                    <Icon name="smile" size={19} />
                   </button>
                   <textarea
                     value={text}
@@ -1484,10 +1515,12 @@ export default function MessagesWorkspace({
                     aria-label="Message"
                   />
                   <button
-                    className="send-button"
+                    className="send-button dm-send-button"
                     disabled={!text.trim() || sending}
+                    aria-label={sending ? "Sending message" : "Send message"}
+                    title={sending ? "Sending…" : "Send"}
                   >
-                    <Icon name="send" size={18} />
+                    <Icon name="send" size={19} />
                   </button>
                 </div>
               </form>
@@ -1574,12 +1607,6 @@ export default function MessagesWorkspace({
         </div>
       )}
 
-      {notice && (
-        <div className="toast" role="status">
-          {notice}
-          <button onClick={() => setNotice("")}>×</button>
-        </div>
-      )}
     </div>
   );
 }
