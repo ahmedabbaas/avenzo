@@ -274,7 +274,7 @@ jobs:
             }
 
             @Override
-            protected void onDestroy() {
+            public void onDestroy() {
               notificationHandler.removeCallbacks(notificationPoller);
               notificationExecutor.shutdownNow();
               super.onDestroy();
