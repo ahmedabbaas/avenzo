@@ -151,6 +151,7 @@ export default function MessagesWorkspace({
   );
   const fileRef = useRef<HTMLInputElement | null>(null);
   const bodyRef = useRef<HTMLDivElement | null>(null);
+  const stickToBottomRef = useRef(true);
   const typingTimer = useRef<number | null>(null);
   const activeRef = useRef<InboxConversation | null>(null);
   const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(
@@ -158,6 +159,28 @@ export default function MessagesWorkspace({
   );
 
   const pendingShare = sharePending;
+
+  const scrollToLatest = useCallback((behavior: ScrollBehavior = "auto") => {
+    const node = bodyRef.current;
+    if (!node) return;
+
+    window.requestAnimationFrame(() => {
+      node.scrollTo({
+        top: node.scrollHeight,
+        behavior,
+      });
+    });
+  }, []);
+
+  function handleMessageScroll() {
+    const node = bodyRef.current;
+    if (!node) return;
+
+    const distanceFromBottom =
+      node.scrollHeight - node.scrollTop - node.clientHeight;
+
+    stickToBottomRef.current = distanceFromBottom < 120;
+  }
 
   useEffect(() => {
     activeRef.current = active;
@@ -203,6 +226,7 @@ export default function MessagesWorkspace({
   const loadConversation = useCallback(
     async (conversation: InboxConversation) => {
       setActive(conversation);
+      stickToBottomRef.current = true;
       setMessages(
         await fetchConversationMessages(
           supabase,
@@ -223,14 +247,9 @@ export default function MessagesWorkspace({
       );
       setOtherAllowsOnline(privacy.onlineStatus);
       await loadLists();
-      window.setTimeout(() => {
-        bodyRef.current?.scrollTo({
-          top: bodyRef.current.scrollHeight,
-          behavior: "smooth",
-        });
-      }, 50);
+      window.setTimeout(() => scrollToLatest("auto"), 0);
     },
-    [supabase, currentUser.id, loadLists]
+    [supabase, currentUser.id, loadLists, scrollToLatest]
   );
 
   useEffect(() => {
@@ -310,6 +329,11 @@ export default function MessagesWorkspace({
 
     return () => window.clearTimeout(timer);
   }, [query, loadPeople]);
+
+  useEffect(() => {
+    if (!active || !stickToBottomRef.current) return;
+    scrollToLatest("smooth");
+  }, [active, messages.length, scrollToLatest]);
 
   useEffect(() => {
     const channel = supabase
@@ -485,6 +509,7 @@ export default function MessagesWorkspace({
     setNotice("");
 
     try {
+      stickToBottomRef.current = true;
       const message = await sendDirectMessage({
         supabase,
         conversationId: active.conversation_id,
@@ -501,10 +526,6 @@ export default function MessagesWorkspace({
       setText("");
       setReplyTo(null);
       await loadLists();
-      bodyRef.current?.scrollTo({
-        top: bodyRef.current.scrollHeight,
-        behavior: "smooth",
-      });
     } catch (error) {
       const detail = error instanceof Error ? error.message : "";
 
@@ -1051,7 +1072,11 @@ export default function MessagesWorkspace({
               </div>
             )}
 
-            <div className="dm-message-area" ref={bodyRef}>
+            <div
+              className="dm-message-area"
+              ref={bodyRef}
+              onScroll={handleMessageScroll}
+            >
               {filteredMessages.length === 0 ? (
                 <div className="conversation-start">
                   <AvatarImage
