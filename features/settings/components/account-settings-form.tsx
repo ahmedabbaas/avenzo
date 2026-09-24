@@ -97,6 +97,7 @@ export default function AccountSettingsForm({
   const [privacy, setPrivacy] = useState(initialPrivacy);
   const [name, setName] = useState(initialProfile.display_name);
   const [username, setUsername] = useState(initialProfile.username);
+  const [savedUsername, setSavedUsername] = useState(initialProfile.username);
   const [bio, setBio] = useState(initialProfile.bio || "");
   const [website, setWebsite] = useState(initialProfile.website || "");
   const [gender, setGender] = useState(initialProfile.gender || "");
@@ -130,7 +131,7 @@ export default function AccountSettingsForm({
 
   useEffect(() => {
     if (
-      username === initialProfile.username ||
+      username === savedUsername ||
       !isValidUsername(username)
     ) {
       return;
@@ -162,7 +163,7 @@ export default function AccountSettingsForm({
       active = false;
       window.clearTimeout(timer);
     };
-  }, [username, initialProfile.username]);
+  }, [username, savedUsername]);
 
   useEffect(() => {
     let active = true;
@@ -218,7 +219,7 @@ export default function AccountSettingsForm({
       return;
     }
 
-    if (username !== initialProfile.username) {
+    if (username !== savedUsername) {
       if (!isValidUsername(username)) {
         setProfileStatus("Username must be 3–30 characters using letters, numbers, underscores or periods.");
         return;
@@ -267,7 +268,7 @@ export default function AccountSettingsForm({
         avatarUrl = supabase.storage.from("media").getPublicUrl(path).data.publicUrl;
       }
 
-      if (username !== initialProfile.username) {
+      if (username !== savedUsername) {
         const { error: usernameError } = await supabase.rpc("change_username", {
           candidate: username,
         });
@@ -304,6 +305,7 @@ export default function AccountSettingsForm({
 
       setProfile(data as AccountProfile);
       setUsername(data.username);
+      setSavedUsername(data.username);
       setUsernameState("idle");
       setAvatarFile(null);
       if (avatarPreview) URL.revokeObjectURL(avatarPreview);
@@ -497,7 +499,7 @@ export default function AccountSettingsForm({
   }
 
   const usernameMessage =
-    username === initialProfile.username
+    username === savedUsername
       ? "Your current username."
       : usernameState === "checking"
         ? "Checking availability…"
@@ -552,7 +554,7 @@ export default function AccountSettingsForm({
                   const next = normalizeUsername(event.target.value);
                   setUsername(next);
                   setUsernameState(
-                    next === initialProfile.username
+                    next === savedUsername
                       ? "idle"
                       : isValidUsername(next)
                         ? "checking"
