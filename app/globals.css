@@ -2025,3 +2025,71 @@ html[data-theme="light"] .shared-detail-card>p{color:var(--text-soft)}
 
 /* Keep destructive / media overlay surfaces intentionally dark */
 html[data-theme="light"] .dm-media-viewer{background:rgba(0,0,0,.92)}
+
+/* AVENZO THEME + DM HEADER REFINEMENT v4 */
+
+/* Desktop DM header: do not let View Profile occupy the flexible identity column. */
+@media(min-width:821px){
+  .dm-chat-head{
+    grid-template-columns:48px minmax(0,1fr) auto auto;
+  }
+  .dm-chat-head>.dm-back{display:none}
+  .dm-chat-head>img{grid-column:1}
+  .dm-chat-head>.dm-head-identity{grid-column:2}
+  .dm-chat-head>.dm-view-profile{
+    grid-column:3;
+    width:auto;
+    min-width:104px;
+    max-width:150px;
+    min-height:36px;
+    padding:8px 13px;
+    justify-self:end;
+    white-space:nowrap;
+  }
+  .dm-chat-head>.dm-more-button{grid-column:4}
+}
+
+/* Remaining light-theme surfaces that previously kept dark hard-coded values. */
+html[data-theme="light"] .dm-back{color:var(--text)}
+html[data-theme="light"] .dm-chat-empty,
+html[data-theme="light"] .dm-empty-state,
+html[data-theme="light"] .dm-list-empty,
+html[data-theme="light"] .dm-user-results>p{color:var(--muted)}
+html[data-theme="light"] .dm-chat-empty h2,
+html[data-theme="light"] .dm-empty-state b{color:var(--text)}
+html[data-theme="light"] .dm-bubble.deleted{
+  background:#eef2f3!important;
+  color:#6e7981!important;
+}
+html[data-theme="light"] .dm-reply-preview{
+  background:#f1f4f5;
+  color:#59666f;
+}
+html[data-theme="light"] .dm-reaction-picker,
+html[data-theme="light"] .dm-reactions button{
+  background:#fff;
+  color:#344149;
+  border-color:var(--line);
+}
+html[data-theme="light"] .dm-reactions button.mine{
+  border-color:#a7c72e;
+  color:#708b12;
+}
+html[data-theme="light"] .dm-more-menu button{color:#2d3940}
+html[data-theme="light"] .dm-more-menu button:hover{background:#eef2f3}
+html[data-theme="light"] .dm-more-menu button.danger{color:#b43d48}
+html[data-theme="light"] .dm-request-banner,
+html[data-theme="light"] .dm-share-banner{
+  background:#f4f7f7;
+  border-bottom-color:var(--line);
+}
+html[data-theme="light"] .dm-request-banner span,
+html[data-theme="light"] .dm-share-banner span{color:#66727a}
+html[data-theme="light"] .dm-message-actions>button:hover{
+  background:#eef2f3;
+  color:#172026;
+}
+html[data-theme="light"] .dm-inline-notice>button:hover{
+  background:#e7ecee;
+  color:#172026;
+}
