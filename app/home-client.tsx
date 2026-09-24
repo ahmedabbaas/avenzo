@@ -744,7 +744,7 @@ export default function HomeClient({
             <button
               key={item.id}
               className={screen === item.id ? "active" : ""}
-              onClick={() => setScreen(item.id)}
+              onClick={() => item.id === "messages" ? router.push("/messages") : setScreen(item.id)}
             >
               <Icon name={item.icon} />
               <span>{t(item.label)}</span>
@@ -919,10 +919,12 @@ export default function HomeClient({
                       person={person}
                       following={followed.includes(person.id)}
                       onFollow={() => void toggleFollow(person)}
-                      onMessage={() => {
-                        void openChat(person);
-                        setScreen("messages");
-                      }}
+                      onMessage={() =>
+                        router.push(
+                          "/messages?user=" +
+                            encodeURIComponent(person.username)
+                        )
+                      }
                     />
                   ))}
                 </div>
