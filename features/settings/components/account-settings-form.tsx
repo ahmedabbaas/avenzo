@@ -18,6 +18,7 @@ import {
 import AvatarImage from "../../social/components/avatar-image";
 import { avatarFor } from "../../social/lib/profile";
 import type { PrivacySettings } from "../types";
+import { useUiTranslation } from "../lib/i18n";
 
 type AccountProfile = {
   id: string;
@@ -92,6 +93,7 @@ export default function AccountSettingsForm({
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
+  const t = useUiTranslation();
 
   const [profile, setProfile] = useState(initialProfile);
   const [privacy, setPrivacy] = useState(initialPrivacy);
@@ -516,7 +518,7 @@ export default function AccountSettingsForm({
   return (
     <div className="settings-sections">
       <Section
-        title="Profile"
+        title={t("Profile")}
         text="Manage public profile information. Email and security stay separate."
       >
         <div className="account-avatar-row">
@@ -533,7 +535,7 @@ export default function AccountSettingsForm({
 
         <div className="settings-grid-2">
           <label className="settings-field">
-            <span>Full name</span>
+            <span>{t("Full name")}</span>
             <input
               value={name}
               maxLength={DISPLAY_NAME_MAX_LENGTH}
@@ -542,7 +544,7 @@ export default function AccountSettingsForm({
           </label>
 
           <label className="settings-field">
-            <span>Username</span>
+            <span>{t("Username")}</span>
             <div className="username-input-wrap">
               <span>@</span>
               <input
@@ -570,7 +572,7 @@ export default function AccountSettingsForm({
         </div>
 
         <label className="settings-field">
-          <span>Bio</span>
+          <span>{t("Bio")}</span>
           <textarea
             value={bio}
             maxLength={BIO_MAX_LENGTH}
@@ -581,7 +583,7 @@ export default function AccountSettingsForm({
 
         <div className="settings-grid-2">
           <label className="settings-field">
-            <span>Website</span>
+            <span>{t("Website")}</span>
             <input
               value={website}
               placeholder="https://example.com"
@@ -590,7 +592,7 @@ export default function AccountSettingsForm({
           </label>
 
           <label className="settings-field">
-            <span>Gender</span>
+            <span>{t("Gender")}</span>
             <select value={gender} onChange={(event) => setGender(event.target.value)}>
               <option value="">Not specified</option>
               <option value="male">Male</option>
@@ -602,7 +604,7 @@ export default function AccountSettingsForm({
         </div>
 
         <label className="settings-field">
-          <span>Date of birth</span>
+          <span>{t("Date of birth")}</span>
           <input
             type="date"
             value={dob}
@@ -615,17 +617,17 @@ export default function AccountSettingsForm({
         <div className="settings-inline-action">
           <div role="status" aria-live="polite">{profileStatus}</div>
           <button className="btn" disabled={profileSaving} onClick={() => void saveProfile()}>
-            {profileSaving ? "Saving…" : "Save Profile"}
+            {profileSaving ? "Saving…" : t("Save Profile")}
           </button>
         </div>
       </Section>
 
       <Section
-        title="Account Information"
+        title={t("Account Information")}
         text="Sensitive account details are visible only to you."
       >
         <label className="settings-field">
-          <span>Email address</span>
+          <span>{t("Email address")}</span>
           <div className="settings-inline-input">
             <input
               type="email"
@@ -640,18 +642,18 @@ export default function AccountSettingsForm({
         </label>
 
         <div className="account-info-list">
-          <div><span>Phone number</span><b>{phone || "Not configured"}</b></div>
-          <div><span>Account created</span><b>{new Date(profile.created_at).toLocaleDateString()}</b></div>
+          <div><span>{t("Phone number")}</span><b>{phone || "Not configured"}</b></div>
+          <div><span>{t("Account created")}</span><b>{new Date(profile.created_at).toLocaleDateString()}</b></div>
         </div>
       </Section>
 
       <Section
-        title="Password & Security"
+        title={t("Password & Security")}
         text="Manage password, active sessions and two-factor authentication."
       >
         <div className="settings-grid-2">
           <label className="settings-field">
-            <span>New password</span>
+            <span>{t("New password")}</span>
             <input
               type="password"
               value={password}
@@ -660,7 +662,7 @@ export default function AccountSettingsForm({
             />
           </label>
           <label className="settings-field">
-            <span>Confirm new password</span>
+            <span>{t("Confirm new password")}</span>
             <input
               type="password"
               value={confirmPassword}
@@ -672,19 +674,19 @@ export default function AccountSettingsForm({
 
         <div className="settings-button-row">
           <button className="btn" disabled={securityBusy} onClick={() => void changePassword()}>
-            Change password
+            {t("Change password")}
           </button>
           <Link className="btn secondary" href="/forgot-password">
-            Forgot password?
+            {t("Forgot password?")}
           </Link>
           <button className="btn secondary" disabled={securityBusy} onClick={() => void logoutOtherDevices()}>
-            Log out other devices
+            {t("Log out other devices")}
           </button>
         </div>
 
         <div className="security-subsection">
           <div>
-            <b>Two-factor authentication</b>
+            <b>{t("Two-factor authentication")}</b>
             <span>{mfaVerified ? "Enabled with an authenticator app." : "Add an authenticator app for extra security."}</span>
           </div>
           {mfaVerified ? (
@@ -722,12 +724,12 @@ export default function AccountSettingsForm({
       </Section>
 
       <Section
-        title="Privacy"
+        title={t("Privacy")}
         text="Control who can interact with your account."
       >
         <label className="settings-toggle-row">
           <span>
-            <b>Private account</b>
+            <b>{t("Private account")}</b>
             <small>Limit your content to approved/following relationships where supported.</small>
           </span>
           <input
@@ -740,14 +742,14 @@ export default function AccountSettingsForm({
           <span className="settings-switch" aria-hidden="true" />
         </label>
 
-        <AudienceSelect label="Who can follow me" value={privacy.who_can_follow} onChange={(v) => setPrivacy((p) => ({ ...p, who_can_follow: v }))} />
-        <AudienceSelect label="Who can message me" value={privacy.who_can_message} onChange={(v) => setPrivacy((p) => ({ ...p, who_can_message: v }))} />
-        <AudienceSelect label="Who can comment on my posts" value={privacy.who_can_comment} onChange={(v) => setPrivacy((p) => ({ ...p, who_can_comment: v }))} />
-        <AudienceSelect label="Who can mention me" value={privacy.who_can_mention} onChange={(v) => setPrivacy((p) => ({ ...p, who_can_mention: v }))} />
-        <AudienceSelect label="Who can tag me" value={privacy.who_can_tag} onChange={(v) => setPrivacy((p) => ({ ...p, who_can_tag: v }))} />
+        <AudienceSelect label={t("Who can follow me")} value={privacy.who_can_follow} onChange={(v) => setPrivacy((p) => ({ ...p, who_can_follow: v }))} />
+        <AudienceSelect label={t("Who can message me")} value={privacy.who_can_message} onChange={(v) => setPrivacy((p) => ({ ...p, who_can_message: v }))} />
+        <AudienceSelect label={t("Who can comment on my posts")} value={privacy.who_can_comment} onChange={(v) => setPrivacy((p) => ({ ...p, who_can_comment: v }))} />
+        <AudienceSelect label={t("Who can mention me")} value={privacy.who_can_mention} onChange={(v) => setPrivacy((p) => ({ ...p, who_can_mention: v }))} />
+        <AudienceSelect label={t("Who can tag me")} value={privacy.who_can_tag} onChange={(v) => setPrivacy((p) => ({ ...p, who_can_tag: v }))} />
 
         <label className="settings-field settings-field-row">
-          <span>Story visibility</span>
+          <span>{t("Story visibility")}</span>
           <select
             value={privacy.story_visibility}
             onChange={(event) =>
@@ -774,31 +776,31 @@ export default function AccountSettingsForm({
         <div className="settings-inline-action">
           <div role="status" aria-live="polite">{privacyStatus}</div>
           <button className="btn" disabled={privacySaving} onClick={() => void savePrivacy()}>
-            {privacySaving ? "Saving…" : "Save Privacy"}
+            {privacySaving ? "Saving…" : t("Save Privacy")}
           </button>
         </div>
       </Section>
 
       <section className="settings-danger-section">
         <div className="settings-form-head">
-          <h2>Account Actions</h2>
+          <h2>{t("Account Actions")}</h2>
           <p>These actions affect your login or account availability.</p>
         </div>
 
         <div className="danger-action-row">
-          <div><b>Log out</b><span>End this session on this device.</span></div>
+          <div><b>{t("Log out")}</b><span>End this session on this device.</span></div>
           <button className="btn secondary" onClick={() => void signOutCurrent()}>Log out</button>
         </div>
 
         <div className="danger-action-row">
-          <div><b>Deactivate account</b><span>Temporarily deactivate. Logging in again reactivates your account.</span></div>
+          <div><b>{t("Deactivate account")}</b><span>Temporarily deactivate. Logging in again reactivates your account.</span></div>
           <button className="btn secondary" disabled={dangerBusy} onClick={() => void deactivateAccount()}>
             {deactivateConfirm ? "Confirm Deactivate" : "Deactivate"}
           </button>
         </div>
 
         <div className="danger-action-row danger">
-          <div><b>Delete account</b><span>Permanently delete your account and social content. Your username remains reserved.</span></div>
+          <div><b>{t("Delete account")}</b><span>Permanently delete your account and social content. Your username remains reserved.</span></div>
           {!deleteOpen ? (
             <button className="btn danger-button" onClick={() => setDeleteOpen(true)}>
               Delete account
