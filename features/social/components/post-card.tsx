@@ -18,6 +18,8 @@ export default function PostCard({
   onComment,
   own,
   onDelete,
+  autoplayVideo = false,
+  dataSaving = false,
 }: {
   post: Post;
   saved: boolean;
@@ -28,6 +30,8 @@ export default function PostCard({
   onComment: (value: string) => void;
   own: boolean;
   onDelete: () => void;
+  autoplayVideo?: boolean;
+  dataSaving?: boolean;
 }) {
   const [comment, setComment] = useState("");
   const author = post.profile;
@@ -82,7 +86,9 @@ export default function PostCard({
           className="post-media"
           src={mediaUrl}
           controls
-          preload="metadata"
+          autoPlay={autoplayVideo}
+          muted={autoplayVideo}
+          preload={dataSaving ? "none" : "metadata"}
           playsInline
         />
       )}
