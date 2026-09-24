@@ -1,5 +1,5 @@
 import EmptyState from "./empty-state";
-import { avatarFor } from "../lib/profile";
+import { avatarFor, formatRelativeTime } from "../lib/profile";
 import type { Post, Profile, ProfileStats, Reel } from "../types";
 import AvatarImage from "./avatar-image";
 import UserMediaImage from "./user-media-image";
@@ -25,38 +25,45 @@ export default function ProfileView({
   onCreateReel: () => void;
   onCreateStory: () => void;
 }) {
-  const mediaPosts = posts.filter((post) => post.media_path);
-
   return (
-    <>
-      <div className="profile-hero">
-        <AvatarImage src={avatarFor(profile)} alt={profile.display_name} size={180} />
-        <div>
+    <div className="profile-page">
+      <section className="profile-hero">
+        <AvatarImage
+          src={avatarFor(profile)}
+          alt={profile.display_name}
+          size={180}
+        />
+
+        <div className="profile-hero-copy">
           <div className="profile-title-row">
-            <div>
+            <div className="profile-identity">
               <div className="eyebrow">@{profile.username}</div>
               <h1>{profile.display_name}</h1>
             </div>
-            <button className="btn secondary small" onClick={onEdit}>
+
+            <button className="btn secondary small profile-edit" onClick={onEdit}>
               Edit profile
             </button>
           </div>
 
-          <p>{profile.bio || "Welcome to AVENZO."}</p>
+          <p className="profile-bio">{profile.bio || "Welcome to AVENZO."}</p>
 
-          <div className="profile-stats">
+          <div className="profile-stats" aria-label="Profile statistics">
             <span>
-              <b>{stats.posts}</b> posts
+              <b>{stats.posts}</b>
+              <small>Posts</small>
             </span>
             <span>
-              <b>{stats.followers}</b> followers
+              <b>{stats.followers}</b>
+              <small>Followers</small>
             </span>
             <span>
-              <b>{stats.following}</b> following
+              <b>{stats.following}</b>
+              <small>Following</small>
             </span>
           </div>
 
-          <div className="profile-create-actions">
+          <div className="profile-create-actions" aria-label="Create content">
             <button className="btn small" onClick={onCreatePost}>
               Create Post
             </button>
@@ -68,37 +75,49 @@ export default function ProfileView({
             </button>
           </div>
         </div>
-      </div>
+      </section>
 
-      <section className="profile-content-section">
-        <div className="section-inline-head">
+      <section className="profile-content-section" aria-labelledby="profile-posts-title">
+        <div className="profile-section-head">
           <div>
-            <div className="eyebrow">POSTS</div>
-            <h3>{stats.posts} posts</h3>
+            <div className="eyebrow">CONTENT</div>
+            <h2 id="profile-posts-title">Posts</h2>
           </div>
+          <span className="profile-section-count">{stats.posts}</span>
         </div>
 
-        {mediaPosts.length > 0 ? (
+        {posts.length > 0 ? (
           <div className="profile-grid">
-            {mediaPosts.map((post) =>
-              post.media_type === "video" ? (
+            {posts.map((post) => {
+              if (!post.media_path) {
+                return (
+                  <article className="profile-text-post" key={post.id}>
+                    <span>TEXT POST</span>
+                    <p>{post.caption}</p>
+                    <small>{formatRelativeTime(post.created_at)}</small>
+                  </article>
+                );
+              }
+
+              return post.media_type === "video" ? (
                 <video
                   key={post.id}
-                  src={media(post.media_path!)}
+                  src={media(post.media_path)}
                   preload="metadata"
                   controls
                   muted
+                  playsInline
                 />
               ) : (
                 <UserMediaImage
                   key={post.id}
-                  src={media(post.media_path!)}
+                  src={media(post.media_path)}
                   alt={post.caption || "AVENZO post"}
                   width={post.media_width}
                   height={post.media_height}
                 />
-              )
-            )}
+              );
+            })}
           </div>
         ) : (
           <EmptyState
@@ -110,12 +129,13 @@ export default function ProfileView({
         )}
       </section>
 
-      <section className="profile-content-section">
-        <div className="section-inline-head">
+      <section className="profile-content-section" aria-labelledby="profile-reels-title">
+        <div className="profile-section-head">
           <div>
-            <div className="eyebrow">REELS</div>
-            <h3>{reels.length} reels</h3>
+            <div className="eyebrow">VIDEO</div>
+            <h2 id="profile-reels-title">Reels</h2>
           </div>
+          <span className="profile-section-count">{reels.length}</span>
         </div>
 
         {reels.length > 0 ? (
@@ -127,18 +147,19 @@ export default function ProfileView({
                 preload="metadata"
                 controls
                 muted
+                playsInline
               />
             ))}
           </div>
         ) : (
           <EmptyState
-            title="0 reels"
+            title="No reels yet."
             text="Your reels will appear here after you upload a real video."
             action={onCreateReel}
             actionLabel="Create Reel"
           />
         )}
       </section>
-    </>
+    </div>
   );
 }
