@@ -1468,7 +1468,6 @@ export default function MessagesWorkspace({
                               •••
                             </button>
                           )}
-                          )}
                         </div>
                       </div>
                     </div>
