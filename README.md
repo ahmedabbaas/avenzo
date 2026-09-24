@@ -138,3 +138,5 @@ Before considering a release complete:
 <!-- vercel-redeploy-trigger -->
 
 <!-- production-redeploy: reels-verification-v1 -->
+
+<!-- production-redeploy: self-badge-realtime-reels-v2 -->
