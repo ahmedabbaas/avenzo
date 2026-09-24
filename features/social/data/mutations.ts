@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { MediaDimensions } from "../lib/media";
+import { optimizeImageForUpload, type MediaDimensions } from "../lib/media";
 import { validateContentFile } from "../lib/upload-validation";
 import type { Message, Post, Reel } from "../types";
 
@@ -67,6 +67,7 @@ export async function publishContent({
   caption,
   file,
   dimensions,
+  highQualityUploads = true,
 }: {
   supabase: SupabaseClient;
   userId: string;
@@ -74,6 +75,7 @@ export async function publishContent({
   caption: string;
   file: File | null;
   dimensions: MediaDimensions | null;
+  highQualityUploads?: boolean;
 }) {
   const validationError = validateContentFile(file, mode);
 
@@ -86,11 +88,16 @@ export async function publishContent({
 
   try {
     if (file) {
+      const preparedFile = await optimizeImageForUpload(
+        file,
+        highQualityUploads
+      );
+
       const uploaded = await uploadContentMedia({
         supabase,
         userId,
         mode,
-        file,
+        file: preparedFile,
       });
 
       uploadedPath = uploaded.path;
