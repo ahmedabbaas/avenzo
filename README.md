@@ -64,6 +64,7 @@ supabase/migrations/004_blocked_accounts_management.sql
 supabase/migrations/005_auth_rate_limiting.sql
 supabase/migrations/006_optimize_rls_auth_uid.sql
 supabase/migrations/007_image_media_dimensions.sql
+supabase/migrations/008_harden_media_bucket_uploads.sql
 ```
 
 These migrations cover:
@@ -84,6 +85,7 @@ These migrations cover:
 - database-backed authentication rate limiting
 - optimized auth lookups inside RLS policies
 - stored image dimensions for stable/optimized media rendering
+- storage-level 25 MB upload enforcement and allowed media MIME types
 
 Do not manually seed or edit production as the normal workflow. Use migrations for schema changes.
 
@@ -94,11 +96,12 @@ The social domain is being split out of the main client shell under:
 ```text
 features/social/
   components/
+  data/
   lib/
   types.ts
 ```
 
-Keep reusable UI/domain logic out of `app/home-client.tsx` as the app grows.
+Keep reusable UI/domain logic out of `app/home-client.tsx` as the app grows. The create-content modal, story viewer, feed cards, settings, profile, messaging, queries and mutations are split into domain modules instead of living in one page component.
 
 ## Local development
 
@@ -115,7 +118,7 @@ npm run typecheck
 npm run build
 ```
 
-GitHub Actions runs these checks for `main` and pull requests.
+GitHub Actions runs these checks for `main` and pull requests. Unit coverage currently includes authentication validation and social upload validation.
 
 ## Production
 
