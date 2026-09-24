@@ -591,23 +591,15 @@ export default function HomeClient({
   }
 
   async function sharePost(post: Post) {
-    const url = window.location.origin + "/p/" + post.id;
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: post.profile?.display_name
-            ? post.profile.display_name + " on AVENZO"
-            : "AVENZO post",
-          text: post.caption || "View this post on AVENZO",
-          url,
-        });
-      } else {
-        await navigator.clipboard.writeText(url);
-        showToast("Post link copied.");
-      }
-    } catch {
-      // User-cancelled shares do not need an error banner.
-    }
+    router.push(
+      "/messages?sharePost=" + encodeURIComponent(post.id)
+    );
+  }
+
+  function shareReel(reel: Reel) {
+    router.push(
+      "/messages?shareReel=" + encodeURIComponent(reel.id)
+    );
   }
 
   async function toggleFollow(other: Profile) {
@@ -980,6 +972,7 @@ export default function HomeClient({
                         onLike={() => void toggleReelLike(reel)}
                         onSave={() => void toggleReelSave(reel)}
                         onComment={(body) => void addReelComment(reel, body)}
+                        onShare={() => shareReel(reel)}
                         onDelete={() => void deleteReel(reel)}
                         autoplayVideo={runtimePreferences.media_autoplay_videos}
                         dataSaving={
