@@ -382,10 +382,68 @@
       });
     }
 
+    function enhanceLegacyDmChrome() {
+      var chat = document.querySelector(".dm-chat");
+      if (!chat) return;
+
+      var head = chat.querySelector(".dm-chat-head");
+      if (head && !head.querySelector(".dm-head-search-button")) {
+        var more = head.querySelector(".dm-more-button");
+        if (more) {
+          var search = document.createElement("button");
+          search.type = "button";
+          search.className = "icon-button dm-head-search-button avenzo-native-dm-search";
+          search.setAttribute("aria-label", "Search messages");
+          search.innerHTML =
+            '<svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+              '<circle cx="10.5" cy="10.5" r="6.5"></circle>' +
+              '<path d="m15.5 15.5 5 5"></path>' +
+            '</svg>';
+          search.addEventListener("click", function(){
+            var tools = chat.querySelector(".dm-chat-tools");
+            if (tools) tools.classList.toggle("open");
+          });
+          head.insertBefore(search, more);
+        }
+      }
+
+      var compose = chat.querySelector(".dm-compose-row");
+      if (compose && !compose.querySelector(".dm-camera-button")) {
+        var buttons = Array.prototype.slice.call(
+          compose.querySelectorAll(":scope > button")
+        );
+        var normalButtons = buttons.filter(function(button){
+          return !button.classList.contains("dm-send-button") &&
+            !button.classList.contains("send-button");
+        });
+
+        if (normalButtons[0]) {
+          normalButtons[0].classList.add("dm-camera-button");
+        }
+        if (normalButtons[1]) {
+          normalButtons[1].classList.add("dm-emoji-button");
+        }
+        compose.classList.add("avenzo-legacy-composer");
+      }
+
+      var headerAvatar = head ? head.querySelector(":scope > img") : null;
+      if (headerAvatar) {
+        chat.querySelectorAll(".dm-message-row.them").forEach(function(row){
+          if (row.querySelector(".dm-message-avatar")) return;
+          var avatarWrap = document.createElement("span");
+          avatarWrap.className = "dm-message-avatar avenzo-native-message-avatar";
+          avatarWrap.setAttribute("aria-hidden", "true");
+          avatarWrap.appendChild(headerAvatar.cloneNode(true));
+          row.insertBefore(avatarWrap, row.firstChild);
+        });
+      }
+    }
+
     function syncMobileState() {
       applyBranding();
       ensureDrawer();
       normalizeBottomNav();
+      enhanceLegacyDmChrome();
       enhanceLegacyDmActions();
       syncHomeState();
 

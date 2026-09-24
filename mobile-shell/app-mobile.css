@@ -2471,3 +2471,52 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
     grid-template-columns:40px minmax(0,1fr) 36px 40px!important;
   }
 }
+
+/* AVENZO LEGACY DM RUNTIME MAP v1 */
+@media(max-width:820px){
+  html.avenzo-android-app .dm-compose-row.avenzo-legacy-composer{
+    grid-template-columns:40px minmax(0,1fr) 36px 40px!important;
+  }
+
+  html.avenzo-android-app .dm-compose-row.avenzo-legacy-composer>.dm-camera-button{
+    grid-column:1!important;
+    grid-row:1!important;
+  }
+
+  html.avenzo-android-app .dm-compose-row.avenzo-legacy-composer>textarea{
+    grid-column:2!important;
+    grid-row:1!important;
+  }
+
+  html.avenzo-android-app .dm-compose-row.avenzo-legacy-composer>.dm-emoji-button{
+    grid-column:3!important;
+    grid-row:1!important;
+  }
+
+  html.avenzo-android-app .dm-compose-row.avenzo-legacy-composer>.dm-send-button{
+    grid-column:4!important;
+    grid-row:1!important;
+  }
+
+  html.avenzo-android-app .avenzo-native-dm-search{
+    grid-column:4!important;
+  }
+
+  html.avenzo-android-app .avenzo-native-message-avatar{
+    display:block!important;
+  }
+}
+
+@media(max-width:370px){
+  html.avenzo-android-app .dm-compose-row.avenzo-legacy-composer{
+    grid-template-columns:40px minmax(0,1fr) 40px!important;
+  }
+
+  html.avenzo-android-app .dm-compose-row.avenzo-legacy-composer>.dm-emoji-button{
+    display:none!important;
+  }
+
+  html.avenzo-android-app .dm-compose-row.avenzo-legacy-composer>.dm-send-button{
+    grid-column:3!important;
+  }
+}
