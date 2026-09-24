@@ -40,7 +40,6 @@ import {
 } from "../features/social/data/queries";
 import ActivityPanel from "../features/social/components/activity-panel";
 import AvatarImage from "../features/social/components/avatar-image";
-import UserMediaImage from "../features/social/components/user-media-image";
 import EmptyState from "../features/social/components/empty-state";
 import MessagesPanel from "../features/social/components/messages-panel";
 import ProfileView from "../features/social/components/profile-view";
@@ -53,10 +52,7 @@ import PageTitle from "../features/social/components/page-title";
 import SettingsPanel from "../features/social/components/settings-panel";
 import CreateContentModal from "../features/social/components/create-content-modal";
 import StoryViewer from "../features/social/components/story-viewer";
-import {
-  avatarFor,
-  formatRelativeTime,
-} from "../features/social/lib/profile";
+import { avatarFor } from "../features/social/lib/profile";
 import { readImageDimensions, type MediaDimensions } from "../features/social/lib/media";
 import { validateContentFile } from "../features/social/lib/upload-validation";
 import type {
