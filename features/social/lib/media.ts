@@ -51,6 +51,50 @@ export async function readImageDimensions(
   });
 }
 
+export async function readVideoDimensions(
+  file: File
+): Promise<MediaDimensions | null> {
+  if (!file.type.startsWith("video/") || typeof document === "undefined") {
+    return null;
+  }
+
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const video = document.createElement("video");
+    video.preload = "metadata";
+    video.muted = true;
+
+    const cleanup = () => {
+      URL.revokeObjectURL(url);
+      video.removeAttribute("src");
+      video.load();
+    };
+
+    video.onloadedmetadata = () => {
+      const dimensions =
+        video.videoWidth > 0 && video.videoHeight > 0
+          ? { width: video.videoWidth, height: video.videoHeight }
+          : null;
+      cleanup();
+      resolve(dimensions);
+    };
+
+    video.onerror = () => {
+      cleanup();
+      resolve(null);
+    };
+
+    video.src = url;
+  });
+}
+
+export async function readMediaDimensions(
+  file: File
+): Promise<MediaDimensions | null> {
+  return file.type.startsWith("video/")
+    ? readVideoDimensions(file)
+    : readImageDimensions(file);
+}
 
 export async function optimizeImageForUpload(
   file: File,

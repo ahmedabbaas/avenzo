@@ -12,6 +12,8 @@ export type Profile = {
   display_name: string;
   bio: string;
   avatar_url: string | null;
+  verified?: boolean;
+  is_admin?: boolean;
   created_at?: string;
 };
 
@@ -31,6 +33,9 @@ export type Post = {
   media_type: "image" | "video" | null;
   media_width?: number | null;
   media_height?: number | null;
+  hashtags?: string[];
+  mentions?: string[];
+  location?: string;
   created_at: string;
   profile?: Profile;
   likeCount: number;
@@ -42,9 +47,19 @@ export type Post = {
 export type Reel = {
   id: string;
   author_id: string;
+  title: string;
   caption: string;
   media_path: string;
   media_type: "video";
+  cover_path: string | null;
+  media_width?: number | null;
+  media_height?: number | null;
+  hashtags: string[];
+  mentions: string[];
+  location: string;
+  viewCount: number;
+  shareCount: number;
+  saveCount: number;
   created_at: string;
   profile?: Profile;
   likeCount: number;
@@ -60,6 +75,11 @@ export type Story = {
   media_type: "image" | "video";
   media_width?: number | null;
   media_height?: number | null;
+  caption?: string;
+  hashtags?: string[];
+  mentions?: string[];
+  location?: string;
+  cover_path?: string | null;
   created_at: string;
   expires_at: string;
   profile?: Profile;

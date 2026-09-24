@@ -1,4 +1,5 @@
 export const CONTENT_MEDIA_MAX_BYTES = 25 * 1024 * 1024;
+export const COVER_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
 
 export const ALLOWED_CONTENT_MIME_TYPES = new Set([
   "image/jpeg",
@@ -10,6 +11,12 @@ export const ALLOWED_CONTENT_MIME_TYPES = new Set([
   "video/quicktime",
 ]);
 
+export const ALLOWED_COVER_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+]);
+
 export type ContentMode = "post" | "reel" | "story";
 
 export function validateContentFile(
@@ -18,7 +25,7 @@ export function validateContentFile(
 ): string | null {
   if (!file) {
     if (mode === "story") return "Choose an image or video for your story.";
-    if (mode === "reel") return "Reels require a video.";
+    if (mode === "reel") return "Reels require a vertical video.";
     return null;
   }
 
@@ -34,5 +41,31 @@ export function validateContentFile(
     return "Reels require a video.";
   }
 
+  return null;
+}
+
+export function validateCoverFile(
+  file: Pick<File, "type" | "size"> | null
+): string | null {
+  if (!file) return null;
+
+  if (!ALLOWED_COVER_MIME_TYPES.has(file.type)) {
+    return "Cover image must be JPEG, PNG or WebP.";
+  }
+
+  if (file.size > COVER_IMAGE_MAX_BYTES) {
+    return "Cover image must be 10 MB or smaller.";
+  }
+
+  return null;
+}
+
+export function validateVerticalReelDimensions(
+  dimensions: { width: number; height: number } | null
+): string | null {
+  if (!dimensions) return null;
+  if (dimensions.height <= dimensions.width) {
+    return "Reels must use a vertical video (portrait orientation).";
+  }
   return null;
 }
