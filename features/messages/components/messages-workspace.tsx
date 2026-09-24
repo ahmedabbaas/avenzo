@@ -12,6 +12,7 @@ import {
 import Link from "next/link";
 import { createClient } from "../../../lib/supabase/client";
 import AvatarImage from "../../social/components/avatar-image";
+import UserMediaImage from "../../social/components/user-media-image";
 import Icon from "../../social/components/icon";
 import { avatarFor, formatRelativeTime } from "../../social/lib/profile";
 import type { Profile } from "../../social/types";
@@ -1168,8 +1169,50 @@ export default function MessagesWorkspace({
 
                               {message.shared_post_id && (
                                 <div className="dm-shared-card">
-                                  <b>Shared post</b>
-                                  <span>Open the post on AVENZO.</span>
+                                  <div className="dm-shared-copy">
+                                    <b>
+                                      @{message.shared_post?.creator_username || "user"}
+                                    </b>
+                                    <span>
+                                      {message.shared_post?.caption ||
+                                        "Shared an AVENZO post"}
+                                    </span>
+                                  </div>
+
+                                  {message.shared_post?.media_path &&
+                                    (message.shared_post.media_type === "video" ? (
+                                      <video
+                                        src={
+                                          supabase.storage
+                                            .from("media")
+                                            .getPublicUrl(
+                                              message.shared_post.media_path
+                                            ).data.publicUrl
+                                        }
+                                        muted
+                                        controls
+                                        playsInline
+                                        preload="metadata"
+                                        className="dm-shared-media"
+                                      />
+                                    ) : (
+                                      <UserMediaImage
+                                        src={
+                                          supabase.storage
+                                            .from("media")
+                                            .getPublicUrl(
+                                              message.shared_post.media_path
+                                            ).data.publicUrl
+                                        }
+                                        alt={
+                                          message.shared_post.caption ||
+                                          "Shared AVENZO post"
+                                        }
+                                        className="dm-shared-media"
+                                        loading="lazy"
+                                      />
+                                    ))}
+
                                   <Link
                                     href={"/p/" + message.shared_post_id}
                                     className="btn secondary small"
@@ -1178,24 +1221,84 @@ export default function MessagesWorkspace({
                                   </Link>
                                 </div>
                               )}
+
                               {message.shared_reel_id && (
                                 <div className="dm-shared-card">
-                                  <b>Shared reel</b>
-                                  <span>View the shared reel on AVENZO.</span>
+                                  <div className="dm-shared-copy">
+                                    <b>
+                                      @{message.shared_reel?.creator_username || "user"}
+                                    </b>
+                                    <span>
+                                      {message.shared_reel?.caption ||
+                                        "Shared an AVENZO reel"}
+                                    </span>
+                                  </div>
+
+                                  {message.shared_reel?.media_path && (
+                                    <video
+                                      src={
+                                        supabase.storage
+                                          .from("media")
+                                          .getPublicUrl(
+                                            message.shared_reel.media_path
+                                          ).data.publicUrl
+                                      }
+                                      muted
+                                      controls
+                                      playsInline
+                                      preload="metadata"
+                                      className="dm-shared-media"
+                                    />
+                                  )}
+
                                   <Link
-                                    href="/home"
+                                    href={"/r/" + message.shared_reel_id}
                                     className="btn secondary small"
                                   >
-                                    Open Reels
+                                    Open Reel
                                   </Link>
                                 </div>
                               )}
+
                               {message.shared_profile_id && (
-                                <div className="dm-shared-card">
-                                  <b>Shared profile</b>
-                                  <span>
-                                    A profile was shared in this conversation.
-                                  </span>
+                                <div className="dm-shared-card dm-shared-profile">
+                                  {message.shared_profile && (
+                                    <AvatarImage
+                                      src={avatarFor({
+                                        id: message.shared_profile.id,
+                                        username: message.shared_profile.username,
+                                        display_name:
+                                          message.shared_profile.display_name,
+                                        bio: "",
+                                        avatar_url:
+                                          message.shared_profile.avatar_url,
+                                      })}
+                                      alt={message.shared_profile.display_name}
+                                      size={84}
+                                    />
+                                  )}
+                                  <div className="dm-shared-copy">
+                                    <b>
+                                      {message.shared_profile?.display_name ||
+                                        "Shared profile"}
+                                    </b>
+                                    <span>
+                                      @{message.shared_profile?.username || "user"}
+                                    </span>
+                                  </div>
+                                  {message.shared_profile && (
+                                    <Link
+                                      href={
+                                        "/u/" +
+                                        encodeURIComponent(
+                                          message.shared_profile.username
+                                        )
+                                      }
+                                      className="btn secondary small"
+                                    >
+                                      Open Profile
+                                    </Link>
+                                  )}
                                 </div>
                               )}
                             </>
