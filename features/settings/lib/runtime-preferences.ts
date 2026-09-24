@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 export type RuntimePreferences = {
+  language: "en" | "ur";
   confirm_delete_content: boolean;
   confirm_unfollow: boolean;
   feed_autoplay_videos: boolean;
@@ -14,6 +15,7 @@ export type RuntimePreferences = {
 };
 
 const DEFAULTS: RuntimePreferences = {
+  language: "en",
   confirm_delete_content: true,
   confirm_unfollow: true,
   feed_autoplay_videos: true,
