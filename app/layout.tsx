@@ -12,9 +12,9 @@ export const metadata: Metadata = {
     "AVENZO is a private-first social platform for real people, posts and conversations.",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: "/avenzo-mark.svg",
-    shortcut: "/avenzo-mark.svg",
-    apple: "/avenzo-mark.svg",
+    icon: [{ url: "/avenzo-logo.webp", type: "image/webp" }],
+    shortcut: [{ url: "/avenzo-logo.webp", type: "image/webp" }],
+    apple: [{ url: "/avenzo-logo.webp", type: "image/webp" }],
   },
   formatDetection: {
     telephone: false,

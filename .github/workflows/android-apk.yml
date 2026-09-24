@@ -1,0 +1,75 @@
+name: Build AVENZO Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "capacitor.config.ts"
+      - "mobile-shell/**"
+      - "public/avenzo-logo.webp"
+      - ".github/workflows/android-apk.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Capacitor
+        run: npm install --no-save @capacitor/core@7 @capacitor/android@7 @capacitor/cli@7
+
+      - name: Add Android project
+        run: npx cap add android
+
+      - name: Sync Android project
+        run: npx cap sync android
+
+      - name: Apply AVENZO launcher icon
+        shell: bash
+        run: |
+          mkdir -p android/app/src/main/res/drawable-nodpi
+          cp public/avenzo-logo.webp android/app/src/main/res/drawable-nodpi/avenzo_logo.webp
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+          s = s.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@drawable/avenzo_logo"')
+          s = s.replace('android:roundIcon="@mipmap/ic_launcher_round"', 'android:roundIcon="@drawable/avenzo_logo"')
+          p.write_text(s)
+          PY
+
+      - name: Build installable debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Rename APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk AVENZO.apk
+
+      - name: Upload AVENZO APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AVENZO-Android-APK
+          path: AVENZO.apk
+          if-no-files-found: error
+          retention-days: 30
