@@ -65,13 +65,7 @@ export default function AppSettingsForm({
 
   useEffect(() => {
     applyAppPreferences(settings);
-  }, [
-    settings.theme,
-    settings.language,
-    settings.reduce_animations,
-    settings.larger_text,
-    settings.high_contrast,
-  ]);
+  }, [settings]);
 
   async function persist(next = settings, quiet = false) {
     setSaving(true);
