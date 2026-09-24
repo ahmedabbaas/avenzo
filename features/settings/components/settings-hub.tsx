@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Icon from "../../social/components/icon";
+import { useUiTranslation } from "../lib/i18n";
 
 function SettingsCard({
   href,
@@ -29,58 +30,60 @@ function SettingsCard({
 }
 
 export default function SettingsHub() {
+  const t = useUiTranslation();
+
   return (
     <div className="settings-hub">
       <section>
-        <div className="settings-group-label">APP</div>
+        <div className="settings-group-label">{t("App").toUpperCase()}</div>
         <SettingsCard
           href="/settings/app"
           icon="settings"
-          title="App Settings"
+          title={t("App Settings")}
           text="Appearance, language, notifications, feed, media and accessibility."
         />
       </section>
 
       <section>
-        <div className="settings-group-label">ACCOUNT</div>
+        <div className="settings-group-label">{t("Account").toUpperCase()}</div>
         <SettingsCard
           href="/settings/account"
           icon="profile"
-          title="Profile & Account"
+          title={t("Profile & Account")}
           text="Profile, username, security, privacy and account information."
         />
         <SettingsCard
           href="/settings/blocked"
           icon="activity"
-          title="Blocked Accounts"
+          title={t("Blocked Accounts")}
           text="View and unblock accounts you have blocked."
         />
       </section>
 
       <section>
-        <div className="settings-group-label">OTHER</div>
+        <div className="settings-group-label">{t("Other").toUpperCase()}</div>
         <SettingsCard
           href="/help"
           icon="messages"
-          title="Help & Support"
+          title={t("Help & Support")}
           text="Get help with your account and AVENZO features."
         />
         <SettingsCard
           href="/about"
           icon="activity"
-          title="About"
+          title={t("About")}
           text="Learn about AVENZO."
         />
         <SettingsCard
           href="/terms"
           icon="activity"
-          title="Terms"
+          title={t("Terms")}
           text="Read the AVENZO terms."
         />
         <SettingsCard
           href="/privacy"
           icon="activity"
-          title="Privacy Policy"
+          title={t("Privacy Policy")}
           text="Understand how AVENZO handles your data."
         />
       </section>
