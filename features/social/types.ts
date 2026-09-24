@@ -89,7 +89,14 @@ export type ProfileStats = {
 
 export type NotificationRow = {
   id: string;
-  type: "follow" | "like" | "comment" | "message";
+  type:
+    | "follow"
+    | "like"
+    | "comment"
+    | "message"
+    | "message_request"
+    | "message_reply"
+    | "message_reaction";
   created_at: string;
   actor_id: string;
 };
