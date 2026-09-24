@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import PreferencesBootstrap from "../features/settings/components/preferences-bootstrap";
 
 export const metadata: Metadata = {
   applicationName: "AVENZO",
@@ -40,6 +41,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <PreferencesBootstrap />
         <a className="skip-link" href="#main-content">
           Skip to main content
         </a>
