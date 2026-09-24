@@ -31,6 +31,7 @@ import {
   fetchFeedPosts,
   fetchPeopleAndFollowing,
   fetchProfile,
+  fetchProfilePosts,
   fetchProfileStats,
   fetchReels,
   fetchSavedPostIds,
@@ -91,8 +92,10 @@ export default function HomeClient({
   const [profile, setProfile] = useState(initialProfile);
   const [screen, setScreen] = useState<Screen>(initialScreen || "home");
   const [posts, setPosts] = useState<Post[]>([]);
+  const [profilePosts, setProfilePosts] = useState<Post[]>([]);
   const [explorePosts, setExplorePosts] = useState<Post[]>([]);
   const [reels, setReels] = useState<Reel[]>([]);
+  const [profileReels, setProfileReels] = useState<Reel[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [savedReels, setSavedReels] = useState<string[]>([]);
   const [storyViewer, setStoryViewer] = useState<Story | null>(null);
@@ -178,6 +181,19 @@ export default function HomeClient({
     setPosts(await fetchFeedPosts(supabase, initialProfile.id));
   }
 
+  async function loadProfileContent() {
+    const [ownPosts, ownReels] = await Promise.all([
+      fetchProfilePosts(supabase, initialProfile.id),
+      fetchReels(supabase, initialProfile.id, {
+        authorId: initialProfile.id,
+        limit: 120,
+      }),
+    ]);
+
+    setProfilePosts(ownPosts);
+    setProfileReels(ownReels.reels);
+  }
+
   async function loadExplorePosts() {
     setExplorePosts(
       await fetchExplorePosts(supabase, initialProfile.id)
@@ -204,6 +220,7 @@ export default function HomeClient({
         loadProfile(),
         loadPeople(),
         loadPosts(),
+        loadProfileContent(),
         loadExplorePosts(),
         loadReels(),
         loadStories(),
@@ -381,6 +398,7 @@ export default function HomeClient({
 
       await Promise.all([
         loadPosts(),
+        loadProfileContent(),
         loadExplorePosts(),
         loadReels(),
         loadStories(),
@@ -402,7 +420,12 @@ export default function HomeClient({
     try {
       await removePost(supabase, initialProfile.id, post);
       showToast("Post deleted.");
-      await Promise.all([loadPosts(), loadExplorePosts(), loadStats()]);
+      await Promise.all([
+        loadPosts(),
+        loadProfileContent(),
+        loadExplorePosts(),
+        loadStats(),
+      ]);
     } catch {
       showToast("Could not delete post.");
     }
@@ -502,7 +525,7 @@ export default function HomeClient({
       );
     } catch {
       showToast("Could not update reel like.");
-      await loadReels();
+      await Promise.all([loadReels(), loadProfileContent()]);
     }
   }
 
@@ -1009,8 +1032,8 @@ export default function HomeClient({
           {screen === "profile" && (
             <ProfileView
               profile={profile}
-              posts={posts.filter((post) => post.author_id === profile.id)}
-              reels={reels.filter((reel) => reel.author_id === profile.id)}
+              posts={profilePosts}
+              reels={profileReels}
               media={mediaUrl}
               stats={stats}
               onEdit={() => setScreen("settings")}
@@ -1043,6 +1066,7 @@ export default function HomeClient({
                 void Promise.all([
                   loadPeople(),
                   loadPosts(),
+                  loadProfileContent(),
                   loadExplorePosts(),
                   loadReels(),
                   loadStories(),
