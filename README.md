@@ -140,3 +140,5 @@ Before considering a release complete:
 <!-- production-redeploy: reels-verification-v1 -->
 
 <!-- production-redeploy: self-badge-realtime-reels-v2 -->
+
+<!-- production-redeploy: strict-media-badge-liveviews-v3 -->
