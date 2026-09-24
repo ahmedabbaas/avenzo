@@ -262,6 +262,21 @@ export async function fetchFeedPosts(
   return hydratePosts(supabase, userId, (data || []) as PostRow[]);
 }
 
+export async function fetchProfilePosts(
+  supabase: SupabaseClient,
+  userId: string
+) {
+  const { data, error } = await supabase
+    .from("posts")
+    .select("*")
+    .eq("author_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(120);
+
+  assertNoError(error);
+  return hydratePosts(supabase, userId, (data || []) as PostRow[]);
+}
+
 export async function fetchPostById(
   supabase: SupabaseClient,
   userId: string,
@@ -302,13 +317,23 @@ export async function fetchExplorePosts(
 
 export async function fetchReels(
   supabase: SupabaseClient,
-  userId: string
+  userId: string,
+  options?: {
+    authorId?: string;
+    limit?: number;
+  }
 ): Promise<{ reels: Reel[]; savedReels: string[] }> {
-  const { data, error } = await supabase
+  let query = supabase
     .from("reels")
-    .select("*")
+    .select("*");
+
+  if (options?.authorId) {
+    query = query.eq("author_id", options.authorId);
+  }
+
+  const { data, error } = await query
     .order("created_at", { ascending: false })
-    .limit(60);
+    .limit(options?.limit || 60);
 
   assertNoError(error);
 
