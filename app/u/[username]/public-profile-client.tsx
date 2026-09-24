@@ -7,6 +7,7 @@ import { createClient } from "../../../lib/supabase/client";
 import AvatarImage from "../../../features/social/components/avatar-image";
 import UserMediaImage from "../../../features/social/components/user-media-image";
 import { initialsAvatar } from "../../../features/social/lib/profile";
+import VerifiedBadge from "../../../features/social/components/verified-badge";
 
 type PublicProfile = {
   id: string;
@@ -14,6 +15,7 @@ type PublicProfile = {
   display_name: string;
   bio: string;
   avatar_url: string | null;
+  verified?: boolean;
   created_at?: string;
 };
 
@@ -186,7 +188,7 @@ export default function PublicProfileClient({
           <AvatarImage src={avatar} alt={profile.display_name} size={220} />
 
           <div className="public-profile-copy">
-            <div className="eyebrow">@{profile.username}</div>
+            <div className="eyebrow verified-line">@{profile.username}<VerifiedBadge verified={profile.verified} /></div>
             <h1>{profile.display_name}</h1>
             <p>{profile.bio || "New to AVENZO."}</p>
 

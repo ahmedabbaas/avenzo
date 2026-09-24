@@ -12,6 +12,7 @@ import {
 } from "../lib/profile";
 import type { NotificationRow, Profile } from "../types";
 import AvatarImage from "./avatar-image";
+import VerifiedBadge from "./verified-badge";
 
 export default function ActivityPanel({
   supabase,
@@ -57,7 +58,7 @@ export default function ActivityPanel({
       const { data: actors } = actorIds.length
         ? await supabase
             .from("profiles")
-            .select("id,username,display_name,bio,avatar_url,created_at")
+            .select("id,username,display_name,bio,avatar_url,verified,created_at")
             .in("id", actorIds)
         : { data: [] };
 
@@ -132,7 +133,7 @@ export default function ActivityPanel({
                 />
                 <div>
                   <p>
-                    <b>{actorName}</b> {copy}
+                    <b>{actorName}<VerifiedBadge verified={item.actor?.verified} /></b> {copy}
                   </p>
                   <small>{formatRelativeTime(item.created_at)}</small>
                 </div>

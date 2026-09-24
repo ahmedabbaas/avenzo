@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "../../../lib/supabase/server";
+import VerifiedBadge from "../../../features/social/components/verified-badge";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,7 @@ export default async function PostDetailPage({
 
   const { data: author } = await supabase
     .from("profiles")
-    .select("id,username,display_name,avatar_url")
+    .select("id,username,display_name,avatar_url,verified")
     .eq("id", post.author_id)
     .maybeSingle();
 
@@ -42,7 +43,7 @@ export default async function PostDetailPage({
       <header>
         <Link href="/home">← AVENZO</Link>
         <Link href={"/u/" + encodeURIComponent(author.username)}>
-          @{author.username}
+          @{author.username}<VerifiedBadge verified={author.verified} />
         </Link>
       </header>
 
@@ -50,7 +51,7 @@ export default async function PostDetailPage({
         <div className="shared-detail-author">
           <div>
             <b>{author.display_name}</b>
-            <span>@{author.username}</span>
+            <span className="verified-line">@{author.username}<VerifiedBadge verified={author.verified} /></span>
           </div>
           <time>{new Date(post.created_at).toLocaleString()}</time>
         </div>

@@ -25,7 +25,7 @@ export default async function MessagesPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id,username,display_name,bio,avatar_url,created_at")
+    .select("id,username,display_name,bio,avatar_url,verified,created_at")
     .eq("id", user.id)
     .maybeSingle();
 

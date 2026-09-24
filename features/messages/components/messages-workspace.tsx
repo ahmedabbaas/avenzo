@@ -12,6 +12,7 @@ import {
 import Link from "next/link";
 import { createClient } from "../../../lib/supabase/client";
 import AvatarImage from "../../social/components/avatar-image";
+import VerifiedBadge from "../../social/components/verified-badge";
 import UserMediaImage from "../../social/components/user-media-image";
 import Icon from "../../social/components/icon";
 import { avatarFor, formatRelativeTime } from "../../social/lib/profile";
@@ -70,6 +71,7 @@ function profileFromInbox(item: InboxConversation): Profile {
     display_name: item.display_name,
     bio: "",
     avatar_url: item.avatar_url,
+    verified: item.verified,
   };
 }
 
@@ -477,6 +479,7 @@ export default function MessagesWorkspace({
           username: person.username,
           display_name: person.display_name,
           avatar_url: person.avatar_url,
+          verified: Boolean(person.verified),
           last_message: "",
           last_message_type: null,
           last_message_at: new Date().toISOString(),
@@ -910,7 +913,7 @@ export default function MessagesWorkspace({
                 <span className="dm-conversation-copy">
                   <span>
                     <b>{item.display_name}</b>
-                    <small>@{item.username}</small>
+                    <small className="verified-line">@{item.username}<VerifiedBadge verified={item.verified} /></small>
                   </span>
                   <em>{item.last_message || "New conversation"}</em>
                 </span>
@@ -960,7 +963,7 @@ export default function MessagesWorkspace({
               <div className="dm-head-identity">
                 <b>{active.display_name}</b>
                 <small>
-                  @{active.username}
+                  <span className="verified-line">@{active.username}<VerifiedBadge verified={active.verified} /></span>
                   {otherAllowsOnline &&
                     (otherOnline ? " · Online" : " · Offline")}
                 </small>
@@ -1085,7 +1088,7 @@ export default function MessagesWorkspace({
                     size={96}
                   />
                   <b>{active.display_name}</b>
-                  <span>@{active.username}</span>
+                  <span className="verified-line">@{active.username}<VerifiedBadge verified={active.verified} /></span>
                   <p>
                     {active.request_incoming
                       ? "Review this message request."
@@ -1221,6 +1224,7 @@ export default function MessagesWorkspace({
                                   <div className="dm-shared-copy">
                                     <b>
                                       @{message.shared_post?.creator_username || "user"}
+                                      <VerifiedBadge verified={message.shared_post?.creator_verified} />
                                     </b>
                                     <span>
                                       {message.shared_post?.caption ||
@@ -1276,6 +1280,7 @@ export default function MessagesWorkspace({
                                   <div className="dm-shared-copy">
                                     <b>
                                       @{message.shared_reel?.creator_username || "user"}
+                                      <VerifiedBadge verified={message.shared_reel?.creator_verified} />
                                     </b>
                                     <span>
                                       {message.shared_reel?.caption ||
@@ -1333,6 +1338,7 @@ export default function MessagesWorkspace({
                                     </b>
                                     <span>
                                       @{message.shared_profile?.username || "user"}
+                                      <VerifiedBadge verified={message.shared_profile?.verified} />
                                     </span>
                                   </div>
                                   {message.shared_profile && (
@@ -1597,7 +1603,7 @@ export default function MessagesWorkspace({
                   />
                   <span>
                     <b>{person.display_name}</b>
-                    <small>@{person.username}</small>
+                    <small className="verified-line">@{person.username}<VerifiedBadge verified={person.verified} /></small>
                   </span>
                 </button>
               ))}

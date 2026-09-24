@@ -11,7 +11,7 @@ import type {
 } from "./types";
 
 const PROFILE_COLUMNS =
-  "id,username,display_name,bio,avatar_url,created_at";
+  "id,username,display_name,bio,avatar_url,verified,created_at";
 
 function assertNoError(error: unknown) {
   if (error) throw error;
@@ -26,9 +26,32 @@ export async function fetchInbox(
   });
   assertNoError(error);
 
-  return ((data || []) as InboxConversation[]).map((item) => ({
+  const rows = ((data || []) as InboxConversation[]).map((item) => ({
     ...item,
+    verified: false,
     unread_count: Number(item.unread_count || 0),
+  }));
+
+  const userIds = [...new Set(rows.map((item) => item.other_user_id))];
+  if (!userIds.length) return rows;
+
+  const verificationResult = await supabase
+    .from("profiles")
+    .select("id,verified")
+    .in("id", userIds);
+
+  assertNoError(verificationResult.error);
+
+  const verifiedMap = new Map(
+    (verificationResult.data || []).map((profile) => [
+      profile.id,
+      Boolean(profile.verified),
+    ])
+  );
+
+  return rows.map((item) => ({
+    ...item,
+    verified: verifiedMap.get(item.other_user_id) || false,
   }));
 }
 
@@ -109,13 +132,13 @@ export async function fetchConversationMessages(
     reelIds.length
       ? supabase
           .from("reels")
-          .select("id,author_id,caption,media_path")
+          .select("id,author_id,title,caption,media_path,cover_path")
           .in("id", reelIds)
       : Promise.resolve({ data: [], error: null }),
     profileIds.length
       ? supabase
           .from("profiles")
-          .select("id,username,display_name,avatar_url")
+          .select("id,username,display_name,avatar_url,verified")
           .in("id", profileIds)
       : Promise.resolve({ data: [], error: null }),
   ]);
@@ -134,7 +157,7 @@ export async function fetchConversationMessages(
   const authorResult = contentAuthorIds.length
     ? await supabase
         .from("profiles")
-        .select("id,username,display_name")
+        .select("id,username,display_name,verified")
         .in("id", contentAuthorIds)
     : { data: [], error: null };
 
@@ -156,6 +179,7 @@ export async function fetchConversationMessages(
           media_type: post.media_type,
           creator_username: author?.username || "user",
           creator_name: author?.display_name || "AVENZO user",
+          creator_verified: Boolean(author?.verified),
         },
       ];
     })
@@ -168,10 +192,13 @@ export async function fetchConversationMessages(
         reel.id,
         {
           id: reel.id,
+          title: reel.title || "",
           caption: reel.caption,
           media_path: reel.media_path,
+          cover_path: reel.cover_path || null,
           creator_username: author?.username || "user",
           creator_name: author?.display_name || "AVENZO user",
+          creator_verified: Boolean(author?.verified),
         },
       ];
     })

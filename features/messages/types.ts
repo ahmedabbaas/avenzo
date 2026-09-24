@@ -16,6 +16,7 @@ export type InboxConversation = {
   username: string;
   display_name: string;
   avatar_url: string | null;
+  verified: boolean;
   last_message: string;
   last_message_type: MessageType | null;
   last_message_at: string;
@@ -53,14 +54,18 @@ export type SharedPostPreview = {
   media_type: "image" | "video" | null;
   creator_username: string;
   creator_name: string;
+  creator_verified: boolean;
 };
 
 export type SharedReelPreview = {
   id: string;
+  title?: string;
   caption: string;
   media_path: string;
+  cover_path?: string | null;
   creator_username: string;
   creator_name: string;
+  creator_verified: boolean;
 };
 
 export type SharedProfilePreview = {
@@ -68,6 +73,7 @@ export type SharedProfilePreview = {
   username: string;
   display_name: string;
   avatar_url: string | null;
+  verified: boolean;
 };
 
 export type DirectMessage = {
