@@ -82,7 +82,7 @@ export default function SettingsShell({
 
         <header className="settings-page-header">
           <div className="eyebrow">{eyebrow}</div>
-          <h1>{title}</h1>
+          <h1>{t(title)}</h1>
           <p>{description}</p>
         </header>
 
