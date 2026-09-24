@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { MediaDimensions } from "../lib/media";
+import { validateContentFile } from "../lib/upload-validation";
 import type { Message, Post, Reel } from "../types";
 
 export type CreateMode = "post" | "reel" | "story";
@@ -74,6 +75,12 @@ export async function publishContent({
   file: File | null;
   dimensions: MediaDimensions | null;
 }) {
+  const validationError = validateContentFile(file, mode);
+
+  if (validationError) {
+    throw new Error(validationError);
+  }
+
   let uploadedPath: string | null = null;
   let mediaType: "image" | "video" | null = null;
 
