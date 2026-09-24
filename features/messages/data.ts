@@ -467,6 +467,16 @@ export async function declineMessageRequest(
   assertNoError(error);
 }
 
+export async function deleteMessageRequest(
+  supabase: SupabaseClient,
+  conversationId: string
+) {
+  const { error } = await supabase.rpc("delete_message_request", {
+    cid: conversationId,
+  });
+  assertNoError(error);
+}
+
 export async function setConversationMuted(
   supabase: SupabaseClient,
   conversationId: string,
