@@ -51,6 +51,14 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
+  let requiresMfa = false;
+  if (user?.email_confirmed_at) {
+    const { data: aal } =
+      await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    requiresMfa =
+      aal?.nextLevel === "aal2" && aal.currentLevel !== "aal2";
+  }
+
   if ((!user || !user.email_confirmed_at) && !publicPath) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/login";
@@ -60,7 +68,15 @@ export async function updateSession(request: NextRequest) {
     return redirectResponse;
   }
 
-  if (user?.email_confirmed_at && guestOnly) {
+  if (user?.email_confirmed_at && requiresMfa && !publicPath) {
+    const redirectResponse = NextResponse.redirect(
+      new URL("/login?mfa=1", request.url)
+    );
+    redirectResponse.headers.set("x-request-id", requestId);
+    return redirectResponse;
+  }
+
+  if (user?.email_confirmed_at && guestOnly && !requiresMfa) {
     const redirectResponse = NextResponse.redirect(
       new URL("/home", request.url)
     );
