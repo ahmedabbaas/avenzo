@@ -29,6 +29,7 @@ import {
   fetchMessagingPrivacy,
   getExistingConversation,
   hideMessageForMe,
+  markMessageDelivered,
   markMessagesRead,
   reportMessage,
   reportUserFromMessages,
@@ -204,8 +205,7 @@ export default function MessagesWorkspace({
       if (!conversation.request_incoming) {
         await markMessagesRead(
           supabase,
-          conversation.conversation_id,
-          currentUser.id
+          conversation.conversation_id
         );
       }
 
@@ -315,10 +315,7 @@ export default function MessagesWorkspace({
         },
         async (payload) => {
           const incoming = payload.new as DirectMessage;
-          await supabase
-            .from("messages")
-            .update({ delivered_at: new Date().toISOString() })
-            .eq("id", incoming.id);
+          await markMessageDelivered(supabase, incoming.id);
 
           if (
             activeRef.current?.conversation_id === incoming.conversation_id
@@ -331,8 +328,7 @@ export default function MessagesWorkspace({
             if (!activeRef.current.request_incoming) {
               await markMessagesRead(
                 supabase,
-                incoming.conversation_id,
-                currentUser.id
+                incoming.conversation_id
               );
             }
           }
