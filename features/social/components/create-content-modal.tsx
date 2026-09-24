@@ -341,7 +341,8 @@ export default function CreateContentModal({
             className="btn"
             disabled={
               posting ||
-              (mode === "reel" && (!file || dimensions?.height <= (dimensions?.width || 0))) ||
+              (mode === "reel" &&
+                (!file || !dimensions || dimensions.height <= dimensions.width)) ||
               (mode === "story" && !file)
             }
           >
