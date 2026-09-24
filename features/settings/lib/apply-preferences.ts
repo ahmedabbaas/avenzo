@@ -1,5 +1,7 @@
 import type { AppSettings } from "../types";
 
+const VISUAL_STORAGE_KEY = "avenzo-visual-preferences";
+
 export function applyAppPreferences(settings: AppSettings) {
   if (typeof document === "undefined") return;
 
@@ -21,6 +23,7 @@ export function applyAppPreferences(settings: AppSettings) {
   root.dataset.lessMobileData = settings.use_less_mobile_data ? "true" : "false";
   root.lang = settings.language;
   root.dir = settings.language === "ur" ? "rtl" : "ltr";
+  root.style.colorScheme = effectiveTheme;
 
   const runtimePreferences = {
     language: settings.language,
@@ -36,6 +39,17 @@ export function applyAppPreferences(settings: AppSettings) {
 
   try {
     window.localStorage.setItem(
+      VISUAL_STORAGE_KEY,
+      JSON.stringify({
+        theme: settings.theme,
+        language: settings.language,
+        reduceMotion: settings.reduce_animations,
+        largeText: settings.larger_text,
+        highContrast: settings.high_contrast,
+      })
+    );
+
+    window.localStorage.setItem(
       "avenzo-runtime-preferences",
       JSON.stringify(runtimePreferences)
     );
@@ -45,5 +59,13 @@ export function applyAppPreferences(settings: AppSettings) {
 
   window.dispatchEvent(
     new CustomEvent("avenzo:preferences", { detail: runtimePreferences })
+  );
+  window.dispatchEvent(
+    new CustomEvent("avenzo:theme", {
+      detail: {
+        preference: settings.theme,
+        effectiveTheme,
+      },
+    })
   );
 }
