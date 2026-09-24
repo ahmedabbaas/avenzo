@@ -51,6 +51,8 @@ import PostCard from "../features/social/components/post-card";
 import ReelCard from "../features/social/components/reel-card";
 import PageTitle from "../features/social/components/page-title";
 import SettingsPanel from "../features/social/components/settings-panel";
+import CreateContentModal from "../features/social/components/create-content-modal";
+import StoryViewer from "../features/social/components/story-viewer";
 import {
   avatarFor,
   formatRelativeTime,
@@ -1163,199 +1165,36 @@ export default function HomeClient({
       </nav>
 
       {showCreate && (
-        <div
-          className="modal"
-          role="dialog"
-          aria-modal="true"
-          aria-label={"Create " + createMode}
-        >
-          <form className="modal-box create-modal" onSubmit={createContent}>
-            <div className="modal-header">
-              <div>
-                <div className="eyebrow">CREATE</div>
-                <h2>
-                  {createMode === "post"
-                    ? "New post"
-                    : createMode === "reel"
-                      ? "New reel"
-                      : "New story"}
-                </h2>
-              </div>
-              <button
-                type="button"
-                className="icon-button"
-                onClick={() => setShowCreate(false)}
-                aria-label="Close"
-              >
-                <Icon name="close" />
-              </button>
-            </div>
-
-            <div className="create-type-tabs" role="tablist" aria-label="Content type">
-              {(["post", "reel", "story"] as const).map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  className={createMode === mode ? "active" : ""}
-                  onClick={() => {
-                    setCreateMode(mode);
-                    setCaption("");
-                    setFile(null);
-                    setMediaDimensions(null);
-                    if (preview) URL.revokeObjectURL(preview);
-                    setPreview("");
-                  }}
-                >
-                  {mode === "post" ? "Post" : mode === "reel" ? "Reel" : "Story"}
-                </button>
-              ))}
-            </div>
-
-            <div className="composer-author">
-              <AvatarImage src={avatarFor(profile)} alt={profile.display_name} size={96} />
-              <div>
-                <b>{profile.display_name}</b>
-                <small>@{profile.username}</small>
-              </div>
-            </div>
-
-            {createMode !== "story" && (
-              <textarea
-                value={caption}
-                onChange={(event) => setCaption(event.target.value.slice(0, 2200))}
-                placeholder={
-                  createMode === "reel"
-                    ? "Add a caption to your reel…"
-                    : "What’s worth sharing?"
-                }
-                autoFocus
-              />
-            )}
-
-            <div className="composer-meta">
-              <label className="upload-button">
-                <Icon name="camera" size={17} />
-                {createMode === "reel"
-                  ? "Choose video"
-                  : createMode === "story"
-                    ? "Choose story media"
-                    : "Add photo or video"}
-                <input
-                  type="file"
-                  accept={createMode === "reel" ? "video/*" : "image/*,video/*"}
-                  onChange={pickFile}
-                />
-              </label>
-              {createMode !== "story" && <span>{caption.length}/2200</span>}
-            </div>
-
-            {createMode === "story" && (
-              <p className="create-hint">
-                Stories are visible to you and your followers for 24 hours.
-              </p>
-            )}
-
-            {createMode === "reel" && (
-              <p className="create-hint">
-                Reels are real uploaded videos. AVENZO never inserts demo reels.
-              </p>
-            )}
-
-            {preview &&
-              (file?.type.startsWith("video/") ? (
-                <video src={preview} controls className="upload-preview" />
-              ) : (
-                <UserMediaImage
-                  src={preview}
-                  className="upload-preview"
-                  alt={createMode === "story" ? "Story preview" : "Post preview"}
-                  width={mediaDimensions?.width}
-                  height={mediaDimensions?.height}
-                  loading="eager"
-                />
-              ))}
-
-            <div className="modal-actions">
-              <button
-                type="button"
-                className="btn secondary"
-                onClick={() => setShowCreate(false)}
-              >
-                Cancel
-              </button>
-              <button className="btn" disabled={posting}>
-                {posting
-                  ? "Publishing…"
-                  : createMode === "post"
-                    ? "Publish Post"
-                    : createMode === "reel"
-                      ? "Publish Reel"
-                      : "Publish Story"}
-              </button>
-            </div>
-          </form>
-        </div>
+        <CreateContentModal
+          profile={profile}
+          mode={createMode}
+          caption={caption}
+          file={file}
+          preview={preview}
+          dimensions={mediaDimensions}
+          posting={posting}
+          onModeChange={(mode) => {
+            setCreateMode(mode);
+            setCaption("");
+            setFile(null);
+            setMediaDimensions(null);
+            if (preview) URL.revokeObjectURL(preview);
+            setPreview("");
+          }}
+          onCaptionChange={setCaption}
+          onFileChange={(event) => void pickFile(event)}
+          onClose={() => setShowCreate(false)}
+          onSubmit={(event) => void createContent(event)}
+        />
       )}
 
       {storyViewer && (
-        <div
-          className="modal story-viewer-shell"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Story"
-          onClick={() => setStoryViewer(null)}
-        >
-          <div className="story-viewer" onClick={(event) => event.stopPropagation()}>
-            <div className="story-viewer-head">
-              <div className="person-line">
-                <AvatarImage
-                  src={avatarFor(storyViewer.profile || profile)}
-                  alt={storyViewer.profile?.display_name || profile.display_name}
-                  size={80}
-                />
-                <div>
-                  <b>
-                    {storyViewer.profile?.display_name || profile.display_name}
-                  </b>
-                  <small>
-                    @{storyViewer.profile?.username || profile.username} ·{" "}
-                    {formatRelativeTime(storyViewer.created_at)}
-                  </small>
-                </div>
-              </div>
-              <button
-                className="icon-button"
-                onClick={() => setStoryViewer(null)}
-                aria-label="Close story"
-              >
-                <Icon name="close" />
-              </button>
-            </div>
-
-            {storyViewer.media_type === "video" ? (
-              <video
-                src={mediaUrl(storyViewer.media_path)}
-                controls
-                autoPlay
-                playsInline
-                className="story-viewer-media"
-              />
-            ) : (
-              <UserMediaImage
-                src={mediaUrl(storyViewer.media_path)}
-                alt="Story"
-                className="story-viewer-media"
-                width={storyViewer.media_width}
-                height={storyViewer.media_height}
-                loading="eager"
-              />
-            )}
-
-            <small className="story-expiry">
-              Expires {new Date(storyViewer.expires_at).toLocaleString()}
-            </small>
-          </div>
-        </div>
+        <StoryViewer
+          story={storyViewer}
+          fallbackProfile={profile}
+          mediaUrl={mediaUrl}
+          onClose={() => setStoryViewer(null)}
+        />
       )}
 
       {toast && (
