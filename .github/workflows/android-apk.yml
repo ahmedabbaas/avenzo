@@ -159,6 +159,8 @@ jobs:
           import android.graphics.BitmapFactory;
           import android.os.Build;
           import android.os.Bundle;
+          import android.os.Handler;
+          import android.os.Looper;
           import android.util.Base64;
           import android.view.View;
           import android.view.WindowManager;
@@ -168,14 +170,52 @@ jobs:
           import androidx.activity.OnBackPressedCallback;
           import com.getcapacitor.BridgeActivity;
           import com.getcapacitor.BridgeWebViewClient;
+          import java.io.BufferedReader;
           import java.io.ByteArrayOutputStream;
           import java.io.InputStream;
+          import java.io.InputStreamReader;
+          import java.net.HttpURLConnection;
+          import java.net.URLEncoder;
+          import java.net.URL;
           import java.nio.charset.StandardCharsets;
+          import java.time.Instant;
+          import java.util.concurrent.ExecutorService;
+          import java.util.concurrent.Executors;
+          import org.json.JSONArray;
+          import org.json.JSONObject;
 
           public class MainActivity extends BridgeActivity {
             private static final String MESSAGE_CHANNEL_ID = "avenzo_messages";
+            private static final String SUPABASE_URL =
+              "https://ltlxynrssgpqgzbdpliv.supabase.co";
+            private static final String SUPABASE_KEY =
+              "sb_publishable_tAxyIZKlwXyeGI7627SFSQ_VJvaSR0d";
+
             private boolean avenzoClientInstalled = false;
+            private boolean activityVisible = false;
             private long lastRootBackPress = 0L;
+            private String supabaseAccessToken = "";
+            private String supabaseUserId = "";
+            private String lastNotificationAt = "";
+            private final Handler notificationHandler =
+              new Handler(Looper.getMainLooper());
+            private final ExecutorService notificationExecutor =
+              Executors.newSingleThreadExecutor();
+
+            private final Runnable notificationPoller = new Runnable() {
+              @Override
+              public void run() {
+                if (
+                  !supabaseAccessToken.isEmpty() &&
+                  !supabaseUserId.isEmpty()
+                ) {
+                  notificationExecutor.execute(
+                    () -> pollMessageNotifications()
+                  );
+                }
+                notificationHandler.postDelayed(this, 5000L);
+              }
+            };
 
             @Override
             public void onCreate(Bundle savedInstanceState) {
@@ -204,6 +244,7 @@ jobs:
 
               configureWebView();
               handleIntentRoute(getIntent());
+              notificationHandler.postDelayed(notificationPoller, 3500L);
             }
 
             @Override
@@ -216,6 +257,7 @@ jobs:
             @Override
             public void onResume() {
               super.onResume();
+              activityVisible = true;
               configureWebView();
 
               if (getBridge() != null && getBridge().getWebView() != null) {
@@ -223,6 +265,19 @@ jobs:
                 webView.postDelayed(() -> injectAvenzoShell(webView), 120);
                 webView.postDelayed(() -> injectAvenzoShell(webView), 700);
               }
+            }
+
+            @Override
+            public void onPause() {
+              activityVisible = false;
+              super.onPause();
+            }
+
+            @Override
+            protected void onDestroy() {
+              notificationHandler.removeCallbacks(notificationPoller);
+              notificationExecutor.shutdownNow();
+              super.onDestroy();
             }
 
             private void createMessageNotificationChannel() {
@@ -328,6 +383,132 @@ jobs:
               );
             }
 
+            private boolean isMessagesScreenVisible() {
+              if (!activityVisible) return false;
+              if (getBridge() == null || getBridge().getWebView() == null) {
+                return false;
+              }
+              String url = getBridge().getWebView().getUrl();
+              return url != null && url.contains("/messages");
+            }
+
+            private String notificationBody(String type) {
+              if ("message_request".equals(type)) {
+                return "You have a new message request";
+              }
+              if ("message_reply".equals(type)) {
+                return "Someone replied to your message";
+              }
+              return "You have a new message";
+            }
+
+            private void pollMessageNotifications() {
+              String token = supabaseAccessToken;
+              String userId = supabaseUserId;
+              String cursor = lastNotificationAt;
+
+              if (
+                token.isEmpty() ||
+                userId.isEmpty() ||
+                cursor.isEmpty()
+              ) {
+                return;
+              }
+
+              HttpURLConnection connection = null;
+              try {
+                String encodedCursor = URLEncoder.encode(
+                  cursor,
+                  StandardCharsets.UTF_8.name()
+                );
+
+                String endpoint =
+                  SUPABASE_URL +
+                  "/rest/v1/notifications" +
+                  "?recipient_id=eq." + userId +
+                  "&type=in.(message,message_request,message_reply)" +
+                  "&created_at=gt." + encodedCursor +
+                  "&select=id,type,created_at" +
+                  "&order=created_at.asc" +
+                  "&limit=20";
+
+                connection = (HttpURLConnection) new URL(endpoint).openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(8000);
+                connection.setReadTimeout(8000);
+                connection.setRequestProperty("apikey", SUPABASE_KEY);
+                connection.setRequestProperty(
+                  "Authorization",
+                  "Bearer " + token
+                );
+                connection.setRequestProperty("Accept", "application/json");
+
+                int code = connection.getResponseCode();
+                if (code != 200) return;
+
+                StringBuilder body = new StringBuilder();
+                try (
+                  BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(
+                      connection.getInputStream(),
+                      StandardCharsets.UTF_8
+                    )
+                  )
+                ) {
+                  String line;
+                  while ((line = reader.readLine()) != null) {
+                    body.append(line);
+                  }
+                }
+
+                JSONArray rows = new JSONArray(body.toString());
+                for (int i = 0; i < rows.length(); i++) {
+                  JSONObject row = rows.getJSONObject(i);
+                  String type = row.optString("type", "message");
+                  String createdAt = row.optString("created_at", cursor);
+
+                  if (!isMessagesScreenVisible()) {
+                    runOnUiThread(
+                      () -> showMessageNotification(
+                        "AVENZO",
+                        notificationBody(type),
+                        "/messages"
+                      )
+                    );
+                  }
+
+                  if (!createdAt.isEmpty()) {
+                    lastNotificationAt = createdAt;
+                  }
+                }
+              } catch (Exception ignored) {
+              } finally {
+                if (connection != null) connection.disconnect();
+              }
+            }
+
+            private void registerNotificationSession(
+              String accessToken,
+              String userId
+            ) {
+              if (
+                accessToken == null ||
+                accessToken.trim().isEmpty() ||
+                userId == null ||
+                userId.trim().isEmpty()
+              ) {
+                return;
+              }
+
+              boolean userChanged = !userId.equals(supabaseUserId);
+              supabaseAccessToken = accessToken;
+              supabaseUserId = userId;
+
+              if (userChanged || lastNotificationAt.isEmpty()) {
+                lastNotificationAt = Instant.now().toString();
+              }
+            }
+
             private void handleIntentRoute(Intent intent) {
               if (intent == null) return;
               String route = intent.getStringExtra("avenzo_route");
@@ -398,6 +579,14 @@ jobs:
                 runOnUiThread(
                   () -> showMessageNotification(title, body, route)
                 );
+              }
+
+              @JavascriptInterface
+              public void registerSession(
+                String accessToken,
+                String userId
+              ) {
+                registerNotificationSession(accessToken, userId);
               }
             }
 

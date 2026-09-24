@@ -439,12 +439,86 @@
       }
     }
 
+    function decodeJwtSubject(token) {
+      try {
+        var payload = token.split(".")[1];
+        if (!payload) return "";
+        payload = payload.replace(/-/g, "+").replace(/_/g, "/");
+        while (payload.length % 4) payload += "=";
+        var decoded = JSON.parse(atob(payload));
+        return decoded && decoded.sub ? String(decoded.sub) : "";
+      } catch (e) {
+        return "";
+      }
+    }
+
+    function registerNativeNotificationSession(token) {
+      if (!token || !window.AvenzoNative?.registerSession) return;
+      var userId = decodeJwtSubject(token);
+      if (!userId) return;
+
+      try {
+        window.AvenzoNative.registerSession(token, userId);
+      } catch (e) {}
+    }
+
+    function extractBearer(headers) {
+      try {
+        if (!headers) return "";
+        if (headers instanceof Headers) {
+          var value = headers.get("authorization") || headers.get("Authorization");
+          return value && value.indexOf("Bearer ") === 0 ? value.slice(7) : "";
+        }
+        if (Array.isArray(headers)) {
+          var row = headers.find(function(item){
+            return item && String(item[0]).toLowerCase() === "authorization";
+          });
+          var pairValue = row && row[1] ? String(row[1]) : "";
+          return pairValue.indexOf("Bearer ") === 0 ? pairValue.slice(7) : "";
+        }
+        var key = Object.keys(headers).find(function(name){
+          return name.toLowerCase() === "authorization";
+        });
+        var objectValue = key ? String(headers[key]) : "";
+        return objectValue.indexOf("Bearer ") === 0 ? objectValue.slice(7) : "";
+      } catch (e) {
+        return "";
+      }
+    }
+
+    function installNativeNotificationSessionCapture() {
+      if (!window.AvenzoNative?.registerSession) return;
+      if (window.__avenzoNativeFetchWrapped) return;
+      window.__avenzoNativeFetchWrapped = true;
+
+      var originalFetch = window.fetch.bind(window);
+      window.fetch = function(input, init) {
+        try {
+          var url = typeof input === "string"
+            ? input
+            : input && input.url
+              ? input.url
+              : "";
+          if (url.indexOf("ltlxynrssgpqgzbdpliv.supabase.co") !== -1) {
+            var token = extractBearer(init && init.headers);
+            if (!token && input && input.headers) {
+              token = extractBearer(input.headers);
+            }
+            if (token) registerNativeNotificationSession(token);
+          }
+        } catch (e) {}
+
+        return originalFetch(input, init);
+      };
+    }
+
     function syncMobileState() {
       applyBranding();
       ensureDrawer();
       normalizeBottomNav();
       enhanceLegacyDmChrome();
       enhanceLegacyDmActions();
+      installNativeNotificationSessionCapture();
       syncHomeState();
 
       var activeChat = document.querySelector(".dm-chat:not(.dm-mobile-hidden)");
