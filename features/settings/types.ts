@@ -35,6 +35,9 @@ export type PrivacySettings = {
   account_private: boolean;
   who_can_follow: AudiencePreference;
   who_can_message: AudiencePreference;
+  who_can_send_message_requests: AudiencePreference;
+  read_receipts: boolean;
+  online_status: boolean;
   who_can_comment: AudiencePreference;
   who_can_mention: AudiencePreference;
   who_can_tag: AudiencePreference;
