@@ -55,6 +55,7 @@ import StoryViewer from "../features/social/components/story-viewer";
 import { avatarFor } from "../features/social/lib/profile";
 import { readImageDimensions, type MediaDimensions } from "../features/social/lib/media";
 import { validateContentFile } from "../features/social/lib/upload-validation";
+import { useRuntimePreferences } from "../features/settings/lib/runtime-preferences";
 import type {
   Chat,
   Message,
@@ -86,6 +87,7 @@ export default function HomeClient({
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
+  const runtimePreferences = useRuntimePreferences();
 
   const [profile, setProfile] = useState(initialProfile);
   const [screen, setScreen] = useState<Screen>(initialScreen || "home");
@@ -413,7 +415,10 @@ export default function HomeClient({
 
   async function deletePost(post: Post) {
     if (post.author_id !== initialProfile.id) return;
-    if (!window.confirm("Delete this post? This cannot be undone.")) return;
+    if (
+      runtimePreferences.confirm_delete_content &&
+      !window.confirm("Delete this post? This cannot be undone.")
+    ) return;
 
     try {
       await removePost(supabase, initialProfile.id, post);
@@ -568,7 +573,10 @@ export default function HomeClient({
 
   async function deleteReel(reel: Reel) {
     if (reel.author_id !== initialProfile.id) return;
-    if (!window.confirm("Delete this reel? This cannot be undone.")) return;
+    if (
+      runtimePreferences.confirm_delete_content &&
+      !window.confirm("Delete this reel? This cannot be undone.")
+    ) return;
 
     try {
       await removeReel(supabase, initialProfile.id, reel);
@@ -601,6 +609,14 @@ export default function HomeClient({
 
   async function toggleFollow(other: Profile) {
     const isFollowing = followed.includes(other.id);
+
+    if (
+      isFollowing &&
+      runtimePreferences.confirm_unfollow &&
+      !window.confirm(`Unfollow @${other.username}?`)
+    ) {
+      return;
+    }
 
     setFollowed((current) =>
       isFollowing
@@ -859,6 +875,11 @@ export default function HomeClient({
                     onComment={(body) => void addComment(post, body)}
                     own={post.author_id === initialProfile.id}
                     onDelete={() => void deletePost(post)}
+                    autoplayVideo={runtimePreferences.feed_autoplay_videos}
+                    dataSaving={
+                      runtimePreferences.data_saving_mode ||
+                      runtimePreferences.use_less_mobile_data
+                    }
                   />
                 ))
               )}
@@ -955,6 +976,11 @@ export default function HomeClient({
                         onSave={() => void toggleReelSave(reel)}
                         onComment={(body) => void addReelComment(reel, body)}
                         onDelete={() => void deleteReel(reel)}
+                        autoplayVideo={runtimePreferences.media_autoplay_videos}
+                        dataSaving={
+                          runtimePreferences.data_saving_mode ||
+                          runtimePreferences.use_less_mobile_data
+                        }
                       />
                     ))}
                   </div>
@@ -987,6 +1013,11 @@ export default function HomeClient({
                       onComment={(body) => void addComment(post, body)}
                       own={post.author_id === initialProfile.id}
                       onDelete={() => void deletePost(post)}
+                      autoplayVideo={runtimePreferences.feed_autoplay_videos}
+                      dataSaving={
+                        runtimePreferences.data_saving_mode ||
+                        runtimePreferences.use_less_mobile_data
+                      }
                     />
                   ))
                 )}
@@ -1013,6 +1044,11 @@ export default function HomeClient({
                   onComment={(body) => void addComment(post, body)}
                   own={post.author_id === initialProfile.id}
                   onDelete={() => void deletePost(post)}
+                  autoplayVideo={runtimePreferences.feed_autoplay_videos}
+                  dataSaving={
+                    runtimePreferences.data_saving_mode ||
+                    runtimePreferences.use_less_mobile_data
+                  }
                 />
               ))}
               {!loading && saved.length === 0 && (
@@ -1194,6 +1230,11 @@ export default function HomeClient({
           fallbackProfile={profile}
           mediaUrl={mediaUrl}
           onClose={() => setStoryViewer(null)}
+          autoplayVideo={runtimePreferences.media_autoplay_videos}
+          dataSaving={
+            runtimePreferences.data_saving_mode ||
+            runtimePreferences.use_less_mobile_data
+          }
         />
       )}
 
