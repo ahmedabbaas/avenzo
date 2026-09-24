@@ -86,22 +86,28 @@ export async function fetchConversationMessages(
   const reactions = (reactionResult.data || []) as MessageReaction[];
   const byId = new Map(rows.map((message) => [message.id, message]));
 
-  return rows.map((message) => ({
-    ...message,
-    attachments: attachments.filter(
-      (attachment) => attachment.message_id === message.id
-    ),
-    reactions: reactions.filter(
-      (reaction) => reaction.message_id === message.id
-    ),
-    reply_to: message.reply_to_id
-      ? ({
-          ...byId.get(message.reply_to_id),
-          attachments: [],
-          reactions: [],
-        } as DirectMessage | undefined) || null
-      : null,
-  }));
+  return rows.map((message) => {
+    const replied = message.reply_to_id
+      ? byId.get(message.reply_to_id)
+      : undefined;
+
+    return {
+      ...message,
+      attachments: attachments.filter(
+        (attachment) => attachment.message_id === message.id
+      ),
+      reactions: reactions.filter(
+        (reaction) => reaction.message_id === message.id
+      ),
+      reply_to: replied
+        ? {
+            ...replied,
+            attachments: [],
+            reactions: [],
+          }
+        : null,
+    } as DirectMessage;
+  });
 }
 
 export async function ensureConversation(
