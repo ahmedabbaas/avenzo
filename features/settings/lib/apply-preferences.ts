@@ -23,6 +23,7 @@ export function applyAppPreferences(settings: AppSettings) {
   root.dir = settings.language === "ur" ? "rtl" : "ltr";
 
   const runtimePreferences = {
+    language: settings.language,
     confirm_delete_content: settings.confirm_delete_content,
     confirm_unfollow: settings.confirm_unfollow,
     feed_autoplay_videos: settings.feed_autoplay_videos,
