@@ -354,7 +354,10 @@ img{max-width:100%}
 }
 .profile-identity{min-width:0}
 .profile-hero h1{
-  font:700 clamp(32px,4vw,40px)/1.02 "Space Grotesk";
+  font-family:"Space Grotesk","DM Sans",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:clamp(32px,4vw,40px);
+  font-weight:700;
+  line-height:1.02;
   letter-spacing:-.05em;
   margin:7px 0 0;
   overflow-wrap:anywhere
@@ -402,7 +405,10 @@ img{max-width:100%}
 }
 .profile-section-head h2{
   margin:5px 0 0;
-  font:700 24px/1.1 "Space Grotesk";
+  font-family:"Space Grotesk","DM Sans",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:24px;
+  font-weight:700;
+  line-height:1.1;
   letter-spacing:-.035em
 }
 .profile-section-count{
