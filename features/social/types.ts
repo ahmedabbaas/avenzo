@@ -4,8 +4,7 @@ export type Screen =
   | "messages"
   | "activity"
   | "saved"
-  | "profile"
-  | "settings";
+  | "profile";
 
 export type Profile = {
   id: string;
