@@ -72,16 +72,6 @@ export default function PostCard({
         )}
       </div>
 
-      {post.caption && <p className="post-caption">{post.caption}</p>}
-
-      {(post.hashtags?.length || post.mentions?.length || post.location) && (
-        <div className="content-meta-line">
-          {post.hashtags?.map((tag) => <span key={"#"+tag}>#{tag}</span>)}
-          {post.mentions?.map((mention) => <span key={"@"+mention}>@{mention}</span>)}
-          {post.location && <small>⌖ {post.location}</small>}
-        </div>
-      )}
-
       {post.media_path && post.media_type === "image" && (
         <UserMediaImage
           className="post-media"
@@ -132,6 +122,21 @@ export default function PostCard({
             <Icon name="bookmark" size={20} />
           </button>
         </div>
+
+        {post.caption && (
+          <p className="post-caption post-caption-after">
+            <b>{author?.username ? "@" + author.username : authorName}</b>
+            <span>{post.caption}</span>
+          </p>
+        )}
+
+        {(post.hashtags?.length || post.mentions?.length || post.location) && (
+          <div className="content-meta-line post-meta-after">
+            {post.hashtags?.map((tag) => <span key={"#"+tag}>#{tag}</span>)}
+            {post.mentions?.map((mention) => <span key={"@"+mention}>@{mention}</span>)}
+            {post.location && <small>⌖ {post.location}</small>}
+          </div>
+        )}
 
         {post.comments.length > 0 && (
           <div className="comment-list">

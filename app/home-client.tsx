@@ -702,6 +702,14 @@ export default function HomeClient({
     <div className="social-app">
       <header className="top">
         <button
+          className="mobile-home-create"
+          onClick={() => openComposer("post")}
+          aria-label="Create"
+        >
+          <Icon name="plus" size={25} />
+        </button>
+
+        <button
           className="brand"
           onClick={() => setScreen("home")}
           aria-label="AVENZO home"
@@ -1192,9 +1200,9 @@ export default function HomeClient({
       <nav className="mobile-nav" aria-label="Mobile navigation">
         {[
           { id: "home" as Screen, label: "Home", icon: "home" as IconName },
-          { id: "explore" as Screen, label: "Explore", icon: "explore" as IconName },
           { id: "reels" as const, label: "Reels", icon: "reels" as IconName },
-          { id: "messages" as Screen, label: "Messages", icon: "messages" as IconName },
+          { id: "messages" as const, label: "Messages", icon: "messages" as IconName },
+          { id: "explore" as Screen, label: "Search", icon: "explore" as IconName },
           { id: "profile" as Screen, label: "Profile", icon: "profile" as IconName },
         ].map((item) => (
           <button
@@ -1217,16 +1225,6 @@ export default function HomeClient({
             <small>{item.label}</small>
           </button>
         ))}
-
-        <button
-          className="mobile-create"
-          onClick={() => openComposer("post")}
-        >
-          <span className="mobile-icon-wrap">
-            <Icon name="plus" />
-          </span>
-          <small>Create</small>
-        </button>
       </nav>
 
       {showCreate && (
