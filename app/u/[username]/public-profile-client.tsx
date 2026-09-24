@@ -217,11 +217,21 @@ export default function PublicProfileClient({
               <Link
                 className="btn secondary"
                 href={
-                  "/home?chat=" +
+                  "/messages?user=" +
                   encodeURIComponent(profile.username)
                 }
               >
                 Message
+              </Link>
+
+              <Link
+                className="btn secondary"
+                href={
+                  "/messages?shareProfile=" +
+                  encodeURIComponent(profile.id)
+                }
+              >
+                Share Profile
               </Link>
 
               <details className="profile-safety-menu">
