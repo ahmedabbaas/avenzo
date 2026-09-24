@@ -134,3 +134,5 @@ Before considering a release complete:
 - mobile layout must be checked
 - upload and auth failure states must be checked
 - rollback/deployment status must be understood
+
+<!-- vercel-redeploy-trigger -->
