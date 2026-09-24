@@ -69,6 +69,12 @@ jobs:
 
           manifest = Path("android/app/src/main/AndroidManifest.xml")
           s = manifest.read_text()
+          if 'android:hardwareAccelerated=' not in s:
+              s = s.replace(
+                  '<application',
+                  '<application android:hardwareAccelerated="true"',
+                  1
+              )
           s = s.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@drawable/avenzo_logo"')
           s = s.replace('android:roundIcon="@mipmap/ic_launcher_round"', 'android:roundIcon="@drawable/avenzo_logo"')
           if 'android:screenOrientation=' not in s:
@@ -138,7 +144,10 @@ jobs:
 
           import android.os.Bundle;
           import android.util.Base64;
+          import android.view.View;
           import android.webkit.WebView;
+          import android.widget.Toast;
+          import androidx.activity.OnBackPressedCallback;
           import com.getcapacitor.BridgeActivity;
           import com.getcapacitor.BridgeWebViewClient;
           import java.io.ByteArrayOutputStream;
@@ -147,10 +156,21 @@ jobs:
 
           public class MainActivity extends BridgeActivity {
             private boolean avenzoClientInstalled = false;
+            private long lastRootBackPress = 0L;
 
             @Override
             public void onCreate(Bundle savedInstanceState) {
               super.onCreate(savedInstanceState);
+
+              getOnBackPressedDispatcher().addCallback(
+                this,
+                new OnBackPressedCallback(true) {
+                  @Override
+                  public void handleOnBackPressed() {
+                    handleAvenzoBack();
+                  }
+                }
+              );
             }
 
             @Override
@@ -163,6 +183,7 @@ jobs:
 
               final WebView webView = getBridge().getWebView();
               webView.setOverScrollMode(WebView.OVER_SCROLL_NEVER);
+              webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
               webView.getSettings().setBuiltInZoomControls(false);
               webView.getSettings().setDisplayZoomControls(false);
 
@@ -175,26 +196,54 @@ jobs:
               });
 
               avenzoClientInstalled = true;
-              webView.postDelayed(() -> injectAvenzoShell(webView), 350);
-              webView.postDelayed(() -> injectAvenzoShell(webView), 1200);
+              webView.postDelayed(() -> injectAvenzoShell(webView), 250);
+              webView.postDelayed(() -> injectAvenzoShell(webView), 900);
             }
 
-            @Override
-            public void onBackPressed() {
+            private void handleAvenzoBack() {
               if (getBridge() == null || getBridge().getWebView() == null) {
-                super.onBackPressed();
+                handleRootExit();
                 return;
               }
 
               final WebView webView = getBridge().getWebView();
               webView.evaluateJavascript(
-                "(function(){try{return window.__avenzoHandleBack?window.__avenzoHandleBack():'exit';}catch(e){return 'exit';}})();",
+                "(function(){try{return window.__avenzoHandleBack?window.__avenzoHandleBack():'history';}catch(e){return 'history';}})();",
                 result -> {
-                  if ("\"exit\"".equals(result) || "null".equals(result)) {
-                    MainActivity.super.onBackPressed();
+                  if ("\"handled\"".equals(result)) {
+                    lastRootBackPress = 0L;
+                    return;
                   }
+
+                  if ("\"history\"".equals(result)) {
+                    lastRootBackPress = 0L;
+                    if (webView.canGoBack()) {
+                      webView.goBack();
+                    } else {
+                      webView.loadUrl("https://avenzo-ivory.vercel.app/home");
+                    }
+                    return;
+                  }
+
+                  handleRootExit();
                 }
               );
+            }
+
+            private void handleRootExit() {
+              long now = System.currentTimeMillis();
+              if (now - lastRootBackPress <= 2000L) {
+                lastRootBackPress = 0L;
+                moveTaskToBack(true);
+                return;
+              }
+
+              lastRootBackPress = now;
+              Toast.makeText(
+                this,
+                "Press back again to exit",
+                Toast.LENGTH_SHORT
+              ).show();
             }
 
             private String readAssetText(String path) throws Exception {
