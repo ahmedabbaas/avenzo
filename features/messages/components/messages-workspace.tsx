@@ -139,7 +139,8 @@ export default function MessagesWorkspace({
   const [tab, setTab] = useState<"inbox" | "requests">("inbox");
   const [newMessageOpen, setNewMessageOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
-  const [reactionFor, setReactionFor] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [actionMessage, setActionMessage] = useState<DirectMessage | null>(null);
   const [typing, setTyping] = useState(false);
   const [otherOnline, setOtherOnline] = useState(false);
   const [otherAllowsOnline, setOtherAllowsOnline] = useState(false);
@@ -155,6 +156,8 @@ export default function MessagesWorkspace({
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const stickToBottomRef = useRef(true);
   const typingTimer = useRef<number | null>(null);
+  const messageHoldTimerRef = useRef<number | null>(null);
+  const messageHoldStartRef = useRef<{ x: number; y: number } | null>(null);
   const activeRef = useRef<InboxConversation | null>(null);
   const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(
     null
@@ -194,6 +197,44 @@ export default function MessagesWorkspace({
     const timer = window.setTimeout(() => setNotice(""), 5200);
     return () => window.clearTimeout(timer);
   }, [notice]);
+
+  function clearMessageHold() {
+    if (messageHoldTimerRef.current !== null) {
+      window.clearTimeout(messageHoldTimerRef.current);
+      messageHoldTimerRef.current = null;
+    }
+    messageHoldStartRef.current = null;
+  }
+
+  function startMessageHold(message: DirectMessage, x: number, y: number) {
+    clearMessageHold();
+    if (message.deleted_for_everyone_at) return;
+
+    messageHoldStartRef.current = { x, y };
+    messageHoldTimerRef.current = window.setTimeout(() => {
+      setActionMessage(message);
+      messageHoldTimerRef.current = null;
+      messageHoldStartRef.current = null;
+      if ("vibrate" in navigator) {
+        navigator.vibrate(18);
+      }
+    }, 420);
+  }
+
+  function moveMessageHold(x: number, y: number) {
+    const start = messageHoldStartRef.current;
+    if (!start) return;
+    if (Math.abs(x - start.x) > 10 || Math.abs(y - start.y) > 10) {
+      clearMessageHold();
+    }
+  }
+
+  function openMessageActions(message: DirectMessage) {
+    clearMessageHold();
+    if (!message.deleted_for_everyone_at) {
+      setActionMessage(message);
+    }
+  }
 
   const loadLists = useCallback(async () => {
     const [nextInbox, nextRequests] = await Promise.all([
@@ -630,7 +671,6 @@ export default function MessagesWorkspace({
       message.id,
       mine?.emoji === emoji ? null : emoji
     );
-    setReactionFor(null);
     setMessages(
       await fetchConversationMessages(
         supabase,
@@ -975,6 +1015,13 @@ export default function MessagesWorkspace({
                 View Profile
               </Link>
               <button
+                className="icon-button dm-head-search-button"
+                onClick={() => setSearchOpen((value) => !value)}
+                aria-label="Search messages"
+              >
+                <Icon name="search" size={19} />
+              </button>
+              <button
                 className="icon-button dm-more-button"
                 onClick={() => setMoreOpen((value) => !value)}
                 aria-label="Conversation options"
@@ -1006,7 +1053,7 @@ export default function MessagesWorkspace({
               )}
             </header>
 
-            <div className="dm-chat-tools">
+            <div className={"dm-chat-tools " + (searchOpen ? "open" : "")}>
               <label>
                 <Icon name="search" size={15} />
                 <input
@@ -1115,7 +1162,29 @@ export default function MessagesWorkspace({
                       <div
                         id={"message-" + message.id}
                         className={"dm-message-row " + (own ? "me" : "them")}
+                        onContextMenu={(event) => {
+                          event.preventDefault();
+                          openMessageActions(message);
+                        }}
+                        onPointerDown={(event) =>
+                          startMessageHold(message, event.clientX, event.clientY)
+                        }
+                        onPointerMove={(event) =>
+                          moveMessageHold(event.clientX, event.clientY)
+                        }
+                        onPointerUp={clearMessageHold}
+                        onPointerCancel={clearMessageHold}
+                        onPointerLeave={clearMessageHold}
                       >
+                        {!own && (
+                          <span className="dm-message-avatar" aria-hidden="true">
+                            <AvatarImage
+                              src={avatarFor(activeProfile)}
+                              alt=""
+                              size={56}
+                            />
+                          </span>
+                        )}
                         <div className="dm-message-stack">
                           {message.reply_to && (
                             <button
@@ -1389,84 +1458,16 @@ export default function MessagesWorkspace({
                           </div>
 
                           {!message.deleted_for_everyone_at && (
-                            <div className="dm-message-actions">
-                              <button onClick={() => setReplyTo(message)}>
-                                Reply
-                              </button>
-                              {message.body && (
-                                <button
-                                  onClick={() =>
-                                    void messageAction("copy", message)
-                                  }
-                                >
-                                  Copy
-                                </button>
-                              )}
-                              <button
-                                onClick={() =>
-                                  setReactionFor(
-                                    reactionFor === message.id
-                                      ? null
-                                      : message.id
-                                  )
-                                }
-                              >
-                                React
-                              </button>
-                              {own &&
-                                message.message_type === "text" && (
-                                  <button
-                                    onClick={() =>
-                                      void messageAction("edit", message)
-                                    }
-                                  >
-                                    Edit
-                                  </button>
-                                )}
-                              <button
-                                onClick={() =>
-                                  void messageAction("delete_me", message)
-                                }
-                              >
-                                Delete for me
-                              </button>
-                              {own && (
-                                <button
-                                  onClick={() =>
-                                    void messageAction(
-                                      "delete_everyone",
-                                      message
-                                    )
-                                  }
-                                >
-                                  Delete for everyone
-                                </button>
-                              )}
-                              {!own && (
-                                <button
-                                  onClick={() =>
-                                    void messageAction("report", message)
-                                  }
-                                >
-                                  Report
-                                </button>
-                              )}
-
-                              {reactionFor === message.id && (
-                                <span className="dm-reaction-picker">
-                                  {REACTIONS.map((emoji) => (
-                                    <button
-                                      key={emoji}
-                                      onClick={() =>
-                                        void react(message, emoji)
-                                      }
-                                    >
-                                      {emoji}
-                                    </button>
-                                  ))}
-                                </span>
-                              )}
-                            </div>
+                            <button
+                              type="button"
+                              className="dm-message-menu-trigger"
+                              onClick={() => openMessageActions(message)}
+                              aria-label="Message options"
+                              title="Message options"
+                            >
+                              •••
+                            </button>
+                          )}
                           )}
                         </div>
                       </div>
@@ -1508,11 +1509,11 @@ export default function MessagesWorkspace({
                 <div className="dm-compose-row">
                   <button
                     type="button"
-                    className="dm-compose-icon"
+                    className="dm-compose-icon dm-camera-button"
                     onClick={() => fileRef.current?.click()}
-                    aria-label="Attach image, video, audio or file"
+                    aria-label="Add photo or video"
                   >
-                    <Icon name="paperclip" size={19} />
+                    <Icon name="camera" size={20} />
                   </button>
                   <input
                     ref={fileRef}
@@ -1521,14 +1522,6 @@ export default function MessagesWorkspace({
                     accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,audio/webm,audio/mpeg,audio/mp4,application/pdf,text/plain"
                     onChange={(event) => void attach(event)}
                   />
-                  <button
-                    type="button"
-                    className="dm-compose-icon"
-                    onClick={() => setText((value) => value + " ❤️")}
-                    aria-label="Add emoji"
-                  >
-                    <Icon name="smile" size={19} />
-                  </button>
                   <textarea
                     value={text}
                     rows={1}
@@ -1546,6 +1539,22 @@ export default function MessagesWorkspace({
                     aria-label="Message"
                   />
                   <button
+                    type="button"
+                    className="dm-compose-icon dm-emoji-button"
+                    onClick={() => setText((value) => value + " ❤️")}
+                    aria-label="Add emoji"
+                  >
+                    <Icon name="smile" size={19} />
+                  </button>
+                  <button
+                    type="button"
+                    className="dm-compose-icon dm-attach-button"
+                    onClick={() => fileRef.current?.click()}
+                    aria-label="Attach file"
+                  >
+                    <Icon name="paperclip" size={19} />
+                  </button>
+                  <button
                     className="send-button dm-send-button"
                     disabled={!text.trim() || sending}
                     aria-label={sending ? "Sending message" : "Send message"}
@@ -1559,6 +1568,123 @@ export default function MessagesWorkspace({
           </>
         )}
       </section>
+
+      {actionMessage && (
+        <div
+          className="modal dm-message-action-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Message actions"
+          onClick={() => setActionMessage(null)}
+        >
+          <div
+            className="dm-message-action-sheet"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="dm-action-grabber" />
+            <div className="dm-action-reactions" aria-label="React to message">
+              {REACTIONS.map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => {
+                    const message = actionMessage;
+                    setActionMessage(null);
+                    void react(message, emoji);
+                  }}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+
+            <div className="dm-action-list">
+              <button
+                type="button"
+                onClick={() => {
+                  setReplyTo(actionMessage);
+                  setActionMessage(null);
+                }}
+              >
+                Reply
+              </button>
+
+              {actionMessage.body && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const message = actionMessage;
+                    setActionMessage(null);
+                    void messageAction("copy", message);
+                  }}
+                >
+                  Copy
+                </button>
+              )}
+
+              {actionMessage.sender_id === currentUser.id &&
+                actionMessage.message_type === "text" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const message = actionMessage;
+                      setActionMessage(null);
+                      void messageAction("edit", message);
+                    }}
+                  >
+                    Edit
+                  </button>
+                )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  const message = actionMessage;
+                  setActionMessage(null);
+                  void messageAction("delete_me", message);
+                }}
+              >
+                Delete for me
+              </button>
+
+              {actionMessage.sender_id === currentUser.id ? (
+                <button
+                  type="button"
+                  className="danger"
+                  onClick={() => {
+                    const message = actionMessage;
+                    setActionMessage(null);
+                    void messageAction("delete_everyone", message);
+                  }}
+                >
+                  Delete for everyone
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="danger"
+                  onClick={() => {
+                    const message = actionMessage;
+                    setActionMessage(null);
+                    void messageAction("report", message);
+                  }}
+                >
+                  Report
+                </button>
+              )}
+            </div>
+
+            <button
+              type="button"
+              className="dm-action-cancel"
+              onClick={() => setActionMessage(null)}
+              aria-label="Close message actions"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {newMessageOpen && (
         <div className="modal" role="dialog" aria-modal="true">
