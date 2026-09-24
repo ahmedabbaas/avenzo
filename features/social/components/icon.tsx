@@ -20,7 +20,9 @@ export type IconName =
   | "back"
   | "paperclip"
   | "smile"
-  | "more";
+  | "more"
+  | "reels"
+  | "eye";
 
 
 export default function Icon({ name, size = 19 }: { name: IconName; size?: number }) {
@@ -120,6 +122,18 @@ export default function Icon({ name, size = 19 }: { name: IconName; size?: numbe
         <circle cx="5" cy="12" r="1" />
         <circle cx="12" cy="12" r="1" />
         <circle cx="19" cy="12" r="1" />
+      </>
+    ),
+    reels: (
+      <>
+        <rect x="5" y="3" width="14" height="18" rx="3" />
+        <path d="m10 9 5 3-5 3V9Z" />
+      </>
+    ),
+    eye: (
+      <>
+        <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+        <circle cx="12" cy="12" r="2.5" />
       </>
     ),
   };
