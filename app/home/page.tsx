@@ -31,6 +31,14 @@ export default async function HomePage({
     redirect("/settings");
   }
 
+  if (params.screen === "messages") {
+    const chat =
+      typeof params.chat === "string"
+        ? "?user=" + encodeURIComponent(params.chat)
+        : "";
+    redirect("/messages" + chat);
+  }
+
   const initialChatUsername =
     typeof params.chat === "string" ? params.chat.toLowerCase() : "";
   const allowedScreens = new Set([
