@@ -1,0 +1,808 @@
+/* AVENZO MOBILE APP FRAME v1 */
+
+/* Phone-first shell shared by mobile web + Android WebView. */
+@media(max-width:780px){
+  html,body,#main-content{
+    width:100%;
+    min-width:0;
+    min-height:100%;
+    overflow-x:hidden;
+  }
+
+  html{
+    background:var(--bg);
+    overscroll-behavior:none;
+  }
+
+  body{
+    min-height:100dvh;
+    overscroll-behavior-y:none;
+    -webkit-text-size-adjust:100%;
+  }
+
+  input,textarea,select{
+    font-size:16px;
+  }
+
+  /* Native-feeling top app bar */
+  .top{
+    height:calc(58px + env(safe-area-inset-top));
+    min-height:calc(58px + env(safe-area-inset-top));
+    padding:
+      env(safe-area-inset-top)
+      max(10px,env(safe-area-inset-right))
+      0
+      max(10px,env(safe-area-inset-left));
+    gap:7px;
+    box-shadow:0 1px 0 rgba(255,255,255,.02);
+  }
+
+  .brand{
+    flex:none;
+    min-width:36px;
+    padding:4px 2px;
+    gap:0;
+  }
+
+  .brand>span{
+    display:none;
+  }
+
+  .brand .avenzo-brand-logo{
+    width:34px;
+    height:34px;
+    border-radius:11px;
+  }
+
+  .search-wrap{
+    width:auto;
+    max-width:none;
+    min-height:40px;
+    margin:0;
+    flex:1;
+    border-radius:13px;
+    padding:0 10px;
+  }
+
+  .search-wrap input{
+    width:100%;
+    font-size:14px;
+  }
+
+  .top-profile{
+    flex:none;
+    width:38px;
+    height:38px;
+    padding:3px;
+    justify-content:center;
+  }
+
+  .top-profile img,.top-profile .avatar{
+    width:32px;
+    height:32px;
+  }
+
+  /* Feed frame */
+  .social-layout{
+    display:block;
+    width:100%;
+    max-width:none;
+    margin:0;
+    padding:
+      10px
+      max(0px,env(safe-area-inset-right))
+      calc(82px + env(safe-area-inset-bottom))
+      max(0px,env(safe-area-inset-left));
+  }
+
+  .social-main{
+    width:100%;
+    max-width:none;
+    min-width:0;
+  }
+
+  .welcome{
+    margin:0 10px;
+    padding:18px;
+    border-radius:20px;
+    gap:14px;
+  }
+
+  .welcome h1{
+    margin-top:7px;
+    font-size:clamp(28px,8.8vw,34px);
+  }
+
+  .welcome p{
+    font-size:13px;
+    line-height:1.5;
+  }
+
+  .welcome .btn{
+    width:100%;
+    justify-content:center;
+  }
+
+  .stories-row{
+    margin:0;
+    padding:16px 10px 8px;
+    scroll-padding-inline:10px;
+  }
+
+  .feed-toolbar,.section-title{
+    margin-inline:10px;
+  }
+
+  .section-title h2{
+    font-size:28px;
+  }
+
+  .people-grid{
+    padding-inline:10px;
+  }
+
+  .post-card,.reel-card{
+    margin:10px 8px;
+    border-radius:18px;
+    box-shadow:none;
+  }
+
+  .post-head{
+    padding:13px 13px 9px;
+  }
+
+  .person-line img{
+    width:38px;
+    height:38px;
+  }
+
+  .post-caption,.reel-card-title{
+    padding-left:13px;
+    padding-right:13px;
+  }
+
+  .content-meta-line{
+    padding-left:13px;
+    padding-right:13px;
+  }
+
+  .post-media,.reel-media{
+    width:100%;
+    max-height:72dvh;
+    object-fit:contain;
+    background:#030405;
+  }
+
+  .post-content{
+    padding:11px 13px 14px;
+  }
+
+  .post-actions{
+    gap:18px;
+  }
+
+  .post-actions button,.post-stat{
+    min-height:40px;
+  }
+
+  .comment-input{
+    min-height:45px;
+  }
+
+  /* Exactly six mobile destinations fit the phone frame. */
+  .mobile-nav{
+    grid-template-columns:repeat(6,minmax(0,1fr));
+    min-height:calc(64px + env(safe-area-inset-bottom));
+    padding:
+      6px
+      max(4px,env(safe-area-inset-right))
+      calc(6px + env(safe-area-inset-bottom))
+      max(4px,env(safe-area-inset-left));
+    background:rgba(6,8,10,.96);
+    border-top-color:rgba(255,255,255,.08);
+    box-shadow:0 -10px 35px rgba(0,0,0,.18);
+  }
+
+  .mobile-nav button{
+    min-width:0;
+    min-height:50px;
+    gap:2px;
+    padding:4px 1px;
+    border-radius:12px;
+  }
+
+  .mobile-nav button:active{
+    background:rgba(255,255,255,.055);
+  }
+
+  .mobile-nav small{
+    max-width:100%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    font-size:8px;
+    line-height:1.1;
+  }
+
+  .mobile-icon-wrap{
+    min-height:26px;
+  }
+
+  .mobile-create .mobile-icon-wrap{
+    width:36px;
+    height:30px;
+    border-radius:11px;
+  }
+
+  /* Own profile */
+  .profile-page{
+    padding-inline:10px;
+  }
+
+  .profile-hero{
+    grid-template-columns:82px minmax(0,1fr);
+    gap:14px;
+    padding:14px 0 19px;
+  }
+
+  .profile-hero>img{
+    width:82px;
+    height:82px;
+    padding:3px;
+  }
+
+  .profile-hero-copy{
+    min-width:0;
+  }
+
+  .profile-title-row{
+    display:block;
+  }
+
+  .profile-hero h1{
+    margin-top:4px;
+    font-size:26px;
+    line-height:1.05;
+  }
+
+  .profile-edit{
+    width:100%;
+    min-height:38px;
+    margin-top:9px;
+    justify-content:center;
+  }
+
+  .profile-bio{
+    margin-top:12px;
+    font-size:12px;
+    line-height:1.5;
+  }
+
+  .profile-stats{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px 10px;
+    margin-top:14px;
+  }
+
+  .profile-stats span{
+    display:flex;
+    align-items:baseline;
+    gap:5px;
+  }
+
+  .profile-create-panel{
+    margin-top:14px;
+    padding-top:13px;
+    gap:8px;
+  }
+
+  .profile-create-panel .profile-create-actions{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    width:100%;
+    gap:6px;
+  }
+
+  .profile-create-panel .profile-create-actions .btn{
+    width:100%;
+    min-width:0;
+    padding-inline:7px;
+    font-size:10px;
+  }
+
+  .profile-content-tabs{
+    margin:12px 0 0;
+    position:sticky;
+    top:calc(58px + env(safe-area-inset-top));
+    z-index:16;
+    backdrop-filter:blur(14px);
+  }
+
+  .profile-content-section{
+    padding-top:19px;
+  }
+
+  .profile-section-head{
+    min-height:38px;
+  }
+
+  .profile-section-head h2{
+    font-size:23px;
+  }
+
+  .profile-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:3px;
+    margin-top:10px;
+  }
+
+  .profile-grid img,
+  .profile-grid video,
+  .profile-text-post,
+  .profile-reel-tile{
+    border-radius:8px;
+  }
+
+  /* Public user profile */
+  .public-profile-shell{
+    min-height:100dvh;
+  }
+
+  .public-profile-top{
+    height:calc(58px + env(safe-area-inset-top));
+    padding:
+      env(safe-area-inset-top)
+      max(10px,env(safe-area-inset-right))
+      0
+      max(10px,env(safe-area-inset-left));
+  }
+
+  .public-brand{
+    font-size:17px;
+    gap:7px;
+  }
+
+  .public-brand .avenzo-brand-logo{
+    width:32px;
+    height:32px;
+  }
+
+  .public-profile-wrap{
+    width:100%;
+    padding:
+      12px
+      max(10px,env(safe-area-inset-right))
+      calc(28px + env(safe-area-inset-bottom))
+      max(10px,env(safe-area-inset-left));
+  }
+
+  .public-profile-hero{
+    grid-template-columns:78px minmax(0,1fr);
+    gap:13px;
+    padding:16px;
+    border-radius:20px;
+  }
+
+  .public-profile-hero>img{
+    width:78px;
+    height:78px;
+    padding:3px;
+  }
+
+  .public-profile-copy h1{
+    margin-top:5px;
+    font-size:27px;
+  }
+
+  .public-profile-copy>p{
+    margin-top:10px;
+    font-size:12px;
+  }
+
+  .public-profile-stats{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;
+    margin-top:14px;
+  }
+
+  .public-profile-stats span{
+    display:grid;
+    gap:2px;
+  }
+
+  .public-profile-actions{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:7px;
+    margin-top:14px;
+  }
+
+  .public-profile-actions .btn,
+  .public-profile-actions a{
+    width:100%;
+    justify-content:center;
+  }
+
+  .public-profile-actions .profile-safety-menu{
+    grid-column:auto;
+  }
+
+  .public-profile-tabs{
+    margin-top:12px;
+  }
+
+  .public-profile-section-title{
+    padding:22px 2px 10px;
+  }
+
+  .public-profile-section-title h2{
+    font-size:22px;
+  }
+
+  .public-profile-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:3px;
+  }
+
+  .public-profile-grid img,
+  .public-profile-grid video{
+    border-radius:7px;
+  }
+
+  /* Messages behave like a native two-screen inbox/chat flow. */
+  .messages-page{
+    height:100dvh;
+    padding:
+      env(safe-area-inset-top)
+      env(safe-area-inset-right)
+      env(safe-area-inset-bottom)
+      env(safe-area-inset-left);
+  }
+
+  .messages-page-topbar{
+    height:54px;
+    min-height:54px;
+    padding:0 10px;
+  }
+
+  .messages-brand{
+    gap:7px;
+  }
+
+  .messages-brand .avenzo-brand-logo{
+    width:30px;
+    height:30px;
+  }
+
+  .dm-workspace{
+    width:100%;
+    height:auto;
+    min-height:0;
+    flex:1;
+    border:0;
+    border-radius:0;
+  }
+
+  .dm-sidebar-head{
+    padding:14px 12px 10px;
+  }
+
+  .dm-tabs,.dm-search{
+    margin-left:10px;
+    margin-right:10px;
+  }
+
+  .dm-conversation-list{
+    padding-inline:6px;
+    padding-bottom:calc(10px + env(safe-area-inset-bottom));
+  }
+
+  .dm-conversation{
+    min-height:68px;
+    grid-template-columns:46px minmax(0,1fr) auto;
+    gap:9px;
+    padding:9px 8px;
+  }
+
+  .dm-conversation img{
+    width:46px;
+    height:46px;
+  }
+
+  .dm-chat-head{
+    min-height:58px;
+    grid-template-columns:38px 40px minmax(0,1fr) 38px;
+    padding:7px 8px;
+    gap:7px;
+  }
+
+  .dm-chat-head>img{
+    width:40px!important;
+    height:40px!important;
+  }
+
+  .dm-chat-tools{
+    min-height:39px;
+    padding:5px 9px;
+  }
+
+  .dm-message-area{
+    padding:13px 10px 18px;
+  }
+
+  .dm-message-stack{
+    max-width:91%;
+  }
+
+  .dm-bubble{
+    border-radius:17px;
+    font-size:13px;
+    line-height:1.45;
+  }
+
+  .dm-composer{
+    padding:
+      7px
+      8px
+      max(8px,env(safe-area-inset-bottom));
+  }
+
+  .dm-compose-row{
+    min-height:50px;
+    grid-template-columns:36px 36px minmax(0,1fr) 38px;
+    gap:3px;
+    border-radius:16px;
+    padding:5px;
+  }
+
+  .dm-compose-row textarea{
+    min-height:34px;
+    max-height:96px;
+    font-size:16px!important;
+    padding:8px!important;
+  }
+
+  /* Reels use the whole physical phone display safely. */
+  .reels-page,.reels-viewport,.reel-slide{
+    height:100dvh;
+    min-height:100dvh;
+  }
+
+  .reels-topbar{
+    height:calc(56px + env(safe-area-inset-top));
+    padding:
+      calc(7px + env(safe-area-inset-top))
+      max(9px,env(safe-area-inset-right))
+      7px
+      max(9px,env(safe-area-inset-left));
+    gap:7px;
+  }
+
+  .reels-topbar>div>b{
+    font-size:15px;
+  }
+
+  .reel-slide{
+    width:100%;
+    min-height:0;
+    border:0;
+  }
+
+  .reel-slide-video{
+    object-fit:cover;
+  }
+
+  .reel-overlay{
+    grid-template-columns:minmax(0,1fr) 48px;
+    gap:9px;
+    padding:
+      76px
+      max(11px,env(safe-area-inset-right))
+      calc(16px + env(safe-area-inset-bottom))
+      max(11px,env(safe-area-inset-left));
+  }
+
+  .reel-overlay-copy{
+    gap:7px;
+  }
+
+  .reel-overlay-copy h2{
+    font-size:20px;
+  }
+
+  .reel-overlay-copy p{
+    font-size:12px;
+    line-height:1.45;
+  }
+
+  .reel-actions-rail{
+    gap:9px;
+  }
+
+  .reel-actions-rail button,.reel-metric{
+    width:46px;
+    min-height:46px;
+    border-radius:14px;
+  }
+
+  .reel-comments-drawer{
+    height:min(66dvh,620px);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+
+  /* Composer and dialogs become phone bottom sheets. */
+  .modal{
+    align-items:end;
+    justify-items:stretch;
+    padding:
+      max(8px,env(safe-area-inset-top))
+      0
+      0;
+    background:rgba(0,0,0,.64);
+  }
+
+  .modal-box,
+  .create-upload-panel,
+  .dm-new-message-modal{
+    width:100%;
+    max-width:none;
+    max-height:calc(100dvh - max(8px,env(safe-area-inset-top)));
+    margin:0;
+    overflow:auto;
+    border-left:0;
+    border-right:0;
+    border-bottom:0;
+    border-radius:24px 24px 0 0;
+    padding:
+      17px
+      14px
+      calc(16px + env(safe-area-inset-bottom));
+  }
+
+  .create-upload-panel .modal-header{
+    top:-17px;
+    margin:-17px -14px 0;
+    padding:16px 14px 10px;
+  }
+
+  .create-type-tabs{
+    position:sticky;
+    top:49px;
+    z-index:3;
+  }
+
+  .upload-dropzone{
+    min-height:132px;
+    padding:18px 14px;
+    border-radius:16px;
+  }
+
+  .upload-preview-frame{
+    max-height:52dvh;
+  }
+
+  .upload-preview-frame.vertical{
+    width:min(280px,78vw);
+    max-height:none;
+  }
+
+  .create-field textarea{
+    min-height:84px;
+  }
+
+  .modal-actions{
+    position:sticky;
+    bottom:calc(-16px - env(safe-area-inset-bottom));
+    z-index:4;
+    margin:16px -14px calc(-16px - env(safe-area-inset-bottom));
+    padding:
+      11px
+      14px
+      calc(12px + env(safe-area-inset-bottom));
+    background:linear-gradient(to top,var(--panel) 82%,rgba(12,16,19,.92));
+    border-top:1px solid var(--line);
+  }
+
+  .modal-actions .btn{
+    flex:1;
+    justify-content:center;
+    min-height:44px;
+  }
+
+  /* Settings + authentication */
+  .settings-page-shell{
+    padding-bottom:calc(58px + env(safe-area-inset-bottom));
+  }
+
+  .settings-mobile-head{
+    min-height:calc(56px + env(safe-area-inset-top));
+    padding-top:env(safe-area-inset-top);
+  }
+
+  .auth-shell{
+    min-height:100dvh;
+    padding:
+      calc(18px + env(safe-area-inset-top))
+      16px
+      calc(20px + env(safe-area-inset-bottom));
+  }
+
+  .auth-brand-panel>.auth-brand{
+    margin-bottom:28px;
+  }
+
+  .auth-card{
+    width:100%;
+    max-width:none;
+    padding:21px 18px;
+    border-radius:22px;
+  }
+
+  .toast{
+    left:10px;
+    right:10px;
+    bottom:calc(74px + env(safe-area-inset-bottom));
+    max-width:none;
+    text-align:center;
+  }
+}
+
+@media(max-width:390px){
+  .search-wrap{
+    min-height:38px;
+  }
+
+  .search-wrap input{
+    font-size:13px;
+  }
+
+  .mobile-nav small{
+    font-size:7.5px;
+  }
+
+  .profile-hero{
+    grid-template-columns:72px minmax(0,1fr);
+  }
+
+  .profile-hero>img{
+    width:72px;
+    height:72px;
+  }
+
+  .profile-hero h1{
+    font-size:23px;
+  }
+
+  .profile-create-panel .profile-create-actions .btn{
+    font-size:9px;
+    padding-inline:4px;
+  }
+
+  .public-profile-hero{
+    grid-template-columns:70px minmax(0,1fr);
+    padding:13px;
+  }
+
+  .public-profile-hero>img{
+    width:70px;
+    height:70px;
+  }
+
+  .public-profile-copy h1{
+    font-size:24px;
+  }
+}
+
+html[data-theme="light"] .mobile-nav{
+  background:rgba(245,247,248,.97);
+  border-top-color:var(--line);
+}
+
+html[data-theme="light"] .mobile-nav button:active{
+  background:#e9eef0;
+}
+
+html[data-theme="light"] .modal-actions{
+  background:linear-gradient(to top,#fff 82%,rgba(255,255,255,.94));
+}

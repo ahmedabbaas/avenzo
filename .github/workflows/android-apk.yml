@@ -90,6 +90,137 @@ jobs:
           styles.write_text(text)
           PY
 
+      - name: Inject AVENZO native mobile shell
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64
+
+          css = Path("mobile-shell/app-mobile.css").read_text()
+          logo = base64.b64encode(Path("public/avenzo-logo.webp").read_bytes()).decode()
+
+          js = r"""
+          (function(){
+            try {
+              var styleId = "avenzo-android-mobile-style";
+              var style = document.getElementById(styleId);
+              if (!style) {
+                style = document.createElement("style");
+                style.id = styleId;
+                document.head.appendChild(style);
+              }
+              style.textContent = atob("__CSS__");
+              document.documentElement.classList.add("avenzo-android-app");
+
+              var logo = "data:image/webp;base64,__LOGO__";
+              function brandImage(size) {
+                var img = document.createElement("img");
+                img.src = logo;
+                img.alt = "";
+                img.setAttribute("aria-hidden", "true");
+                img.className = "avenzo-native-logo";
+                img.style.width = size + "px";
+                img.style.height = size + "px";
+                img.style.objectFit = "cover";
+                img.style.borderRadius = Math.max(9, Math.round(size * .3)) + "px";
+                img.style.flex = "0 0 auto";
+                return img;
+              }
+
+              function applyBranding() {
+                document.querySelectorAll(".brand,.public-brand,.messages-brand").forEach(function(el){
+                  if (el.querySelector(".avenzo-brand-logo,.avenzo-native-logo")) return;
+                  var mark = el.querySelector(":scope > i");
+                  if (!mark) {
+                    var span = el.querySelector(":scope > span");
+                    if (span && span.textContent.trim() === "A") mark = span;
+                  }
+                  var img = brandImage(el.classList.contains("brand") ? 34 : 31);
+                  if (mark) mark.replaceWith(img); else el.prepend(img);
+                });
+
+                document.querySelectorAll(".brand-mark").forEach(function(mark){
+                  if (mark.parentElement && mark.parentElement.querySelector(".avenzo-native-logo")) return;
+                  mark.replaceWith(brandImage(52));
+                });
+              }
+
+              applyBranding();
+              if (!window.__avenzoNativeBrandObserver) {
+                window.__avenzoNativeBrandObserver = new MutationObserver(applyBranding);
+                window.__avenzoNativeBrandObserver.observe(document.documentElement, {
+                  childList: true,
+                  subtree: true
+                });
+              }
+            } catch (e) {}
+          })();
+          """
+          js = js.replace("__CSS__", base64.b64encode(css.encode()).decode())
+          js = js.replace("__LOGO__", logo)
+          script_b64 = base64.b64encode(js.encode()).decode()
+
+          java = f"""package com.avenzo.app;
+
+          import android.os.Bundle;
+          import android.util.Base64;
+          import android.webkit.WebView;
+          import com.getcapacitor.BridgeActivity;
+          import com.getcapacitor.BridgeWebViewClient;
+          import java.nio.charset.StandardCharsets;
+
+          public class MainActivity extends BridgeActivity {{
+            private boolean avenzoClientInstalled = false;
+            private static final String AVENZO_SCRIPT_B64 = "{script_b64}";
+
+            @Override
+            public void onCreate(Bundle savedInstanceState) {{
+              super.onCreate(savedInstanceState);
+            }}
+
+            @Override
+            public void onResume() {{
+              super.onResume();
+
+              if (avenzoClientInstalled || getBridge() == null || getBridge().getWebView() == null) {{
+                return;
+              }}
+
+              final WebView webView = getBridge().getWebView();
+              webView.setOverScrollMode(WebView.OVER_SCROLL_NEVER);
+              webView.getSettings().setBuiltInZoomControls(false);
+              webView.getSettings().setDisplayZoomControls(false);
+
+              webView.setWebViewClient(new BridgeWebViewClient(getBridge()) {{
+                @Override
+                public void onPageFinished(WebView view, String url) {{
+                  super.onPageFinished(view, url);
+                  injectAvenzoShell(view);
+                }}
+              }});
+
+              avenzoClientInstalled = true;
+              webView.postDelayed(() -> injectAvenzoShell(webView), 350);
+              webView.postDelayed(() -> injectAvenzoShell(webView), 1200);
+            }}
+
+            private void injectAvenzoShell(WebView view) {{
+              try {{
+                byte[] decoded = Base64.decode(AVENZO_SCRIPT_B64, Base64.DEFAULT);
+                String script = new String(decoded, StandardCharsets.UTF_8);
+                view.evaluateJavascript(script, null);
+              }} catch (Exception ignored) {{
+              }}
+            }}
+          }}
+          """
+
+          main = Path("android/app/src/main/java/com/avenzo/app/MainActivity.java")
+          main.parent.mkdir(parents=True, exist_ok=True)
+          main.write_text(java)
+          PY
+
       - name: Build installable debug APK
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
