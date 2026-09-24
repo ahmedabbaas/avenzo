@@ -22,7 +22,9 @@ export type IconName =
   | "smile"
   | "more"
   | "reels"
-  | "eye";
+  | "eye"
+  | "phone"
+  | "mic";
 
 
 export default function Icon({ name, size = 19 }: { name: IconName; size?: number }) {
@@ -134,6 +136,15 @@ export default function Icon({ name, size = 19 }: { name: IconName; size?: numbe
       <>
         <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
         <circle cx="12" cy="12" r="2.5" />
+      </>
+    ),
+    phone: (
+      <path d="M7 4.5 10 8 8.4 10.3a15.2 15.2 0 0 0 5.3 5.3L16 14l3.5 3c.5.4.6 1.1.2 1.6l-1.2 1.5c-.5.6-1.2.9-2 .8-6.7-.8-12.6-6.7-13.4-13.4-.1-.8.2-1.5.8-2l1.5-1.2c.5-.4 1.2-.3 1.6.2Z" />
+    ),
+    mic: (
+      <>
+        <rect x="9" y="3" width="6" height="11" rx="3" />
+        <path d="M6.5 11.5a5.5 5.5 0 0 0 11 0M12 17v4M9 21h6" />
       </>
     ),
   };

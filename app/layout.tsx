@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import PreferencesBootstrap from "../features/settings/components/preferences-bootstrap";
 import NativeMessageNotifications from "../features/notifications/components/native-message-notifications";
+import CallManager from "../features/messages/components/call-manager";
 
 export const metadata: Metadata = {
   applicationName: "AVENZO",
@@ -47,6 +48,7 @@ export default function RootLayout({
       <body>
         <PreferencesBootstrap />
         <NativeMessageNotifications />
+        <CallManager />
         <a className="skip-link" href="#main-content">
           Skip to main content
         </a>
