@@ -15,6 +15,7 @@ export default function ReelCard({
   onLike,
   onSave,
   onComment,
+  onShare,
   onDelete,
   autoplayVideo = false,
   dataSaving = false,
@@ -26,6 +27,7 @@ export default function ReelCard({
   onLike: () => void;
   onSave: () => void;
   onComment: (value: string) => void;
+  onShare: () => void;
   onDelete: () => void;
   autoplayVideo?: boolean;
   dataSaving?: boolean;
@@ -93,6 +95,10 @@ export default function ReelCard({
             <Icon name="comment" size={20} />
             <span>{reel.commentCount}</span>
           </span>
+
+          <button onClick={onShare} aria-label="Share reel">
+            <Icon name="send" size={20} />
+          </button>
 
           <button
             className={"save-action " + (saved ? "saved" : "")}
