@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
 import { applyAppPreferences } from "../lib/apply-preferences";
 import type { AppSettings } from "../types";
+import { useUiTranslation } from "../lib/i18n";
 
 function Toggle({
   checked,
@@ -58,6 +59,7 @@ export default function AppSettingsForm({
   initialSettings: AppSettings;
 }) {
   const supabase = useMemo(() => createClient(), []);
+  const t = useUiTranslation();
   const [settings, setSettings] = useState(initialSettings);
   const [status, setStatus] = useState("");
   const [saving, setSaving] = useState(false);
@@ -134,7 +136,7 @@ export default function AppSettingsForm({
   return (
     <div className="settings-sections">
       <Section
-        title="Appearance"
+        title={t("Appearance")}
         text="Choose how AVENZO looks on this device."
       >
         <div className="theme-options">
@@ -152,10 +154,10 @@ export default function AppSettingsForm({
               </span>
               <strong>
                 {theme === "light"
-                  ? "Light Mode"
+                  ? t("Light Mode")
                   : theme === "dark"
-                    ? "Dark Mode"
-                    : "System Default"}
+                    ? t("Dark Mode")
+                    : t("System Default")}
               </strong>
             </button>
           ))}
@@ -163,11 +165,11 @@ export default function AppSettingsForm({
       </Section>
 
       <Section
-        title="Language"
+        title={t("Language")}
         text="Choose the language used by AVENZO."
       >
         <label className="settings-field">
-          <span>Application language</span>
+          <span>{t("Application language")}</span>
           <select
             value={settings.language}
             onChange={(event) =>
@@ -181,57 +183,57 @@ export default function AppSettingsForm({
       </Section>
 
       <Section
-        title="Notifications"
+        title={t("Notifications")}
         text="Control which social activity can notify you."
       >
-        <Toggle checked={settings.notify_likes} onChange={(v) => patch("notify_likes", v)} label="Likes" />
-        <Toggle checked={settings.notify_comments} onChange={(v) => patch("notify_comments", v)} label="Comments" />
-        <Toggle checked={settings.notify_followers} onChange={(v) => patch("notify_followers", v)} label="New followers" />
-        <Toggle checked={settings.notify_messages} onChange={(v) => patch("notify_messages", v)} label="Messages" />
-        <Toggle checked={settings.notify_mentions} onChange={(v) => patch("notify_mentions", v)} label="Mentions" />
-        <Toggle checked={settings.notify_stories} onChange={(v) => patch("notify_stories", v)} label="Stories" />
-        <Toggle checked={settings.notify_reels} onChange={(v) => patch("notify_reels", v)} label="Reels" />
-        <Toggle checked={settings.notify_other} onChange={(v) => patch("notify_other", v)} label="Other activity" />
+        <Toggle checked={settings.notify_likes} onChange={(v) => patch("notify_likes", v)} label={t("Likes")} />
+        <Toggle checked={settings.notify_comments} onChange={(v) => patch("notify_comments", v)} label={t("Comments")} />
+        <Toggle checked={settings.notify_followers} onChange={(v) => patch("notify_followers", v)} label={t("New followers")} />
+        <Toggle checked={settings.notify_messages} onChange={(v) => patch("notify_messages", v)} label={t("Messages")} />
+        <Toggle checked={settings.notify_mentions} onChange={(v) => patch("notify_mentions", v)} label={t("Mentions")} />
+        <Toggle checked={settings.notify_stories} onChange={(v) => patch("notify_stories", v)} label={t("Stories")} />
+        <Toggle checked={settings.notify_reels} onChange={(v) => patch("notify_reels", v)} label={t("Reels")} />
+        <Toggle checked={settings.notify_other} onChange={(v) => patch("notify_other", v)} label={t("Other activity")} />
       </Section>
 
       <Section
-        title="Feed Preferences"
+        title={t("Feed Preferences")}
         text="Tune what the home feed does and how much data it uses."
       >
-        <Toggle checked={settings.show_suggested_posts} onChange={(v) => patch("show_suggested_posts", v)} label="Show suggested posts" />
-        <Toggle checked={settings.feed_autoplay_videos} onChange={(v) => patch("feed_autoplay_videos", v)} label="Autoplay videos in feed" />
-        <Toggle checked={settings.show_sensitive_content} onChange={(v) => patch("show_sensitive_content", v)} label="Show sensitive content" />
-        <Toggle checked={settings.data_saving_mode} onChange={(v) => patch("data_saving_mode", v)} label="Data-saving mode" />
+        <Toggle checked={settings.show_suggested_posts} onChange={(v) => patch("show_suggested_posts", v)} label={t("Show suggested posts")} />
+        <Toggle checked={settings.feed_autoplay_videos} onChange={(v) => patch("feed_autoplay_videos", v)} label={t("Autoplay videos in feed")} />
+        <Toggle checked={settings.show_sensitive_content} onChange={(v) => patch("show_sensitive_content", v)} label={t("Show sensitive content")} />
+        <Toggle checked={settings.data_saving_mode} onChange={(v) => patch("data_saving_mode", v)} label={t("Data-saving mode")} />
       </Section>
 
       <Section
-        title="Media Settings"
+        title={t("Media Settings")}
         text="Control playback quality and upload behavior."
       >
-        <Toggle checked={settings.media_autoplay_videos} onChange={(v) => patch("media_autoplay_videos", v)} label="Autoplay videos" />
-        <Toggle checked={settings.high_quality_uploads} onChange={(v) => patch("high_quality_uploads", v)} label="High-quality media uploads" />
-        <Toggle checked={settings.use_less_mobile_data} onChange={(v) => patch("use_less_mobile_data", v)} label="Use less mobile data" />
+        <Toggle checked={settings.media_autoplay_videos} onChange={(v) => patch("media_autoplay_videos", v)} label={t("Autoplay videos")} />
+        <Toggle checked={settings.high_quality_uploads} onChange={(v) => patch("high_quality_uploads", v)} label={t("High-quality media uploads")} />
+        <Toggle checked={settings.use_less_mobile_data} onChange={(v) => patch("use_less_mobile_data", v)} label={t("Use less mobile data")} />
       </Section>
 
       <Section
-        title="Accessibility"
+        title={t("Accessibility")}
         text="Adjust motion, text size and contrast."
       >
-        <Toggle checked={settings.reduce_animations} onChange={(v) => patch("reduce_animations", v)} label="Reduce animations" />
-        <Toggle checked={settings.larger_text} onChange={(v) => patch("larger_text", v)} label="Larger text" />
-        <Toggle checked={settings.high_contrast} onChange={(v) => patch("high_contrast", v)} label="High contrast mode" />
+        <Toggle checked={settings.reduce_animations} onChange={(v) => patch("reduce_animations", v)} label={t("Reduce animations")} />
+        <Toggle checked={settings.larger_text} onChange={(v) => patch("larger_text", v)} label={t("Larger text")} />
+        <Toggle checked={settings.high_contrast} onChange={(v) => patch("high_contrast", v)} label={t("High contrast mode")} />
       </Section>
 
       <Section
-        title="App Behavior"
+        title={t("App Behavior")}
         text="Choose how AVENZO confirms actions."
       >
-        <Toggle checked={settings.confirm_delete_content} onChange={(v) => patch("confirm_delete_content", v)} label="Confirm before deleting content" />
-        <Toggle checked={settings.confirm_unfollow} onChange={(v) => patch("confirm_unfollow", v)} label="Confirm before unfollowing" />
+        <Toggle checked={settings.confirm_delete_content} onChange={(v) => patch("confirm_delete_content", v)} label={t("Confirm before deleting content")} />
+        <Toggle checked={settings.confirm_unfollow} onChange={(v) => patch("confirm_unfollow", v)} label={t("Confirm before unfollowing")} />
         <Toggle
           checked={settings.auto_save_settings}
           onChange={(v) => patch("auto_save_settings", v)}
-          label="Save settings automatically"
+          label={t("Save settings automatically")}
           description="When off, use the Save App Settings button below."
         />
       </Section>
@@ -243,7 +245,7 @@ export default function AppSettingsForm({
           disabled={saving}
           onClick={() => void persist()}
         >
-          {saving ? "Saving…" : "Save App Settings"}
+          {saving ? "Saving…" : t("Save App Settings")}
         </button>
       </div>
     </div>
