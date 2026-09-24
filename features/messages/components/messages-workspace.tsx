@@ -109,6 +109,12 @@ function messageTime(value: string) {
   });
 }
 
+function recordingTime(value: number) {
+  const minutes = Math.floor(value / 60);
+  const seconds = value % 60;
+  return minutes + ":" + String(seconds).padStart(2, "0");
+}
+
 function receipt(message: DirectMessage, own: boolean) {
   if (!own) return "";
   if (message.read_at) return "✓✓ Seen";
@@ -159,6 +165,8 @@ export default function MessagesWorkspace({
   const [ownOnlineEnabled, setOwnOnlineEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [notice, setNotice] = useState("");
   const [viewer, setViewer] = useState("");
   const [sharePending, setSharePending] = useState(
@@ -166,6 +174,11 @@ export default function MessagesWorkspace({
   );
   const fileRef = useRef<HTMLInputElement | null>(null);
   const bodyRef = useRef<HTMLDivElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordingStreamRef = useRef<MediaStream | null>(null);
+  const recordingChunksRef = useRef<BlobPart[]>([]);
+  const recordingTimerRef = useRef<number | null>(null);
+  const cancelRecordingRef = useRef(false);
   const stickToBottomRef = useRef(true);
   const typingTimer = useRef<number | null>(null);
   const messageHoldTimerRef = useRef<number | null>(null);
@@ -509,6 +522,20 @@ export default function MessagesWorkspace({
     supabase,
   ]);
 
+  useEffect(() => {
+    return () => {
+      clearRecordingTimer();
+      if (
+        mediaRecorderRef.current &&
+        mediaRecorderRef.current.state !== "inactive"
+      ) {
+        cancelRecordingRef.current = true;
+        mediaRecorderRef.current.stop();
+      }
+      stopRecordingStream();
+    };
+  }, []);
+
   async function startConversation(person: Profile) {
     if (person.id === currentUser.id) return;
     setNotice("");
@@ -672,6 +699,180 @@ export default function MessagesWorkspace({
     } finally {
       setSending(false);
     }
+  }
+
+  function clearRecordingTimer() {
+    if (recordingTimerRef.current !== null) {
+      window.clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+  }
+
+  function stopRecordingStream() {
+    recordingStreamRef.current?.getTracks().forEach((track) => track.stop());
+    recordingStreamRef.current = null;
+  }
+
+  async function sendVoiceBlob(blob: Blob, mimeType: string) {
+    if (!active || active.request_incoming || cancelRecordingRef.current) {
+      cancelRecordingRef.current = false;
+      return;
+    }
+
+    if (blob.size === 0) {
+      setNotice("Voice message was empty.");
+      return;
+    }
+
+    if (blob.size > MAX_ATTACHMENT_BYTES) {
+      setNotice("Voice message is too large.");
+      return;
+    }
+
+    const extension = mimeType.includes("mp4") ? "m4a" : "webm";
+    const file = new File(
+      [blob],
+      "voice-" + Date.now() + "." + extension,
+      { type: mimeType || "audio/webm" }
+    );
+
+    setSending(true);
+    try {
+      await sendMessageAttachment({
+        supabase,
+        conversationId: active.conversation_id,
+        senderId: currentUser.id,
+        recipientId: active.other_user_id,
+        file,
+        replyToId: replyTo?.id || null,
+      });
+      setReplyTo(null);
+      setMessages(
+        await fetchConversationMessages(
+          supabase,
+          active.conversation_id
+        )
+      );
+      await loadLists();
+      stickToBottomRef.current = true;
+      window.setTimeout(() => scrollToLatest("smooth"), 0);
+    } catch {
+      setNotice("Voice message could not be sent.");
+    } finally {
+      setSending(false);
+      cancelRecordingRef.current = false;
+    }
+  }
+
+  async function startVoiceRecording() {
+    if (!active || active.request_incoming || sending || recording) return;
+
+    if (active.request_status === "pending") {
+      setNotice(
+        "Wait for this message request to be accepted before sending a voice message."
+      );
+      return;
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+      setNotice("Voice recording is not supported on this device.");
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+        video: false,
+      });
+
+      recordingStreamRef.current = stream;
+      recordingChunksRef.current = [];
+      cancelRecordingRef.current = false;
+
+      const preferredMime = MediaRecorder.isTypeSupported(
+        "audio/webm;codecs=opus"
+      )
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/webm")
+          ? "audio/webm"
+          : "";
+
+      const recorder = preferredMime
+        ? new MediaRecorder(stream, { mimeType: preferredMime })
+        : new MediaRecorder(stream);
+
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordingChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        clearRecordingTimer();
+        stopRecordingStream();
+        mediaRecorderRef.current = null;
+        setRecording(false);
+        setRecordingSeconds(0);
+
+        const type = recorder.mimeType || "audio/webm";
+        const blob = new Blob(recordingChunksRef.current, { type });
+        recordingChunksRef.current = [];
+        void sendVoiceBlob(blob, type);
+      };
+
+      recorder.start(250);
+      setRecording(true);
+      setRecordingSeconds(0);
+
+      recordingTimerRef.current = window.setInterval(() => {
+        setRecordingSeconds((value) => {
+          const next = value + 1;
+          if (next >= 120) {
+            window.setTimeout(() => stopVoiceRecording(true), 0);
+          }
+          return next;
+        });
+      }, 1000);
+    } catch {
+      stopRecordingStream();
+      setRecording(false);
+      setNotice("Allow microphone access to record a voice message.");
+    }
+  }
+
+  function stopVoiceRecording(sendRecording: boolean) {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state === "inactive") return;
+
+    cancelRecordingRef.current = !sendRecording;
+    recorder.stop();
+  }
+
+  function startAudioCall() {
+    if (!active || active.request_incoming) return;
+
+    if (active.request_status !== "accepted") {
+      setNotice("The message request must be accepted before starting a call.");
+      return;
+    }
+
+    window.dispatchEvent(
+      new CustomEvent("avenzo:start-audio-call", {
+        detail: {
+          conversationId: active.conversation_id,
+          otherUserId: active.other_user_id,
+          username: active.username,
+          displayName: active.display_name,
+          avatarUrl: active.avatar_url,
+        },
+      })
+    );
   }
 
   async function react(message: DirectMessage, emoji: string) {
@@ -1060,6 +1261,15 @@ export default function MessagesWorkspace({
               >
                 View Profile
               </Link>
+              <button
+                type="button"
+                className="icon-button dm-call-button"
+                onClick={startAudioCall}
+                aria-label="Start audio call"
+                title="Audio call"
+              >
+                <Icon name="phone" size={20} />
+              </button>
               <button
                 className="icon-button dm-head-search-button"
                 onClick={() => setSearchOpen((value) => !value)}
@@ -1602,6 +1812,20 @@ export default function MessagesWorkspace({
                   </div>
                 )}
 
+                {recording && (
+                  <div className="dm-recording-status" role="status">
+                    <span className="dm-recording-dot" />
+                    <b>{recordingTime(recordingSeconds)}</b>
+                    <span>Recording voice message</span>
+                    <button
+                      type="button"
+                      onClick={() => stopVoiceRecording(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+
                 <div className="dm-compose-row">
                   <button
                     type="button"
@@ -1631,8 +1855,9 @@ export default function MessagesWorkspace({
                         void send();
                       }
                     }}
-                    placeholder="Message…"
+                    placeholder={recording ? "Recording…" : "Message…"}
                     aria-label="Message"
+                    disabled={recording}
                   />
                   <button
                     type="button"
@@ -1650,14 +1875,42 @@ export default function MessagesWorkspace({
                   >
                     <Icon name="paperclip" size={19} />
                   </button>
-                  <button
-                    className="send-button dm-send-button"
-                    disabled={!text.trim() || sending}
-                    aria-label={sending ? "Sending message" : "Send message"}
-                    title={sending ? "Sending…" : "Send"}
-                  >
-                    <Icon name="send" size={19} />
-                  </button>
+                  {text.trim() ? (
+                    <button
+                      className="send-button dm-send-button"
+                      disabled={sending || recording}
+                      aria-label={sending ? "Sending message" : "Send message"}
+                      title={sending ? "Sending…" : "Send"}
+                    >
+                      <Icon name="send" size={19} />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className={
+                        "dm-compose-icon dm-voice-button" +
+                        (recording ? " recording" : "")
+                      }
+                      disabled={sending}
+                      onClick={() =>
+                        recording
+                          ? stopVoiceRecording(true)
+                          : void startVoiceRecording()
+                      }
+                      aria-label={
+                        recording
+                          ? "Stop and send voice message"
+                          : "Record voice message"
+                      }
+                      title={
+                        recording
+                          ? "Tap to send voice message"
+                          : "Record voice message"
+                      }
+                    >
+                      <Icon name="mic" size={19} />
+                    </button>
+                  )}
                 </div>
               </form>
             )}
