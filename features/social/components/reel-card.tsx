@@ -16,6 +16,8 @@ export default function ReelCard({
   onSave,
   onComment,
   onDelete,
+  autoplayVideo = false,
+  dataSaving = false,
 }: {
   reel: Reel;
   mediaUrl: string;
@@ -25,6 +27,8 @@ export default function ReelCard({
   onSave: () => void;
   onComment: (value: string) => void;
   onDelete: () => void;
+  autoplayVideo?: boolean;
+  dataSaving?: boolean;
 }) {
   const [comment, setComment] = useState("");
   const author = reel.profile;
@@ -66,8 +70,10 @@ export default function ReelCard({
         className="reel-media"
         src={mediaUrl}
         controls
+        autoPlay={autoplayVideo}
+        muted={autoplayVideo}
         playsInline
-        preload="metadata"
+        preload={dataSaving ? "none" : "metadata"}
       />
 
       {reel.caption && <p className="post-caption">{reel.caption}</p>}
