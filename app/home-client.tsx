@@ -6,13 +6,14 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase/client";
+import { fetchInbox } from "../features/messages/data";
 import {
-  createMessage,
   createPostComment,
   createReelComment,
   publishContent,
@@ -25,8 +26,6 @@ import {
   setReelSaved,
 } from "../features/social/data/mutations";
 import {
-  fetchChats,
-  fetchConversation,
   fetchExplorePosts,
   fetchFeedPosts,
   fetchPeopleAndFollowing,
@@ -37,12 +36,10 @@ import {
   fetchSavedPostIds,
   fetchStories,
   fetchUnreadActivityCount,
-  markConversationRead,
 } from "../features/social/data/queries";
 import ActivityPanel from "../features/social/components/activity-panel";
 import AvatarImage from "../features/social/components/avatar-image";
 import EmptyState from "../features/social/components/empty-state";
-import MessagesPanel from "../features/social/components/messages-panel";
 import ProfileView from "../features/social/components/profile-view";
 import FeedSkeleton from "../features/social/components/feed-skeleton";
 import Icon, { type IconName } from "../features/social/components/icon";
@@ -58,8 +55,6 @@ import { validateContentFile } from "../features/social/lib/upload-validation";
 import { useRuntimePreferences } from "../features/settings/lib/runtime-preferences";
 import { useUiTranslation } from "../features/settings/lib/i18n";
 import type {
-  Chat,
-  Message,
   Post,
   Profile,
   ProfileStats,
@@ -79,11 +74,9 @@ const NAV_ITEMS: Array<{ id: Screen; label: string; icon: IconName }> = [
 
 export default function HomeClient({
   profile: initialProfile,
-  initialChatUsername = "",
   initialScreen,
 }: {
   profile: Profile;
-  initialChatUsername?: string;
   initialScreen?: Screen;
 }) {
   const router = useRouter();
@@ -114,10 +107,8 @@ export default function HomeClient({
     useState<MediaDimensions | null>(null);
   const [posting, setPosting] = useState(false);
   const [toast, setToast] = useState("");
-  const [chats, setChats] = useState<Chat[]>([]);
-  const [selected, setSelected] = useState<Profile | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [message, setMessage] = useState("");
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const toastTimerRef = useRef<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [unreadActivity, setUnreadActivity] = useState(0);
   const [stats, setStats] = useState<ProfileStats>({
@@ -130,8 +121,23 @@ export default function HomeClient({
     supabase.storage.from("media").getPublicUrl(path).data.publicUrl;
 
   const showToast = useCallback((message: string) => {
+    if (toastTimerRef.current !== null) {
+      window.clearTimeout(toastTimerRef.current);
+    }
+
     setToast(message);
-    window.setTimeout(() => setToast(""), 3200);
+    toastTimerRef.current = window.setTimeout(() => {
+      setToast("");
+      toastTimerRef.current = null;
+    }, 3200);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current !== null) {
+        window.clearTimeout(toastTimerRef.current);
+      }
+    };
   }, []);
 
   const markActivityRead = useCallback(() => {
@@ -161,18 +167,6 @@ export default function HomeClient({
 
     setPeople(result.people);
     setFollowed(result.followed);
-
-    if (initialChatUsername) {
-      const requested = result.people.find(
-        (person) =>
-          person.username.toLowerCase() === initialChatUsername
-      );
-
-      if (requested) {
-        setScreen("messages");
-        await openChat(requested);
-      }
-    }
   }
 
   async function loadSavedPosts() {
@@ -212,9 +206,19 @@ export default function HomeClient({
     setStories(await fetchStories(supabase));
   }
 
-  const loadChats = useCallback(async () => {
-    setChats(await fetchChats(supabase, initialProfile.id));
-  }, [supabase, initialProfile.id]);
+  const loadUnreadMessages = useCallback(async () => {
+    const [inbox, requests] = await Promise.all([
+      fetchInbox(supabase, false),
+      fetchInbox(supabase, true),
+    ]);
+
+    setUnreadMessages(
+      [...inbox, ...requests].reduce(
+        (total, conversation) => total + Number(conversation.unread_count || 0),
+        0
+      )
+    );
+  }, [supabase]);
 
   async function refreshEverything() {
     try {
@@ -227,7 +231,7 @@ export default function HomeClient({
         loadReels(),
         loadStories(),
         loadSavedPosts(),
-        loadChats(),
+        loadUnreadMessages(),
         loadStats(),
         loadUnreadActivity(),
       ]);
@@ -237,30 +241,6 @@ export default function HomeClient({
       );
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function openChat(other: Profile) {
-    setSelected(other);
-
-    try {
-      setMessages(
-        await fetchConversation(
-          supabase,
-          initialProfile.id,
-          other.id
-        )
-      );
-
-      await markConversationRead(
-        supabase,
-        initialProfile.id,
-        other.id
-      );
-
-      await loadChats();
-    } catch {
-      showToast("This conversation could not be loaded right now.");
     }
   }
 
@@ -287,16 +267,8 @@ export default function HomeClient({
           table: "messages",
           filter: "recipient_id=eq." + initialProfile.id,
         },
-        (payload) => {
-          const incoming = payload.new as Message;
-          if (selected && incoming.sender_id === selected.id) {
-            setMessages((current) => [...current, incoming]);
-            void supabase
-              .from("messages")
-              .update({ read_at: new Date().toISOString() })
-              .eq("id", incoming.id);
-          }
-          void loadChats();
+        () => {
+          void loadUnreadMessages();
         }
       )
       .on(
@@ -321,9 +293,8 @@ export default function HomeClient({
     };
   }, [
     initialProfile.id,
-    loadChats,
+    loadUnreadMessages,
     screen,
-    selected,
     showToast,
     supabase,
   ]);
@@ -633,26 +604,6 @@ export default function HomeClient({
     }
   }
 
-  async function sendMessage() {
-    const clean = message.trim();
-    if (!selected || !clean) return;
-
-    try {
-      const data = await createMessage(
-        supabase,
-        initialProfile.id,
-        selected.id,
-        clean
-      );
-
-      setMessages((current) => [...current, data]);
-      setMessage("");
-      await loadChats();
-    } catch {
-      showToast("Message could not be sent.");
-    }
-  }
-
   async function signOut() {
     await supabase.auth.signOut();
     router.replace("/login");
@@ -665,7 +616,6 @@ export default function HomeClient({
       .includes(query.toLowerCase().trim())
   );
 
-  const unreadMessages = chats.reduce((total, chat) => total + chat.unread, 0);
 
   return (
     <div className="social-app">
@@ -1089,20 +1039,7 @@ export default function HomeClient({
             />
           )}
 
-          {screen === "messages" && (
-            <MessagesPanel
-              people={filteredPeople}
-              chats={chats}
-              selected={selected}
-              openChat={(person) => void openChat(person)}
-              messages={messages}
-              userId={initialProfile.id}
-              text={message}
-              setText={setMessage}
-              send={() => void sendMessage()}
-              onBack={() => setSelected(null)}
-            />
-          )}
+
         </main>
 
         <aside className="right-rail">

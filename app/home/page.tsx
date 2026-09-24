@@ -41,11 +41,9 @@ export default async function HomePage({
     redirect("/messages" + chat);
   }
 
-  const initialChatUsername = "";
   const allowedScreens = new Set([
     "home",
     "explore",
-    "messages",
     "activity",
     "saved",
     "profile",
@@ -55,17 +53,10 @@ export default async function HomePage({
       ? (params.screen as
           | "home"
           | "explore"
-          | "messages"
           | "activity"
           | "saved"
           | "profile")
       : undefined;
 
-  return (
-    <HomeClient
-      profile={profile}
-      initialChatUsername={initialChatUsername}
-      initialScreen={initialScreen}
-    />
-  );
+  return <HomeClient profile={profile} initialScreen={initialScreen} />;
 }
