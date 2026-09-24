@@ -19,9 +19,9 @@ import type { Profile } from "../../social/types";
 import {
   acceptMessageRequest,
   blockUserFromMessages,
-  declineMessageRequest,
   deleteConversationForMe,
   deleteMessageForEveryone,
+  deleteMessageRequest,
   editMessage,
   ensureConversation,
   fetchConversationMessages,
@@ -662,7 +662,7 @@ export default function MessagesWorkspace({
 
   async function deleteRequest() {
     if (!active) return;
-    await declineMessageRequest(supabase, active.conversation_id);
+    await deleteMessageRequest(supabase, active.conversation_id);
     setActive(null);
     setMessages([]);
     await loadLists();
@@ -1123,9 +1123,11 @@ export default function MessagesWorkspace({
                                       key={attachment.id}
                                       onClick={() => setViewer(url)}
                                     >
-                                      <img
+                                      <UserMediaImage
                                         src={url}
                                         alt={attachment.file_name || "Image"}
+                                        className="dm-message-image"
+                                        loading="lazy"
                                       />
                                     </button>
                                   );
@@ -1563,7 +1565,12 @@ export default function MessagesWorkspace({
           >
             <Icon name="close" />
           </button>
-          <img src={viewer} alt="Message attachment" />
+          <UserMediaImage
+            src={viewer}
+            alt="Message attachment"
+            className="dm-viewer-image"
+            loading="eager"
+          />
         </div>
       )}
 
