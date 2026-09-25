@@ -1402,7 +1402,7 @@ export default function MessagesWorkspace({
         <div className="dm-sidebar-head">
           <div>
             <div className="eyebrow">MESSAGES</div>
-            <h1>Inbox</h1>
+            <h1>Messages</h1>
           </div>
           <div className="dm-sidebar-actions">
             <Link className="btn secondary small" href="/messages/groups">
