@@ -35,8 +35,8 @@ export default async function UserProfilePage({
 
   const [
     postsResult,
+    collaboratorResult,
     reelsResult,
-    postCountResult,
     followerCountResult,
     followingCountResult,
     relationshipResult,
@@ -48,15 +48,16 @@ export default async function UserProfilePage({
       .order("created_at", { ascending: false })
       .limit(60),
     supabase
+      .from("post_collaborators")
+      .select("post_id")
+      .eq("user_id", target.id)
+      .eq("status", "accepted"),
+    supabase
       .from("reels")
       .select("id,title,caption,media_path,cover_path,view_count,created_at")
       .eq("author_id", target.id)
       .order("created_at", { ascending: false })
       .limit(60),
-    supabase
-      .from("posts")
-      .select("id", { count: "exact", head: true })
-      .eq("author_id", target.id),
     supabase
       .from("follows")
       .select("follower_id", { count: "exact", head: true })
@@ -70,12 +71,41 @@ export default async function UserProfilePage({
     }),
   ]);
 
-  const posts = (postsResult.data || []).map((post) => ({
-    ...post,
-    media_url: post.media_path
-      ? supabase.storage.from("media").getPublicUrl(post.media_path).data.publicUrl
-      : "",
-  }));
+  const collaboratorPostIds = (collaboratorResult.data || []).map(
+    (row: { post_id: string }) => row.post_id
+  );
+
+  const collaboratorPostsResult = collaboratorPostIds.length
+    ? await supabase
+        .from("posts")
+        .select("id,caption,media_path,media_type,media_width,media_height,created_at")
+        .in("id", collaboratorPostIds)
+    : { data: [], error: null };
+
+  const publicPostMap = new Map<
+    string,
+    NonNullable<typeof postsResult.data>[number]
+  >();
+  for (const post of [
+    ...(postsResult.data || []),
+    ...(collaboratorPostsResult.data || []),
+  ]) {
+    publicPostMap.set(post.id, post);
+  }
+
+  const posts = [...publicPostMap.values()]
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() -
+        new Date(a.created_at).getTime()
+    )
+    .slice(0, 60)
+    .map((post) => ({
+      ...post,
+      media_url: post.media_path
+        ? supabase.storage.from("media").getPublicUrl(post.media_path).data.publicUrl
+        : "",
+    }));
 
   const reels = (reelsResult.data || []).map((reel) => ({
     ...reel,
@@ -105,7 +135,7 @@ export default async function UserProfilePage({
       initialFollowState={initialFollowState}
       accountPrivate={accountPrivate}
       stats={{
-        posts: postCountResult.count || 0,
+        posts: posts.length,
         followers: followerCountResult.count || 0,
         following: followingCountResult.count || 0,
       }}

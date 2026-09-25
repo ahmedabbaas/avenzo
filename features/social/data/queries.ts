@@ -354,15 +354,54 @@ export async function fetchFeedPosts(
     ),
   ];
 
-  const { data, error } = await supabase
-    .from("posts")
-    .select("*")
-    .in("author_id", feedAuthors)
-    .order("created_at", { ascending: false })
-    .limit(60);
+  const [authoredResult, collabResult] = await Promise.all([
+    supabase
+      .from("posts")
+      .select("*")
+      .in("author_id", feedAuthors)
+      .order("created_at", { ascending: false })
+      .limit(60),
+    supabase
+      .from("post_collaborators")
+      .select("post_id")
+      .in("user_id", feedAuthors)
+      .eq("status", "accepted"),
+  ]);
 
-  assertNoError(error);
-  return hydratePosts(supabase, userId, (data || []) as PostRow[]);
+  assertNoError(authoredResult.error);
+  assertNoError(collabResult.error);
+
+  const collabPostIds = (collabResult.data || []).map(
+    (row: { post_id: string }) => row.post_id
+  );
+
+  let collabPosts: PostRow[] = [];
+  if (collabPostIds.length) {
+    const result = await supabase
+      .from("posts")
+      .select("*")
+      .in("id", collabPostIds);
+    assertNoError(result.error);
+    collabPosts = (result.data || []) as PostRow[];
+  }
+
+  const postMap = new Map<string, PostRow>();
+  for (const row of [
+    ...((authoredResult.data || []) as PostRow[]),
+    ...collabPosts,
+  ]) {
+    postMap.set(row.id, row);
+  }
+
+  const rows = [...postMap.values()]
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() -
+        new Date(a.created_at).getTime()
+    )
+    .slice(0, 60);
+
+  return hydratePosts(supabase, userId, rows);
 }
 
 export async function fetchProfilePosts(

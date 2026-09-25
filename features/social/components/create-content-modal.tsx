@@ -26,6 +26,9 @@ export default function CreateContentModal({
   dimensions,
   posting,
   uploadProgress,
+  people,
+  collaboratorIds,
+  onToggleCollaborator,
   onModeChange,
   onTitleChange,
   onCaptionChange,
@@ -51,6 +54,9 @@ export default function CreateContentModal({
   dimensions: MediaDimensions | null;
   posting: boolean;
   uploadProgress: number;
+  people: Profile[];
+  collaboratorIds: string[];
+  onToggleCollaborator: (userId: string) => void;
   onModeChange: (mode: CreateContentMode) => void;
   onTitleChange: (value: string) => void;
   onCaptionChange: (value: string) => void;
@@ -283,6 +289,53 @@ export default function CreateContentModal({
             />
           </label>
         </div>
+
+        {mode === "post" && (
+          <div className="create-collab-section">
+            <div className="create-collab-head">
+              <div>
+                <b>Add collaborators</b>
+                <span>
+                  Invite up to 3 real AVENZO users. They must accept before
+                  the post appears on their profile.
+                </span>
+              </div>
+              <small>{collaboratorIds.length}/3</small>
+            </div>
+
+            <div className="create-collab-list">
+              {people.slice(0, 30).map((person) => {
+                const selected = collaboratorIds.includes(person.id);
+                return (
+                  <button
+                    type="button"
+                    key={person.id}
+                    className={selected ? "selected" : ""}
+                    disabled={
+                      posting ||
+                      (!selected && collaboratorIds.length >= 3)
+                    }
+                    onClick={() => onToggleCollaborator(person.id)}
+                  >
+                    <AvatarImage
+                      src={avatarFor(person)}
+                      alt={person.display_name}
+                      size={64}
+                    />
+                    <span>
+                      <b className="verified-line">
+                        {person.display_name}
+                        <VerifiedBadge verified={person.verified} />
+                      </b>
+                      <small>@{person.username}</small>
+                    </span>
+                    <i>{selected ? "✓" : "+"}</i>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {isVideo && (
           <div className="cover-picker">

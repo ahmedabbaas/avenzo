@@ -50,7 +50,23 @@ export default function PostCard({
           >
             <AvatarImage src={avatarFor(author)} alt={author.display_name} size={80} />
             <div>
-              <b>{authorName}</b>
+              <b className="post-author-collab">
+                <span>{authorName}</span>
+                {post.collaborators?.length ? (
+                  <span className="post-collab-copy">
+                    {" "}with{" "}
+                    {post.collaborators.slice(0, 2).map((collaborator, index) => (
+                      <span key={collaborator.id}>
+                        {index > 0 ? ", " : ""}
+                        @{collaborator.username}
+                      </span>
+                    ))}
+                    {post.collaborators.length > 2
+                      ? " +" + (post.collaborators.length - 2)
+                      : ""}
+                  </span>
+                ) : null}
+              </b>
               <small className="verified-line">
                 @{author.username}
                 <VerifiedBadge verified={author.verified} />
