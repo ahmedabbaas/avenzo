@@ -824,6 +824,22 @@ export default function AccountSettingsForm({
           </select>
         </label>
 
+        <Link className="settings-navigation-row" href="/settings/follow-requests">
+          <span>
+            <b>Follow requests</b>
+            <small>Approve or decline people requesting access to your private account.</small>
+          </span>
+          <span>›</span>
+        </Link>
+
+        <Link className="settings-navigation-row" href="/settings/close-friends">
+          <span>
+            <b>Close Friends</b>
+            <small>Manage your private audience for Notes and Stories.</small>
+          </span>
+          <span>›</span>
+        </Link>
+
         <Link className="settings-navigation-row" href="/settings/blocked">
           <span>
             <b>Blocked accounts</b>

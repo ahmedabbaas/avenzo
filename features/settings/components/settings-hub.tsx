@@ -53,12 +53,6 @@ export default function SettingsHub() {
           text="Profile, username, security, privacy and account information."
         />
         <SettingsCard
-          href="/settings/close-friends"
-          icon="profile"
-          title="Close Friends"
-          text="Choose the private audience you can use for Notes, Stories and future private sharing."
-        />
-        <SettingsCard
           href="/settings/follow-requests"
           icon="activity"
           title="Follow Requests"
@@ -68,7 +62,7 @@ export default function SettingsHub() {
           href="/settings/close-friends"
           icon="profile"
           title="Close Friends"
-          text="Manage your private audience for Notes and Stories."
+          text="Manage your private audience for Notes, Stories and private sharing."
         />
         <SettingsCard
           href="/settings/blocked"
