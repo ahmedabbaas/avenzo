@@ -230,6 +230,18 @@ export default function HomeClient({
     setStories(await fetchStories(supabase));
   }
 
+  function openStory(story: Story) {
+    setStoryViewer(story);
+
+    if (story.author_id !== initialProfile.id && !story.viewed) {
+      setStories((current) =>
+        current.map((item) =>
+          item.id === story.id ? { ...item, viewed: true } : item
+        )
+      );
+    }
+  }
+
   const loadUnreadMessages = useCallback(async () => {
     const [inbox, requests] = await Promise.all([
       fetchInbox(supabase, false),
@@ -886,9 +898,9 @@ export default function HomeClient({
 
                 {stories.map((story) => (
                   <button
-                    className="story"
+                    className={"story " + (story.viewed ? "viewed" : "unseen")}
                     key={story.id}
-                    onClick={() => setStoryViewer(story)}
+                    onClick={() => openStory(story)}
                   >
                     <span className="story-ring">
                       <AvatarImage
@@ -1267,8 +1279,18 @@ export default function HomeClient({
         <StoryViewer
           story={storyViewer}
           fallbackProfile={profile}
+          currentUserId={initialProfile.id}
           mediaUrl={mediaUrl}
           onClose={() => setStoryViewer(null)}
+          onViewed={() => {
+            setStories((current) =>
+              current.map((item) =>
+                item.id === storyViewer.id
+                  ? { ...item, viewed: true }
+                  : item
+              )
+            );
+          }}
           autoplayVideo={runtimePreferences.media_autoplay_videos}
           dataSaving={
             runtimePreferences.data_saving_mode ||

@@ -505,9 +505,39 @@ export async function fetchStories(
   const authors = (authorsResult.data || []) as Profile[];
   const authorMap = new Map(authors.map((author) => [author.id, author]));
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const storyIds = rows.map((story) => story.id);
+  const viewResult = user && storyIds.length
+    ? await supabase
+        .from("story_views")
+        .select("story_id,viewer_id")
+        .in("story_id", storyIds)
+    : { data: [], error: null };
+
+  assertNoError(viewResult.error);
+
+  const views = (viewResult.data || []) as Array<{
+    story_id: string;
+    viewer_id: string;
+  }>;
+
   return rows.map((story) => ({
     ...story,
     profile: authorMap.get(story.author_id),
+    viewed:
+      story.author_id === user?.id ||
+      views.some(
+        (view) =>
+          view.story_id === story.id &&
+          view.viewer_id === user?.id
+      ),
+    viewerCount:
+      story.author_id === user?.id
+        ? views.filter((view) => view.story_id === story.id).length
+        : undefined,
   }));
 }
 

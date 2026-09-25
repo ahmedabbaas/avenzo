@@ -6012,3 +6012,107 @@ html[data-theme="light"]{
     border-radius:16px;
   }
 }
+
+/* AVENZO STORY VIEWS v1 */
+.story.viewed .story-ring{
+  opacity:.72;
+  filter:saturate(.32);
+}
+
+.story.unseen .story-ring{
+  opacity:1;
+  filter:none;
+}
+
+.story-viewer-foot{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.story-viewers-button{
+  min-height:38px;
+  padding:0 12px;
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:999px;
+  background:rgba(255,255,255,.06);
+  color:#f5f6f7;
+  font-size:10px;
+  font-weight:800;
+}
+
+.story-viewers-panel{
+  max-height:260px;
+  overflow-y:auto;
+  margin-top:8px;
+  padding:10px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  background:rgba(9,11,13,.96);
+}
+
+.story-viewers-panel-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:8px;
+}
+
+.story-viewers-panel-head b{
+  font-size:12px;
+}
+
+.story-viewers-panel-head span{
+  color:var(--accent);
+  font-size:10px;
+  font-weight:800;
+}
+
+.story-viewers-panel>p{
+  margin:14px 4px;
+  color:#8f969d;
+  font-size:10px;
+  text-align:center;
+}
+
+.story-viewers-list{
+  display:grid;
+  gap:5px;
+}
+
+.story-viewers-list>div{
+  display:grid;
+  grid-template-columns:36px minmax(0,1fr);
+  align-items:center;
+  gap:9px;
+  min-height:44px;
+}
+
+.story-viewers-list img{
+  width:36px!important;
+  height:36px!important;
+  border-radius:50%!important;
+}
+
+.story-viewers-list span{
+  min-width:0;
+  display:grid;
+  gap:2px;
+}
+
+.story-viewers-list b,
+.story-viewers-list small{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.story-viewers-list b{
+  font-size:10px;
+}
+
+.story-viewers-list small{
+  color:#838b92;
+  font-size:8px;
+}

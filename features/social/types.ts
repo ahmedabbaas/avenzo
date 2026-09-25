@@ -84,6 +84,8 @@ export type Story = {
   created_at: string;
   expires_at: string;
   profile?: Profile;
+  viewed?: boolean;
+  viewerCount?: number;
 };
 
 export type Message = {
