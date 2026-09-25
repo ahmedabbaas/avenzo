@@ -67,7 +67,7 @@ export default function ConnectionsList({
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [settledKey, setSettledKey] = useState("");
   const [loadingMore, setLoadingMore] = useState(false);
   const [busyId, setBusyId] = useState("");
   const [error, setError] = useState("");
@@ -75,6 +75,9 @@ export default function ConnectionsList({
   const [retryNonce, setRetryNonce] = useState(0);
   const ownList = target.id === viewerId;
   const title = kind === "followers" ? "Followers" : "Following";
+  const requestKey =
+    target.id + ":" + kind + ":" + debouncedSearch + ":" + retryNonce;
+  const loading = settledKey !== requestKey;
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -123,10 +126,6 @@ export default function ConnectionsList({
   useEffect(() => {
     let active = true;
 
-    setLoading(true);
-    setError("");
-    setStatus("");
-
     void fetchPage(0)
       .then((result) => {
         if (!active) return;
@@ -140,13 +139,13 @@ export default function ConnectionsList({
         setError("Something went wrong. Please try again.");
       })
       .finally(() => {
-        if (active) setLoading(false);
+        if (active) setSettledKey(requestKey);
       });
 
     return () => {
       active = false;
     };
-  }, [fetchPage, retryNonce]);
+  }, [fetchPage, requestKey]);
 
   async function loadMore() {
     if (loadingMore || items.length >= total) return;
@@ -295,7 +294,11 @@ export default function ConnectionsList({
           <span className="sr-only">Search {title.toLowerCase()}</span>
           <input
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setError("");
+              setStatus("");
+            }}
             placeholder={"Search " + title.toLowerCase()}
             autoComplete="off"
             inputMode="search"
@@ -322,7 +325,10 @@ export default function ConnectionsList({
             <span>{error}</span>
             <button
               type="button"
-              onClick={() => setRetryNonce((current) => current + 1)}
+              onClick={() => {
+                setError("");
+                setRetryNonce((current) => current + 1);
+              }}
             >
               Retry
             </button>
