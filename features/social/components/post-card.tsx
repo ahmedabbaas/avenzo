@@ -38,11 +38,32 @@ export default function PostCard({
 }) {
   const [comment, setComment] = useState("");
   const [carouselIndex, setCarouselIndex] = useState(0);
+  const [heartBurst, setHeartBurst] = useState(false);
   const author = post.profile;
   const authorName = author?.display_name || "AVENZO user";
 
   return (
-    <article className="post-card">
+    <article
+      className="post-card"
+      onDoubleClick={(event) => {
+        const target = event.target as HTMLElement;
+        if (
+          target.closest("button") ||
+          target.closest("input") ||
+          target.closest("form") ||
+          target.closest("a")
+        ) {
+          return;
+        }
+
+        if (!post.liked) onLike();
+        setHeartBurst(false);
+        window.requestAnimationFrame(() => {
+          setHeartBurst(true);
+          window.setTimeout(() => setHeartBurst(false), 620);
+        });
+      }}
+    >
       <div className="post-head">
         {author ? (
           <Link
@@ -161,6 +182,12 @@ export default function PostCard({
           preload={dataSaving ? "none" : "metadata"}
           playsInline
         />
+      )}
+
+      {heartBurst && (
+        <span className="post-heart-burst" aria-hidden="true">
+          ♥
+        </span>
       )}
 
       <div className="post-content">
