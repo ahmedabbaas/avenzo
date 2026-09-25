@@ -405,7 +405,9 @@ export default function ReelsPanel({
                         reel.comments.map((item) => (
                           <div key={item.id}>
                             <b className="verified-line">
-                              @{item.profile?.username || "user"}
+                              {item.profile
+                                ? "@" + item.profile.username
+                                : "Account unavailable"}
                               <VerifiedBadge verified={item.profile?.verified} />
                             </b>
                             <span>{item.body}</span>
@@ -433,6 +435,42 @@ export default function ReelsPanel({
           })}
         </div>
       )}
+
+      <nav className="mobile-nav" aria-label="Mobile navigation">
+        <button type="button" onClick={() => router.push("/home")} aria-label="Home">
+          <span className="mobile-icon-wrap"><Icon name="home" /></span>
+          <small>Home</small>
+        </button>
+        <button
+          type="button"
+          onClick={() => router.push("/home?screen=explore")}
+          aria-label="Search"
+        >
+          <span className="mobile-icon-wrap"><Icon name="explore" /></span>
+          <small>Search</small>
+        </button>
+        <button
+          type="button"
+          className="mobile-create"
+          onClick={() => router.push("/home?create=post")}
+          aria-label="Create"
+        >
+          <span className="mobile-icon-wrap"><Icon name="plus" /></span>
+          <small>Create</small>
+        </button>
+        <button type="button" className="active" aria-label="Reels" aria-current="page">
+          <span className="mobile-icon-wrap"><Icon name="reels" /></span>
+          <small>Reels</small>
+        </button>
+        <button
+          type="button"
+          onClick={() => router.push("/home?screen=profile")}
+          aria-label="Profile"
+        >
+          <span className="mobile-icon-wrap"><Icon name="profile" /></span>
+          <small>Profile</small>
+        </button>
+      </nav>
     </main>
   );
 }
