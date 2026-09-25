@@ -26,7 +26,11 @@ export type IconName =
   | "phone"
   | "mic"
   | "repost"
-  | "clock";
+  | "clock"
+  | "grid"
+  | "tag"
+  | "menu"
+  | "chevronDown";
 
 
 export default function Icon({ name, size = 19 }: { name: IconName; size?: number }) {
@@ -164,6 +168,26 @@ export default function Icon({ name, size = 19 }: { name: IconName; size?: numbe
         <path d="M12 7.5V12l3 2" />
       </>
     ),
+    grid: (
+      <>
+        <rect x="3.5" y="3.5" width="7" height="7" rx="1.2" />
+        <rect x="13.5" y="3.5" width="7" height="7" rx="1.2" />
+        <rect x="3.5" y="13.5" width="7" height="7" rx="1.2" />
+        <rect x="13.5" y="13.5" width="7" height="7" rx="1.2" />
+      </>
+    ),
+    tag: (
+      <>
+        <path d="M20.5 12.5 12 21l-8.5-8.5V4h8.5l8.5 8.5Z" />
+        <circle cx="8.2" cy="8.2" r="1.4" />
+      </>
+    ),
+    menu: (
+      <>
+        <path d="M4 7h16M4 12h16M4 17h16" />
+      </>
+    ),
+    chevronDown: <path d="m7 9 5 5 5-5" />,
   };
 
   return (
