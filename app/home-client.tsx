@@ -18,14 +18,18 @@ import {
   createReelComment,
   publishContent,
   removePost,
+  removePostComment,
   removeReel,
+  reportPost,
   setFollowing,
+  setPostCommentLike,
   setPostLike,
   setPostSaved,
   setPostReposted,
   setReelLike,
   setReelReposted,
   setReelSaved,
+  updatePostCaption,
 } from "../features/social/data/mutations";
 import {
   fetchExplorePosts,
@@ -63,6 +67,7 @@ import {
 import { useRuntimePreferences } from "../features/settings/lib/runtime-preferences";
 import { useUiTranslation } from "../features/settings/lib/i18n";
 import type {
+  Comment,
   Post,
   Profile,
   ProfileStats,
@@ -692,7 +697,11 @@ export default function HomeClient({
     }
   }
 
-  async function addComment(post: Post, body: string) {
+  async function addComment(
+    post: Post,
+    body: string,
+    parentId: string | null = null
+  ) {
     const clean = body.trim();
     if (!clean) return;
 
@@ -701,11 +710,70 @@ export default function HomeClient({
         supabase,
         initialProfile.id,
         post.id,
-        clean
+        clean,
+        parentId
       );
-      await Promise.all([loadPosts(), loadExplorePosts()]);
+      await Promise.all([loadPosts(), loadExplorePosts(), loadProfileContent()]);
     } catch {
-      showToast("Could not post comment.");
+      showToast(parentId ? "Could not post reply." : "Could not post comment.");
+    }
+  }
+
+  async function toggleCommentLike(post: Post, comment: Comment) {
+    try {
+      await setPostCommentLike(
+        supabase,
+        initialProfile.id,
+        comment.id,
+        Boolean(comment.liked)
+      );
+      await Promise.all([loadPosts(), loadExplorePosts(), loadProfileContent()]);
+    } catch {
+      showToast("Could not update comment like.");
+    }
+  }
+
+  async function deleteComment(post: Post, comment: Comment) {
+    if (comment.user_id !== initialProfile.id) return;
+    if (
+      runtimePreferences.confirm_delete_content &&
+      !window.confirm("Delete this comment?")
+    ) return;
+
+    try {
+      await removePostComment(supabase, initialProfile.id, comment.id);
+      showToast("Comment deleted.");
+      await Promise.all([loadPosts(), loadExplorePosts(), loadProfileContent()]);
+    } catch {
+      showToast("Could not delete comment.");
+    }
+  }
+
+  async function editPostCaption(post: Post, nextCaption: string) {
+    if (post.author_id !== initialProfile.id) return;
+
+    try {
+      await updatePostCaption(
+        supabase,
+        initialProfile.id,
+        post.id,
+        nextCaption
+      );
+      showToast("Caption updated.");
+      await Promise.all([loadPosts(), loadExplorePosts(), loadProfileContent()]);
+    } catch {
+      showToast("Could not update caption.");
+    }
+  }
+
+  async function submitPostReport(post: Post) {
+    if (post.author_id === initialProfile.id) return;
+
+    try {
+      await reportPost(supabase, initialProfile.id, post.id);
+      showToast("Report submitted for review.");
+    } catch {
+      showToast("Could not submit report.");
     }
   }
 
@@ -1265,7 +1333,20 @@ export default function HomeClient({
                       onSave={() => void toggleSave(post)}
                       onShare={() => void sharePost(post)}
                       onRepost={() => void togglePostRepost(post)}
-                      onComment={(body) => void addComment(post, body)}
+                      onComment={(body, parentId) =>
+                        void addComment(post, body, parentId || null)
+                      }
+                      onCommentLike={(comment) =>
+                        void toggleCommentLike(post, comment)
+                      }
+                      onCommentDelete={(comment) =>
+                        void deleteComment(post, comment)
+                      }
+                      onEditCaption={(nextCaption) =>
+                        void editPostCaption(post, nextCaption)
+                      }
+                      onReport={() => void submitPostReport(post)}
+                      currentUserId={initialProfile.id}
                       own={post.author_id === initialProfile.id}
                       onDelete={() => void deletePost(post)}
                       autoplayVideo={runtimePreferences.feed_autoplay_videos}
@@ -1415,7 +1496,20 @@ export default function HomeClient({
                       onSave={() => void toggleSave(post)}
                       onShare={() => void sharePost(post)}
                       onRepost={() => void togglePostRepost(post)}
-                      onComment={(body) => void addComment(post, body)}
+                      onComment={(body, parentId) =>
+                        void addComment(post, body, parentId || null)
+                      }
+                      onCommentLike={(comment) =>
+                        void toggleCommentLike(post, comment)
+                      }
+                      onCommentDelete={(comment) =>
+                        void deleteComment(post, comment)
+                      }
+                      onEditCaption={(nextCaption) =>
+                        void editPostCaption(post, nextCaption)
+                      }
+                      onReport={() => void submitPostReport(post)}
+                      currentUserId={initialProfile.id}
                       own={post.author_id === initialProfile.id}
                       onDelete={() => void deletePost(post)}
                       autoplayVideo={runtimePreferences.feed_autoplay_videos}
