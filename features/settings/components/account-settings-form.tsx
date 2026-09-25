@@ -820,6 +820,7 @@ export default function AccountSettingsForm({
           >
             <option value="everyone">Everyone</option>
             <option value="followers">Followers</option>
+            <option value="close_friends">Close Friends</option>
             <option value="only_me">Only me</option>
           </select>
         </label>
