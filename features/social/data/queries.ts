@@ -201,7 +201,7 @@ async function hydratePosts(
       .in("post_id", postIds),
     supabase
       .from("comments")
-      .select("id,post_id,user_id,body,created_at")
+      .select("id,post_id,user_id,body,parent_id,created_at")
       .in("post_id", postIds)
       .order("created_at", { ascending: true }),
     supabase
@@ -236,6 +236,7 @@ async function hydratePosts(
     post_id: string;
     user_id: string;
     body: string;
+    parent_id: string | null;
     created_at: string;
   }>;
 
@@ -311,6 +312,7 @@ async function hydratePosts(
         id: comment.id,
         body: comment.body,
         user_id: comment.user_id,
+        parent_id: comment.parent_id,
         created_at: comment.created_at,
         profile: commentUserMap.get(comment.user_id),
       })),
@@ -578,6 +580,7 @@ export async function fetchReels(
     reel_id: string;
     user_id: string;
     body: string;
+    parent_id: string | null;
     created_at: string;
   }>;
 
