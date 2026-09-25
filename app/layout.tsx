@@ -1,8 +1,15 @@
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import PreferencesBootstrap from "../features/settings/components/preferences-bootstrap";
 import NativeMessageNotifications from "../features/notifications/components/native-message-notifications";
 import CallManager from "../features/messages/components/call-manager";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-avenzo-ui",
+});
 
 export const metadata: Metadata = {
   applicationName: "AVENZO",
@@ -45,7 +52,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>
+      <body className={inter.variable}>
         <PreferencesBootstrap />
         <NativeMessageNotifications />
         <CallManager />
