@@ -10,6 +10,7 @@ const NAV = [
   { href: "/settings", label: "Settings home", icon: "settings" as const },
   { href: "/settings/app", label: "App Settings", icon: "explore" as const },
   { href: "/settings/account", label: "Profile & Account", icon: "profile" as const },
+  { href: "/settings/close-friends", label: "Close Friends", icon: "profile" as const },
   { href: "/settings/blocked", label: "Blocked Accounts", icon: "saved" as const },
 ];
 

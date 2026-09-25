@@ -5419,3 +5419,156 @@ html[data-theme="light"]{
     padding:6px 10px;
   }
 }
+
+/* AVENZO CLOSE FRIENDS SETTINGS v1 */
+.close-friends-card{
+  display:grid;
+  gap:16px;
+  padding:18px;
+  border:1px solid var(--line);
+  border-radius:20px;
+  background:var(--panel);
+}
+
+.close-friends-search{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-height:48px;
+  padding:0 10px 0 14px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--panel-2);
+}
+
+.close-friends-search input{
+  min-width:0;
+  flex:1;
+  border:0!important;
+  outline:0!important;
+  background:transparent!important;
+  color:var(--text)!important;
+  padding:0!important;
+}
+
+.close-friends-search button{
+  min-width:48px;
+  min-height:38px;
+  border:0;
+  border-radius:10px;
+  background:transparent;
+  color:var(--accent);
+  font-weight:700;
+}
+
+.close-friends-summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:12px 2px;
+}
+
+.close-friends-summary>div{
+  display:grid;
+  gap:4px;
+}
+
+.close-friends-summary b{
+  font-size:15px;
+}
+
+.close-friends-summary span{
+  max-width:620px;
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.5;
+}
+
+.close-friends-summary strong{
+  display:grid;
+  place-items:center;
+  min-width:42px;
+  height:42px;
+  padding:0 10px;
+  border-radius:999px;
+  background:rgba(216,255,63,.1);
+  color:var(--accent);
+  font-size:13px;
+}
+
+.close-friends-list{
+  display:grid;
+  gap:4px;
+}
+
+.close-friends-row{
+  display:grid;
+  grid-template-columns:50px minmax(0,1fr) auto;
+  align-items:center;
+  gap:12px;
+  min-height:66px;
+  padding:8px 4px;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+
+.close-friends-row:last-child{
+  border-bottom:0;
+}
+
+.close-friends-row img{
+  width:50px!important;
+  height:50px!important;
+  border-radius:50%!important;
+  object-fit:cover;
+}
+
+.close-friends-row>div{
+  min-width:0;
+  display:grid;
+  gap:3px;
+}
+
+.close-friends-row b,
+.close-friends-row span,
+.close-friends-row small{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.close-friends-row b{
+  font-size:13px;
+}
+
+.close-friends-row span{
+  color:var(--text-soft);
+  font-size:11px;
+}
+
+.close-friends-row small{
+  color:var(--muted);
+  font-size:9px;
+}
+
+@media(max-width:620px){
+  .close-friends-card{
+    padding:12px;
+    border-radius:16px;
+  }
+
+  .close-friends-row{
+    grid-template-columns:46px minmax(0,1fr) auto;
+    gap:10px;
+  }
+
+  .close-friends-row img{
+    width:46px!important;
+    height:46px!important;
+  }
+
+  .close-friends-row .btn{
+    min-width:72px;
+    min-height:42px;
+  }
+}
