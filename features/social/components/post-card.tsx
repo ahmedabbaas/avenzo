@@ -40,7 +40,9 @@ export default function PostCard({
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [heartBurst, setHeartBurst] = useState(false);
   const author = post.profile;
-  const authorName = author?.display_name || "AVENZO user";
+  const authorName = author?.display_name || "Account unavailable";
+
+  if (!author) return null;
 
   return (
     <article
