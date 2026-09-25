@@ -37,6 +37,7 @@ export default function PostCard({
   dataSaving?: boolean;
 }) {
   const [comment, setComment] = useState("");
+  const [carouselIndex, setCarouselIndex] = useState(0);
   const author = post.profile;
   const authorName = author?.display_name || "AVENZO user";
 
@@ -90,7 +91,57 @@ export default function PostCard({
         )}
       </div>
 
-      {post.media_path && post.media_type === "image" && (
+      {post.media_type === "image" &&
+      (post.mediaItems?.length || 0) > 1 ? (
+        <div className="post-carousel-shell">
+          <div
+            className="post-carousel-track"
+            onScroll={(event) => {
+              const node = event.currentTarget;
+              const width = node.clientWidth || 1;
+              const next = Math.round(node.scrollLeft / width);
+              if (next !== carouselIndex) {
+                setCarouselIndex(
+                  Math.max(
+                    0,
+                    Math.min(next, (post.mediaItems?.length || 1) - 1)
+                  )
+                );
+              }
+            }}
+          >
+            {post.mediaItems?.map((item, index) => (
+              <div className="post-carousel-slide" key={item.id}>
+                <UserMediaImage
+                  className="post-media post-carousel-media"
+                  src={item.url}
+                  alt={
+                    item.alt_text ||
+                    (post.caption
+                      ? post.caption + " · image " + (index + 1)
+                      : "AVENZO carousel image " + (index + 1))
+                  }
+                  width={item.media_width}
+                  height={item.media_height}
+                />
+              </div>
+            ))}
+          </div>
+
+          <span className="post-carousel-count" aria-live="polite">
+            {carouselIndex + 1}/{post.mediaItems?.length || 1}
+          </span>
+
+          <div className="post-carousel-dots" aria-hidden="true">
+            {post.mediaItems?.map((item, index) => (
+              <i
+                key={item.id}
+                className={index === carouselIndex ? "active" : ""}
+              />
+            ))}
+          </div>
+        </div>
+      ) : post.media_path && post.media_type === "image" ? (
         <UserMediaImage
           className="post-media"
           src={mediaUrl}
@@ -98,7 +149,7 @@ export default function PostCard({
           width={post.media_width}
           height={post.media_height}
         />
-      )}
+      ) : null}
 
       {post.media_path && post.media_type === "video" && (
         <video
