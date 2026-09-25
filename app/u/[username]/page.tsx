@@ -39,7 +39,7 @@ export default async function UserProfilePage({
     postCountResult,
     followerCountResult,
     followingCountResult,
-    followResult,
+    relationshipResult,
   ] = await Promise.all([
     supabase
       .from("posts")
@@ -65,12 +65,9 @@ export default async function UserProfilePage({
       .from("follows")
       .select("following_id", { count: "exact", head: true })
       .eq("follower_id", target.id),
-    supabase
-      .from("follows")
-      .select("following_id")
-      .eq("follower_id", user.id)
-      .eq("following_id", target.id)
-      .maybeSingle(),
+    supabase.rpc("get_follow_relationship", {
+      target_user: target.id,
+    }),
   ]);
 
   const posts = (postsResult.data || []).map((post) => ({
@@ -88,13 +85,25 @@ export default async function UserProfilePage({
       : "",
   }));
 
+  const relationshipRow = Array.isArray(relationshipResult.data)
+    ? relationshipResult.data[0]
+    : relationshipResult.data;
+  const initialFollowState =
+    relationshipRow?.state === "following"
+      ? "following"
+      : relationshipRow?.state === "requested"
+        ? "requested"
+        : "none";
+  const accountPrivate = Boolean(relationshipRow?.target_private);
+
   return (
     <PublicProfileClient
       viewerId={user.id}
       profile={target}
       posts={posts}
       reels={reels}
-      initialFollowing={Boolean(followResult.data)}
+      initialFollowState={initialFollowState}
+      accountPrivate={accountPrivate}
       stats={{
         posts: postCountResult.count || 0,
         followers: followerCountResult.count || 0,

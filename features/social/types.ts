@@ -108,10 +108,18 @@ export type ProfileStats = {
   following: number;
 };
 
+export type FollowRelationshipState =
+  | "none"
+  | "requested"
+  | "following"
+  | "self";
+
 export type NotificationRow = {
   id: string;
   type:
     | "follow"
+    | "follow_request"
+    | "follow_request_accepted"
     | "like"
     | "comment"
     | "message"

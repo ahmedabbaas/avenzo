@@ -28,6 +28,8 @@ export default function ActivityPanel({
       id: string;
       type:
         | "follow"
+        | "follow_request"
+        | "follow_request_accepted"
         | "like"
         | "comment"
         | "message"
@@ -108,7 +110,11 @@ export default function ActivityPanel({
             const copy =
               item.type === "follow"
                 ? "followed you"
-                : item.type === "like"
+                : item.type === "follow_request"
+                  ? "requested to follow you"
+                  : item.type === "follow_request_accepted"
+                    ? "accepted your follow request"
+                    : item.type === "like"
                   ? "liked your post"
                   : item.type === "comment"
                     ? "commented on your post"

@@ -113,6 +113,7 @@ export default function HomeClient({
   const [people, setPeople] = useState<Profile[]>([]);
   const [query, setQuery] = useState("");
   const [followed, setFollowed] = useState<string[]>([]);
+  const [requested, setRequested] = useState<string[]>([]);
   const [saved, setSaved] = useState<string[]>([]);
   const [showCreate, setShowCreate] = useState(Boolean(initialCreateMode));
   const [title, setTitle] = useState("");
@@ -189,6 +190,7 @@ export default function HomeClient({
 
     setPeople(result.people);
     setFollowed(result.followed);
+    setRequested(result.requested);
   }
 
   async function loadSavedPosts() {
@@ -657,6 +659,8 @@ export default function HomeClient({
 
   async function toggleFollow(other: Profile) {
     const isFollowing = followed.includes(other.id);
+    const isRequested = requested.includes(other.id);
+    const activeRelationship = isFollowing || isRequested;
 
     if (
       isFollowing &&
@@ -666,22 +670,40 @@ export default function HomeClient({
       return;
     }
 
-    setFollowed((current) =>
-      isFollowing
-        ? current.filter((id) => id !== other.id)
-        : [...current, other.id]
-    );
-
     try {
-      await setFollowing(
+      const nextState = await setFollowing(
         supabase,
         initialProfile.id,
         other.id,
-        isFollowing
+        activeRelationship
       );
-      await Promise.all([loadStats(), loadPosts(), loadStories()]);
+
+      setFollowed((current) =>
+        nextState === "following"
+          ? [...new Set([...current, other.id])]
+          : current.filter((id) => id !== other.id)
+      );
+
+      setRequested((current) =>
+        nextState === "requested"
+          ? [...new Set([...current, other.id])]
+          : current.filter((id) => id !== other.id)
+      );
+
+      if (nextState === "requested") {
+        showToast("Follow request sent.");
+      } else if (isRequested && nextState === "none") {
+        showToast("Follow request cancelled.");
+      }
+
+      await Promise.all([
+        loadStats(),
+        loadPosts(),
+        loadStories(),
+        loadPeople(),
+      ]);
     } catch {
-      showToast("Could not update follow.");
+      showToast("Could not update follow right now.");
       await loadPeople();
     }
   }
@@ -963,6 +985,7 @@ export default function HomeClient({
                       key={person.id}
                       person={person}
                       following={followed.includes(person.id)}
+                      requested={requested.includes(person.id)}
                       onFollow={() => void toggleFollow(person)}
                       onMessage={() =>
                         router.push(
@@ -1144,7 +1167,11 @@ export default function HomeClient({
               <button onClick={() => setScreen("explore")}>See all</button>
             </div>
             {people
-              .filter((person) => !followed.includes(person.id))
+              .filter(
+                (person) =>
+                  !followed.includes(person.id) &&
+                  !requested.includes(person.id)
+              )
               .slice(0, 4)
               .map((person) => (
                 <div className="mini-person" key={person.id}>
@@ -1158,7 +1185,11 @@ export default function HomeClient({
                   <button onClick={() => void toggleFollow(person)}>Follow</button>
                 </div>
               ))}
-            {people.filter((person) => !followed.includes(person.id)).length === 0 && (
+            {people.filter(
+              (person) =>
+                !followed.includes(person.id) &&
+                !requested.includes(person.id)
+            ).length === 0 && (
               <p className="rail-empty">You’re caught up with people here.</p>
             )}
           </div>

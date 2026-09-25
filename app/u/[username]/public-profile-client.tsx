@@ -63,20 +63,24 @@ export default function PublicProfileClient({
   profile,
   posts,
   reels,
-  initialFollowing,
+  initialFollowState,
+  accountPrivate,
   stats: initialStats,
 }: {
   viewerId: string;
   profile: PublicProfile;
   posts: PublicPost[];
   reels: PublicReel[];
-  initialFollowing: boolean;
+  initialFollowState: "none" | "requested" | "following";
+  accountPrivate: boolean;
   stats: Stats;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
 
-  const [following, setFollowing] = useState(initialFollowing);
+  const [followState, setFollowState] = useState(initialFollowState);
+  const following = followState === "following";
+  const requested = followState === "requested";
   const [contentTab, setContentTab] = useState<"posts" | "reels">(
     reels.length > 0 && posts.length === 0 ? "reels" : "posts"
   );
@@ -134,38 +138,52 @@ export default function PublicProfileClient({
     setBusy(true);
     setNotice("");
 
-    const nextFollowing = !following;
+    const previous = followState;
 
-    setFollowing(nextFollowing);
-    setStats((current) => ({
-      ...current,
-      followers: Math.max(
-        0,
-        current.followers + (nextFollowing ? 1 : -1)
-      ),
-    }));
+    const { data, error } = await supabase.rpc(
+      previous === "following" || previous === "requested"
+        ? "unfollow_or_cancel_request"
+        : "request_or_follow_user",
+      { target_user: profile.id }
+    );
 
-    const result = following
-      ? await supabase
-          .from("follows")
-          .delete()
-          .eq("follower_id", viewerId)
-          .eq("following_id", profile.id)
-      : await supabase.from("follows").insert({
-          follower_id: viewerId,
-          following_id: profile.id,
-        });
+    if (error) {
+      setNotice(
+        error.message.includes("FOLLOW_NOT_ALLOWED")
+          ? "This account is not accepting follows from you right now."
+          : "Could not update follow right now."
+      );
+      setBusy(false);
+      return;
+    }
 
-    if (result.error) {
-      setFollowing(!nextFollowing);
+    const next =
+      data === "following"
+        ? "following"
+        : data === "requested"
+          ? "requested"
+          : "none";
+
+    setFollowState(next);
+
+    const followerDelta =
+      previous !== "following" && next === "following"
+        ? 1
+        : previous === "following" && next !== "following"
+          ? -1
+          : 0;
+
+    if (followerDelta !== 0) {
       setStats((current) => ({
         ...current,
-        followers: Math.max(
-          0,
-          current.followers + (nextFollowing ? -1 : 1)
-        ),
+        followers: Math.max(0, current.followers + followerDelta),
       }));
-      setNotice("Could not update follow right now.");
+    }
+
+    if (next === "requested") {
+      setNotice("Follow request sent.");
+    } else if (previous === "requested" && next === "none") {
+      setNotice("Follow request cancelled.");
     }
 
     setBusy(false);
@@ -271,7 +289,7 @@ export default function PublicProfileClient({
                 disabled={busy}
                 onClick={toggleFollow}
               >
-                {following ? "Following" : "Follow"}
+                {following ? "Following" : requested ? "Requested" : "Follow"}
               </button>
 
               <Link
@@ -322,6 +340,18 @@ export default function PublicProfileClient({
           </div>
         </div>
 
+        {accountPrivate && !following ? (
+          <section className="public-private-account">
+            <div className="public-private-lock" aria-hidden="true">🔒</div>
+            <h2>This account is private</h2>
+            <p>
+              Follow @{profile.username} to see their posts and reels after
+              they accept your request.
+            </p>
+            {requested && <small>Your follow request is pending.</small>}
+          </section>
+        ) : (
+          <>
         <div className="public-profile-tabs" role="tablist" aria-label="Profile content">
           <button
             className={contentTab === "posts" ? "active" : ""}
@@ -410,6 +440,8 @@ export default function PublicProfileClient({
                 <p>This account has not uploaded a reel.</p>
               </div>
             )}
+          </>
+        )}
           </>
         )}
       </section>

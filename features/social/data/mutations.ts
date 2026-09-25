@@ -487,22 +487,26 @@ export async function removeReel(
 
 export async function setFollowing(
   supabase: SupabaseClient,
-  userId: string,
+  _userId: string,
   otherUserId: string,
-  currentlyFollowing: boolean
-) {
-  const result = currentlyFollowing
-    ? await supabase
-        .from("follows")
-        .delete()
-        .eq("follower_id", userId)
-        .eq("following_id", otherUserId)
-    : await supabase.from("follows").insert({
-        follower_id: userId,
-        following_id: otherUserId,
-      });
+  currentlyFollowingOrRequested: boolean
+): Promise<"none" | "requested" | "following"> {
+  const rpc = currentlyFollowingOrRequested
+    ? "unfollow_or_cancel_request"
+    : "request_or_follow_user";
 
-  assertNoError(result.error);
+  const { data, error } = await supabase.rpc(rpc, {
+    target_user: otherUserId,
+  });
+
+  assertNoError(error);
+
+  const state = String(data || "none");
+  return state === "following"
+    ? "following"
+    : state === "requested"
+      ? "requested"
+      : "none";
 }
 
 export async function createMessage(

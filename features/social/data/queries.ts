@@ -128,7 +128,7 @@ export async function fetchPeopleAndFollowing(
   supabase: SupabaseClient,
   userId: string
 ) {
-  const [profilesResult, followResult] = await Promise.all([
+  const [profilesResult, followResult, requestResult] = await Promise.all([
     supabase
       .from("profiles")
       .select(PROFILE_COLUMNS)
@@ -139,15 +139,24 @@ export async function fetchPeopleAndFollowing(
       .from("follows")
       .select("following_id")
       .eq("follower_id", userId),
+    supabase
+      .from("follow_requests")
+      .select("target_id")
+      .eq("requester_id", userId)
+      .eq("status", "pending"),
   ]);
 
   assertNoError(profilesResult.error);
   assertNoError(followResult.error);
+  assertNoError(requestResult.error);
 
   return {
     people: (profilesResult.data || []) as Profile[],
     followed: (followResult.data || []).map(
       (row: { following_id: string }) => row.following_id
+    ),
+    requested: (requestResult.data || []).map(
+      (row: { target_id: string }) => row.target_id
     ),
   };
 }

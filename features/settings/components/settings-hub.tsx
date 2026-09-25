@@ -59,6 +59,18 @@ export default function SettingsHub() {
           text="Choose the private audience you can use for Notes, Stories and future private sharing."
         />
         <SettingsCard
+          href="/settings/follow-requests"
+          icon="activity"
+          title="Follow Requests"
+          text="Review pending requests for your private account."
+        />
+        <SettingsCard
+          href="/settings/close-friends"
+          icon="profile"
+          title="Close Friends"
+          text="Manage your private audience for Notes and Stories."
+        />
+        <SettingsCard
           href="/settings/blocked"
           icon="activity"
           title={t("Blocked Accounts")}

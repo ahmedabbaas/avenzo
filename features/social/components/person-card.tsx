@@ -7,11 +7,13 @@ import VerifiedBadge from "./verified-badge";
 export default function PersonCard({
   person,
   following,
+  requested = false,
   onFollow,
   onMessage,
 }: {
   person: Profile;
   following: boolean;
+  requested?: boolean;
   onFollow: () => void;
   onMessage: () => void;
 }) {
@@ -26,8 +28,11 @@ export default function PersonCard({
         </div>
       </Link>
       <div className="person-actions">
-        <button className="btn small" onClick={onFollow}>
-          {following ? "Following" : "Follow"}
+        <button
+          className={"btn small " + (requested ? "requested" : "")}
+          onClick={onFollow}
+        >
+          {following ? "Following" : requested ? "Requested" : "Follow"}
         </button>
         <button className="btn secondary small" onClick={onMessage}>
           Message
