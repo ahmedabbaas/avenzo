@@ -25,6 +25,18 @@ export type Comment = {
   profile?: Profile;
 };
 
+export type PostMediaItem = {
+  id: string;
+  post_id: string;
+  media_path: string;
+  media_type: "image";
+  media_width: number | null;
+  media_height: number | null;
+  alt_text: string;
+  position: number;
+  url: string;
+};
+
 export type Post = {
   id: string;
   author_id: string;
@@ -44,6 +56,7 @@ export type Post = {
   commentCount: number;
   comments: Comment[];
   reposted?: boolean;
+  mediaItems?: PostMediaItem[];
 };
 
 export type Reel = {

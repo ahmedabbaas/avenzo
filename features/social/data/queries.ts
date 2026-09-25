@@ -3,6 +3,7 @@ import type {
   Chat,
   Message,
   Post,
+  PostMediaItem,
   Profile,
   ProfileStats,
   Reel,
@@ -171,7 +172,13 @@ async function hydratePosts(
   const authorIds = [...new Set(rows.map((post) => post.author_id))];
   const postIds = rows.map((post) => post.id);
 
-  const [authorsResult, likesResult, commentsResult, repostsResult] = await Promise.all([
+  const [
+    authorsResult,
+    likesResult,
+    commentsResult,
+    repostsResult,
+    mediaItemsResult,
+  ] = await Promise.all([
     supabase
       .from("profiles")
       .select(PROFILE_COLUMNS)
@@ -190,12 +197,18 @@ async function hydratePosts(
       .select("post_id,user_id")
       .eq("user_id", userId)
       .in("post_id", postIds),
+    supabase
+      .from("post_media_items")
+      .select("id,post_id,media_path,media_type,media_width,media_height,alt_text,position")
+      .in("post_id", postIds)
+      .order("position", { ascending: true }),
   ]);
 
   assertNoError(authorsResult.error);
   assertNoError(likesResult.error);
   assertNoError(commentsResult.error);
   assertNoError(repostsResult.error);
+  assertNoError(mediaItemsResult.error);
 
   const authors = (authorsResult.data || []) as Profile[];
   const authorMap = new Map(authors.map((author) => [author.id, author]));
@@ -237,6 +250,12 @@ async function hydratePosts(
       .filter((id): id is string => Boolean(id))
   );
 
+  const mediaItems = (mediaItemsResult.data || []).map((item) => ({
+    ...item,
+    media_type: "image" as const,
+    url: supabase.storage.from("media").getPublicUrl(item.media_path).data.publicUrl,
+  })) as PostMediaItem[];
+
   return rows.map((post) => ({
     ...post,
     profile: authorMap.get(post.author_id),
@@ -257,6 +276,7 @@ async function hydratePosts(
         profile: commentUserMap.get(comment.user_id),
       })),
     reposted: repostedPostIds.has(post.id),
+    mediaItems: mediaItems.filter((item) => item.post_id === post.id),
   }));
 }
 
