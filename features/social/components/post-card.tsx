@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Icon from "./icon";
 import { avatarFor, formatRelativeTime, initialsAvatar } from "../lib/profile";
-import type { Post } from "../types";
+import type { Comment, Post } from "../types";
 import AvatarImage from "./avatar-image";
 import UserMediaImage from "./user-media-image";
 import VerifiedBadge from "./verified-badge";
@@ -18,6 +18,11 @@ export default function PostCard({
   onShare,
   onRepost,
   onComment,
+  onCommentLike,
+  onCommentDelete,
+  onEditCaption,
+  onReport,
+  currentUserId,
   own,
   onDelete,
   autoplayVideo = false,
@@ -30,13 +35,23 @@ export default function PostCard({
   onSave: () => void;
   onShare: () => void;
   onRepost?: () => void;
-  onComment: (value: string) => void;
+  onComment: (value: string, parentId?: string | null) => void;
+  onCommentLike: (comment: Comment) => void;
+  onCommentDelete: (comment: Comment) => void;
+  onEditCaption: (caption: string) => void;
+  onReport: () => void;
+  currentUserId: string;
   own: boolean;
   onDelete: () => void;
   autoplayVideo?: boolean;
   dataSaving?: boolean;
 }) {
   const [comment, setComment] = useState("");
+  const [replyTo, setReplyTo] = useState<Comment | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [editingCaption, setEditingCaption] = useState(false);
+  const [captionDraft, setCaptionDraft] = useState(post.caption || "");
+  const [viewerUrl, setViewerUrl] = useState("");
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [heartBurst, setHeartBurst] = useState(false);
   const author = post.profile;
@@ -107,11 +122,72 @@ export default function PostCard({
             </div>
           </div>
         )}
-        {own && (
-          <button className="post-delete" onClick={onDelete} aria-label="Delete post">
-            Delete
+        <div className="post-menu-shell">
+          <button
+            className="post-more-button"
+            type="button"
+            onClick={() => setMenuOpen((open) => !open)}
+            aria-label="Post options"
+            aria-expanded={menuOpen}
+          >
+            <Icon name="more" size={19} />
           </button>
-        )}
+          {menuOpen && (
+            <div className="post-menu" role="menu">
+              {own && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setCaptionDraft(post.caption || "");
+                    setEditingCaption(true);
+                    setMenuOpen(false);
+                  }}
+                >
+                  Edit caption
+                </button>
+              )}
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  void navigator.clipboard?.writeText(
+                    window.location.origin + "/p/" + post.id
+                  );
+                  setMenuOpen(false);
+                }}
+              >
+                Copy link
+              </button>
+              {!own && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="danger"
+                  onClick={() => {
+                    onReport();
+                    setMenuOpen(false);
+                  }}
+                >
+                  Report
+                </button>
+              )}
+              {own && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="danger"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onDelete();
+                  }}
+                >
+                  Delete post
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {post.media_type === "image" &&
@@ -165,13 +241,20 @@ export default function PostCard({
           </div>
         </div>
       ) : post.media_path && post.media_type === "image" ? (
-        <UserMediaImage
-          className="post-media"
-          src={mediaUrl}
-          alt={post.caption || "AVENZO post"}
-          width={post.media_width}
-          height={post.media_height}
-        />
+        <button
+          className="post-media-open"
+          type="button"
+          onClick={() => setViewerUrl(mediaUrl)}
+          aria-label="Open image full screen"
+        >
+          <UserMediaImage
+            className="post-media"
+            src={mediaUrl}
+            alt={post.caption || "AVENZO post"}
+            width={post.media_width}
+            height={post.media_height}
+          />
+        </button>
       ) : null}
 
       {post.media_path && post.media_type === "video" && (
@@ -232,12 +315,35 @@ export default function PostCard({
           </button>
         </div>
 
-        {post.caption && (
+        {editingCaption ? (
+          <form
+            className="post-caption-editor"
+            onSubmit={(event) => {
+              event.preventDefault();
+              onEditCaption(captionDraft);
+              setEditingCaption(false);
+            }}
+          >
+            <textarea
+              value={captionDraft}
+              maxLength={2200}
+              rows={3}
+              onChange={(event) => setCaptionDraft(event.target.value)}
+              aria-label="Edit post caption"
+            />
+            <div>
+              <button type="button" onClick={() => setEditingCaption(false)}>
+                Cancel
+              </button>
+              <button type="submit">Save</button>
+            </div>
+          </form>
+        ) : post.caption ? (
           <p className="post-caption post-caption-after">
             <b>{author?.username ? "@" + author.username : authorName}</b>
             <span>{post.caption}</span>
           </p>
-        )}
+        ) : null}
 
         {(post.hashtags?.length || post.mentions?.length || post.location) && (
           <div className="content-meta-line post-meta-after">
@@ -249,15 +355,83 @@ export default function PostCard({
 
         {post.comments.length > 0 && (
           <div className="comment-list">
-            {post.comments.slice(-3).map((item) => (
-              <div key={item.id}>
-                <b className="verified-line">
-                  @{item.profile?.username || "user"}
-                  <VerifiedBadge verified={item.profile?.verified} />
-                </b>
-                <span>{item.body}</span>
-              </div>
-            ))}
+            {post.comments
+              .filter((item) => !item.parent_id)
+              .slice(-3)
+              .map((item) => (
+                <div className="post-comment-thread" key={item.id}>
+                  <div className="post-comment-row">
+                    <div className="post-comment-copy">
+                      <b className="verified-line">
+                        @{item.profile?.username || "user"}
+                        <VerifiedBadge verified={item.profile?.verified} />
+                      </b>
+                      <span>{item.body}</span>
+                    </div>
+                    <div className="post-comment-tools">
+                      <button
+                        type="button"
+                        className={item.liked ? "active" : ""}
+                        onClick={() => onCommentLike(item)}
+                      >
+                        <Icon name="heart" size={13} />
+                        {item.likeCount ? <span>{item.likeCount}</span> : null}
+                      </button>
+                      <button type="button" onClick={() => setReplyTo(item)}>
+                        Reply
+                      </button>
+                      {item.user_id === currentUserId && (
+                        <button
+                          type="button"
+                          className="danger"
+                          onClick={() => onCommentDelete(item)}
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {post.comments
+                    .filter((reply) => reply.parent_id === item.id)
+                    .map((reply) => (
+                      <div className="post-comment-reply" key={reply.id}>
+                        <div className="post-comment-copy">
+                          <b className="verified-line">
+                            @{reply.profile?.username || "user"}
+                            <VerifiedBadge verified={reply.profile?.verified} />
+                          </b>
+                          <span>{reply.body}</span>
+                        </div>
+                        <div className="post-comment-tools">
+                          <button
+                            type="button"
+                            className={reply.liked ? "active" : ""}
+                            onClick={() => onCommentLike(reply)}
+                          >
+                            <Icon name="heart" size={12} />
+                            {reply.likeCount ? <span>{reply.likeCount}</span> : null}
+                          </button>
+                          {reply.user_id === currentUserId && (
+                            <button
+                              type="button"
+                              className="danger"
+                              onClick={() => onCommentDelete(reply)}
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              ))}
+          </div>
+        )}
+
+        {replyTo && (
+          <div className="comment-replying">
+            Replying to @{replyTo.profile?.username || "user"}
+            <button type="button" onClick={() => setReplyTo(null)}>×</button>
           </div>
         )}
 
@@ -265,20 +439,41 @@ export default function PostCard({
           onSubmit={(event) => {
             event.preventDefault();
             if (!comment.trim()) return;
-            onComment(comment);
+            onComment(comment, replyTo?.id || null);
             setComment("");
+            setReplyTo(null);
           }}
           className="comment-input"
         >
           <input
             value={comment}
             onChange={(event) => setComment(event.target.value.slice(0, 1000))}
-            placeholder="Add a comment…"
+            placeholder={replyTo ? "Write a reply…" : "Add a comment…"}
             aria-label="Add a comment"
           />
           <button disabled={!comment.trim()}>Post</button>
         </form>
       </div>
+
+      {viewerUrl && (
+        <div
+          className="post-media-viewer"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Post image viewer"
+          onClick={() => setViewerUrl("")}
+        >
+          <button
+            type="button"
+            className="post-viewer-close"
+            onClick={() => setViewerUrl("")}
+            aria-label="Close image viewer"
+          >
+            <Icon name="close" size={22} />
+          </button>
+          <img src={viewerUrl} alt={post.caption || "AVENZO post"} />
+        </div>
+      )}
     </article>
   );
 }
