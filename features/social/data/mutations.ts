@@ -517,12 +517,83 @@ export async function createPostComment(
   supabase: SupabaseClient,
   userId: string,
   postId: string,
-  body: string
+  body: string,
+  parentId: string | null = null
 ) {
+  const cleanBody = body.trim().slice(0, 1000);
+  if (!cleanBody) throw new Error("Comment cannot be empty.");
+
   const { error } = await supabase.from("comments").insert({
     post_id: postId,
     user_id: userId,
-    body: body.trim(),
+    body: cleanBody,
+    parent_id: parentId,
+  });
+
+  assertNoError(error);
+}
+
+export async function updatePostCaption(
+  supabase: SupabaseClient,
+  userId: string,
+  postId: string,
+  caption: string
+) {
+  const cleanCaption = caption.trim().slice(0, 2200);
+  const { error } = await supabase
+    .from("posts")
+    .update({ caption: cleanCaption })
+    .eq("id", postId)
+    .eq("author_id", userId);
+
+  assertNoError(error);
+}
+
+export async function removePostComment(
+  supabase: SupabaseClient,
+  userId: string,
+  commentId: string
+) {
+  const { error } = await supabase
+    .from("comments")
+    .delete()
+    .eq("id", commentId)
+    .eq("user_id", userId);
+
+  assertNoError(error);
+}
+
+export async function setPostCommentLike(
+  supabase: SupabaseClient,
+  userId: string,
+  commentId: string,
+  currentlyLiked: boolean
+) {
+  const result = currentlyLiked
+    ? await supabase
+        .from("comment_likes")
+        .delete()
+        .eq("comment_id", commentId)
+        .eq("user_id", userId)
+    : await supabase.from("comment_likes").insert({
+        comment_id: commentId,
+        user_id: userId,
+      });
+
+  assertNoError(result.error);
+}
+
+export async function reportPost(
+  supabase: SupabaseClient,
+  userId: string,
+  postId: string,
+  details = "Reported from post menu."
+) {
+  const { error } = await supabase.from("reports").insert({
+    reporter_id: userId,
+    reported_post_id: postId,
+    reason: "other",
+    details: details.slice(0, 1000),
   });
 
   assertNoError(error);
