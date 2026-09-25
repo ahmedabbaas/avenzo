@@ -72,6 +72,7 @@ export default function ConnectionsList({
   const [busyId, setBusyId] = useState("");
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
+  const [retryNonce, setRetryNonce] = useState(0);
   const ownList = target.id === viewerId;
   const title = kind === "followers" ? "Followers" : "Following";
 
@@ -116,7 +117,7 @@ export default function ConnectionsList({
         total: rows.length ? Number(rows[0].total_count || 0) : 0,
       };
     },
-    [debouncedSearch, kind, supabase, target.id]
+    [debouncedSearch, kind, retryNonce, supabase, target.id]
   );
 
   useEffect(() => {
@@ -321,13 +322,7 @@ export default function ConnectionsList({
             <span>{error}</span>
             <button
               type="button"
-              onClick={() => {
-                setDebouncedSearch((current) => current + " ");
-                window.setTimeout(
-                  () => setDebouncedSearch(search.trim().slice(0, 80)),
-                  0
-                );
-              }}
+              onClick={() => setRetryNonce((current) => current + 1)}
             >
               Retry
             </button>
