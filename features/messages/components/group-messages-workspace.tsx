@@ -251,9 +251,10 @@ export default function GroupMessagesWorkspace({
           </button>
         </div>
 
-        <div className="group-switch-row">
+        <div className="group-switch-row group-switch-row-three">
           <Link href="/messages">Direct</Link>
           <span>Groups</span>
+          <Link href="/channels">Channels</Link>
         </div>
 
         <div className="group-list">

@@ -1409,6 +1409,10 @@ export default function MessagesWorkspace({
               <Icon name="messages" size={16} />
               Groups
             </Link>
+            <Link className="btn secondary small dm-channels-link" href="/channels">
+              <Icon name="activity" size={16} />
+              Channels
+            </Link>
             <button
               className="btn small"
               onClick={() => setNewMessageOpen(true)}
