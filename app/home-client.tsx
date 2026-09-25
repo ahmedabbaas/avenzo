@@ -910,14 +910,17 @@ export default function HomeClient({
           onClick={() => setScreen("home")}
           aria-label="AVENZO home"
         >
-          <span className="brand-home-content">
-            <BrandLogo size={34} />
-            <span>AVENZO</span>
-          </span>
-          <span className="brand-profile-content">
-            <span>@{profile.username}</span>
-            <Icon name="chevronDown" size={15} />
-          </span>
+          {screen === "profile" ? (
+            <span className="brand-profile-content">
+              <span>@{profile.username}</span>
+              <Icon name="chevronDown" size={15} />
+            </span>
+          ) : (
+            <span className="brand-home-content">
+              <BrandLogo size={34} />
+              <span>AVENZO</span>
+            </span>
+          )}
         </button>
 
         <div className="search-wrap">
