@@ -10,6 +10,7 @@ import UserMediaImage from "./user-media-image";
 import VerifiedBadge from "./verified-badge";
 import Icon from "./icon";
 import RepostsGrid from "./reposts-grid";
+import ProfileHighlightsRow from "./profile-highlights-row";
 
 export default function ProfileView({
   profile,
@@ -77,6 +78,8 @@ export default function ProfileView({
           </div>
         </div>
       </section>
+
+      <ProfileHighlightsRow profileId={profile.id} own />
 
       <div className="profile-content-tabs" role="tablist" aria-label="Profile content">
         <button

@@ -65,6 +65,12 @@ export default function SettingsHub() {
           text="Manage your private audience for Notes, Stories and private sharing."
         />
         <SettingsCard
+          href="/settings/archive"
+          icon="saved"
+          title="Story Archive & Highlights"
+          text="Manage archived Stories and keep selected moments on your profile."
+        />
+        <SettingsCard
           href="/settings/blocked"
           icon="activity"
           title={t("Blocked Accounts")}

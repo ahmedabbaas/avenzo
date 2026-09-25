@@ -12,6 +12,7 @@ const NAV = [
   { href: "/settings/account", label: "Profile & Account", icon: "profile" as const },
   { href: "/settings/follow-requests", label: "Follow Requests", icon: "activity" as const },
   { href: "/settings/close-friends", label: "Close Friends", icon: "profile" as const },
+  { href: "/settings/archive", label: "Archive & Highlights", icon: "saved" as const },
   { href: "/settings/blocked", label: "Blocked Accounts", icon: "saved" as const },
 ];
 

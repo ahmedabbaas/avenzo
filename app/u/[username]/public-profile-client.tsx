@@ -9,6 +9,7 @@ import AvatarImage from "../../../features/social/components/avatar-image";
 import UserMediaImage from "../../../features/social/components/user-media-image";
 import { initialsAvatar } from "../../../features/social/lib/profile";
 import VerifiedBadge from "../../../features/social/components/verified-badge";
+import ProfileHighlightsRow from "../../../features/social/components/profile-highlights-row";
 import RepostsGrid from "../../../features/social/components/reposts-grid";
 
 type PublicProfile = {
@@ -340,6 +341,8 @@ export default function PublicProfileClient({
             )}
           </div>
         </div>
+
+        <ProfileHighlightsRow profileId={profile.id} />
 
         {accountPrivate && !following ? (
           <section className="public-private-account">
