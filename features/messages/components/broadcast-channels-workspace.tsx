@@ -405,7 +405,9 @@ export default function BroadcastChannelsWorkspace({
                           <VerifiedBadge verified={post.author_verified} />
                         </b>
                         <small>
-                          @{post.author_username} ·{" "}
+                          {post.author_username
+                            ? "@" + post.author_username
+                            : "Account unavailable"}{" · "}
                           {formatRelativeTime(post.created_at)}
                         </small>
                       </div>
