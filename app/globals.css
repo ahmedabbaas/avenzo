@@ -11556,3 +11556,12 @@ html[data-theme="dark"] .messages-page{
     transform:scale(.95)!important;
   }
 }
+
+
+/* AVENZO DM VISIBILITY FIX v5 */
+@media(max-width:820px){
+  .dm-sidebar.dm-mobile-hidden,
+  .dm-chat.dm-mobile-hidden{
+    display:none!important;
+  }
+}
