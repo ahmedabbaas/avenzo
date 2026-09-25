@@ -5790,3 +5790,12 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
     transform:scale(.95)!important;
   }
 }
+
+
+/* AVENZO APK DM VISIBILITY FIX v5 */
+@media(max-width:820px){
+  html.avenzo-android-app .dm-sidebar.dm-mobile-hidden,
+  html.avenzo-android-app .dm-chat.dm-mobile-hidden{
+    display:none!important;
+  }
+}
