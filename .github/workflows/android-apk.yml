@@ -231,9 +231,7 @@ jobs:
                 WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
               );
 
-              WindowManager.LayoutParams params = getWindow().getAttributes();
-              params.preferredRefreshRate = 120.0f;
-              getWindow().setAttributes(params);
+              preferHighRefreshRate();
 
               createMessageNotificationChannel();
               requestNotificationPermission();
@@ -265,6 +263,7 @@ jobs:
             public void onResume() {
               super.onResume();
               activityVisible = true;
+              preferHighRefreshRate();
               configureWebView();
 
               if (getBridge() != null && getBridge().getWebView() != null) {
@@ -541,6 +540,31 @@ jobs:
               }
             }
 
+            private void preferHighRefreshRate() {
+              if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return;
+
+              Display display = getDisplay();
+              if (display == null) return;
+
+              Display.Mode current = display.getMode();
+              Display.Mode best = current;
+
+              for (Display.Mode mode : display.getSupportedModes()) {
+                boolean sameResolution =
+                  mode.getPhysicalWidth() == current.getPhysicalWidth() &&
+                  mode.getPhysicalHeight() == current.getPhysicalHeight();
+
+                if (sameResolution && mode.getRefreshRate() > best.getRefreshRate()) {
+                  best = mode;
+                }
+              }
+
+              WindowManager.LayoutParams params = getWindow().getAttributes();
+              params.preferredDisplayModeId = best.getModeId();
+              params.preferredRefreshRate = best.getRefreshRate();
+              getWindow().setAttributes(params);
+            }
+
             private void configureWebView() {
               if (
                 avenzoClientInstalled ||
@@ -553,6 +577,12 @@ jobs:
               final WebView webView = getBridge().getWebView();
               webView.setOverScrollMode(WebView.OVER_SCROLL_IF_CONTENT_SCROLLS);
               webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                webView.setRendererPriorityPolicy(
+                  WebView.RENDERER_PRIORITY_IMPORTANT,
+                  false
+                );
+              }
               webView.setVerticalScrollBarEnabled(false);
               webView.setHorizontalScrollBarEnabled(false);
               webView.getSettings().setBuiltInZoomControls(false);
