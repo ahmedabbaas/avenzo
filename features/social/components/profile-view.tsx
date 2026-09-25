@@ -36,15 +36,44 @@ export default function ProfileView({
 }) {
   const [tab, setTab] =
     useState<"posts" | "reels" | "reposts" | "tagged">("posts");
+  const [shareLabel, setShareLabel] = useState("Share profile");
+
+  async function shareProfile() {
+    const url =
+      window.location.origin +
+      "/u/" +
+      encodeURIComponent(profile.username);
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: profile.display_name + " on AVENZO",
+          text: "View @" + profile.username + " on AVENZO",
+          url,
+        });
+        setShareLabel("Shared");
+      } else {
+        await navigator.clipboard.writeText(url);
+        setShareLabel("Link copied");
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+
+      try {
+        await navigator.clipboard.writeText(url);
+        setShareLabel("Link copied");
+      } catch {
+        setShareLabel("Copy failed");
+      }
+    }
+
+    window.setTimeout(() => setShareLabel("Share profile"), 1600);
+  }
 
   return (
     <div className="profile-page">
       <section className="profile-hero">
         <div className="profile-mobile-top" aria-label="Profile overview">
-          <span className="profile-mobile-stat">
-            <b>{stats.followers}</b>
-            <small>Followers</small>
-          </span>
           <span className="profile-mobile-avatar-wrap">
             <AvatarImage
               src={avatarFor(profile)}
@@ -58,6 +87,14 @@ export default function ProfileView({
             >
               <Icon name="plus" size={16} />
             </button>
+          </span>
+          <span className="profile-mobile-stat">
+            <b>{stats.posts}</b>
+            <small>Posts</small>
+          </span>
+          <span className="profile-mobile-stat">
+            <b>{stats.followers}</b>
+            <small>Followers</small>
           </span>
           <span className="profile-mobile-stat">
             <b>{stats.following}</b>
@@ -85,19 +122,25 @@ export default function ProfileView({
             <button className="btn secondary small profile-edit" onClick={onEdit}>
               Edit profile
             </button>
+            <button
+              className="btn secondary small profile-edit"
+              type="button"
+              onClick={() => void shareProfile()}
+            >
+              {shareLabel}
+            </button>
           </div>
 
           <p className="profile-bio">{profile.bio || "Welcome to AVENZO."}</p>
 
           <div className="profile-mobile-actions" aria-label="Profile actions">
             <button type="button" onClick={onEdit}>Edit profile</button>
-            <button type="button" onClick={onCreatePost}>Create post</button>
+            <button type="button" onClick={() => void shareProfile()}>{shareLabel}</button>
             <button type="button" className="primary" onClick={onCreateStory}>Add story</button>
           </div>
 
           <div className="profile-stats" aria-label="Profile statistics">
             <span><b>{stats.posts}</b><small>Posts</small></span>
-            <span><b>{reels.length}</b><small>Reels</small></span>
             <span><b>{stats.followers}</b><small>Followers</small></span>
             <span><b>{stats.following}</b><small>Following</small></span>
           </div>

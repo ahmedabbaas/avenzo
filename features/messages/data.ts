@@ -180,8 +180,8 @@ export async function fetchConversationMessages(
           caption: post.caption,
           media_path: post.media_path,
           media_type: post.media_type,
-          creator_username: author?.username || "user",
-          creator_name: author?.display_name || "AVENZO user",
+          creator_username: author?.username || "",
+          creator_name: author?.display_name || "Account unavailable",
           creator_verified: Boolean(author?.verified),
         },
       ];
@@ -199,8 +199,8 @@ export async function fetchConversationMessages(
           caption: reel.caption,
           media_path: reel.media_path,
           cover_path: reel.cover_path || null,
-          creator_username: author?.username || "user",
-          creator_name: author?.display_name || "AVENZO user",
+          creator_username: author?.username || "",
+          creator_name: author?.display_name || "Account unavailable",
           creator_verified: Boolean(author?.verified),
         },
       ];

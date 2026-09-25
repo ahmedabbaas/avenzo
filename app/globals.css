@@ -3390,7 +3390,7 @@ html[data-theme="light"] .avenzo-brand-logo{
     padding:
       76px
       max(11px,env(safe-area-inset-right))
-      calc(16px + env(safe-area-inset-bottom))
+      calc(76px + env(safe-area-inset-bottom))
       max(11px,env(safe-area-inset-left));
   }
 
@@ -3418,8 +3418,9 @@ html[data-theme="light"] .avenzo-brand-logo{
   }
 
   .reel-comments-drawer{
-    height:min(66dvh,620px);
-    padding-bottom:env(safe-area-inset-bottom);
+    bottom:calc(58px + env(safe-area-inset-bottom));
+    height:min(60dvh,560px);
+    padding-bottom:0;
   }
 
   /* Composer and dialogs become phone bottom sheets. */
@@ -10610,11 +10611,11 @@ html[data-theme="light"] .top-messages:hover{
 
   .screen-profile .profile-mobile-top{
     display:grid!important;
-    grid-template-columns:minmax(0,1fr) 86px minmax(0,1fr)!important;
+    grid-template-columns:86px repeat(3,minmax(0,1fr))!important;
     align-items:center!important;
-    gap:10px!important;
+    gap:8px!important;
     width:100%!important;
-    max-width:360px!important;
+    max-width:420px!important;
     margin:0 auto 12px!important;
   }
 

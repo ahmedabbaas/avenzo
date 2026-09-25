@@ -2027,7 +2027,9 @@ export default function MessagesWorkspace({
                                 <div className="dm-shared-card">
                                   <div className="dm-shared-copy">
                                     <b>
-                                      @{message.shared_post?.creator_username || "user"}
+                                      {message.shared_post?.creator_username
+                                        ? "@" + message.shared_post.creator_username
+                                        : "Account unavailable"}
                                       <VerifiedBadge verified={message.shared_post?.creator_verified} />
                                     </b>
                                     <span>
@@ -2083,7 +2085,9 @@ export default function MessagesWorkspace({
                                 <div className="dm-shared-card">
                                   <div className="dm-shared-copy">
                                     <b>
-                                      @{message.shared_reel?.creator_username || "user"}
+                                      {message.shared_reel?.creator_username
+                                        ? "@" + message.shared_reel.creator_username
+                                        : "Account unavailable"}
                                       <VerifiedBadge verified={message.shared_reel?.creator_verified} />
                                     </b>
                                     <span>
@@ -2141,7 +2145,9 @@ export default function MessagesWorkspace({
                                         "Shared profile"}
                                     </b>
                                     <span>
-                                      @{message.shared_profile?.username || "user"}
+                                      {message.shared_profile?.username
+                                        ? "@" + message.shared_profile.username
+                                        : "Profile unavailable"}
                                       <VerifiedBadge verified={message.shared_profile?.verified} />
                                     </span>
                                   </div>
