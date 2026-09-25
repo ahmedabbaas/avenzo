@@ -10,6 +10,7 @@ import UserMediaImage from "./user-media-image";
 import VerifiedBadge from "./verified-badge";
 import Icon from "./icon";
 import RepostsGrid from "./reposts-grid";
+import TaggedPostsGrid from "./tagged-posts-grid";
 import ProfileHighlightsRow from "./profile-highlights-row";
 
 export default function ProfileView({
@@ -33,7 +34,8 @@ export default function ProfileView({
   onCreateReel: () => void;
   onCreateStory: () => void;
 }) {
-  const [tab, setTab] = useState<"posts" | "reels" | "reposts">("posts");
+  const [tab, setTab] =
+    useState<"posts" | "reels" | "reposts" | "tagged">("posts");
 
   return (
     <div className="profile-page">
@@ -99,6 +101,12 @@ export default function ProfileView({
           onClick={() => setTab("reposts")}
         >
           Reposts
+        </button>
+        <button
+          className={tab === "tagged" ? "active" : ""}
+          onClick={() => setTab("tagged")}
+        >
+          Tagged
         </button>
       </div>
 
@@ -199,7 +207,7 @@ export default function ProfileView({
             />
           )}
         </section>
-      ) : (
+      ) : tab === "reposts" ? (
         <section className="profile-content-section" aria-labelledby="profile-reposts-title">
           <div className="profile-section-head">
             <div>
@@ -208,6 +216,16 @@ export default function ProfileView({
             </div>
           </div>
           <RepostsGrid profileId={profile.id} own />
+        </section>
+      ) : (
+        <section className="profile-content-section" aria-labelledby="profile-tagged-title">
+          <div className="profile-section-head">
+            <div>
+              <div className="eyebrow">MENTIONS</div>
+              <h2 id="profile-tagged-title">Tagged</h2>
+            </div>
+          </div>
+          <TaggedPostsGrid username={profile.username} />
         </section>
       )}
     </div>

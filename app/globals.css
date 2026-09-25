@@ -2510,7 +2510,7 @@ html[data-theme="dark"] button{
 .reel-open-link:hover{color:var(--accent)}
 .profile-content-tabs,.public-profile-tabs{
   display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-columns:repeat(4,minmax(0,1fr));
   gap:4px;
   padding:4px;
   margin:20px 0 0;
@@ -6784,4 +6784,78 @@ html[data-theme="light"]{
     grid-template-columns:40px minmax(0,1fr) 34px 34px 40px!important;
   }
   .dm-compose-row:has(.dm-schedule-button) .dm-emoji-button{display:none!important}
+}
+
+/* AVENZO TAGGED POSTS v1 */
+.tagged-posts-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+.tagged-post-tile{
+  min-width:0;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:15px;
+  background:var(--panel);
+}
+.tagged-post-tile>a{
+  display:grid;
+  aspect-ratio:1;
+  overflow:hidden;
+  background:#070809;
+  color:#fff;
+  text-decoration:none;
+}
+.tagged-post-tile img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.tagged-post-tile>a>span{
+  display:grid;
+  place-items:center;
+  padding:18px;
+  text-align:center;
+}
+.tagged-post-author{
+  min-height:42px;
+  padding:8px 10px;
+  color:var(--muted);
+  font-size:9px;
+}
+.tagged-post-author span{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+}
+.tagged-post-author b{color:var(--text)}
+.tagged-posts-empty{
+  display:grid;
+  place-items:center;
+  gap:5px;
+  min-height:220px;
+  padding:28px;
+  border:1px dashed var(--line);
+  border-radius:17px;
+  color:var(--muted);
+  text-align:center;
+}
+.tagged-posts-empty b{color:var(--text)}
+.tagged-posts-empty p{max-width:420px;margin:0;line-height:1.5}
+@media(max-width:820px){
+  .tagged-posts-grid{gap:2px}
+  .tagged-post-tile{border:0;border-radius:2px;background:transparent}
+  .tagged-post-author{display:none}
+  .profile-content-tabs,.public-profile-tabs{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  }
+  .profile-content-tabs button,.public-profile-tabs button{
+    min-width:0!important;
+    padding-inline:4px!important;
+    font-size:clamp(9px,2.7vw,12px)!important;
+  }
+  .profile-content-tabs button span,.public-profile-tabs button span{
+    display:none!important;
+  }
 }

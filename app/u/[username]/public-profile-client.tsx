@@ -11,6 +11,7 @@ import { initialsAvatar } from "../../../features/social/lib/profile";
 import VerifiedBadge from "../../../features/social/components/verified-badge";
 import ProfileHighlightsRow from "../../../features/social/components/profile-highlights-row";
 import RepostsGrid from "../../../features/social/components/reposts-grid";
+import TaggedPostsGrid from "../../../features/social/components/tagged-posts-grid";
 
 type PublicProfile = {
   id: string;
@@ -83,7 +84,8 @@ export default function PublicProfileClient({
   const [followState, setFollowState] = useState(initialFollowState);
   const following = followState === "following";
   const requested = followState === "requested";
-  const [contentTab, setContentTab] = useState<"posts" | "reels" | "reposts">(
+  const [contentTab, setContentTab] =
+    useState<"posts" | "reels" | "reposts" | "tagged">(
     reels.length > 0 && posts.length === 0 ? "reels" : "posts"
   );
   const [reelItems, setReelItems] = useState(reels);
@@ -375,6 +377,12 @@ export default function PublicProfileClient({
           >
             Reposts
           </button>
+          <button
+            className={contentTab === "tagged" ? "active" : ""}
+            onClick={() => setContentTab("tagged")}
+          >
+            Tagged
+          </button>
         </div>
 
         {contentTab === "posts" ? (
@@ -451,7 +459,7 @@ export default function PublicProfileClient({
               </div>
             )}
           </>
-        ) : (
+        ) : contentTab === "reposts" ? (
           <>
             <div className="public-profile-section-title">
               <div>
@@ -460,6 +468,16 @@ export default function PublicProfileClient({
               </div>
             </div>
             <RepostsGrid profileId={profile.id} />
+          </>
+        ) : (
+          <>
+            <div className="public-profile-section-title">
+              <div>
+                <div className="eyebrow">TAGGED</div>
+                <h2>Posts tagging @{profile.username}</h2>
+              </div>
+            </div>
+            <TaggedPostsGrid username={profile.username} />
           </>
         )}
           </>
