@@ -21,6 +21,8 @@ export default function CreateContentModal({
   location,
   file,
   preview,
+  postPreviews = [],
+  postDimensions = [],
   coverFile,
   coverPreview,
   dimensions,
@@ -36,6 +38,7 @@ export default function CreateContentModal({
   onMentionsChange,
   onLocationChange,
   onFileSelect,
+  onPostFilesSelect,
   onCoverSelect,
   onClose,
   onSubmit,
@@ -49,6 +52,8 @@ export default function CreateContentModal({
   location: string;
   file: File | null;
   preview: string;
+  postPreviews?: string[];
+  postDimensions?: Array<MediaDimensions | null>;
   coverFile: File | null;
   coverPreview: string;
   dimensions: MediaDimensions | null;
@@ -64,6 +69,7 @@ export default function CreateContentModal({
   onMentionsChange: (value: string) => void;
   onLocationChange: (value: string) => void;
   onFileSelect: (file: File | null) => void;
+  onPostFilesSelect?: (files: File[]) => void;
   onCoverSelect: (file: File | null) => void;
   onClose: () => void;
   onSubmit: (event: FormEvent) => void;
@@ -75,7 +81,12 @@ export default function CreateContentModal({
   function drop(event: DragEvent<HTMLDivElement>) {
     event.preventDefault();
     setDragging(false);
-    onFileSelect(event.dataTransfer.files?.[0] || null);
+    const files = Array.from(event.dataTransfer.files || []);
+    if (mode === "post" && onPostFilesSelect) {
+      onPostFilesSelect(files);
+    } else {
+      onFileSelect(files[0] || null);
+    }
   }
 
   const isVideo = Boolean(file?.type.startsWith("video/"));
@@ -168,13 +179,15 @@ export default function CreateContentModal({
               ? file.name
               : mode === "reel"
                 ? "Drop a vertical video here"
-                : "Drop an image or video here"}
+                : mode === "post"
+                  ? "Drop up to 10 images here"
+                  : "Drop an image or video here"}
           </b>
           <span>
             {mode === "reel"
               ? "Portrait video only · up to 25 MB"
               : mode === "post"
-                ? "Images only · JPEG, PNG, WebP or GIF · up to 25 MB"
+                ? "Up to 10 images · JPEG, PNG, WebP or GIF · up to 25 MB each"
                 : "JPEG, PNG, WebP, GIF, MP4, WebM or MOV · up to 25 MB"}
           </span>
           <button type="button" className="btn secondary small" disabled={posting}>
@@ -184,6 +197,7 @@ export default function CreateContentModal({
             ref={fileInput}
             type="file"
             hidden
+            multiple={mode === "post"}
             accept={
               mode === "reel"
                 ? "video/*"
@@ -192,13 +206,34 @@ export default function CreateContentModal({
                   : "image/*,video/*"
             }
             onChange={(event) => {
-              onFileSelect(event.target.files?.[0] || null);
+              const files = Array.from(event.target.files || []);
+              if (mode === "post" && onPostFilesSelect) {
+                onPostFilesSelect(files);
+              } else {
+                onFileSelect(files[0] || null);
+              }
               event.target.value = "";
             }}
           />
         </div>
 
-        {preview &&
+        {mode === "post" && postPreviews.length > 0 ? (
+          <div className="create-carousel-preview" aria-label="Selected carousel images">
+            {postPreviews.map((itemPreview, index) => (
+              <div className="create-carousel-preview-item" key={itemPreview}>
+                <UserMediaImage
+                  src={itemPreview}
+                  alt={"Post image " + (index + 1)}
+                  width={postDimensions[index]?.width}
+                  height={postDimensions[index]?.height}
+                  loading="eager"
+                />
+                <span>{index + 1}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          preview &&
           (isVideo ? (
             <div className={"upload-preview-frame " + (mode === "reel" ? "vertical" : "")}>
               <video
@@ -218,9 +253,14 @@ export default function CreateContentModal({
               height={dimensions?.height}
               loading="eager"
             />
-          ))}
+          ))
+        )}
 
-        {dimensions && (
+        {mode === "post" && postPreviews.length > 0 ? (
+          <div className="upload-dimensions">
+            {postPreviews.length} image{postPreviews.length === 1 ? "" : "s"} selected
+          </div>
+        ) : dimensions && (
           <div className="upload-dimensions">
             {dimensions.width} × {dimensions.height}
             {mode === "reel" && (
