@@ -277,14 +277,24 @@ export default function PublicProfileClient({
                 <b>{stats.posts}</b>
                 posts
               </span>
-              <span>
+              <Link
+                href={
+                  "/connections/followers?user=" +
+                  encodeURIComponent(profile.username)
+                }
+              >
                 <b>{stats.followers}</b>
                 followers
-              </span>
-              <span>
+              </Link>
+              <Link
+                href={
+                  "/connections/following?user=" +
+                  encodeURIComponent(profile.username)
+                }
+              >
                 <b>{stats.following}</b>
                 following
-              </span>
+              </Link>
             </div>
 
             <div className="public-profile-actions">

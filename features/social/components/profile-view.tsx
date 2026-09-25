@@ -92,14 +92,14 @@ export default function ProfileView({
             <b>{stats.posts}</b>
             <small>Posts</small>
           </span>
-          <span className="profile-mobile-stat">
+          <Link className="profile-mobile-stat" href="/connections/followers">
             <b>{stats.followers}</b>
             <small>Followers</small>
-          </span>
-          <span className="profile-mobile-stat">
+          </Link>
+          <Link className="profile-mobile-stat" href="/connections/following">
             <b>{stats.following}</b>
             <small>Following</small>
-          </span>
+          </Link>
         </div>
 
         <AvatarImage
@@ -141,8 +141,8 @@ export default function ProfileView({
 
           <div className="profile-stats" aria-label="Profile statistics">
             <span><b>{stats.posts}</b><small>Posts</small></span>
-            <span><b>{stats.followers}</b><small>Followers</small></span>
-            <span><b>{stats.following}</b><small>Following</small></span>
+            <Link href="/connections/followers"><b>{stats.followers}</b><small>Followers</small></Link>
+            <Link href="/connections/following"><b>{stats.following}</b><small>Following</small></Link>
           </div>
 
           <div className="profile-create-panel">
