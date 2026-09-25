@@ -117,7 +117,7 @@ export default function ConnectionsList({
         total: rows.length ? Number(rows[0].total_count || 0) : 0,
       };
     },
-    [debouncedSearch, kind, retryNonce, supabase, target.id]
+    [debouncedSearch, kind, supabase, target.id]
   );
 
   useEffect(() => {
@@ -146,7 +146,7 @@ export default function ConnectionsList({
     return () => {
       active = false;
     };
-  }, [fetchPage]);
+  }, [fetchPage, retryNonce]);
 
   async function loadMore() {
     if (loadingMore || items.length >= total) return;
