@@ -86,16 +86,21 @@ export default function GroupMessagesWorkspace({
 
   useEffect(() => {
     let alive = true;
-    void Promise.all([loadGroups(), loadPeople()])
-      .then(() => alive && setLoading(false))
-      .catch(() => {
-        if (!alive) return;
-        setNotice("Groups could not be loaded right now.");
-        setLoading(false);
-      });
+    const timer = window.setTimeout(() => {
+      void Promise.all([loadGroups(), loadPeople()])
+        .then(() => {
+          if (alive) setLoading(false);
+        })
+        .catch(() => {
+          if (!alive) return;
+          setNotice("Groups could not be loaded right now.");
+          setLoading(false);
+        });
+    }, 0);
 
     return () => {
       alive = false;
+      window.clearTimeout(timer);
     };
   }, [loadGroups, loadPeople]);
 

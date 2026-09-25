@@ -58,7 +58,7 @@ export default function BroadcastChannelsWorkspace({
       if (replacement) setActive(replacement);
     }
     return next;
-  }, [supabase, currentUser.id, active?.id]);
+  }, [supabase, currentUser.id, active]);
 
   const loadChannel = useCallback(async (channel: BroadcastChannel) => {
     setActive(channel);
@@ -70,9 +70,21 @@ export default function BroadcastChannelsWorkspace({
   }, [supabase]);
 
   useEffect(() => {
-    void loadChannels()
-      .catch(() => setNotice("Channels could not be loaded."))
-      .finally(() => setLoading(false));
+    let alive = true;
+    const timer = window.setTimeout(() => {
+      void loadChannels()
+        .catch(() => {
+          if (alive) setNotice("Channels could not be loaded.");
+        })
+        .finally(() => {
+          if (alive) setLoading(false);
+        });
+    }, 0);
+
+    return () => {
+      alive = false;
+      window.clearTimeout(timer);
+    };
   }, [loadChannels]);
 
   useEffect(() => {
