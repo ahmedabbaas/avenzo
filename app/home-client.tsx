@@ -49,6 +49,7 @@ import ReelCard from "../features/social/components/reel-card";
 import PageTitle from "../features/social/components/page-title";
 import CreateContentModal from "../features/social/components/create-content-modal";
 import StoryViewer from "../features/social/components/story-viewer";
+import SavedCollectionsPanel from "../features/social/components/saved-collections-panel";
 import VerifiedBadge from "../features/social/components/verified-badge";
 import { avatarFor } from "../features/social/lib/profile";
 import { readMediaDimensions, type MediaDimensions } from "../features/social/lib/media";
@@ -1081,38 +1082,10 @@ export default function HomeClient({
           )}
 
           {screen === "saved" && (
-            <>
-              <PageTitle
-                eyebrow="COLLECTION"
-                title="Saved posts"
-                text="Private to your account."
-              />
-              {posts.filter((post) => saved.includes(post.id)).map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  saved
-                  mediaUrl={post.media_path ? mediaUrl(post.media_path) : ""}
-                  onLike={() => void toggleLike(post)}
-                  onSave={() => void toggleSave(post)}
-                  onShare={() => void sharePost(post)}
-                  onComment={(body) => void addComment(post, body)}
-                  own={post.author_id === initialProfile.id}
-                  onDelete={() => void deletePost(post)}
-                  autoplayVideo={runtimePreferences.feed_autoplay_videos}
-                  dataSaving={
-                    runtimePreferences.data_saving_mode ||
-                    runtimePreferences.use_less_mobile_data
-                  }
-                />
-              ))}
-              {!loading && saved.length === 0 && (
-                <EmptyState
-                  title="Nothing saved yet."
-                  text="Save posts you want to return to later."
-                />
-              )}
-            </>
+            <SavedCollectionsPanel
+              supabase={supabase}
+              userId={initialProfile.id}
+            />
           )}
 
           {screen === "activity" && (
