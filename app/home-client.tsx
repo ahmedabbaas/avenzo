@@ -910,8 +910,14 @@ export default function HomeClient({
           onClick={() => setScreen("home")}
           aria-label="AVENZO home"
         >
-          <BrandLogo size={34} />
-          <span>AVENZO</span>
+          <span className="brand-home-content">
+            <BrandLogo size={34} />
+            <span>AVENZO</span>
+          </span>
+          <span className="brand-profile-content">
+            <span>@{profile.username}</span>
+            <Icon name="chevronDown" size={15} />
+          </span>
         </button>
 
         <div className="search-wrap">
@@ -964,6 +970,14 @@ export default function HomeClient({
         >
           <Icon name="plus" size={17} />
           <span>Create a post</span>
+        </button>
+
+        <button
+          className="top-profile-menu"
+          onClick={() => router.push("/settings")}
+          aria-label="Profile menu"
+        >
+          <Icon name="menu" size={22} />
         </button>
 
         <button
