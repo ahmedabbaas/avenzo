@@ -22,7 +22,7 @@ export async function fetchInbox(
   supabase: SupabaseClient,
   requests = false
 ): Promise<InboxConversation[]> {
-  const { data, error } = await supabase.rpc("get_dm_inbox_v3", {
+  const { data, error } = await supabase.rpc("get_dm_inbox_v4", {
     include_requests: requests,
   });
   assertNoError(error);
@@ -537,6 +537,18 @@ export async function setConversationFolder(
   const { error } = await supabase.rpc("set_conversation_folder", {
     cid: conversationId,
     next_folder: folder,
+  });
+  assertNoError(error);
+}
+
+export async function setConversationPinned(
+  supabase: SupabaseClient,
+  conversationId: string,
+  pinned: boolean
+) {
+  const { error } = await supabase.rpc("set_conversation_pinned", {
+    cid: conversationId,
+    next_pinned: pinned,
   });
   assertNoError(error);
 }

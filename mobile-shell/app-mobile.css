@@ -3100,3 +3100,18 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
     font-size:11px!important;
   }
 }
+
+/* AVENZO ANDROID PINNED CHATS v1 */
+@media(max-width:820px){
+  html.avenzo-android-app .dm-pinned-mark{
+    display:grid!important;
+    place-items:center!important;
+    width:18px!important;
+    height:18px!important;
+    border-radius:50%!important;
+    background:rgba(216,255,63,.1)!important;
+    color:var(--accent)!important;
+    font-size:11px!important;
+    font-weight:800!important;
+  }
+}

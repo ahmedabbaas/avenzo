@@ -44,6 +44,7 @@ import {
   setConversationMuted,
   setConversationTheme,
   setConversationFolder,
+  setConversationPinned,
   setMessageReaction,
 } from "../data";
 import type {
@@ -650,6 +651,8 @@ export default function MessagesWorkspace({
           muted: false,
           theme: "violet" as InboxConversation["theme"],
           inbox_folder: "primary" as InboxConversation["inbox_folder"],
+          pinned: false,
+          pinned_at: null,
         };
 
       setNewMessageOpen(false);
@@ -1088,6 +1091,44 @@ export default function MessagesWorkspace({
     }
   }
 
+  async function toggleConversationPinned() {
+    if (!active) return;
+
+    const previousPinned = active.pinned;
+    const previousPinnedAt = active.pinned_at;
+    const nextPinned = !active.pinned;
+
+    setActive({
+      ...active,
+      pinned: nextPinned,
+      pinned_at: nextPinned ? new Date().toISOString() : null,
+    });
+    setMoreOpen(false);
+
+    try {
+      await setConversationPinned(
+        supabase,
+        active.conversation_id,
+        nextPinned
+      );
+      await loadLists();
+      setNotice(nextPinned ? "Conversation pinned." : "Conversation unpinned.");
+    } catch (error) {
+      setActive({
+        ...active,
+        pinned: previousPinned,
+        pinned_at: previousPinnedAt,
+      });
+
+      const message = error instanceof Error ? error.message : "";
+      setNotice(
+        message.includes("PIN_LIMIT_REACHED")
+          ? "You can pin up to 3 conversations."
+          : "Could not update pinned chats."
+      );
+    }
+  }
+
   async function conversationAction(
     action: "mute" | "delete" | "block" | "restrict" | "report"
   ) {
@@ -1389,6 +1430,9 @@ export default function MessagesWorkspace({
                   {item.unread_count > 0 && (
                     <i>{item.unread_count}</i>
                   )}
+                  {item.pinned && (
+                    <span className="dm-pinned-mark" title="Pinned">⌃</span>
+                  )}
                   {item.muted && <span title="Muted">⌁</span>}
                 </span>
               </button>
@@ -1486,19 +1530,26 @@ export default function MessagesWorkspace({
                     Chat theme
                   </button>
                   {!active.request_incoming && (
-                    <button
-                      onClick={() =>
-                        void moveConversationFolder(
-                          active.inbox_folder === "general"
-                            ? "primary"
-                            : "general"
-                        )
-                      }
-                    >
-                      {active.inbox_folder === "general"
-                        ? "Move to Primary"
-                        : "Move to General"}
-                    </button>
+                    <>
+                      <button
+                        onClick={() => void toggleConversationPinned()}
+                      >
+                        {active.pinned ? "Unpin chat" : "Pin chat"}
+                      </button>
+                      <button
+                        onClick={() =>
+                          void moveConversationFolder(
+                            active.inbox_folder === "general"
+                              ? "primary"
+                              : "general"
+                          )
+                        }
+                      >
+                        {active.inbox_folder === "general"
+                          ? "Move to Primary"
+                          : "Move to General"}
+                      </button>
+                    </>
                   )}
                   <button onClick={() => void conversationAction("mute")}>
                     {active.muted ? "Unmute" : "Mute"}

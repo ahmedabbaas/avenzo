@@ -26,6 +26,8 @@ export type InboxConversation = {
   muted: boolean;
   theme: "violet" | "ocean" | "emerald" | "sunset" | "mono";
   inbox_folder: "primary" | "general";
+  pinned: boolean;
+  pinned_at: string | null;
 };
 
 export type MessageAttachment = {
