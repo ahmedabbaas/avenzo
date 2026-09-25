@@ -570,8 +570,34 @@
           return "handled";
         }
 
+        var groupBack = document.querySelector(
+          ".group-chat:not(.group-mobile-hidden) .group-back"
+        );
+        if (groupBack && isVisible(groupBack)) {
+          groupBack.click();
+          return "handled";
+        }
+
+        var channelBack = document.querySelector(
+          ".channel-feed:not(.channel-mobile-hidden) .group-back"
+        );
+        if (channelBack && isVisible(channelBack)) {
+          channelBack.click();
+          return "handled";
+        }
+
         if (window.location.pathname.indexOf("/settings") === 0) {
           window.location.href = "/home";
+          return "handled";
+        }
+
+        if (window.location.pathname === "/messages/groups") {
+          window.location.href = "/messages";
+          return "handled";
+        }
+
+        if (window.location.pathname === "/channels") {
+          window.location.href = "/messages";
           return "handled";
         }
 
