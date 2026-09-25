@@ -43,6 +43,7 @@ import {
   deleteOwnNote,
   setConversationMuted,
   setConversationTheme,
+  setConversationFolder,
   setMessageReaction,
 } from "../data";
 import type {
@@ -162,7 +163,8 @@ export default function MessagesWorkspace({
   const [messageQuery, setMessageQuery] = useState("");
   const [text, setText] = useState("");
   const [replyTo, setReplyTo] = useState<DirectMessage | null>(null);
-  const [tab, setTab] = useState<"inbox" | "requests">("inbox");
+  const [tab, setTab] =
+    useState<"primary" | "general" | "requests">("primary");
   const [newMessageOpen, setNewMessageOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -647,6 +649,7 @@ export default function MessagesWorkspace({
           request_incoming: false,
           muted: false,
           theme: "violet" as InboxConversation["theme"],
+          inbox_folder: "primary" as InboxConversation["inbox_folder"],
         };
 
       setNewMessageOpen(false);
@@ -1057,6 +1060,34 @@ export default function MessagesWorkspace({
     }
   }
 
+  async function moveConversationFolder(
+    folder: InboxConversation["inbox_folder"]
+  ) {
+    if (!active) return;
+
+    const previous = active.inbox_folder;
+    setActive({ ...active, inbox_folder: folder });
+    setMoreOpen(false);
+
+    try {
+      await setConversationFolder(
+        supabase,
+        active.conversation_id,
+        folder
+      );
+      setTab(folder);
+      await loadLists();
+      setNotice(
+        folder === "general"
+          ? "Conversation moved to General."
+          : "Conversation moved to Primary."
+      );
+    } catch {
+      setActive({ ...active, inbox_folder: previous });
+      setNotice("Could not move this conversation.");
+    }
+  }
+
   async function conversationAction(
     action: "mute" | "delete" | "block" | "restrict" | "report"
   ) {
@@ -1151,7 +1182,15 @@ export default function MessagesWorkspace({
     ...notes.filter((note) => note.user_id !== currentUser.id),
   ].slice(0, 12);
 
-  const shown = (tab === "inbox" ? inbox : requests).filter((item) =>
+  const baseConversations =
+    tab === "requests"
+      ? requests
+      : inbox.filter(
+          (item) =>
+            (item.inbox_folder || "primary") === tab
+        );
+
+  const shown = baseConversations.filter((item) =>
     (item.display_name + " " + item.username + " " + item.last_message)
       .toLowerCase()
       .includes(query.toLowerCase().trim())
@@ -1238,13 +1277,22 @@ export default function MessagesWorkspace({
 
         <div className="dm-tabs" role="tablist">
           <button
-            className={tab === "inbox" ? "active" : ""}
+            className={tab === "primary" ? "active" : ""}
             onClick={() => {
-              setTab("inbox");
+              setTab("primary");
               setActive(null);
             }}
           >
-            Inbox
+            Primary
+          </button>
+          <button
+            className={tab === "general" ? "active" : ""}
+            onClick={() => {
+              setTab("general");
+              setActive(null);
+            }}
+          >
+            General
           </button>
           <button
             className={tab === "requests" ? "active" : ""}
@@ -1264,9 +1312,11 @@ export default function MessagesWorkspace({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={
-              tab === "inbox"
-                ? "Search conversations"
-                : "Search requests"
+              tab === "requests"
+                ? "Search requests"
+                : tab === "general"
+                  ? "Search General"
+                  : "Search Primary"
             }
           />
         </label>
@@ -1289,14 +1339,18 @@ export default function MessagesWorkspace({
               <b>
                 {tab === "requests"
                   ? "No message requests"
-                  : "No messages yet"}
+                  : tab === "general"
+                    ? "No General chats"
+                    : "No messages yet"}
               </b>
               <p>
                 {tab === "requests"
                   ? "New requests from real users will appear here."
-                  : "Start a conversation with another AVENZO user."}
+                  : tab === "general"
+                    ? "Move lower-priority conversations here to keep Primary focused."
+                    : "Start a conversation with another AVENZO user."}
               </p>
-              {tab === "inbox" && (
+              {tab === "primary" && (
                 <button
                   className="btn small"
                   onClick={() => setNewMessageOpen(true)}
@@ -1431,6 +1485,21 @@ export default function MessagesWorkspace({
                   >
                     Chat theme
                   </button>
+                  {!active.request_incoming && (
+                    <button
+                      onClick={() =>
+                        void moveConversationFolder(
+                          active.inbox_folder === "general"
+                            ? "primary"
+                            : "general"
+                        )
+                      }
+                    >
+                      {active.inbox_folder === "general"
+                        ? "Move to Primary"
+                        : "Move to General"}
+                    </button>
+                  )}
                   <button onClick={() => void conversationAction("mute")}>
                     {active.muted ? "Unmute" : "Mute"}
                   </button>

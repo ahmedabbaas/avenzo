@@ -25,6 +25,7 @@ export type InboxConversation = {
   request_incoming: boolean;
   muted: boolean;
   theme: "violet" | "ocean" | "emerald" | "sunset" | "mono";
+  inbox_folder: "primary" | "general";
 };
 
 export type MessageAttachment = {
