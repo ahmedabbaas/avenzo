@@ -22,6 +22,10 @@ export type Comment = {
   body: string;
   user_id: string;
   created_at: string;
+  parent_id?: string | null;
+  liked?: boolean;
+  likeCount?: number;
+  replyCount?: number;
   profile?: Profile;
 };
 
@@ -140,6 +144,7 @@ export type NotificationRow = {
     | "follow_request_accepted"
     | "like"
     | "comment"
+    | "reply"
     | "message"
     | "message_request"
     | "message_reply"
