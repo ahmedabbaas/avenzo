@@ -1,8 +1,9 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import AuthBrandPanel from "../_components/auth-brand-panel";
 import PasswordField from "../_components/password-field";
+import BrandLogo from "../../components/brand-logo";
+import Icon from "../../features/social/components/icon";
 import TurnstileWidget, {
   readTurnstileToken,
   resetTurnstile,
@@ -130,21 +131,57 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="auth-shell">
+    <main className="auth-shell login-shell">
       <div className="auth-glow auth-glow-a" />
       <div className="auth-glow auth-glow-b" />
 
-      <AuthBrandPanel context="WELCOME TO AVENZO" />
+      <section className="login-showcase-card" aria-label="About AVENZO">
+        <div className="login-showcase-icons" aria-hidden="true">
+          <span><Icon name="heart" size={28} /></span>
+          <span><Icon name="plus" size={31} /></span>
+          <span><Icon name="camera" size={28} /></span>
+          <span><Icon name="messages" size={28} /></span>
+          <span><Icon name="activity" size={28} /></span>
+          <span><Icon name="search" size={28} /></span>
+        </div>
 
-      <section className="auth-card">
+        <div className="login-showcase-brand">
+          <BrandLogo size={62} priority />
+          <div>
+            <strong>AVENZO</strong>
+            <span>Connect. Share. Belong.</span>
+          </div>
+        </div>
+
+        <p>
+          Sign in to your real feed, conversations, stories and people.
+          No demo accounts. No fake activity.
+        </p>
+
+        <a className="login-showcase-cta" href="/signup">
+          Create your account
+        </a>
+      </section>
+
+      <section className="auth-card login-card">
+        <div className="login-card-visual" aria-hidden="true">
+          <span><Icon name="saved" size={28} /></span>
+          <span><Icon name="profile" size={28} /></span>
+          <span><Icon name="messages" size={28} /></span>
+        </div>
+
+        <div className="login-card-brand">
+          <BrandLogo size={38} priority />
+          <strong>AVENZO</strong>
+        </div>
         <div className="eyebrow">
           {mfaRequired ? "TWO-FACTOR AUTHENTICATION" : "WELCOME BACK"}
         </div>
-        <h1>{mfaRequired ? "Verify your sign-in." : "Sign in."}</h1>
+        <h1>{mfaRequired ? "Verify your sign-in." : "Let’s sign you in."}</h1>
         <p className="auth-sub">
           {mfaRequired
             ? "Enter the 6-digit code from your authenticator app."
-            : "Your feed, conversations and profile stay behind your account."}
+            : "Welcome back. Your AVENZO world has been waiting for you."}
         </p>
 
         <form
@@ -225,7 +262,7 @@ export default function LoginPage() {
               ? "Please wait…"
               : mfaRequired
                 ? "Verify & Continue"
-                : "Login"}
+                : "Sign in"}
           </button>
 
           {mfaRequired && (
@@ -249,11 +286,11 @@ export default function LoginPage() {
         </p>
 
         <div className="auth-divider">
-          <span>New to AVENZO?</span>
+          <span>Don’t have an account?</span>
         </div>
 
-        <a className="auth-secondary-button" href="/signup">
-          Create Account
+        <a className="auth-secondary-button login-register-button" href="/signup">
+          Register
         </a>
       </section>
       <SiteFooter />
