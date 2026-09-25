@@ -6,6 +6,7 @@ import type {
   MessageAttachment,
   MessageReaction,
   MessageNote,
+  PinnedMessage,
   SharedPostPreview,
   SharedProfilePreview,
   SharedReelPreview,
