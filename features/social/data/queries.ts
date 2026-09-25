@@ -201,7 +201,7 @@ async function hydratePosts(
       .in("post_id", postIds),
     supabase
       .from("comments")
-      .select("id,post_id,user_id,body,created_at")
+      .select("id,post_id,user_id,body,created_at,parent_id")
       .in("post_id", postIds)
       .order("created_at", { ascending: true }),
     supabase
@@ -237,6 +237,7 @@ async function hydratePosts(
     user_id: string;
     body: string;
     created_at: string;
+    parent_id: string | null;
   }>;
 
   const commentUserIds = [
@@ -257,6 +258,20 @@ async function hydratePosts(
   const commentUserMap = new Map(
     commentUsers.map((profile) => [profile.id, profile])
   );
+
+  let commentLikes: Array<{ comment_id: string; user_id: string }> = [];
+  if (commentRows.length) {
+    const result = await supabase
+      .from("comment_likes")
+      .select("comment_id,user_id")
+      .in("comment_id", commentRows.map((comment) => comment.id));
+
+    assertNoError(result.error);
+    commentLikes = (result.data || []) as Array<{
+      comment_id: string;
+      user_id: string;
+    }>;
+  }
 
   const likes = (likesResult.data || []) as Array<{
     post_id: string;
@@ -312,6 +327,14 @@ async function hydratePosts(
         body: comment.body,
         user_id: comment.user_id,
         created_at: comment.created_at,
+        parent_id: comment.parent_id,
+        likeCount: commentLikes.filter(
+          (like) => like.comment_id === comment.id
+        ).length,
+        liked: commentLikes.some(
+          (like) =>
+            like.comment_id === comment.id && like.user_id === userId
+        ),
         profile: commentUserMap.get(comment.user_id),
       })),
     reposted: repostedPostIds.has(post.id),
