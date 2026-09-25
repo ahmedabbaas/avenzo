@@ -70,11 +70,16 @@ export default function StoryViewer({
   const [showViewers, setShowViewers] = useState(false);
   const progressRef = useRef<HTMLElement | null>(null);
   const touchStartY = useRef<number | null>(null);
+  const onViewedRef = useRef(onViewed);
   const progressTotal = Math.max(1, total);
   const progressPosition = Math.max(
     0,
     Math.min(position, progressTotal - 1)
   );
+
+  useEffect(() => {
+    onViewedRef.current = onViewed;
+  }, [onViewed]);
 
   const loadViewers = useCallback(async () => {
     if (!own) return;
@@ -156,14 +161,13 @@ export default function StoryViewer({
           },
           { onConflict: "story_id,viewer_id" }
         )
-        .then(() => onViewed?.());
+        .then(() => onViewedRef.current?.());
     }, 250);
 
     return () => window.clearTimeout(timer);
   }, [
     currentUserId,
     loadViewers,
-    onViewed,
     own,
     story.id,
     supabase,
