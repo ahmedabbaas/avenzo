@@ -123,3 +123,14 @@ export type MessageNote = {
   avatar_url: string | null;
   verified: boolean;
 };
+
+
+export type PinnedMessage = {
+  message_id: string;
+  sender_id: string;
+  message_type: MessageType;
+  body: string;
+  created_at: string;
+  pinned_at: string;
+  pinned_by: string;
+};

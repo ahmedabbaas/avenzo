@@ -5376,3 +5376,46 @@ html[data-theme="light"]{
   font-weight:800;
   line-height:1;
 }
+
+/* AVENZO PINNED MESSAGES v1 */
+.dm-pinned-message-strip{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:9px;
+  width:100%;
+  min-height:38px;
+  padding:7px 14px;
+  border:0;
+  border-bottom:1px solid rgba(255,255,255,.05);
+  background:#0d1215;
+  color:#dce2e6;
+  text-align:left;
+}
+
+.dm-pinned-message-strip span{
+  color:var(--accent);
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:.13em;
+}
+
+.dm-pinned-message-strip b{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:10px;
+}
+
+.dm-pinned-message-strip small{
+  color:#78828b;
+  font-size:9px;
+}
+
+@media(max-width:820px){
+  .dm-pinned-message-strip{
+    min-height:36px;
+    padding:6px 10px;
+  }
+}

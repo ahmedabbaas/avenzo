@@ -30,6 +30,7 @@ import {
   fetchInbox,
   fetchMessageUsers,
   fetchMessagingPrivacy,
+  fetchPinnedMessages,
   getExistingConversation,
   hideMessageForMe,
   markMessageDelivered,
@@ -45,6 +46,7 @@ import {
   setConversationTheme,
   setConversationFolder,
   setConversationPinned,
+  setMessagePinned,
   setMessageReaction,
 } from "../data";
 import type {
@@ -52,6 +54,7 @@ import type {
   InboxConversation,
   MessageNote,
   MessageReaction,
+  PinnedMessage,
 } from "../types";
 
 const REACTIONS = ["❤️", "😂", "👍", "😮", "😢", "😡"];
@@ -154,6 +157,7 @@ export default function MessagesWorkspace({
   const [requests, setRequests] = useState<InboxConversation[]>([]);
   const [active, setActive] = useState<InboxConversation | null>(null);
   const [messages, setMessages] = useState<DirectMessage[]>([]);
+  const [pinnedMessages, setPinnedMessages] = useState<PinnedMessage[]>([]);
   const [people, setPeople] = useState<Profile[]>([]);
   const [notes, setNotes] = useState<MessageNote[]>([]);
   const [noteOpen, setNoteOpen] = useState(false);
@@ -311,12 +315,18 @@ export default function MessagesWorkspace({
     async (conversation: InboxConversation) => {
       setActive(conversation);
       stickToBottomRef.current = true;
-      setMessages(
-        await fetchConversationMessages(
+      const [nextMessages, nextPinnedMessages] = await Promise.all([
+        fetchConversationMessages(
           supabase,
           conversation.conversation_id
-        )
-      );
+        ),
+        fetchPinnedMessages(
+          supabase,
+          conversation.conversation_id
+        ),
+      ]);
+      setMessages(nextMessages);
+      setPinnedMessages(nextPinnedMessages);
 
       if (!conversation.request_incoming) {
         await markMessagesRead(
@@ -485,6 +495,31 @@ export default function MessagesWorkspace({
       void supabase.removeChannel(channel);
     };
   }, [supabase, currentUser.id, loadLists, loadNotes]);
+
+  useEffect(() => {
+    if (!active) {
+      setPinnedMessages([]);
+      return;
+    }
+
+    const channel = supabase
+      .channel("avenzo-dm-pins-" + active.conversation_id)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "message_pins",
+          filter: "conversation_id=eq." + active.conversation_id,
+        },
+        () => void refreshPinnedMessages(active.conversation_id)
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [active, supabase]);
 
   useEffect(() => {
     if (!active) {
@@ -958,6 +993,31 @@ export default function MessagesWorkspace({
         },
       })
     );
+  }
+
+  async function refreshPinnedMessages(conversationId: string) {
+    setPinnedMessages(
+      await fetchPinnedMessages(supabase, conversationId)
+    );
+  }
+
+  async function toggleMessagePinned(message: DirectMessage) {
+    const isPinned = pinnedMessages.some(
+      (item) => item.message_id === message.id
+    );
+
+    try {
+      await setMessagePinned(supabase, message.id, !isPinned);
+      await refreshPinnedMessages(message.conversation_id);
+      setNotice(isPinned ? "Message unpinned." : "Message pinned.");
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "";
+      setNotice(
+        detail.includes("PINNED_MESSAGE_LIMIT")
+          ? "You can pin up to 3 messages in a conversation."
+          : "Could not update pinned messages."
+      );
+    }
   }
 
   async function react(message: DirectMessage, emoji: string) {
@@ -1603,6 +1663,36 @@ export default function MessagesWorkspace({
                   ))}
                 </div>
               </div>
+            )}
+
+            {pinnedMessages.length > 0 && (
+              <button
+                type="button"
+                className="dm-pinned-message-strip"
+                onClick={() =>
+                  document
+                    .getElementById(
+                      "message-" + pinnedMessages[0].message_id
+                    )
+                    ?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "center",
+                    })
+                }
+              >
+                <span>PINNED</span>
+                <b>
+                  {pinnedMessages[0].body ||
+                    (pinnedMessages[0].message_type === "audio"
+                      ? "Voice message"
+                      : pinnedMessages[0].message_type === "image"
+                        ? "Photo"
+                        : pinnedMessages[0].message_type === "video"
+                          ? "Video"
+                          : "Shared message")}
+                </b>
+                <small>{pinnedMessages.length}/3</small>
+              </button>
             )}
 
             <div className={"dm-chat-tools " + (searchOpen ? "open" : "")}>
@@ -2288,6 +2378,21 @@ export default function MessagesWorkspace({
                 }}
               >
                 Reply
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const message = actionMessage;
+                  setActionMessage(null);
+                  void toggleMessagePinned(message);
+                }}
+              >
+                {pinnedMessages.some(
+                  (item) => item.message_id === actionMessage.id
+                )
+                  ? "Unpin message"
+                  : "Pin message"}
               </button>
 
               {actionMessage.body && (

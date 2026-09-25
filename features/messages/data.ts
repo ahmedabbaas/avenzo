@@ -712,3 +712,27 @@ export async function deleteOwnNote(
     .eq("user_id", userId);
   assertNoError(error);
 }
+
+
+export async function fetchPinnedMessages(
+  supabase: SupabaseClient,
+  conversationId: string
+): Promise<PinnedMessage[]> {
+  const { data, error } = await supabase.rpc("get_pinned_messages", {
+    cid: conversationId,
+  });
+  assertNoError(error);
+  return (data || []) as PinnedMessage[];
+}
+
+export async function setMessagePinned(
+  supabase: SupabaseClient,
+  messageId: string,
+  pinned: boolean
+) {
+  const { error } = await supabase.rpc("set_message_pinned", {
+    mid: messageId,
+    next_pinned: pinned,
+  });
+  assertNoError(error);
+}
