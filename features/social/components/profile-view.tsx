@@ -89,6 +89,12 @@ export default function ProfileView({
 
           <p className="profile-bio">{profile.bio || "Welcome to AVENZO."}</p>
 
+          <div className="profile-mobile-actions" aria-label="Profile actions">
+            <button type="button" onClick={onEdit}>Edit profile</button>
+            <button type="button" onClick={onCreatePost}>Create post</button>
+            <button type="button" className="primary" onClick={onCreateStory}>Add story</button>
+          </div>
+
           <div className="profile-stats" aria-label="Profile statistics">
             <span><b>{stats.posts}</b><small>Posts</small></span>
             <span><b>{reels.length}</b><small>Reels</small></span>
