@@ -2295,11 +2295,11 @@ export default function MessagesWorkspace({
                 <div className="dm-compose-row">
                   <button
                     type="button"
-                    className="dm-compose-icon dm-camera-button"
+                    className="dm-compose-icon dm-camera-button dm-simple-plus"
                     onClick={() => fileRef.current?.click()}
-                    aria-label="Add photo or video"
+                    aria-label="Add photo, video or file"
                   >
-                    <Icon name="camera" size={20} />
+                    <Icon name="plus" size={20} />
                   </button>
                   <input
                     ref={fileRef}
