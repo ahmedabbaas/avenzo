@@ -153,6 +153,65 @@ export default function HomeClient({
   const mediaUrl = (path: string) =>
     supabase.storage.from("media").getPublicUrl(path).data.publicUrl;
 
+  const storySequence = useMemo(() => {
+    const groups = new Map<string, Story[]>();
+    const authorOrder: string[] = [];
+
+    for (const item of stories) {
+      if (!groups.has(item.author_id)) {
+        groups.set(item.author_id, []);
+        authorOrder.push(item.author_id);
+      }
+      groups.get(item.author_id)?.push(item);
+    }
+
+    return authorOrder.flatMap((authorId) =>
+      (groups.get(authorId) || [])
+        .slice()
+        .sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() -
+            new Date(b.created_at).getTime()
+        )
+    );
+  }, [stories]);
+
+  const storyViewerIndex = storyViewer
+    ? storySequence.findIndex((item) => item.id === storyViewer.id)
+    : -1;
+  const storyAuthorStories = storyViewer
+    ? storySequence.filter(
+        (item) => item.author_id === storyViewer.author_id
+      )
+    : [];
+  const storyAuthorPosition = storyViewer
+    ? storyAuthorStories.findIndex((item) => item.id === storyViewer.id)
+    : -1;
+
+  function stepStory(delta: -1 | 1) {
+    if (!storyViewer) return;
+
+    const currentIndex = storySequence.findIndex(
+      (item) => item.id === storyViewer.id
+    );
+
+    if (currentIndex < 0) {
+      setStoryViewer(null);
+      return;
+    }
+
+    const nextIndex = currentIndex + delta;
+
+    if (nextIndex < 0) return;
+
+    if (nextIndex >= storySequence.length) {
+      setStoryViewer(null);
+      return;
+    }
+
+    setStoryViewer(storySequence[nextIndex]);
+  }
+
   const showToast = useCallback((message: string) => {
     if (toastTimerRef.current !== null) {
       window.clearTimeout(toastTimerRef.current);
@@ -1562,11 +1621,21 @@ export default function HomeClient({
 
       {storyViewer && (
         <StoryViewer
+          key={storyViewer.id}
           story={storyViewer}
           fallbackProfile={profile}
           currentUserId={initialProfile.id}
           mediaUrl={mediaUrl}
           onClose={() => setStoryViewer(null)}
+          onPrevious={
+            storyViewerIndex > 0
+              ? () => stepStory(-1)
+              : undefined
+          }
+          onNext={() => stepStory(1)}
+          hasPrevious={storyViewerIndex > 0}
+          position={storyAuthorPosition >= 0 ? storyAuthorPosition : 0}
+          total={Math.max(1, storyAuthorStories.length)}
           onViewed={() => {
             setStories((current) =>
               current.map((item) =>
