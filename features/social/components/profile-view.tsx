@@ -74,10 +74,6 @@ export default function ProfileView({
     <div className="profile-page">
       <section className="profile-hero">
         <div className="profile-mobile-top" aria-label="Profile overview">
-          <span className="profile-mobile-stat">
-            <b>{stats.followers}</b>
-            <small>Followers</small>
-          </span>
           <span className="profile-mobile-avatar-wrap">
             <AvatarImage
               src={avatarFor(profile)}
@@ -91,6 +87,14 @@ export default function ProfileView({
             >
               <Icon name="plus" size={16} />
             </button>
+          </span>
+          <span className="profile-mobile-stat">
+            <b>{stats.posts}</b>
+            <small>Posts</small>
+          </span>
+          <span className="profile-mobile-stat">
+            <b>{stats.followers}</b>
+            <small>Followers</small>
           </span>
           <span className="profile-mobile-stat">
             <b>{stats.following}</b>
