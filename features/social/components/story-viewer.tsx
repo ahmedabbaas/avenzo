@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createClient } from "../../../lib/supabase/client";
 import AvatarImage from "./avatar-image";
 import UserMediaImage from "./user-media-image";
@@ -24,6 +30,11 @@ export default function StoryViewer({
   mediaUrl,
   onClose,
   onViewed,
+  onPrevious,
+  onNext,
+  hasPrevious = false,
+  position = 0,
+  total = 1,
   autoplayVideo = true,
   dataSaving = false,
 }: {
@@ -33,14 +44,37 @@ export default function StoryViewer({
   mediaUrl: (path: string) => string;
   onClose: () => void;
   onViewed?: () => void;
+  onPrevious?: () => void;
+  onNext: () => void;
+  hasPrevious?: boolean;
+  position?: number;
+  total?: number;
   autoplayVideo?: boolean;
   dataSaving?: boolean;
 }) {
   const supabase = useMemo(() => createClient(), []);
-  const author = story.profile || fallbackProfile;
+  const fallbackMatchesAuthor = fallbackProfile.id === story.author_id;
+  const author: Profile =
+    story.profile ||
+    (fallbackMatchesAuthor
+      ? fallbackProfile
+      : {
+          id: story.author_id,
+          username: "",
+          display_name: "Account unavailable",
+          bio: "",
+          avatar_url: null,
+        });
   const own = story.author_id === currentUserId;
   const [viewers, setViewers] = useState<StoryViewerPerson[]>([]);
   const [showViewers, setShowViewers] = useState(false);
+  const progressRef = useRef<HTMLElement | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const progressTotal = Math.max(1, total);
+  const progressPosition = Math.max(
+    0,
+    Math.min(position, progressTotal - 1)
+  );
 
   const loadViewers = useCallback(async () => {
     if (!own) return;
@@ -135,6 +169,33 @@ export default function StoryViewer({
     supabase,
   ]);
 
+  useEffect(() => {
+    if (
+      story.media_type !== "image" ||
+      showViewers
+    ) {
+      return;
+    }
+
+    const timer = window.setTimeout(onNext, 5000);
+    return () => window.clearTimeout(timer);
+  }, [onNext, showViewers, story.id, story.media_type]);
+
+  useEffect(() => {
+    function handleKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onClose();
+      } else if (event.key === "ArrowRight") {
+        onNext();
+      } else if (event.key === "ArrowLeft" && onPrevious) {
+        onPrevious();
+      }
+    }
+
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [onClose, onNext, onPrevious]);
+
   return (
     <div
       className="modal story-viewer-shell"
@@ -143,7 +204,77 @@ export default function StoryViewer({
       aria-label="Story"
       onClick={onClose}
     >
-      <div className="story-viewer" onClick={(event) => event.stopPropagation()}>
+      <div
+        className="story-viewer"
+        onClick={(event) => event.stopPropagation()}
+        onTouchStart={(event) => {
+          touchStartY.current = event.touches[0]?.clientY ?? null;
+        }}
+        onTouchEnd={(event) => {
+          const startY = touchStartY.current;
+          const endY = event.changedTouches[0]?.clientY;
+          touchStartY.current = null;
+
+          if (
+            startY !== null &&
+            typeof endY === "number" &&
+            endY - startY > 80
+          ) {
+            onClose();
+          }
+        }}
+      >
+        <div
+          className="story-progress-row"
+          aria-label={
+            "Story " +
+            (progressPosition + 1) +
+            " of " +
+            progressTotal
+          }
+        >
+          {Array.from({ length: progressTotal }, (_, index) => (
+            <span
+              key={story.author_id + "-progress-" + index}
+              className={
+                index < progressPosition
+                  ? "complete"
+                  : index === progressPosition
+                    ? "active"
+                    : ""
+              }
+            >
+              <i
+                key={
+                  index === progressPosition
+                    ? story.id
+                    : story.author_id + "-" + index
+                }
+                ref={
+                  index === progressPosition
+                    ? (node) => {
+                        progressRef.current = node;
+                      }
+                    : undefined
+                }
+                className={
+                  index === progressPosition &&
+                  story.media_type === "image"
+                    ? "story-image-progress"
+                    : ""
+                }
+                style={
+                  index === progressPosition &&
+                  story.media_type === "image" &&
+                  showViewers
+                    ? { animationPlayState: "paused" }
+                    : undefined
+                }
+              />
+            </span>
+          ))}
+        </div>
+
         <div className="story-viewer-head">
           <div className="person-line">
             <AvatarImage
@@ -154,7 +285,8 @@ export default function StoryViewer({
             <div>
               <b>{author.display_name}</b>
               <small>
-                @{author.username} · {formatRelativeTime(story.created_at)}
+                {author.username ? "@" + author.username + " · " : ""}
+                {formatRelativeTime(story.created_at)}
               </small>
             </div>
           </div>
@@ -167,31 +299,74 @@ export default function StoryViewer({
           </button>
         </div>
 
-        {story.media_type === "video" ? (
-          <video
-            src={mediaUrl(story.media_path)}
-            controls
-            autoPlay={autoplayVideo}
-            muted={autoplayVideo}
-            preload={dataSaving ? "none" : "metadata"}
-            playsInline
-            className="story-viewer-media"
+        <div className="story-media-stage">
+          {story.media_type === "video" ? (
+            <video
+              src={mediaUrl(story.media_path)}
+              controls
+              autoPlay={autoplayVideo}
+              muted={autoplayVideo}
+              preload={dataSaving ? "none" : "metadata"}
+              playsInline
+              className="story-viewer-media"
+              onLoadedMetadata={() => {
+                if (progressRef.current) {
+                  progressRef.current.style.transform = "scaleX(0)";
+                }
+              }}
+              onTimeUpdate={(event) => {
+                const video = event.currentTarget;
+                if (!progressRef.current || !Number.isFinite(video.duration)) {
+                  return;
+                }
+
+                const ratio =
+                  video.duration > 0
+                    ? Math.max(0, Math.min(1, video.currentTime / video.duration))
+                    : 0;
+                progressRef.current.style.transform = "scaleX(" + ratio + ")";
+              }}
+              onEnded={() => {
+                if (progressRef.current) {
+                  progressRef.current.style.transform = "scaleX(1)";
+                }
+                onNext();
+              }}
+            />
+          ) : (
+            <UserMediaImage
+              src={mediaUrl(story.media_path)}
+              alt={story.caption || "Story"}
+              className="story-viewer-media"
+              width={story.media_width}
+              height={story.media_height}
+              loading="eager"
+            />
+          )}
+
+          {hasPrevious && onPrevious && (
+            <button
+              type="button"
+              className="story-tap-zone story-tap-zone-left"
+              onClick={onPrevious}
+              aria-label="Previous story"
+            />
+          )}
+          <button
+            type="button"
+            className="story-tap-zone story-tap-zone-right"
+            onClick={onNext}
+            aria-label="Next story"
           />
-        ) : (
-          <UserMediaImage
-            src={mediaUrl(story.media_path)}
-            alt="Story"
-            className="story-viewer-media"
-            width={story.media_width}
-            height={story.media_height}
-            loading="eager"
-          />
-        )}
+        </div>
 
         <div className="story-viewer-foot">
-          <small className="story-expiry">
-            Expires {new Date(story.expires_at).toLocaleString()}
-          </small>
+          <div className="story-foot-copy">
+            {story.caption && <p>{story.caption}</p>}
+            <small className="story-expiry">
+              Expires {new Date(story.expires_at).toLocaleString()}
+            </small>
+          </div>
 
           {own && (
             <button
