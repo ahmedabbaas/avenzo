@@ -8931,3 +8931,71 @@ html[data-theme="light"] .top-messages:hover{
   color:var(--text);
   background:var(--panel-2);
 }
+
+/* AVENZO HOME FEED MODES v1 */
+.home-feed-modes{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  width:max-content;
+  margin:14px 0 8px;
+  padding:4px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:var(--panel-2);
+}
+
+.home-feed-modes button{
+  min-height:38px;
+  padding:0 16px;
+  border:0;
+  border-radius:999px;
+  background:transparent;
+  color:var(--muted);
+  font-weight:800;
+  font-size:11px;
+}
+
+.home-feed-modes button.active{
+  background:var(--text);
+  color:var(--bg);
+}
+
+@media(max-width:820px){
+  .home-feed-modes{
+    position:sticky;
+    top:calc(3.75rem + env(safe-area-inset-top));
+    z-index:46;
+    width:100%;
+    margin:0;
+    padding:.38rem .7rem;
+    border:0;
+    border-bottom:1px solid rgba(255,255,255,.07);
+    border-radius:0;
+    background:rgba(5,6,7,.96);
+    backdrop-filter:blur(16px);
+  }
+
+  .home-feed-modes button{
+    flex:1;
+    min-height:2.5rem;
+    padding:0 .8rem;
+    border-radius:.75rem;
+    font-size:.76rem;
+  }
+
+  .home-feed-modes button.active{
+    background:#171a1d;
+    color:#fff;
+  }
+
+  html[data-theme="light"] .home-feed-modes{
+    border-bottom-color:var(--line);
+    background:rgba(247,248,250,.96);
+  }
+
+  html[data-theme="light"] .home-feed-modes button.active{
+    background:#171a1d;
+    color:#fff;
+  }
+}
