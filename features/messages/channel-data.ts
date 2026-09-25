@@ -89,8 +89,8 @@ export async function fetchBroadcastPosts(
     const profile = profileMap.get(row.author_id);
     return {
       ...row,
-      author_name: profile?.display_name || "AVENZO creator",
-      author_username: profile?.username || "user",
+      author_name: profile?.display_name || "Account unavailable",
+      author_username: profile?.username || "",
       author_avatar_url: profile?.avatar_url || null,
       author_verified: Boolean(profile?.verified),
       reactions: reactions
