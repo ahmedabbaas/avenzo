@@ -57,6 +57,7 @@ export type Post = {
   comments: Comment[];
   reposted?: boolean;
   mediaItems?: PostMediaItem[];
+  collaborators?: Profile[];
 };
 
 export type Reel = {
@@ -142,7 +143,9 @@ export type NotificationRow = {
     | "message"
     | "message_request"
     | "message_reply"
-    | "message_reaction";
+    | "message_reaction"
+    | "collab_invite"
+    | "collab_accepted";
   created_at: string;
   actor_id: string;
 };

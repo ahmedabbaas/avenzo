@@ -182,6 +182,7 @@ export async function publishContent({
   location = "",
   coverFile = null,
   highQualityUploads = true,
+  collaboratorIds = [],
   onProgress,
 }: {
   supabase: SupabaseClient;
@@ -200,6 +201,7 @@ export async function publishContent({
   location?: string;
   coverFile?: File | null;
   highQualityUploads?: boolean;
+  collaboratorIds?: string[];
   onProgress?: UploadProgress;
 }) {
   const normalizedPostMedia =
@@ -329,8 +331,23 @@ export async function publishContent({
         assertNoError(mediaResult.error);
       }
 
+      const cleanCollaboratorIds = [...new Set(
+        collaboratorIds.filter((id) => id && id !== userId)
+      )].slice(0, 3);
+
+      if (cleanCollaboratorIds.length) {
+        const collaborationResult = await supabase.rpc(
+          "invite_post_collaborators",
+          {
+            target_post: insertedPostId,
+            collaborator_ids: cleanCollaboratorIds,
+          }
+        );
+        assertNoError(collaborationResult.error);
+      }
+
       onProgress?.(100);
-      return;
+      return insertedPostId;
     }
 
     const usesCover = Boolean(coverFile && file?.type.startsWith("video/"));
@@ -680,4 +697,36 @@ export async function createMessage(
 
   assertNoError(error);
   return data as Message;
+}
+
+
+export async function respondPostCollaboration(
+  supabase: SupabaseClient,
+  postId: string,
+  accept: boolean
+) {
+  const { data, error } = await supabase.rpc(
+    "respond_post_collaboration",
+    {
+      target_post: postId,
+      accept_invite: accept,
+    }
+  );
+  assertNoError(error);
+  return data as "accepted" | "declined";
+}
+
+export async function cancelPostCollaboration(
+  supabase: SupabaseClient,
+  postId: string,
+  collaboratorId: string
+) {
+  const { error } = await supabase.rpc(
+    "cancel_post_collaboration",
+    {
+      target_post: postId,
+      collaborator: collaboratorId,
+    }
+  );
+  assertNoError(error);
 }

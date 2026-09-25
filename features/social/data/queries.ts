@@ -99,11 +99,16 @@ export async function fetchProfileStats(
   supabase: SupabaseClient,
   userId: string
 ): Promise<ProfileStats> {
-  const [postsCount, followersCount, followingCount] = await Promise.all([
+  const [ownPosts, collabPosts, followersCount, followingCount] = await Promise.all([
     supabase
       .from("posts")
-      .select("id", { count: "exact", head: true })
+      .select("id")
       .eq("author_id", userId),
+    supabase
+      .from("post_collaborators")
+      .select("post_id")
+      .eq("user_id", userId)
+      .eq("status", "accepted"),
     supabase
       .from("follows")
       .select("follower_id", { count: "exact", head: true })
@@ -114,12 +119,18 @@ export async function fetchProfileStats(
       .eq("follower_id", userId),
   ]);
 
-  assertNoError(postsCount.error);
+  assertNoError(ownPosts.error);
+  assertNoError(collabPosts.error);
   assertNoError(followersCount.error);
   assertNoError(followingCount.error);
 
+  const postIds = new Set([
+    ...(ownPosts.data || []).map((row: { id: string }) => row.id),
+    ...(collabPosts.data || []).map((row: { post_id: string }) => row.post_id),
+  ]);
+
   return {
-    posts: postsCount.count || 0,
+    posts: postIds.size,
     followers: followersCount.count || 0,
     following: followingCount.count || 0,
   };
@@ -178,6 +189,7 @@ async function hydratePosts(
     commentsResult,
     repostsResult,
     mediaItemsResult,
+    collaboratorsResult,
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -202,6 +214,11 @@ async function hydratePosts(
       .select("id,post_id,media_path,media_type,media_width,media_height,alt_text,position")
       .in("post_id", postIds)
       .order("position", { ascending: true }),
+    supabase
+      .from("post_collaborators")
+      .select("post_id,user_id,status")
+      .in("post_id", postIds)
+      .eq("status", "accepted"),
   ]);
 
   assertNoError(authorsResult.error);
@@ -209,6 +226,7 @@ async function hydratePosts(
   assertNoError(commentsResult.error);
   assertNoError(repostsResult.error);
   assertNoError(mediaItemsResult.error);
+  assertNoError(collaboratorsResult.error);
 
   const authors = (authorsResult.data || []) as Profile[];
   const authorMap = new Map(authors.map((author) => [author.id, author]));
@@ -256,6 +274,27 @@ async function hydratePosts(
     url: supabase.storage.from("media").getPublicUrl(item.media_path).data.publicUrl,
   })) as PostMediaItem[];
 
+  const collaboratorRows = (collaboratorsResult.data || []) as Array<{
+    post_id: string;
+    user_id: string;
+    status: string;
+  }>;
+  const collaboratorUserIds = [
+    ...new Set(collaboratorRows.map((row) => row.user_id)),
+  ];
+  let collaboratorProfiles: Profile[] = [];
+  if (collaboratorUserIds.length) {
+    const result = await supabase
+      .from("profiles")
+      .select(PROFILE_COLUMNS)
+      .in("id", collaboratorUserIds);
+    assertNoError(result.error);
+    collaboratorProfiles = (result.data || []) as Profile[];
+  }
+  const collaboratorProfileMap = new Map(
+    collaboratorProfiles.map((profile) => [profile.id, profile])
+  );
+
   return rows.map((post) => ({
     ...post,
     profile: authorMap.get(post.author_id),
@@ -277,6 +316,10 @@ async function hydratePosts(
       })),
     reposted: repostedPostIds.has(post.id),
     mediaItems: mediaItems.filter((item) => item.post_id === post.id),
+    collaborators: collaboratorRows
+      .filter((row) => row.post_id === post.id)
+      .map((row) => collaboratorProfileMap.get(row.user_id))
+      .filter((profile): profile is Profile => Boolean(profile)),
   }));
 }
 
@@ -326,15 +369,54 @@ export async function fetchProfilePosts(
   supabase: SupabaseClient,
   userId: string
 ) {
-  const { data, error } = await supabase
-    .from("posts")
-    .select("*")
-    .eq("author_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(120);
+  const [ownResult, collabResult] = await Promise.all([
+    supabase
+      .from("posts")
+      .select("*")
+      .eq("author_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(120),
+    supabase
+      .from("post_collaborators")
+      .select("post_id")
+      .eq("user_id", userId)
+      .eq("status", "accepted"),
+  ]);
 
-  assertNoError(error);
-  return hydratePosts(supabase, userId, (data || []) as PostRow[]);
+  assertNoError(ownResult.error);
+  assertNoError(collabResult.error);
+
+  const collabIds = (collabResult.data || []).map(
+    (row: { post_id: string }) => row.post_id
+  );
+
+  let collabPosts: PostRow[] = [];
+  if (collabIds.length) {
+    const result = await supabase
+      .from("posts")
+      .select("*")
+      .in("id", collabIds);
+    assertNoError(result.error);
+    collabPosts = (result.data || []) as PostRow[];
+  }
+
+  const map = new Map<string, PostRow>();
+  for (const row of [
+    ...((ownResult.data || []) as PostRow[]),
+    ...collabPosts,
+  ]) {
+    map.set(row.id, row);
+  }
+
+  const rows = [...map.values()]
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() -
+        new Date(a.created_at).getTime()
+    )
+    .slice(0, 120);
+
+  return hydratePosts(supabase, userId, rows);
 }
 
 export async function fetchPostById(
