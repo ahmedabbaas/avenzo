@@ -1497,15 +1497,11 @@ export default function HomeClient({
         </button>
 
         <button
-          className={screen === "activity" ? "active" : ""}
-          onClick={() => setScreen("activity")}
-          aria-label="Activity"
+          onClick={() => router.push("/reels")}
+          aria-label="Reels"
         >
-          <span className="mobile-icon-wrap">
-            <Icon name="activity" />
-            {unreadActivity > 0 && <i>{Math.min(unreadActivity, 9)}</i>}
-          </span>
-          <small>Activity</small>
+          <span className="mobile-icon-wrap"><Icon name="reels" /></span>
+          <small>Reels</small>
         </button>
 
         <button
