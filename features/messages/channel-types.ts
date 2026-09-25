@@ -25,4 +25,8 @@ export type BroadcastPost = {
   author_username: string;
   author_avatar_url: string | null;
   author_verified: boolean;
+  reactions: Array<{
+    user_id: string;
+    emoji: string;
+  }>;
 };

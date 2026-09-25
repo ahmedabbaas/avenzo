@@ -22,6 +22,7 @@ import {
   joinBroadcastChannel,
   leaveBroadcastChannel,
   publishBroadcastPost,
+  setBroadcastReaction,
 } from "../channel-data";
 import type {
   BroadcastChannel,
@@ -105,6 +106,19 @@ export default function BroadcastChannelsWorkspace({
           }
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "broadcast_channel_reactions",
+        },
+        () => {
+          if (active) {
+            void fetchBroadcastPosts(supabase, active.id).then(setPosts);
+          }
+        }
+      )
       .subscribe();
 
     return () => {
@@ -117,6 +131,30 @@ export default function BroadcastChannelsWorkspace({
     const timer = window.setTimeout(() => setNotice(""), 4500);
     return () => window.clearTimeout(timer);
   }, [notice]);
+
+  async function reactToChannelPost(
+    post: BroadcastPost,
+    emoji: string
+  ) {
+    const mine = post.reactions.find(
+      (reaction) => reaction.user_id === currentUser.id
+    );
+
+    try {
+      await setBroadcastReaction(
+        supabase,
+        currentUser.id,
+        post.id,
+        emoji,
+        mine?.emoji === emoji
+      );
+      if (active) {
+        setPosts(await fetchBroadcastPosts(supabase, active.id));
+      }
+    } catch {
+      setNotice("Reaction could not be updated.");
+    }
+  }
 
   async function createChannel() {
     if (!title.trim()) {
@@ -373,6 +411,34 @@ export default function BroadcastChannelsWorkspace({
                       </div>
                     </div>
                     <p>{post.deleted_at ? "Update deleted" : post.body}</p>
+                    {!post.deleted_at && (
+                      <div className="channel-post-reactions">
+                        {["❤️", "👍", "🔥", "👏"].map((emoji) => {
+                          const count = post.reactions.filter(
+                            (reaction) => reaction.emoji === emoji
+                          ).length;
+                          const mine = post.reactions.some(
+                            (reaction) =>
+                              reaction.emoji === emoji &&
+                              reaction.user_id === currentUser.id
+                          );
+                          return (
+                            <button
+                              type="button"
+                              key={emoji}
+                              className={mine ? "mine" : ""}
+                              onClick={() =>
+                                void reactToChannelPost(post, emoji)
+                              }
+                              aria-label={"React " + emoji}
+                            >
+                              <span>{emoji}</span>
+                              {count > 0 && <small>{count}</small>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </article>
                 ))
               )}

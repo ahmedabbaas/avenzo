@@ -54,15 +54,25 @@ export async function fetchBroadcastPosts(
   supabase: SupabaseClient,
   channelId: string
 ): Promise<BroadcastPost[]> {
-  const posts = await supabase
-    .from("broadcast_channel_posts")
-    .select("id,channel_id,author_id,body,created_at,edited_at,deleted_at")
-    .eq("channel_id", channelId)
-    .order("created_at", { ascending: true })
-    .limit(300);
+  const [posts, reactionsResult] = await Promise.all([
+    supabase
+      .from("broadcast_channel_posts")
+      .select("id,channel_id,author_id,body,created_at,edited_at,deleted_at")
+      .eq("channel_id", channelId)
+      .order("created_at", { ascending: true })
+      .limit(300),
+    supabase
+      .from("broadcast_channel_reactions")
+      .select("post_id,user_id,emoji"),
+  ]);
 
   assertNoError(posts.error);
+  assertNoError(reactionsResult.error);
   const rows = posts.data || [];
+  const postIds = new Set(rows.map((row) => row.id));
+  const reactions = (reactionsResult.data || []).filter(
+    (row) => postIds.has(row.post_id)
+  );
   const ids = [...new Set(rows.map((row) => row.author_id))];
 
   const profiles = ids.length
@@ -83,6 +93,12 @@ export async function fetchBroadcastPosts(
       author_username: profile?.username || "user",
       author_avatar_url: profile?.avatar_url || null,
       author_verified: Boolean(profile?.verified),
+      reactions: reactions
+        .filter((reaction) => reaction.post_id === row.id)
+        .map((reaction) => ({
+          user_id: reaction.user_id,
+          emoji: reaction.emoji,
+        })),
     } as BroadcastPost;
   });
 }
@@ -131,4 +147,32 @@ export async function publishBroadcastPost(
   });
   assertNoError(error);
   return data as string;
+}
+
+
+export async function setBroadcastReaction(
+  supabase: SupabaseClient,
+  userId: string,
+  postId: string,
+  emoji: string,
+  remove: boolean
+) {
+  const result = remove
+    ? await supabase
+        .from("broadcast_channel_reactions")
+        .delete()
+        .eq("post_id", postId)
+        .eq("user_id", userId)
+    : await supabase
+        .from("broadcast_channel_reactions")
+        .upsert(
+          {
+            post_id: postId,
+            user_id: userId,
+            emoji,
+          },
+          { onConflict: "post_id,user_id" }
+        );
+
+  assertNoError(result.error);
 }
