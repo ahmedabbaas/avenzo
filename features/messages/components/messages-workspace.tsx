@@ -1404,13 +1404,19 @@ export default function MessagesWorkspace({
             <div className="eyebrow">MESSAGES</div>
             <h1>Inbox</h1>
           </div>
-          <button
-            className="btn small"
-            onClick={() => setNewMessageOpen(true)}
-          >
-            <Icon name="plus" size={16} />
-            New Message
-          </button>
+          <div className="dm-sidebar-actions">
+            <Link className="btn secondary small" href="/messages/groups">
+              <Icon name="messages" size={16} />
+              Groups
+            </Link>
+            <button
+              className="btn small"
+              onClick={() => setNewMessageOpen(true)}
+            >
+              <Icon name="plus" size={16} />
+              New Message
+            </button>
+          </div>
         </div>
 
         <div className="dm-notes-row" aria-label="Notes">

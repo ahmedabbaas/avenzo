@@ -3167,3 +3167,44 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
     -webkit-overflow-scrolling:touch;
   }
 }
+
+/* AVENZO ANDROID GROUP CHATS v1 */
+@media(max-width:820px){
+  html.avenzo-android-app .group-workspace{
+    width:100%!important;
+    height:100dvh!important;
+    min-height:0!important;
+    background:var(--panel)!important;
+  }
+
+  html.avenzo-android-app .group-sidebar,
+  html.avenzo-android-app .group-chat{
+    width:100%!important;
+    height:100%!important;
+    min-height:0!important;
+    overflow:hidden!important;
+  }
+
+  html.avenzo-android-app .group-mobile-hidden{
+    display:none!important;
+  }
+
+  html.avenzo-android-app .group-list,
+  html.avenzo-android-app .group-message-area{
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-y:contain;
+  }
+
+  html.avenzo-android-app .group-message-area{
+    touch-action:pan-y!important;
+  }
+
+  html.avenzo-android-app .group-composer{
+    padding-bottom:max(8px,env(safe-area-inset-bottom))!important;
+  }
+
+  html.avenzo-android-app .group-compose-row textarea{
+    font-size:16px!important;
+  }
+}
