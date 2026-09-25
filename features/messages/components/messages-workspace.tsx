@@ -498,8 +498,10 @@ export default function MessagesWorkspace({
 
   useEffect(() => {
     if (!active) {
-      setPinnedMessages([]);
-      return;
+      const timer = window.setTimeout(() => {
+        setPinnedMessages([]);
+      }, 0);
+      return () => window.clearTimeout(timer);
     }
 
     const channel = supabase
