@@ -779,12 +779,42 @@ export default function HomeClient({
     router.refresh();
   }
 
+  const normalizedQuery = query.toLowerCase().trim().replace(/^[@#]/, "");
+
   const filteredPeople = people.filter((person) =>
+    !normalizedQuery ||
     (person.display_name + " " + person.username)
       .toLowerCase()
-      .includes(query.toLowerCase().trim())
+      .includes(normalizedQuery)
   );
 
+  const filteredReels = reels.filter((reel) => {
+    if (!normalizedQuery) return true;
+    return [
+      reel.title,
+      reel.caption,
+      reel.location,
+      reel.profile?.display_name,
+      reel.profile?.username,
+      ...(reel.hashtags || []),
+      ...(reel.mentions || []),
+    ].filter(Boolean).join(" ").toLowerCase().includes(normalizedQuery);
+  });
+
+  const filteredExplorePosts = explorePosts.filter((post) => {
+    if (!normalizedQuery) return true;
+    return [
+      post.caption,
+      post.location,
+      post.profile?.display_name,
+      post.profile?.username,
+      ...(post.hashtags || []),
+      ...(post.mentions || []),
+    ].filter(Boolean).join(" ").toLowerCase().includes(normalizedQuery);
+  });
+
+  const searchResultCount =
+    filteredPeople.length + filteredReels.length + filteredExplorePosts.length;
 
   return (
     <div className="social-app">
@@ -814,8 +844,8 @@ export default function HomeClient({
             onKeyDown={(event) => {
               if (event.key === "Enter" && query.trim()) setScreen("explore");
             }}
-            placeholder={t("Search people")}
-            aria-label={t("Search people")}
+            placeholder="Search people, posts, reels or #hashtags"
+            aria-label="Search AVENZO"
           />
           {query && (
             <button
@@ -1031,7 +1061,7 @@ export default function HomeClient({
 
               {query && (
                 <div className="search-summary">
-                  Results for <strong>“{query}”</strong>
+                  {searchResultCount} results for <strong>&quot;{query}&quot;</strong>
                   <button onClick={() => setQuery("")}>Clear</button>
                 </div>
               )}
@@ -1096,7 +1126,7 @@ export default function HomeClient({
                   </div>
                 </div>
 
-                {reels.length === 0 ? (
+                {filteredReels.length === 0 ? (
                   <EmptyState
                     title="No reels yet."
                     text="Reels will appear here only after real users upload videos."
@@ -1107,7 +1137,7 @@ export default function HomeClient({
                   />
                 ) : (
                   <div className="reels-grid">
-                    {reels.map((reel) => (
+                    {filteredReels.map((reel) => (
                       <ReelCard
                         key={reel.id}
                         reel={reel}
@@ -1140,13 +1170,13 @@ export default function HomeClient({
                   </div>
                 </div>
 
-                {explorePosts.length === 0 ? (
+                {filteredExplorePosts.length === 0 ? (
                   <EmptyState
                     title="No posts to explore yet."
                     text="Explore fills up naturally as real people publish posts."
                   />
                 ) : (
-                  explorePosts.map((post) => (
+                  filteredExplorePosts.map((post) => (
                     <PostCard
                       key={"explore-" + post.id}
                       post={post}
@@ -1257,7 +1287,7 @@ export default function HomeClient({
                 !followed.includes(person.id) &&
                 !requested.includes(person.id)
             ).length === 0 && (
-              <p className="rail-empty">You’re caught up with people here.</p>
+              <p className="rail-empty">You&apos;re caught up with people here.</p>
             )}
           </div>
 
