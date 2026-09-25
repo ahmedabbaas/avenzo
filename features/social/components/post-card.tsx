@@ -471,7 +471,12 @@ export default function PostCard({
           >
             <Icon name="close" size={22} />
           </button>
-          <img src={viewerUrl} alt={post.caption || "AVENZO post"} />
+          <UserMediaImage
+            src={viewerUrl}
+            alt={post.caption || "AVENZO post"}
+            className="post-viewer-image"
+            loading="eager"
+          />
         </div>
       )}
     </article>
