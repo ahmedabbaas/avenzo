@@ -40,7 +40,33 @@ export default function ProfileView({
   return (
     <div className="profile-page">
       <section className="profile-hero">
+        <div className="profile-mobile-top" aria-label="Profile overview">
+          <span className="profile-mobile-stat">
+            <b>{stats.followers}</b>
+            <small>Followers</small>
+          </span>
+          <span className="profile-mobile-avatar-wrap">
+            <AvatarImage
+              src={avatarFor(profile)}
+              alt={profile.display_name}
+              size={180}
+            />
+            <button
+              type="button"
+              onClick={onCreateStory}
+              aria-label="Add story"
+            >
+              <Icon name="plus" size={16} />
+            </button>
+          </span>
+          <span className="profile-mobile-stat">
+            <b>{stats.following}</b>
+            <small>Following</small>
+          </span>
+        </div>
+
         <AvatarImage
+          className="profile-desktop-avatar"
           src={avatarFor(profile)}
           alt={profile.display_name}
           size={180}
@@ -87,26 +113,36 @@ export default function ProfileView({
         <button
           className={tab === "posts" ? "active" : ""}
           onClick={() => setTab("posts")}
+          aria-label="Posts"
         >
-          Posts <span>{posts.length}</span>
+          <Icon name="grid" size={20} />
+          <span className="profile-tab-label">Posts</span>
+          <span className="profile-tab-count">{posts.length}</span>
         </button>
         <button
           className={tab === "reels" ? "active" : ""}
           onClick={() => setTab("reels")}
+          aria-label="Reels"
         >
-          Reels <span>{reels.length}</span>
+          <Icon name="reels" size={20} />
+          <span className="profile-tab-label">Reels</span>
+          <span className="profile-tab-count">{reels.length}</span>
         </button>
         <button
           className={tab === "reposts" ? "active" : ""}
           onClick={() => setTab("reposts")}
+          aria-label="Reposts"
         >
-          Reposts
+          <Icon name="repost" size={20} />
+          <span className="profile-tab-label">Reposts</span>
         </button>
         <button
           className={tab === "tagged" ? "active" : ""}
           onClick={() => setTab("tagged")}
+          aria-label="Tagged"
         >
-          Tagged
+          <Icon name="tag" size={20} />
+          <span className="profile-tab-label">Tagged</span>
         </button>
       </div>
 
