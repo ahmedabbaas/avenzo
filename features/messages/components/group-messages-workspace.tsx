@@ -17,10 +17,14 @@ import { avatarFor, formatRelativeTime } from "../../social/lib/profile";
 import type { Profile } from "../../social/types";
 import {
   createGroupChat,
+  deleteGroupMessage,
+  editGroupMessage,
   fetchGroupChats,
   fetchGroupMembers,
   fetchGroupMessages,
   leaveGroupChat,
+  reactGroupMessage,
+  removeGroupMessageReaction,
   searchGroupCandidates,
   sendGroupMessage,
 } from "../group-data";
@@ -53,12 +57,16 @@ export default function GroupMessagesWorkspace({
   const [groupTitle, setGroupTitle] = useState("");
   const [peopleQuery, setPeopleQuery] = useState("");
   const [messageText, setMessageText] = useState("");
+  const [replyTo, setReplyTo] = useState<GroupMessage | null>(null);
+  const [actionMessage, setActionMessage] = useState<GroupMessage | null>(null);
   const [newGroupOpen, setNewGroupOpen] = useState(false);
   const [groupInfoOpen, setGroupInfoOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState("");
   const [sending, setSending] = useState(false);
   const bodyRef = useRef<HTMLDivElement | null>(null);
+  const holdTimerRef = useRef<number | null>(null);
+  const holdStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const loadGroups = useCallback(async () => {
     setGroups(await fetchGroupChats(supabase, currentUser.id));
@@ -124,7 +132,7 @@ export default function GroupMessagesWorkspace({
       )
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "group_messages" },
+        { event: "*", schema: "public", table: "group_messages" },
         async ({ new: inserted }) => {
           const row = inserted as GroupMessage;
           await loadGroups();
@@ -134,6 +142,19 @@ export default function GroupMessagesWorkspace({
               const node = bodyRef.current;
               if (node) node.scrollTop = node.scrollHeight;
             }, 0);
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "group_message_reactions",
+        },
+        () => {
+          if (active) {
+            void fetchGroupMessages(supabase, active.id).then(setMessages);
           }
         }
       )
@@ -156,6 +177,90 @@ export default function GroupMessagesWorkspace({
         ? current.filter((item) => item !== id)
         : [...current, id]
     );
+  }
+
+  function clearMessageHold() {
+    if (holdTimerRef.current !== null) {
+      window.clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+    holdStartRef.current = null;
+  }
+
+  function startMessageHold(
+    message: GroupMessage,
+    x: number,
+    y: number
+  ) {
+    clearMessageHold();
+    if (message.deleted_at) return;
+    holdStartRef.current = { x, y };
+    holdTimerRef.current = window.setTimeout(() => {
+      setActionMessage(message);
+      holdTimerRef.current = null;
+      holdStartRef.current = null;
+      if ("vibrate" in navigator) navigator.vibrate(16);
+    }, 420);
+  }
+
+  function moveMessageHold(x: number, y: number) {
+    const start = holdStartRef.current;
+    if (!start) return;
+    if (Math.abs(x - start.x) > 10 || Math.abs(y - start.y) > 10) {
+      clearMessageHold();
+    }
+  }
+
+  async function refreshActiveMessages() {
+    if (!active) return;
+    setMessages(await fetchGroupMessages(supabase, active.id));
+  }
+
+  async function reactToMessage(
+    message: GroupMessage,
+    emoji: string
+  ) {
+    try {
+      const mine = message.reactions?.find(
+        (reaction) => reaction.user_id === currentUser.id
+      );
+      if (mine?.emoji === emoji) {
+        await removeGroupMessageReaction(supabase, message.id);
+      } else {
+        await reactGroupMessage(supabase, message.id, emoji);
+      }
+      setActionMessage(null);
+      await refreshActiveMessages();
+    } catch {
+      setNotice("Reaction could not be updated.");
+    }
+  }
+
+  async function editMessage(message: GroupMessage) {
+    const next = window.prompt("Edit message", message.body);
+    if (next === null || !next.trim() || next.trim() === message.body) {
+      setActionMessage(null);
+      return;
+    }
+    try {
+      await editGroupMessage(supabase, message.id, next.trim());
+      setActionMessage(null);
+      await refreshActiveMessages();
+    } catch {
+      setNotice("Message could not be edited.");
+    }
+  }
+
+  async function removeMessage(message: GroupMessage) {
+    if (!window.confirm("Delete this message for the group?")) return;
+    try {
+      await deleteGroupMessage(supabase, message.id);
+      setActionMessage(null);
+      if (replyTo?.id === message.id) setReplyTo(null);
+      await refreshActiveMessages();
+    } catch {
+      setNotice("Message could not be deleted.");
+    }
   }
 
   async function createGroup() {
@@ -201,9 +306,11 @@ export default function GroupMessagesWorkspace({
       await sendGroupMessage(
         supabase,
         active.id,
-        messageText.trim()
+        messageText.trim(),
+        replyTo?.id || null
       );
       setMessageText("");
+      setReplyTo(null);
       setMessages(await fetchGroupMessages(supabase, active.id));
       await loadGroups();
       window.setTimeout(() => {
@@ -384,6 +491,23 @@ export default function GroupMessagesWorkspace({
                       className={
                         "group-message-row " + (own ? "me" : "them")
                       }
+                      onContextMenu={(event) => {
+                        event.preventDefault();
+                        if (!message.deleted_at) setActionMessage(message);
+                      }}
+                      onPointerDown={(event) =>
+                        startMessageHold(
+                          message,
+                          event.clientX,
+                          event.clientY
+                        )
+                      }
+                      onPointerMove={(event) =>
+                        moveMessageHold(event.clientX, event.clientY)
+                      }
+                      onPointerUp={clearMessageHold}
+                      onPointerCancel={clearMessageHold}
+                      onPointerLeave={clearMessageHold}
                     >
                       {!own && (
                         <AvatarImage
@@ -415,6 +539,11 @@ export default function GroupMessagesWorkspace({
                             </span>
                           </small>
                         )}
+                        {message.reply_to_id && (
+                          <div className="group-reply-reference">
+                            Replying to an earlier message
+                          </div>
+                        )}
                         <div
                           className={
                             "group-message-bubble" +
@@ -425,6 +554,41 @@ export default function GroupMessagesWorkspace({
                             ? "Message deleted"
                             : message.body}
                         </div>
+                        {message.edited_at && !message.deleted_at && (
+                          <small className="group-message-edited">edited</small>
+                        )}
+                        {message.reactions?.length ? (
+                          <div className="group-message-reactions">
+                            {[...new Set(message.reactions.map((reaction) => reaction.emoji))]
+                              .map((emoji) => (
+                                <button
+                                  type="button"
+                                  key={emoji}
+                                  className={
+                                    message.reactions?.some(
+                                      (reaction) =>
+                                        reaction.emoji === emoji &&
+                                        reaction.user_id === currentUser.id
+                                    )
+                                      ? "mine"
+                                      : ""
+                                  }
+                                  onClick={() =>
+                                    void reactToMessage(message, emoji)
+                                  }
+                                >
+                                  {emoji}
+                                  <span>
+                                    {
+                                      message.reactions?.filter(
+                                        (reaction) => reaction.emoji === emoji
+                                      ).length
+                                    }
+                                  </span>
+                                </button>
+                              ))}
+                          </div>
+                        ) : null}
                         <small className="group-message-time">
                           {new Date(message.created_at).toLocaleTimeString(
                             [],
@@ -439,6 +603,26 @@ export default function GroupMessagesWorkspace({
             </div>
 
             <form className="group-composer" onSubmit={send}>
+              {replyTo && (
+                <div className="group-composer-reply">
+                  <span>
+                    Replying to{" "}
+                    <b>
+                      {replyTo.sender_id === currentUser.id
+                        ? "yourself"
+                        : replyTo.sender?.display_name || "member"}
+                    </b>
+                    <small>{replyTo.body || "Message"}</small>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setReplyTo(null)}
+                    aria-label="Cancel reply"
+                  >
+                    <Icon name="close" size={15} />
+                  </button>
+                </div>
+              )}
               <div className="group-compose-row">
                 <textarea
                   rows={1}
@@ -460,6 +644,70 @@ export default function GroupMessagesWorkspace({
           </>
         )}
       </section>
+
+      {actionMessage && (
+        <div
+          className="modal group-message-action-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Group message actions"
+          onClick={() => setActionMessage(null)}
+        >
+          <div
+            className="group-message-action-sheet"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="dm-action-grabber" />
+            <div className="dm-action-reactions">
+              {["❤️", "😂", "👍", "😮", "😢", "😡"].map((emoji) => (
+                <button
+                  type="button"
+                  key={emoji}
+                  onClick={() => void reactToMessage(actionMessage, emoji)}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+            <div className="dm-action-list">
+              <button
+                type="button"
+                onClick={() => {
+                  setReplyTo(actionMessage);
+                  setActionMessage(null);
+                }}
+              >
+                Reply
+              </button>
+              {actionMessage.sender_id === currentUser.id &&
+                !actionMessage.deleted_at && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => void editMessage(actionMessage)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="danger"
+                      onClick={() => void removeMessage(actionMessage)}
+                    >
+                      Delete for group
+                    </button>
+                  </>
+                )}
+            </div>
+            <button
+              type="button"
+              className="dm-action-cancel"
+              onClick={() => setActionMessage(null)}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {notice && (
         <div className="dm-inline-notice group-notice" role="status">

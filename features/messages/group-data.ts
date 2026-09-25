@@ -115,17 +115,27 @@ export async function fetchGroupMessages(
   supabase: SupabaseClient,
   groupId: string
 ): Promise<GroupMessage[]> {
-  const result = await supabase
-    .from("group_messages")
-    .select(
-      "id,group_id,sender_id,body,message_type,reply_to_id,created_at,updated_at,edited_at,deleted_at"
-    )
-    .eq("group_id", groupId)
-    .order("created_at", { ascending: true })
-    .limit(300);
+  const [result, reactionsResult] = await Promise.all([
+    supabase
+      .from("group_messages")
+      .select(
+        "id,group_id,sender_id,body,message_type,reply_to_id,created_at,updated_at,edited_at,deleted_at"
+      )
+      .eq("group_id", groupId)
+      .order("created_at", { ascending: true })
+      .limit(300),
+    supabase
+      .from("group_message_reactions")
+      .select("message_id,user_id,emoji"),
+  ]);
 
   assertNoError(result.error);
+  assertNoError(reactionsResult.error);
   const rows = (result.data || []) as GroupMessage[];
+  const messageIds = new Set(rows.map((row) => row.id));
+  const reactions = (reactionsResult.data || []).filter(
+    (row) => messageIds.has(row.message_id)
+  );
   const senderIds = [...new Set(rows.map((row) => row.sender_id))];
 
   const members = senderIds.length
@@ -142,6 +152,12 @@ export async function fetchGroupMessages(
     const p = profileMap.get(row.sender_id);
     return {
       ...row,
+      reactions: reactions
+        .filter((reaction) => reaction.message_id === row.id)
+        .map((reaction) => ({
+          user_id: reaction.user_id,
+          emoji: reaction.emoji,
+        })),
       sender: p
         ? {
             user_id: p.id,
@@ -216,4 +232,49 @@ export async function searchGroupCandidates(
   });
   assertNoError(error);
   return (data || []) as Profile[];
+}
+
+
+export async function reactGroupMessage(
+  supabase: SupabaseClient,
+  messageId: string,
+  emoji: string
+) {
+  const { error } = await supabase.rpc("react_group_message", {
+    target_message: messageId,
+    reaction_emoji: emoji,
+  });
+  assertNoError(error);
+}
+
+export async function removeGroupMessageReaction(
+  supabase: SupabaseClient,
+  messageId: string
+) {
+  const { error } = await supabase.rpc("remove_group_message_reaction", {
+    target_message: messageId,
+  });
+  assertNoError(error);
+}
+
+export async function editGroupMessage(
+  supabase: SupabaseClient,
+  messageId: string,
+  body: string
+) {
+  const { error } = await supabase.rpc("edit_group_message", {
+    target_message: messageId,
+    next_body: body,
+  });
+  assertNoError(error);
+}
+
+export async function deleteGroupMessage(
+  supabase: SupabaseClient,
+  messageId: string
+) {
+  const { error } = await supabase.rpc("delete_group_message", {
+    target_message: messageId,
+  });
+  assertNoError(error);
 }

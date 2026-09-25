@@ -8097,3 +8097,114 @@ html[data-theme="light"]{
     grid-column:2;
   }
 }
+
+/* AVENZO GROUP MESSAGE INTERACTIONS v1 */
+.group-reply-reference{
+  max-width:100%;
+  padding:6px 8px;
+  border-left:2px solid #8c61ff;
+  border-radius:8px;
+  background:rgba(126,86,255,.08);
+  color:var(--muted);
+  font-size:9px;
+}
+
+.group-message-edited{
+  color:var(--muted);
+  font-size:8px;
+}
+
+.group-message-reactions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px;
+  margin-top:-1px;
+}
+
+.group-message-reactions button{
+  display:inline-flex;
+  align-items:center;
+  gap:3px;
+  min-height:26px;
+  padding:2px 7px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:var(--panel);
+  color:var(--text);
+  font-size:10px;
+}
+
+.group-message-reactions button.mine{
+  border-color:#8050ff;
+}
+
+.group-message-reactions button span{
+  color:var(--muted);
+  font-size:8px;
+}
+
+.group-composer{
+  display:grid;
+  gap:6px;
+}
+
+.group-composer-reply{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  min-height:42px;
+  padding:7px 9px;
+  border-left:3px solid #875cff;
+  border-radius:10px;
+  background:var(--panel-2);
+}
+
+.group-composer-reply>span{
+  min-width:0;
+  display:grid;
+  gap:2px;
+  color:var(--text-soft);
+  font-size:9px;
+}
+
+.group-composer-reply small{
+  max-width:320px;
+  overflow:hidden;
+  color:var(--muted);
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.group-composer-reply button{
+  display:grid;
+  place-items:center;
+  width:36px;
+  height:36px;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  color:var(--text);
+}
+
+.group-message-action-modal{
+  align-items:end!important;
+  padding:0!important;
+  background:rgba(0,0,0,.55)!important;
+}
+
+.group-message-action-sheet{
+  width:min(560px,100%);
+  margin:0 auto;
+  padding:8px 12px calc(12px + env(safe-area-inset-bottom));
+  border:1px solid #282b30;
+  border-bottom:0;
+  border-radius:24px 24px 0 0;
+  background:#141619;
+}
+
+@media(max-width:820px){
+  .group-message-action-sheet{
+    width:100%;
+  }
+}

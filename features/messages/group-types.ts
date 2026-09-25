@@ -33,4 +33,8 @@ export type GroupMessage = {
   edited_at: string | null;
   deleted_at: string | null;
   sender?: GroupMember | null;
+  reactions?: Array<{
+    user_id: string;
+    emoji: string;
+  }>;
 };
