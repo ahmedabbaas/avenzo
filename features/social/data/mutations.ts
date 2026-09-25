@@ -175,6 +175,7 @@ export async function publishContent({
   caption,
   file,
   dimensions,
+  postMedia = [],
   title = "",
   hashtags = "",
   mentions = "",
@@ -189,6 +190,10 @@ export async function publishContent({
   caption: string;
   file: File | null;
   dimensions: MediaDimensions | null;
+  postMedia?: Array<{
+    file: File;
+    dimensions: MediaDimensions | null;
+  }>;
   title?: string;
   hashtags?: string;
   mentions?: string;
@@ -197,8 +202,30 @@ export async function publishContent({
   highQualityUploads?: boolean;
   onProgress?: UploadProgress;
 }) {
-  const validationError = validateContentFile(file, mode);
-  if (validationError) throw new Error(validationError);
+  const normalizedPostMedia =
+    mode === "post"
+      ? (
+          postMedia.length
+            ? postMedia
+            : file
+              ? [{ file, dimensions }]
+              : []
+        ).slice(0, 10)
+      : [];
+
+  if (mode === "post") {
+    if (postMedia.length > 10) {
+      throw new Error("A carousel can contain up to 10 images.");
+    }
+
+    for (const item of normalizedPostMedia) {
+      const itemError = validateContentFile(item.file, "post");
+      if (itemError) throw new Error(itemError);
+    }
+  } else {
+    const validationError = validateContentFile(file, mode);
+    if (validationError) throw new Error(validationError);
+  }
 
   const coverError = validateCoverFile(coverFile);
   if (coverError) throw new Error(coverError);
@@ -217,8 +244,92 @@ export async function publishContent({
   let uploadedPath: string | null = null;
   let uploadedCoverPath: string | null = null;
   let mediaType: "image" | "video" | null = null;
+  let insertedPostId: string | null = null;
+  const uploadedPaths: string[] = [];
+  const uploadedPostItems: Array<{
+    media_path: string;
+    media_width: number | null;
+    media_height: number | null;
+    position: number;
+  }> = [];
 
   try {
+    if (mode === "post") {
+      const totalItems = Math.max(1, normalizedPostMedia.length);
+
+      for (let index = 0; index < normalizedPostMedia.length; index += 1) {
+        const item = normalizedPostMedia[index];
+        const preparedFile = await optimizeImageForUpload(
+          item.file,
+          highQualityUploads
+        );
+
+        const uploaded = await uploadContentMedia({
+          supabase,
+          userId,
+          mode,
+          file: preparedFile,
+          onProgress: (percent) => {
+            const base = (index / totalItems) * 92;
+            const slice = (percent / 100) * (92 / totalItems);
+            onProgress?.(Math.round(base + slice));
+          },
+        });
+
+        uploadedPaths.push(uploaded.path);
+        uploadedPostItems.push({
+          media_path: uploaded.path,
+          media_width: item.dimensions?.width || null,
+          media_height: item.dimensions?.height || null,
+          position: index,
+        });
+      }
+
+      const first = uploadedPostItems[0] || null;
+      uploadedPath = first?.media_path || null;
+      mediaType = first ? "image" : null;
+
+      const postResult = await supabase
+        .from("posts")
+        .insert({
+          author_id: userId,
+          caption: cleanCaption,
+          hashtags: cleanHashtags,
+          mentions: cleanMentions,
+          location: cleanLocation,
+          media_path: uploadedPath,
+          media_type: mediaType,
+          cover_path: null,
+          media_width: first?.media_width || null,
+          media_height: first?.media_height || null,
+        })
+        .select("id")
+        .single();
+
+      assertNoError(postResult.error);
+      insertedPostId = postResult.data.id;
+
+      if (uploadedPostItems.length) {
+        const mediaResult = await supabase
+          .from("post_media_items")
+          .insert(
+            uploadedPostItems.map((item) => ({
+              post_id: insertedPostId,
+              media_path: item.media_path,
+              media_type: "image",
+              media_width: item.media_width,
+              media_height: item.media_height,
+              position: item.position,
+            }))
+          );
+
+        assertNoError(mediaResult.error);
+      }
+
+      onProgress?.(100);
+      return;
+    }
+
     const usesCover = Boolean(coverFile && file?.type.startsWith("video/"));
     const mainProgressEnd = usesCover ? 82 : 100;
 
@@ -238,6 +349,7 @@ export async function publishContent({
       });
 
       uploadedPath = uploaded.path;
+      uploadedPaths.push(uploaded.path);
       mediaType = uploaded.type;
     }
 
@@ -259,6 +371,7 @@ export async function publishContent({
           ),
       });
       uploadedCoverPath = cover.path;
+      uploadedPaths.push(cover.path);
     }
 
     if (mode === "story") {
@@ -280,34 +393,15 @@ export async function publishContent({
       return;
     }
 
-    if (mode === "reel") {
-      const { error } = await supabase.from("reels").insert({
-        author_id: userId,
-        title: cleanTitle,
-        caption: cleanCaption,
-        hashtags: cleanHashtags,
-        mentions: cleanMentions,
-        location: cleanLocation,
-        media_path: uploadedPath,
-        media_type: "video",
-        cover_path: uploadedCoverPath,
-        media_width: dimensions?.width || null,
-        media_height: dimensions?.height || null,
-      });
-
-      assertNoError(error);
-      onProgress?.(100);
-      return;
-    }
-
-    const { error } = await supabase.from("posts").insert({
+    const { error } = await supabase.from("reels").insert({
       author_id: userId,
+      title: cleanTitle,
       caption: cleanCaption,
       hashtags: cleanHashtags,
       mentions: cleanMentions,
       location: cleanLocation,
       media_path: uploadedPath,
-      media_type: mediaType,
+      media_type: "video",
       cover_path: uploadedCoverPath,
       media_width: dimensions?.width || null,
       media_height: dimensions?.height || null,
@@ -316,12 +410,24 @@ export async function publishContent({
     assertNoError(error);
     onProgress?.(100);
   } catch (error) {
-    const paths = [uploadedPath, uploadedCoverPath].filter(
-      (path): path is string => Boolean(path)
-    );
+    if (insertedPostId) {
+      await supabase
+        .from("posts")
+        .delete()
+        .eq("id", insertedPostId)
+        .eq("author_id", userId);
+    }
+
+    const paths = [...new Set([
+      ...uploadedPaths,
+      uploadedPath,
+      uploadedCoverPath,
+    ].filter((path): path is string => Boolean(path)))];
+
     if (paths.length) {
       await supabase.storage.from("media").remove(paths);
     }
+
     throw error;
   }
 }
@@ -339,9 +445,11 @@ export async function removePost(
 
   assertNoError(error);
 
-  const mediaPaths = [post.media_path, post.cover_path].filter(
-    (path): path is string => Boolean(path)
-  );
+  const mediaPaths = [
+    post.media_path,
+    post.cover_path,
+    ...(post.mediaItems || []).map((item) => item.media_path),
+  ].filter((path): path is string => Boolean(path));
   if (mediaPaths.length) {
     await supabase.storage.from("media").remove(mediaPaths);
   }
