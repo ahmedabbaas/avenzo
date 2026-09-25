@@ -101,6 +101,8 @@ export default function HomeClient({
 
   const [profile, setProfile] = useState(initialProfile);
   const [screen, setScreen] = useState<Screen>(initialScreen || "home");
+  const [homeFeedMode, setHomeFeedMode] =
+    useState<"following" | "for-you">("following");
   const [posts, setPosts] = useState<Post[]>([]);
   const [profilePosts, setProfilePosts] = useState<Post[]>([]);
   const [explorePosts, setExplorePosts] = useState<Post[]>([]);
@@ -889,6 +891,9 @@ export default function HomeClient({
   const searchResultCount =
     filteredPeople.length + filteredReels.length + filteredExplorePosts.length;
 
+  const homeFeedPosts =
+    homeFeedMode === "following" ? posts : explorePosts;
+
   return (
     <div className={"social-app screen-" + screen}>
       <header className="top">
@@ -1104,15 +1109,47 @@ export default function HomeClient({
                 ))}
               </div>
 
+              <div className="home-feed-modes" role="tablist" aria-label="Home feed">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={homeFeedMode === "following"}
+                  className={homeFeedMode === "following" ? "active" : ""}
+                  onClick={() => setHomeFeedMode("following")}
+                >
+                  Following
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={homeFeedMode === "for-you"}
+                  className={homeFeedMode === "for-you" ? "active" : ""}
+                  onClick={() => setHomeFeedMode("for-you")}
+                >
+                  For You
+                </button>
+              </div>
+
               <div className="feed-toolbar home-feed-toolbar">
                 <div>
                   <div className="eyebrow">YOUR AVENZO</div>
                   <h2>Feed</h2>
-                  <span>Posts from you and people you follow.</span>
+                  <span>
+                    {homeFeedMode === "following"
+                      ? "Posts from you and people you follow."
+                      : "Real public content across AVENZO."}
+                  </span>
                 </div>
                 <button
                   className="quiet-button"
-                  onClick={() => void Promise.all([loadPosts(), loadStories()])}
+                  onClick={() =>
+                    void Promise.all([
+                      homeFeedMode === "following"
+                        ? loadPosts()
+                        : loadExplorePosts(),
+                      loadStories(),
+                    ])
+                  }
                 >
                   Refresh
                 </button>
@@ -1120,10 +1157,18 @@ export default function HomeClient({
 
               {loading ? (
                 <FeedSkeleton />
-              ) : posts.length === 0 ? (
+              ) : homeFeedPosts.length === 0 ? (
                 <EmptyState
-                  title="Your feed is empty."
-                  text="Create your first post or follow people to see their content."
+                  title={
+                    homeFeedMode === "following"
+                      ? "Your feed is empty."
+                      : "Nothing to discover yet."
+                  }
+                  text={
+                    homeFeedMode === "following"
+                      ? "Create your first post or follow people to see their content."
+                      : "Public posts from real AVENZO users will appear here."
+                  }
                   action={() => {
                     setCreateMode("post");
                     setShowCreate(true);
@@ -1134,7 +1179,7 @@ export default function HomeClient({
                 />
               ) : (
                 <div className="home-feed-grid">
-                  {posts.map((post) => (
+                  {homeFeedPosts.map((post) => (
                     <PostCard
                       key={post.id}
                       post={post}
