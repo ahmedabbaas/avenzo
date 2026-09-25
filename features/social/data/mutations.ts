@@ -307,6 +307,9 @@ export async function publishContent({
         .single();
 
       assertNoError(postResult.error);
+      if (!postResult.data?.id) {
+        throw new Error("Post could not be created.");
+      }
       insertedPostId = postResult.data.id;
 
       if (uploadedPostItems.length) {

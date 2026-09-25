@@ -11,7 +11,7 @@ function SettingsCard({
   text,
 }: {
   href: string;
-  icon: "settings" | "profile" | "messages" | "activity";
+  icon: "settings" | "profile" | "messages" | "activity" | "saved";
   title: string;
   text: string;
 }) {
