@@ -1033,7 +1033,7 @@ export default function MessagesWorkspace({
       (item) => item.conversation_id === active.conversation_id
     );
     if (next) await loadConversation(next);
-    setTab("inbox");
+    setTab("primary");
   }
 
   async function deleteRequest() {
