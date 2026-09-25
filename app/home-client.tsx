@@ -898,11 +898,11 @@ export default function HomeClient({
     <div className={"social-app screen-" + screen}>
       <header className="top">
         <button
-          className="mobile-home-create"
-          onClick={() => openComposer("post")}
-          aria-label="Create"
+          className="mobile-home-create mobile-home-settings"
+          onClick={() => router.push("/settings")}
+          aria-label="Settings"
         >
-          <Icon name="plus" size={25} />
+          <Icon name="settings" size={23} />
         </button>
 
         <button
@@ -1452,33 +1452,53 @@ export default function HomeClient({
       </div>
 
       <nav className="mobile-nav" aria-label="Mobile navigation">
-        {[
-          { id: "home" as Screen, label: "Home", icon: "home" as IconName },
-          { id: "reels" as const, label: "Reels", icon: "reels" as IconName },
-          { id: "messages" as const, label: "Messages", icon: "messages" as IconName },
-          { id: "explore" as Screen, label: "Search", icon: "explore" as IconName },
-          { id: "profile" as Screen, label: "Profile", icon: "profile" as IconName },
-        ].map((item) => (
-          <button
-            key={item.id}
-            className={screen === item.id ? "active" : ""}
-            onClick={() =>
-              item.id === "messages"
-                ? router.push("/messages")
-                : item.id === "reels"
-                  ? router.push("/reels")
-                  : setScreen(item.id)
-            }
-          >
-            <span className="mobile-icon-wrap">
-              <Icon name={item.icon} />
-              {item.id === "messages" && unreadMessages > 0 && (
-                <i>{Math.min(unreadMessages, 9)}</i>
-              )}
-            </span>
-            <small>{item.label}</small>
-          </button>
-        ))}
+        <button
+          className={screen === "home" ? "active" : ""}
+          onClick={() => setScreen("home")}
+          aria-label="Home"
+        >
+          <span className="mobile-icon-wrap"><Icon name="home" /></span>
+          <small>Home</small>
+        </button>
+
+        <button
+          className={screen === "explore" ? "active" : ""}
+          onClick={() => setScreen("explore")}
+          aria-label="Search"
+        >
+          <span className="mobile-icon-wrap"><Icon name="explore" /></span>
+          <small>Search</small>
+        </button>
+
+        <button
+          className="mobile-create"
+          onClick={() => openComposer("post")}
+          aria-label="Create"
+        >
+          <span className="mobile-icon-wrap"><Icon name="plus" /></span>
+          <small>Create</small>
+        </button>
+
+        <button
+          className={screen === "activity" ? "active" : ""}
+          onClick={() => setScreen("activity")}
+          aria-label="Activity"
+        >
+          <span className="mobile-icon-wrap">
+            <Icon name="activity" />
+            {unreadActivity > 0 && <i>{Math.min(unreadActivity, 9)}</i>}
+          </span>
+          <small>Activity</small>
+        </button>
+
+        <button
+          className={screen === "profile" ? "active" : ""}
+          onClick={() => setScreen("profile")}
+          aria-label="Profile"
+        >
+          <span className="mobile-icon-wrap"><Icon name="profile" /></span>
+          <small>Profile</small>
+        </button>
       </nav>
 
       {showCreate && (
