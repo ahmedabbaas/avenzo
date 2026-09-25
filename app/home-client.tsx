@@ -124,6 +124,11 @@ export default function HomeClient({
   const [mentions, setMentions] = useState("");
   const [location, setLocation] = useState("");
   const [collaboratorIds, setCollaboratorIds] = useState<string[]>([]);
+  const [postMedia, setPostMedia] = useState<Array<{
+    file: File;
+    preview: string;
+    dimensions: MediaDimensions | null;
+  }>>([]);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
   const [coverFile, setCoverFile] = useState<File | null>(null);
@@ -341,6 +346,10 @@ export default function HomeClient({
   function clearComposerMedia() {
     if (preview) URL.revokeObjectURL(preview);
     if (coverPreview) URL.revokeObjectURL(coverPreview);
+    for (const item of postMedia) {
+      URL.revokeObjectURL(item.preview);
+    }
+    setPostMedia([]);
     setFile(null);
     setPreview("");
     setCoverFile(null);
@@ -365,7 +374,57 @@ export default function HomeClient({
     setShowCreate(true);
   }
 
+  async function pickPostFiles(files: File[]) {
+    for (const item of postMedia) {
+      URL.revokeObjectURL(item.preview);
+    }
+
+    const selected = files.slice(0, 10);
+    if (!selected.length) {
+      setPostMedia([]);
+      setFile(null);
+      setPreview("");
+      setMediaDimensions(null);
+      return;
+    }
+
+    const next: Array<{
+      file: File;
+      preview: string;
+      dimensions: MediaDimensions | null;
+    }> = [];
+
+    for (const picked of selected) {
+      const validationError = validateContentFile(picked, "post");
+      if (validationError) {
+        for (const item of next) URL.revokeObjectURL(item.preview);
+        showToast(validationError);
+        return;
+      }
+
+      next.push({
+        file: picked,
+        preview: URL.createObjectURL(picked),
+        dimensions: await readMediaDimensions(picked),
+      });
+    }
+
+    setPostMedia(next);
+    setFile(next[0]?.file || null);
+    setPreview(next[0]?.preview || "");
+    setMediaDimensions(next[0]?.dimensions || null);
+
+    if (files.length > 10) {
+      showToast("A carousel can contain up to 10 images.");
+    }
+  }
+
   async function pickFile(picked: File | null) {
+    if (createMode === "post") {
+      await pickPostFiles(picked ? [picked] : []);
+      return;
+    }
+
     if (preview) URL.revokeObjectURL(preview);
     if (coverPreview) URL.revokeObjectURL(coverPreview);
     setCoverFile(null);
@@ -434,7 +493,11 @@ export default function HomeClient({
       return;
     }
 
-    if (createMode === "post" && !caption.trim() && !file) {
+    if (
+      createMode === "post" &&
+      !caption.trim() &&
+      postMedia.length === 0
+    ) {
       showToast("Add a caption or media before publishing.");
       return;
     }
@@ -455,6 +518,13 @@ export default function HomeClient({
         file,
         coverFile,
         dimensions: mediaDimensions,
+        postMedia:
+          createMode === "post"
+            ? postMedia.map((item) => ({
+                file: item.file,
+                dimensions: item.dimensions,
+              }))
+            : [],
         highQualityUploads: runtimePreferences.high_quality_uploads,
         collaboratorIds: createMode === "post" ? collaboratorIds : [],
         onProgress: setUploadProgress,
@@ -1342,6 +1412,8 @@ export default function HomeClient({
           location={location}
           file={file}
           preview={preview}
+          postPreviews={postMedia.map((item) => item.preview)}
+          postDimensions={postMedia.map((item) => item.dimensions)}
           coverFile={coverFile}
           coverPreview={coverPreview}
           dimensions={mediaDimensions}
@@ -1365,6 +1437,7 @@ export default function HomeClient({
           onMentionsChange={setMentions}
           onLocationChange={setLocation}
           onFileSelect={(nextFile) => void pickFile(nextFile)}
+          onPostFilesSelect={(files) => void pickPostFiles(files)}
           onCoverSelect={pickCover}
           onClose={() => {
             resetComposer(createMode);
