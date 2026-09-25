@@ -25,7 +25,8 @@ export type IconName =
   | "eye"
   | "phone"
   | "mic"
-  | "repost";
+  | "repost"
+  | "clock";
 
 
 export default function Icon({ name, size = 19 }: { name: IconName; size?: number }) {
@@ -155,6 +156,12 @@ export default function Icon({ name, size = 19 }: { name: IconName; size?: numbe
         <path d="M17 17H6.5l2.6 2.6" />
         <path d="m6.5 17 2.6-2.6" />
         <path d="M18 8.5v4M6 15.5v-4" />
+      </>
+    ),
+    clock: (
+      <>
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M12 7.5V12l3 2" />
       </>
     ),
   };

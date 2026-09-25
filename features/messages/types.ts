@@ -134,3 +134,20 @@ export type PinnedMessage = {
   pinned_at: string;
   pinned_by: string;
 };
+
+
+export type ScheduledMessage = {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  recipient_id: string;
+  body: string;
+  reply_to_id: string | null;
+  scheduled_for: string;
+  status: "pending" | "sent" | "cancelled" | "failed";
+  sent_message_id: string | null;
+  created_at: string;
+  sent_at: string | null;
+  cancelled_at: string | null;
+  last_error: string | null;
+};

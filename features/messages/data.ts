@@ -7,6 +7,7 @@ import type {
   MessageReaction,
   MessageNote,
   PinnedMessage,
+  ScheduledMessage,
   SharedPostPreview,
   SharedProfilePreview,
   SharedReelPreview,
@@ -714,6 +715,52 @@ export async function deleteOwnNote(
   assertNoError(error);
 }
 
+
+export async function fetchScheduledMessages(
+  supabase: SupabaseClient,
+  conversationId: string
+): Promise<ScheduledMessage[]> {
+  const { data, error } = await supabase
+    .from("scheduled_messages")
+    .select(
+      "id,conversation_id,sender_id,recipient_id,body,reply_to_id,scheduled_for,status,sent_message_id,created_at,sent_at,cancelled_at,last_error"
+    )
+    .eq("conversation_id", conversationId)
+    .in("status", ["pending", "failed"])
+    .order("scheduled_for", { ascending: true });
+
+  assertNoError(error);
+  return (data || []) as ScheduledMessage[];
+}
+
+export async function scheduleDirectMessage(
+  supabase: SupabaseClient,
+  conversationId: string,
+  recipientId: string,
+  body: string,
+  scheduledFor: string,
+  replyToId: string | null = null
+) {
+  const { data, error } = await supabase.rpc("schedule_direct_message", {
+    cid: conversationId,
+    recipient: recipientId,
+    message_body: body,
+    send_at: scheduledFor,
+    reply_mid: replyToId,
+  });
+  assertNoError(error);
+  return data as string;
+}
+
+export async function cancelScheduledMessage(
+  supabase: SupabaseClient,
+  scheduledMessageId: string
+) {
+  const { error } = await supabase.rpc("cancel_scheduled_message", {
+    target_id: scheduledMessageId,
+  });
+  assertNoError(error);
+}
 
 export async function fetchPinnedMessages(
   supabase: SupabaseClient,

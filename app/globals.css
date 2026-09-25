@@ -6725,3 +6725,63 @@ html[data-theme="light"]{
     padding-bottom:calc(30px + env(safe-area-inset-bottom));
   }
 }
+
+/* AVENZO SCHEDULED DMS v1 */
+.dm-scheduled-strip{
+  display:grid;
+  grid-template-columns:auto auto minmax(0,1fr);
+  align-items:center;
+  gap:7px;
+  width:100%;
+  min-height:38px;
+  margin:0 0 7px;
+  padding:7px 10px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:var(--panel-2);
+  color:var(--text);
+  text-align:left;
+}
+.dm-scheduled-strip span{font-size:10px;font-weight:800}
+.dm-scheduled-strip small{overflow:hidden;color:var(--muted);font-size:9px;text-overflow:ellipsis;white-space:nowrap}
+.dm-schedule-button{color:var(--accent)!important}
+.dm-schedule-modal{align-items:end!important;padding:0!important}
+.dm-schedule-sheet{
+  width:min(560px,100%);
+  max-height:min(82dvh,720px);
+  overflow:auto;
+  margin:0 auto;
+  padding:16px 14px calc(16px + env(safe-area-inset-bottom));
+  border:1px solid var(--line);
+  border-bottom:0;
+  border-radius:24px 24px 0 0;
+  background:var(--panel);
+}
+.dm-schedule-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.dm-schedule-head small{color:var(--accent);font-size:9px;font-weight:800;letter-spacing:.14em}
+.dm-schedule-head h3{margin:2px 0 0;font-size:20px}
+.dm-schedule-head>button{display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:50%;background:var(--panel-2);color:var(--text)}
+.dm-schedule-create{display:grid;gap:10px;margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:15px;background:var(--panel-2)}
+.dm-schedule-preview{display:grid;gap:4px}
+.dm-schedule-preview b{font-size:10px;color:var(--muted)}
+.dm-schedule-preview p{margin:0;max-height:80px;overflow:auto;white-space:pre-wrap;font-size:13px;line-height:1.45}
+.dm-schedule-create label{display:grid;gap:6px;color:var(--text-soft);font-size:10px;font-weight:700}
+.dm-schedule-create input{min-height:44px;padding:0 11px;border:1px solid var(--line);border-radius:11px;background:var(--panel);color:var(--text)}
+.dm-schedule-list{display:grid;gap:7px;margin-top:14px}
+.dm-schedule-list>p{padding:22px 10px;text-align:center;color:var(--muted)}
+.dm-schedule-list article{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:11px;border:1px solid var(--line);border-radius:13px;background:var(--panel-2)}
+.dm-schedule-list article>div{min-width:0;display:grid;gap:4px}
+.dm-schedule-list article b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
+.dm-schedule-list article small{color:var(--muted);font-size:9px}
+.dm-schedule-list article button{min-height:36px;padding:0 10px;border:0;border-radius:9px;background:rgba(255,78,91,.1);color:#ff727c;font-size:9px;font-weight:800}
+@media(max-width:820px){
+  .dm-compose-row:has(.dm-schedule-button){
+    grid-template-columns:40px minmax(0,1fr) 36px 36px 36px 40px!important;
+  }
+}
+@media(max-width:390px){
+  .dm-compose-row:has(.dm-schedule-button){
+    grid-template-columns:40px minmax(0,1fr) 34px 34px 40px!important;
+  }
+  .dm-compose-row:has(.dm-schedule-button) .dm-emoji-button{display:none!important}
+}

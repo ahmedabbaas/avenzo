@@ -31,6 +31,7 @@ import {
   fetchMessageUsers,
   fetchMessagingPrivacy,
   fetchPinnedMessages,
+  fetchScheduledMessages,
   getExistingConversation,
   hideMessageForMe,
   markMessageDelivered,
@@ -40,6 +41,8 @@ import {
   restrictUser,
   sendDirectMessage,
   sendMessageAttachment,
+  scheduleDirectMessage,
+  cancelScheduledMessage,
   saveOwnNote,
   deleteOwnNote,
   setConversationMuted,
@@ -55,6 +58,7 @@ import type {
   MessageNote,
   MessageReaction,
   PinnedMessage,
+  ScheduledMessage,
 } from "../types";
 
 const REACTIONS = ["❤️", "😂", "👍", "😮", "😢", "😡"];
@@ -124,6 +128,12 @@ function recordingTime(value: number) {
   return minutes + ":" + String(seconds).padStart(2, "0");
 }
 
+function defaultScheduleValue() {
+  const date = new Date(Date.now() + 15 * 60 * 1000);
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+}
+
 function receipt(message: DirectMessage, own: boolean) {
   if (!own) return "";
   if (message.read_at) return "✓✓ Seen";
@@ -158,6 +168,7 @@ export default function MessagesWorkspace({
   const [active, setActive] = useState<InboxConversation | null>(null);
   const [messages, setMessages] = useState<DirectMessage[]>([]);
   const [pinnedMessages, setPinnedMessages] = useState<PinnedMessage[]>([]);
+  const [scheduledMessages, setScheduledMessages] = useState<ScheduledMessage[]>([]);
   const [people, setPeople] = useState<Profile[]>([]);
   const [notes, setNotes] = useState<MessageNote[]>([]);
   const [noteOpen, setNoteOpen] = useState(false);
@@ -174,6 +185,8 @@ export default function MessagesWorkspace({
   const [moreOpen, setMoreOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [scheduleAt, setScheduleAt] = useState("");
   const [actionMessage, setActionMessage] = useState<DirectMessage | null>(null);
   const [typing, setTyping] = useState(false);
   const [otherOnline, setOtherOnline] = useState(false);
@@ -315,18 +328,24 @@ export default function MessagesWorkspace({
     async (conversation: InboxConversation) => {
       setActive(conversation);
       stickToBottomRef.current = true;
-      const [nextMessages, nextPinnedMessages] = await Promise.all([
-        fetchConversationMessages(
-          supabase,
-          conversation.conversation_id
-        ),
-        fetchPinnedMessages(
-          supabase,
-          conversation.conversation_id
-        ),
-      ]);
+      const [nextMessages, nextPinnedMessages, nextScheduledMessages] =
+        await Promise.all([
+          fetchConversationMessages(
+            supabase,
+            conversation.conversation_id
+          ),
+          fetchPinnedMessages(
+            supabase,
+            conversation.conversation_id
+          ),
+          fetchScheduledMessages(
+            supabase,
+            conversation.conversation_id
+          ),
+        ]);
       setMessages(nextMessages);
       setPinnedMessages(nextPinnedMessages);
+      setScheduledMessages(nextScheduledMessages);
 
       if (!conversation.request_incoming) {
         await markMessagesRead(
@@ -703,6 +722,73 @@ export default function MessagesWorkspace({
           ? "This account is not accepting messages from you."
           : message
       );
+    }
+  }
+
+  function openSchedule() {
+    if (!active || !text.trim()) return;
+    if (active.request_status !== "accepted") {
+      setNotice("Accept the message request before scheduling a message.");
+      return;
+    }
+    setScheduleAt(defaultScheduleValue());
+    setScheduleOpen(true);
+  }
+
+  async function scheduleCurrentMessage() {
+    if (!active || !text.trim() || !scheduleAt) return;
+
+    const sendDate = new Date(scheduleAt);
+    if (Number.isNaN(sendDate.getTime())) {
+      setNotice("Choose a valid date and time.");
+      return;
+    }
+
+    setSending(true);
+    try {
+      await scheduleDirectMessage(
+        supabase,
+        active.conversation_id,
+        active.other_user_id,
+        text.trim(),
+        sendDate.toISOString(),
+        replyTo?.id || null
+      );
+      setText("");
+      setReplyTo(null);
+      setScheduleOpen(false);
+      setScheduledMessages(
+        await fetchScheduledMessages(
+          supabase,
+          active.conversation_id
+        )
+      );
+      setNotice("Message scheduled.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      setNotice(
+        message.includes("SCHEDULE_TOO_SOON")
+          ? "Schedule it at least 30 seconds from now."
+          : message.includes("SCHEDULE_TOO_FAR")
+            ? "Messages can be scheduled up to 30 days ahead."
+            : "Message could not be scheduled."
+      );
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function cancelScheduled(item: ScheduledMessage) {
+    if (!active) return;
+
+    try {
+      await cancelScheduledMessage(supabase, item.id);
+      setScheduledMessages((current) =>
+        current.filter((message) => message.id !== item.id)
+      );
+      setNotice("Scheduled message cancelled.");
+    } catch {
+      setNotice("Could not cancel scheduled message.");
     }
   }
 
@@ -2142,6 +2228,28 @@ export default function MessagesWorkspace({
 
             {!active.request_incoming && (
               <form className="dm-composer" onSubmit={send}>
+                {scheduledMessages.length > 0 && (
+                  <button
+                    type="button"
+                    className="dm-scheduled-strip"
+                    onClick={() => {
+                      setScheduleAt(defaultScheduleValue());
+                      setScheduleOpen(true);
+                    }}
+                  >
+                    <Icon name="clock" size={15} />
+                    <span>
+                      {scheduledMessages.filter((item) => item.status === "pending").length} scheduled
+                    </span>
+                    <small>
+                      {scheduledMessages[0]
+                        ? new Date(
+                            scheduledMessages[0].scheduled_for
+                          ).toLocaleString()
+                        : ""}
+                    </small>
+                  </button>
+                )}
                 {replyTo && (
                   <div className="dm-composer-reply">
                     <div>
@@ -2224,14 +2332,26 @@ export default function MessagesWorkspace({
                     <Icon name="paperclip" size={19} />
                   </button>
                   {text.trim() ? (
-                    <button
-                      className="send-button dm-send-button"
+                    <>
+                      <button
+                        type="button"
+                        className="dm-compose-icon dm-schedule-button"
+                        onClick={openSchedule}
+                        disabled={sending || recording}
+                        aria-label="Schedule message"
+                        title="Schedule message"
+                      >
+                        <Icon name="clock" size={18} />
+                      </button>
+                      <button
+                        className="send-button dm-send-button"
                       disabled={sending || recording}
                       aria-label={sending ? "Sending message" : "Send message"}
                       title={sending ? "Sending…" : "Send"}
                     >
                       <Icon name="send" size={19} />
                     </button>
+                    </>
                   ) : (
                     <button
                       type="button"
@@ -2265,6 +2385,91 @@ export default function MessagesWorkspace({
           </>
         )}
       </section>
+
+      {scheduleOpen && active && (
+        <div
+          className="modal dm-schedule-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Schedule message"
+          onClick={() => setScheduleOpen(false)}
+        >
+          <div
+            className="dm-schedule-sheet"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="dm-schedule-head">
+              <div>
+                <small>SEND LATER</small>
+                <h3>Scheduled messages</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setScheduleOpen(false)}
+                aria-label="Close scheduled messages"
+              >
+                <Icon name="close" size={17} />
+              </button>
+            </div>
+
+            {text.trim() && (
+              <div className="dm-schedule-create">
+                <div className="dm-schedule-preview">
+                  <b>Message</b>
+                  <p>{text.trim()}</p>
+                </div>
+
+                <label>
+                  Send at
+                  <input
+                    type="datetime-local"
+                    value={scheduleAt}
+                    min={defaultScheduleValue()}
+                    onChange={(event) => setScheduleAt(event.target.value)}
+                  />
+                </label>
+
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={sending || !scheduleAt}
+                  onClick={() => void scheduleCurrentMessage()}
+                >
+                  {sending ? "Scheduling…" : "Schedule"}
+                </button>
+              </div>
+            )}
+
+            <div className="dm-schedule-list">
+              {scheduledMessages.length === 0 ? (
+                <p>No scheduled messages in this conversation.</p>
+              ) : (
+                scheduledMessages.map((item) => (
+                  <article key={item.id}>
+                    <div>
+                      <b>{item.body}</b>
+                      <small>
+                        {item.status === "failed"
+                          ? "Failed · " + (item.last_error || "Delivery error")
+                          : "Sends " +
+                            new Date(item.scheduled_for).toLocaleString()}
+                      </small>
+                    </div>
+                    {item.status === "pending" && (
+                      <button
+                        type="button"
+                        onClick={() => void cancelScheduled(item)}
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </article>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {noteOpen && (
         <div
