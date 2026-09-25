@@ -3351,3 +3351,27 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
     object-fit:cover!important;
   }
 }
+
+/* AVENZO ANDROID DOUBLE TAP LIKE v1 */
+@media(max-width:820px){
+  html.avenzo-android-app .post-card{
+    position:relative!important;
+  }
+
+  html.avenzo-android-app .post-heart-burst{
+    position:absolute!important;
+    left:50%!important;
+    top:43%!important;
+    z-index:12!important;
+    display:grid!important;
+    place-items:center!important;
+    width:84px!important;
+    height:84px!important;
+    transform:translate(-50%,-50%)!important;
+    color:#fff!important;
+    font-size:70px!important;
+    pointer-events:none!important;
+    text-shadow:0 7px 28px rgba(0,0,0,.35)!important;
+    animation:avenzoHeartBurst .62s cubic-bezier(.2,.8,.2,1) both!important;
+  }
+}

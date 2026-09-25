@@ -8390,3 +8390,40 @@ html[data-theme="light"]{
     gap:6px;
   }
 }
+
+/* AVENZO DOUBLE TAP LIKE v1 */
+.post-card{
+  position:relative;
+}
+
+.post-heart-burst{
+  position:absolute;
+  left:50%;
+  top:45%;
+  z-index:12;
+  display:grid;
+  place-items:center;
+  width:86px;
+  height:86px;
+  transform:translate(-50%,-50%);
+  color:#fff;
+  font-size:72px;
+  line-height:1;
+  pointer-events:none;
+  text-shadow:0 7px 28px rgba(0,0,0,.35);
+  animation:avenzoHeartBurst .62s cubic-bezier(.2,.8,.2,1) both;
+}
+
+@keyframes avenzoHeartBurst{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.35) rotate(-8deg)}
+  34%{opacity:1;transform:translate(-50%,-50%) scale(1.18) rotate(3deg)}
+  68%{opacity:1;transform:translate(-50%,-50%) scale(.98)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1.08)}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .post-heart-burst{
+    animation:none;
+    opacity:1;
+  }
+}
