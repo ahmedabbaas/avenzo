@@ -123,6 +123,7 @@ export default function HomeClient({
   const [hashtags, setHashtags] = useState("");
   const [mentions, setMentions] = useState("");
   const [location, setLocation] = useState("");
+  const [collaboratorIds, setCollaboratorIds] = useState<string[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
   const [coverFile, setCoverFile] = useState<File | null>(null);
@@ -355,6 +356,7 @@ export default function HomeClient({
     setHashtags("");
     setMentions("");
     setLocation("");
+    setCollaboratorIds([]);
     setUploadProgress(0);
   }
 
@@ -454,6 +456,7 @@ export default function HomeClient({
         coverFile,
         dimensions: mediaDimensions,
         highQualityUploads: runtimePreferences.high_quality_uploads,
+        collaboratorIds: createMode === "post" ? collaboratorIds : [],
         onProgress: setUploadProgress,
       });
 
@@ -1344,6 +1347,17 @@ export default function HomeClient({
           dimensions={mediaDimensions}
           posting={posting}
           uploadProgress={uploadProgress}
+          people={people}
+          collaboratorIds={collaboratorIds}
+          onToggleCollaborator={(userId) =>
+            setCollaboratorIds((current) =>
+              current.includes(userId)
+                ? current.filter((id) => id !== userId)
+                : current.length < 3
+                  ? [...current, userId]
+                  : current
+            )
+          }
           onModeChange={(mode) => resetComposer(mode)}
           onTitleChange={setTitle}
           onCaptionChange={setCaption}
