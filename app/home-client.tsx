@@ -1188,6 +1188,7 @@ export default function HomeClient({
                       onLike={() => void toggleLike(post)}
                       onSave={() => void toggleSave(post)}
                       onShare={() => void sharePost(post)}
+                      onRepost={() => void togglePostRepost(post)}
                       onComment={(body) => void addComment(post, body)}
                       own={post.author_id === initialProfile.id}
                       onDelete={() => void deletePost(post)}
