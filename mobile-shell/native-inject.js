@@ -52,7 +52,7 @@
     }
 
     function applyBranding() {
-      document.querySelectorAll(".brand,.public-brand,.messages-brand").forEach(function(el){
+      document.querySelectorAll(".public-brand,.messages-brand").forEach(function(el){
         if (el.querySelector(".avenzo-brand-logo,.avenzo-native-logo")) return;
         var mark = el.querySelector(":scope > i");
         if (!mark) {
