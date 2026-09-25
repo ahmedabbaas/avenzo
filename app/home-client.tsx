@@ -890,7 +890,7 @@ export default function HomeClient({
     filteredPeople.length + filteredReels.length + filteredExplorePosts.length;
 
   return (
-    <div className="social-app">
+    <div className={"social-app screen-" + screen}>
       <header className="top">
         <button
           className="mobile-home-create"
@@ -943,6 +943,25 @@ export default function HomeClient({
         </button>
 
         <button
+          className="top-messages"
+          onClick={() => router.push("/messages")}
+          aria-label="Messages"
+        >
+          <Icon name="messages" size={20} />
+          {unreadMessages > 0 && (
+            <i className="top-badge">{Math.min(unreadMessages, 9)}</i>
+          )}
+        </button>
+
+        <button
+          className="top-create"
+          onClick={() => openComposer("post")}
+        >
+          <Icon name="plus" size={17} />
+          <span>Create a post</span>
+        </button>
+
+        <button
           className="top-profile"
           onClick={() => setScreen("profile")}
           aria-label="Open profile"
@@ -960,6 +979,24 @@ export default function HomeClient({
               <strong>{profile.display_name}</strong>
               <small className="verified-line">@{profile.username}<VerifiedBadge verified={profile.verified} /></small>
             </div>
+          </div>
+
+          <div className="nav-profile-details">
+            <div className="nav-profile-stats">
+              <span>
+                <b>{stats.posts}</b>
+                <small>Posts</small>
+              </span>
+              <span>
+                <b>{stats.followers}</b>
+                <small>Followers</small>
+              </span>
+              <span>
+                <b>{stats.following}</b>
+                <small>Following</small>
+              </span>
+            </div>
+            {profile.bio && <p>{profile.bio}</p>}
           </div>
 
           {NAV_ITEMS.map((item) => (
@@ -1017,24 +1054,18 @@ export default function HomeClient({
         <main className="social-main">
           {screen === "home" && (
             <>
-              <section className="welcome">
+              <section className="home-dashboard-head">
                 <div>
-                  <div className="eyebrow">YOUR AVENZO</div>
-                  <h1>Good to see you, {profile.display_name.split(" ")[0]}.</h1>
-                  <p>
-                    A quieter social space for real people, real posts and real
-                    conversations.
-                  </p>
+                  <div className="eyebrow">REAL PEOPLE · REAL STORIES</div>
+                  <h1>Stories</h1>
+                  <p>Updates shared by real AVENZO accounts you can actually open and follow.</p>
                 </div>
                 <button
-                  className="btn"
-                  onClick={() => {
-                    setCreateMode("post");
-                    setShowCreate(true);
-                  }}
+                  className="btn home-create-button"
+                  onClick={() => openComposer("post")}
                 >
                   <Icon name="plus" size={17} />
-                  Create post
+                  Create a post
                 </button>
               </section>
 
@@ -1073,10 +1104,11 @@ export default function HomeClient({
                 ))}
               </div>
 
-              <div className="feed-toolbar">
+              <div className="feed-toolbar home-feed-toolbar">
                 <div>
-                  <div className="eyebrow">HOME FEED</div>
-                  <strong>Posts from you and people you follow</strong>
+                  <div className="eyebrow">YOUR AVENZO</div>
+                  <h2>Feed</h2>
+                  <span>Posts from you and people you follow.</span>
                 </div>
                 <button
                   className="quiet-button"
@@ -1101,25 +1133,27 @@ export default function HomeClient({
                   secondaryActionLabel="Explore people"
                 />
               ) : (
-                posts.map((post) => (
-                  <PostCard
-                    key={post.id}
-                    post={post}
-                    saved={saved.includes(post.id)}
-                    mediaUrl={post.media_path ? mediaUrl(post.media_path) : ""}
-                    onLike={() => void toggleLike(post)}
-                    onSave={() => void toggleSave(post)}
-                    onShare={() => void sharePost(post)}
-                    onComment={(body) => void addComment(post, body)}
-                    own={post.author_id === initialProfile.id}
-                    onDelete={() => void deletePost(post)}
-                    autoplayVideo={runtimePreferences.feed_autoplay_videos}
-                    dataSaving={
-                      runtimePreferences.data_saving_mode ||
-                      runtimePreferences.use_less_mobile_data
-                    }
-                  />
-                ))
+                <div className="home-feed-grid">
+                  {posts.map((post) => (
+                    <PostCard
+                      key={post.id}
+                      post={post}
+                      saved={saved.includes(post.id)}
+                      mediaUrl={post.media_path ? mediaUrl(post.media_path) : ""}
+                      onLike={() => void toggleLike(post)}
+                      onSave={() => void toggleSave(post)}
+                      onShare={() => void sharePost(post)}
+                      onComment={(body) => void addComment(post, body)}
+                      own={post.author_id === initialProfile.id}
+                      onDelete={() => void deletePost(post)}
+                      autoplayVideo={runtimePreferences.feed_autoplay_videos}
+                      dataSaving={
+                        runtimePreferences.data_saving_mode ||
+                        runtimePreferences.use_less_mobile_data
+                      }
+                    />
+                  ))}
+                </div>
               )}
             </>
           )}
