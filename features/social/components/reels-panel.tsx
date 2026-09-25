@@ -9,6 +9,7 @@ import {
   createReelComment,
   recordReelView,
   setReelLike,
+  setReelReposted,
   setReelSaved,
 } from "../data/mutations";
 import { fetchReels } from "../data/queries";
@@ -206,6 +207,30 @@ export default function ReelsPanel({
     }
   }
 
+  async function toggleRepost(reel: Reel) {
+    const wasReposted = Boolean(reel.reposted);
+    setReels((current) =>
+      current.map((item) =>
+        item.id === reel.id
+          ? { ...item, reposted: !wasReposted }
+          : item
+      )
+    );
+
+    try {
+      await setReelReposted(
+        supabase,
+        currentUser.id,
+        reel.id,
+        wasReposted
+      );
+      setNotice(wasReposted ? "Repost removed." : "Reposted.");
+    } catch {
+      setNotice("Could not update repost.");
+      await load();
+    }
+  }
+
   async function addComment(reel: Reel) {
     const clean = comment.trim();
     if (!clean) return;
@@ -346,6 +371,13 @@ export default function ReelsPanel({
                     >
                       <Icon name="send" size={24} />
                       <b>{reel.shareCount}</b>
+                    </button>
+                    <button
+                      className={reel.reposted ? "active" : ""}
+                      onClick={() => void toggleRepost(reel)}
+                      aria-label={reel.reposted ? "Undo repost" : "Repost reel"}
+                    >
+                      <Icon name="repost" size={24} />
                     </button>
                     <button
                       className={isSaved ? "active" : ""}

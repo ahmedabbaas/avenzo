@@ -9,6 +9,7 @@ import AvatarImage from "../../../features/social/components/avatar-image";
 import UserMediaImage from "../../../features/social/components/user-media-image";
 import { initialsAvatar } from "../../../features/social/lib/profile";
 import VerifiedBadge from "../../../features/social/components/verified-badge";
+import RepostsGrid from "../../../features/social/components/reposts-grid";
 
 type PublicProfile = {
   id: string;
@@ -81,7 +82,7 @@ export default function PublicProfileClient({
   const [followState, setFollowState] = useState(initialFollowState);
   const following = followState === "following";
   const requested = followState === "requested";
-  const [contentTab, setContentTab] = useState<"posts" | "reels">(
+  const [contentTab, setContentTab] = useState<"posts" | "reels" | "reposts">(
     reels.length > 0 && posts.length === 0 ? "reels" : "posts"
   );
   const [reelItems, setReelItems] = useState(reels);
@@ -365,6 +366,12 @@ export default function PublicProfileClient({
           >
             Reels <span>{reelItems.length}</span>
           </button>
+          <button
+            className={contentTab === "reposts" ? "active" : ""}
+            onClick={() => setContentTab("reposts")}
+          >
+            Reposts
+          </button>
         </div>
 
         {contentTab === "posts" ? (
@@ -406,7 +413,7 @@ export default function PublicProfileClient({
               </div>
             )}
           </>
-        ) : (
+        ) : contentTab === "reels" ? (
           <>
             <div className="public-profile-section-title">
               <div>
@@ -440,6 +447,16 @@ export default function PublicProfileClient({
                 <p>This account has not uploaded a reel.</p>
               </div>
             )}
+          </>
+        ) : (
+          <>
+            <div className="public-profile-section-title">
+              <div>
+                <div className="eyebrow">REPOSTS</div>
+                <h2>Reposted by @{profile.username}</h2>
+              </div>
+            </div>
+            <RepostsGrid profileId={profile.id} />
           </>
         )}
           </>

@@ -18,6 +18,7 @@ export default function ReelCard({
   onSave,
   onComment,
   onShare,
+  onRepost,
   onDelete,
   autoplayVideo = false,
   dataSaving = false,
@@ -31,6 +32,7 @@ export default function ReelCard({
   onSave: () => void;
   onComment: (value: string) => void;
   onShare: () => void;
+  onRepost?: () => void;
   onDelete: () => void;
   autoplayVideo?: boolean;
   dataSaving?: boolean;
@@ -118,6 +120,16 @@ export default function ReelCard({
             <Icon name="send" size={20} />
             <span>{reel.shareCount}</span>
           </button>
+          {onRepost && (
+            <button
+              className={"repost-action " + (reel.reposted ? "active" : "")}
+              onClick={onRepost}
+              aria-label={reel.reposted ? "Undo repost" : "Repost reel"}
+              title={reel.reposted ? "Undo repost" : "Repost"}
+            >
+              <Icon name="repost" size={20} />
+            </button>
+          )}
           <button
             className={"save-action " + (saved ? "saved" : "")}
             onClick={onSave}

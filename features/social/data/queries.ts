@@ -171,7 +171,7 @@ async function hydratePosts(
   const authorIds = [...new Set(rows.map((post) => post.author_id))];
   const postIds = rows.map((post) => post.id);
 
-  const [authorsResult, likesResult, commentsResult] = await Promise.all([
+  const [authorsResult, likesResult, commentsResult, repostsResult] = await Promise.all([
     supabase
       .from("profiles")
       .select(PROFILE_COLUMNS)
@@ -185,11 +185,17 @@ async function hydratePosts(
       .select("id,post_id,user_id,body,created_at")
       .in("post_id", postIds)
       .order("created_at", { ascending: true }),
+    supabase
+      .from("reposts")
+      .select("post_id,user_id")
+      .eq("user_id", userId)
+      .in("post_id", postIds),
   ]);
 
   assertNoError(authorsResult.error);
   assertNoError(likesResult.error);
   assertNoError(commentsResult.error);
+  assertNoError(repostsResult.error);
 
   const authors = (authorsResult.data || []) as Profile[];
   const authorMap = new Map(authors.map((author) => [author.id, author]));
@@ -225,6 +231,11 @@ async function hydratePosts(
     post_id: string;
     user_id: string;
   }>;
+  const repostedPostIds = new Set(
+    (repostsResult.data || [])
+      .map((row: { post_id: string | null }) => row.post_id)
+      .filter((id): id is string => Boolean(id))
+  );
 
   return rows.map((post) => ({
     ...post,
@@ -245,6 +256,7 @@ async function hydratePosts(
         created_at: comment.created_at,
         profile: commentUserMap.get(comment.user_id),
       })),
+    reposted: repostedPostIds.has(post.id),
   }));
 }
 
@@ -385,7 +397,7 @@ export async function fetchReels(
   const reelIds = rows.map((reel) => reel.id);
   const authorIds = [...new Set(rows.map((reel) => reel.author_id))];
 
-  const [authorsResult, likesResult, commentsResult, savedResult] =
+  const [authorsResult, likesResult, commentsResult, savedResult, repostsResult] =
     await Promise.all([
       supabase
         .from("profiles")
@@ -404,12 +416,18 @@ export async function fetchReels(
         .from("saved_reels")
         .select("reel_id")
         .eq("user_id", userId),
+      supabase
+        .from("reposts")
+        .select("reel_id,user_id")
+        .eq("user_id", userId)
+        .in("reel_id", reelIds),
     ]);
 
   assertNoError(authorsResult.error);
   assertNoError(likesResult.error);
   assertNoError(commentsResult.error);
   assertNoError(savedResult.error);
+  assertNoError(repostsResult.error);
 
   const authors = (authorsResult.data || []) as Profile[];
   const authorMap = new Map(authors.map((author) => [author.id, author]));
@@ -445,6 +463,11 @@ export async function fetchReels(
     reel_id: string;
     user_id: string;
   }>;
+  const repostedReelIds = new Set(
+    (repostsResult.data || [])
+      .map((row: { reel_id: string | null }) => row.reel_id)
+      .filter((id): id is string => Boolean(id))
+  );
 
   return {
     reels: rows.map((reel) => ({
@@ -473,6 +496,7 @@ export async function fetchReels(
           created_at: comment.created_at,
           profile: commentUserMap.get(comment.user_id),
         })),
+      reposted: repostedReelIds.has(reel.id),
     })),
     savedReels: (savedResult.data || []).map(
       (row: { reel_id: string }) => row.reel_id

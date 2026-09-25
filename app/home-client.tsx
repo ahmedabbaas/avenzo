@@ -22,7 +22,9 @@ import {
   setFollowing,
   setPostLike,
   setPostSaved,
+  setPostReposted,
   setReelLike,
+  setReelReposted,
   setReelSaved,
 } from "../features/social/data/mutations";
 import {
@@ -657,6 +659,57 @@ export default function HomeClient({
     }
   }
 
+  async function togglePostRepost(post: Post) {
+    const wasReposted = Boolean(post.reposted);
+
+    const update = (items: Post[]) =>
+      items.map((item) =>
+        item.id === post.id ? { ...item, reposted: !wasReposted } : item
+      );
+
+    setPosts(update);
+    setExplorePosts(update);
+    setProfilePosts(update);
+
+    try {
+      await setPostReposted(
+        supabase,
+        initialProfile.id,
+        post.id,
+        wasReposted
+      );
+      showToast(wasReposted ? "Repost removed." : "Reposted.");
+    } catch {
+      showToast("Could not update repost.");
+      await Promise.all([loadPosts(), loadExplorePosts(), loadProfileContent()]);
+    }
+  }
+
+  async function toggleReelRepost(reel: Reel) {
+    const wasReposted = Boolean(reel.reposted);
+
+    const update = (items: Reel[]) =>
+      items.map((item) =>
+        item.id === reel.id ? { ...item, reposted: !wasReposted } : item
+      );
+
+    setReels(update);
+    setProfileReels(update);
+
+    try {
+      await setReelReposted(
+        supabase,
+        initialProfile.id,
+        reel.id,
+        wasReposted
+      );
+      showToast(wasReposted ? "Repost removed." : "Reposted.");
+    } catch {
+      showToast("Could not update repost.");
+      await Promise.all([loadReels(), loadProfileContent()]);
+    }
+  }
+
   async function sharePost(post: Post) {
     router.push(
       "/messages?sharePost=" + encodeURIComponent(post.id)
@@ -1066,6 +1119,7 @@ export default function HomeClient({
                         onSave={() => void toggleReelSave(reel)}
                         onComment={(body) => void addReelComment(reel, body)}
                         onShare={() => shareReel(reel)}
+                        onRepost={() => void toggleReelRepost(reel)}
                         onDelete={() => void deleteReel(reel)}
                         autoplayVideo={runtimePreferences.media_autoplay_videos}
                         dataSaving={
@@ -1101,6 +1155,7 @@ export default function HomeClient({
                       onLike={() => void toggleLike(post)}
                       onSave={() => void toggleSave(post)}
                       onShare={() => void sharePost(post)}
+                      onRepost={() => void togglePostRepost(post)}
                       onComment={(body) => void addComment(post, body)}
                       own={post.author_id === initialProfile.id}
                       onDelete={() => void deletePost(post)}

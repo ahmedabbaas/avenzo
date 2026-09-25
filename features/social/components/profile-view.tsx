@@ -9,6 +9,7 @@ import AvatarImage from "./avatar-image";
 import UserMediaImage from "./user-media-image";
 import VerifiedBadge from "./verified-badge";
 import Icon from "./icon";
+import RepostsGrid from "./reposts-grid";
 
 export default function ProfileView({
   profile,
@@ -31,7 +32,7 @@ export default function ProfileView({
   onCreateReel: () => void;
   onCreateStory: () => void;
 }) {
-  const [tab, setTab] = useState<"posts" | "reels">("posts");
+  const [tab, setTab] = useState<"posts" | "reels" | "reposts">("posts");
 
   return (
     <div className="profile-page">
@@ -90,6 +91,12 @@ export default function ProfileView({
         >
           Reels <span>{reels.length}</span>
         </button>
+        <button
+          className={tab === "reposts" ? "active" : ""}
+          onClick={() => setTab("reposts")}
+        >
+          Reposts
+        </button>
       </div>
 
       {tab === "posts" ? (
@@ -144,7 +151,7 @@ export default function ProfileView({
             />
           )}
         </section>
-      ) : (
+      ) : tab === "reels" ? (
         <section className="profile-content-section" aria-labelledby="profile-reels-title">
           <div className="profile-section-head">
             <div>
@@ -188,6 +195,16 @@ export default function ProfileView({
               actionLabel="Create Reel"
             />
           )}
+        </section>
+      ) : (
+        <section className="profile-content-section" aria-labelledby="profile-reposts-title">
+          <div className="profile-section-head">
+            <div>
+              <div className="eyebrow">SHARED</div>
+              <h2 id="profile-reposts-title">Reposts</h2>
+            </div>
+          </div>
+          <RepostsGrid profileId={profile.id} own />
         </section>
       )}
     </div>

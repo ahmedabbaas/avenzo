@@ -16,6 +16,7 @@ export default function PostCard({
   onLike,
   onSave,
   onShare,
+  onRepost,
   onComment,
   own,
   onDelete,
@@ -28,6 +29,7 @@ export default function PostCard({
   onLike: () => void;
   onSave: () => void;
   onShare: () => void;
+  onRepost?: () => void;
   onComment: (value: string) => void;
   own: boolean;
   onDelete: () => void;
@@ -113,6 +115,17 @@ export default function PostCard({
           <button onClick={onShare} aria-label="Share post">
             <Icon name="send" size={20} />
           </button>
+
+          {onRepost && (
+            <button
+              className={"repost-action " + (post.reposted ? "active" : "")}
+              onClick={onRepost}
+              aria-label={post.reposted ? "Undo repost" : "Repost"}
+              title={post.reposted ? "Undo repost" : "Repost"}
+            >
+              <Icon name="repost" size={20} />
+            </button>
+          )}
 
           <button
             className={"save-action " + (saved ? "saved" : "")}

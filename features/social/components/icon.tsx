@@ -24,7 +24,8 @@ export type IconName =
   | "reels"
   | "eye"
   | "phone"
-  | "mic";
+  | "mic"
+  | "repost";
 
 
 export default function Icon({ name, size = 19 }: { name: IconName; size?: number }) {
@@ -145,6 +146,15 @@ export default function Icon({ name, size = 19 }: { name: IconName; size?: numbe
       <>
         <rect x="9" y="3" width="6" height="11" rx="3" />
         <path d="M6.5 11.5a5.5 5.5 0 0 0 11 0M12 17v4M9 21h6" />
+      </>
+    ),
+    repost: (
+      <>
+        <path d="M7 7h10.5l-2.6-2.6" />
+        <path d="m17.5 7-2.6 2.6" />
+        <path d="M17 17H6.5l2.6 2.6" />
+        <path d="m6.5 17 2.6-2.6" />
+        <path d="M18 8.5v4M6 15.5v-4" />
       </>
     ),
   };

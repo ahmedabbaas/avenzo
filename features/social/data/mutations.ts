@@ -509,6 +509,48 @@ export async function setFollowing(
       : "none";
 }
 
+export async function setPostReposted(
+  supabase: SupabaseClient,
+  userId: string,
+  postId: string,
+  currentlyReposted: boolean
+) {
+  const result = currentlyReposted
+    ? await supabase
+        .from("reposts")
+        .delete()
+        .eq("user_id", userId)
+        .eq("post_id", postId)
+    : await supabase.from("reposts").insert({
+        user_id: userId,
+        post_id: postId,
+        reel_id: null,
+      });
+
+  assertNoError(result.error);
+}
+
+export async function setReelReposted(
+  supabase: SupabaseClient,
+  userId: string,
+  reelId: string,
+  currentlyReposted: boolean
+) {
+  const result = currentlyReposted
+    ? await supabase
+        .from("reposts")
+        .delete()
+        .eq("user_id", userId)
+        .eq("reel_id", reelId)
+    : await supabase.from("reposts").insert({
+        user_id: userId,
+        post_id: null,
+        reel_id: reelId,
+      });
+
+  assertNoError(result.error);
+}
+
 export async function createMessage(
   supabase: SupabaseClient,
   userId: string,

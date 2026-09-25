@@ -43,6 +43,7 @@ export type Post = {
   liked: boolean;
   commentCount: number;
   comments: Comment[];
+  reposted?: boolean;
 };
 
 export type Reel = {
@@ -67,6 +68,7 @@ export type Reel = {
   liked: boolean;
   commentCount: number;
   comments: Comment[];
+  reposted?: boolean;
 };
 
 export type Story = {
