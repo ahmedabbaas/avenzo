@@ -1,4 +1,5 @@
 import Image from "next/image";
+import type { MouseEventHandler } from "react";
 
 export default function UserMediaImage({
   src,
@@ -7,6 +8,8 @@ export default function UserMediaImage({
   height,
   className,
   loading = "lazy",
+  onClick,
+  dataAvenzoPostId,
 }: {
   src: string;
   alt: string;
@@ -14,6 +17,8 @@ export default function UserMediaImage({
   height?: number | null;
   className?: string;
   loading?: "eager" | "lazy";
+  onClick?: MouseEventHandler<HTMLImageElement>;
+  dataAvenzoPostId?: string;
 }) {
   const hasDimensions =
     Number.isFinite(width) &&
@@ -29,7 +34,16 @@ export default function UserMediaImage({
   if (requiresNativeImage) {
     // Legacy media may predate stored dimensions and local previews use blob URLs.
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={alt} className={className} loading={loading} />;
+    return (
+      <img
+        src={src}
+        alt={alt}
+        className={className}
+        loading={loading}
+        onClick={onClick}
+        data-avenzo-post-id={dataAvenzoPostId}
+      />
+    );
   }
 
   return (
@@ -40,6 +54,8 @@ export default function UserMediaImage({
       height={Number(height)}
       className={className}
       loading={loading}
+      onClick={onClick}
+      data-avenzo-post-id={dataAvenzoPostId}
       sizes="(max-width: 780px) 100vw, 720px"
     />
   );

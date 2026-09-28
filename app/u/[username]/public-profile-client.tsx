@@ -246,6 +246,30 @@ export default function PublicProfileClient({
     setNotice("Report submitted. Thank you for helping keep AVENZO safer.");
   }
 
+  function mobilePostHref(postId: string) {
+    return (
+      "/mobile/profile-posts/" +
+      encodeURIComponent(profile.username) +
+      "/" +
+      encodeURIComponent(postId)
+    );
+  }
+
+  function openMobilePost(
+    event: React.MouseEvent<HTMLAnchorElement>,
+    postId: string
+  ) {
+    if (
+      typeof document === "undefined" ||
+      !document.documentElement.classList.contains("avenzo-android-app")
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    router.push(mobilePostHref(postId));
+  }
+
   const avatar =
     profile.avatar_url || initialsAvatar(profile.display_name);
   const website = normalizeProfileWebsite(profile.website);
@@ -412,6 +436,7 @@ export default function PublicProfileClient({
                       key={post.id}
                       className="public-text-post"
                       href={"/p/" + encodeURIComponent(post.id)}
+                      onClick={(event) => openMobilePost(event, post.id)}
                     >
                       <span>{post.caption || "Text post"}</span>
                     </Link>
@@ -420,6 +445,7 @@ export default function PublicProfileClient({
                       key={post.id}
                       className="public-profile-media-tile"
                       href={"/p/" + encodeURIComponent(post.id)}
+                      onClick={(event) => openMobilePost(event, post.id)}
                     >
                       <video
                         src={post.media_url}
@@ -433,6 +459,7 @@ export default function PublicProfileClient({
                       key={post.id}
                       className="public-profile-media-tile"
                       href={"/p/" + encodeURIComponent(post.id)}
+                      onClick={(event) => openMobilePost(event, post.id)}
                     >
                       <UserMediaImage
                         src={post.media_url}

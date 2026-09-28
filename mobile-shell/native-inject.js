@@ -91,10 +91,44 @@
       if (drawer) drawer.setAttribute("aria-hidden", "false");
     }
 
+    function navigateApp(href) {
+      var targetUrl = new URL(href, window.location.origin);
+
+      if (
+        targetUrl.pathname === "/messages" &&
+        !targetUrl.search &&
+        isVisible(document.querySelector(".top-messages"))
+      ) {
+        document.querySelector(".top-messages").click();
+        return;
+      }
+
+      var links = Array.prototype.slice.call(document.querySelectorAll("a[href]"));
+      var matchingLink = links.find(function(link){
+        try {
+          var url = new URL(link.href, window.location.origin);
+          return (
+            url.origin === window.location.origin &&
+            url.pathname === targetUrl.pathname &&
+            url.search === targetUrl.search
+          );
+        } catch (error) {
+          return false;
+        }
+      });
+
+      if (matchingLink) {
+        matchingLink.click();
+        return;
+      }
+
+      window.location.assign(targetUrl.pathname + targetUrl.search + targetUrl.hash);
+    }
+
     function triggerDestination(label, href) {
       closeDrawer();
       if (href) {
-        window.location.href = href;
+        navigateApp(href);
         return;
       }
       var target = findLeftNavButton(label);
@@ -439,6 +473,177 @@
       }
     }
 
+    function setNativeTextareaValue(textarea, nextValue) {
+      if (!textarea) return;
+      var descriptor = Object.getOwnPropertyDescriptor(
+        window.HTMLTextAreaElement.prototype,
+        "value"
+      );
+      if (descriptor && descriptor.set) descriptor.set.call(textarea, nextValue);
+      else textarea.value = nextValue;
+      textarea.dispatchEvent(new Event("input", { bubbles: true }));
+      textarea.focus();
+    }
+
+    function closeNativeEmojiPicker() {
+      var overlay = document.querySelector(".avenzo-native-emoji-overlay");
+      if (overlay) overlay.remove();
+    }
+
+    function openNativeEmojiPicker(textarea) {
+      closeNativeEmojiPicker();
+
+      var overlay = document.createElement("div");
+      overlay.className = "modal avenzo-native-emoji-overlay";
+
+      var sheet = document.createElement("div");
+      sheet.className = "avenzo-native-emoji-sheet";
+
+      var title = document.createElement("div");
+      title.className = "avenzo-native-sheet-title";
+      title.innerHTML = "<b>Emoji</b><span>Tap to insert</span>";
+      sheet.appendChild(title);
+
+      var grid = document.createElement("div");
+      grid.className = "avenzo-native-emoji-grid";
+      ["😀","😂","❤️","🔥","👍","😍","😭","🎉","🙌","🤝","✨","💯"].forEach(function(emoji){
+        var button = document.createElement("button");
+        button.type = "button";
+        button.textContent = emoji;
+        button.addEventListener("click", function(){
+          var start = textarea.selectionStart == null ? textarea.value.length : textarea.selectionStart;
+          var end = textarea.selectionEnd == null ? start : textarea.selectionEnd;
+          var next =
+            textarea.value.slice(0, start) +
+            emoji +
+            textarea.value.slice(end);
+          setNativeTextareaValue(textarea, next);
+          closeNativeEmojiPicker();
+          window.requestAnimationFrame(function(){
+            var caret = start + emoji.length;
+            textarea.setSelectionRange(caret, caret);
+          });
+        });
+        grid.appendChild(button);
+      });
+      sheet.appendChild(grid);
+
+      overlay.addEventListener("click", closeNativeEmojiPicker);
+      sheet.addEventListener("click", function(event){ event.stopPropagation(); });
+      overlay.appendChild(sheet);
+      document.body.appendChild(overlay);
+    }
+
+    function installNativeEmojiPicker() {
+      var chat = document.querySelector(".dm-chat:not(.dm-mobile-hidden)");
+      if (!chat) return;
+      var button = chat.querySelector(".dm-emoji-button");
+      var textarea = chat.querySelector(".dm-compose-row textarea");
+      if (!button || !textarea || button.dataset.avenzoEmojiEnhanced === "1") return;
+
+      button.dataset.avenzoEmojiEnhanced = "1";
+      button.addEventListener("click", function(event){
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        openNativeEmojiPicker(textarea);
+      }, true);
+    }
+
+    function closeNativeAttachmentPreview() {
+      var overlay = document.querySelector(".avenzo-native-attachment-preview");
+      if (!overlay) return;
+      var objectUrl = overlay.dataset.objectUrl;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      overlay.remove();
+    }
+
+    function dispatchAttachment(originalInput, file) {
+      try {
+        var transfer = new DataTransfer();
+        transfer.items.add(file);
+        originalInput.files = transfer.files;
+        originalInput.dispatchEvent(new Event("change", { bubbles: true }));
+      } catch (error) {
+        closeNativeAttachmentPreview();
+      }
+    }
+
+    function openNativeAttachmentPreview(originalInput, file) {
+      closeNativeAttachmentPreview();
+
+      var overlay = document.createElement("div");
+      overlay.className = "modal avenzo-native-attachment-preview";
+      var objectUrl = URL.createObjectURL(file);
+      overlay.dataset.objectUrl = objectUrl;
+
+      var card = document.createElement("div");
+      card.className = "avenzo-native-attachment-card";
+
+      var head = document.createElement("div");
+      head.className = "avenzo-native-attachment-head";
+      head.innerHTML = "<b>Send image</b><span>Preview before sending</span>";
+
+      var image = document.createElement("img");
+      image.src = objectUrl;
+      image.alt = "Selected image preview";
+
+      var actions = document.createElement("div");
+      actions.className = "avenzo-native-attachment-actions";
+
+      var cancel = document.createElement("button");
+      cancel.type = "button";
+      cancel.textContent = "Cancel";
+
+      var send = document.createElement("button");
+      send.type = "button";
+      send.className = "primary";
+      send.textContent = "Send";
+
+      cancel.addEventListener("click", closeNativeAttachmentPreview);
+      send.addEventListener("click", function(){
+        dispatchAttachment(originalInput, file);
+        closeNativeAttachmentPreview();
+      });
+
+      actions.appendChild(cancel);
+      actions.appendChild(send);
+      card.appendChild(head);
+      card.appendChild(image);
+      card.appendChild(actions);
+      card.addEventListener("click", function(event){ event.stopPropagation(); });
+      overlay.addEventListener("click", closeNativeAttachmentPreview);
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+    }
+
+    function installNativeAttachmentPreview() {
+      var chat = document.querySelector(".dm-chat:not(.dm-mobile-hidden)");
+      if (!chat) return;
+
+      var trigger = chat.querySelector(".dm-simple-plus");
+      var originalInput = chat.querySelector('.dm-compose-row input[type="file"]');
+      if (!trigger || !originalInput || trigger.dataset.avenzoPreviewEnhanced === "1") return;
+
+      trigger.dataset.avenzoPreviewEnhanced = "1";
+      trigger.addEventListener("click", function(event){
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        var picker = document.createElement("input");
+        picker.type = "file";
+        picker.accept = "image/jpeg,image/png,image/webp,image/gif";
+        picker.style.display = "none";
+        picker.addEventListener("change", function(){
+          var file = picker.files && picker.files[0];
+          picker.remove();
+          if (!file) return;
+          openNativeAttachmentPreview(originalInput, file);
+        });
+        document.body.appendChild(picker);
+        picker.click();
+      }, true);
+    }
+
     function decodeJwtSubject(token) {
       try {
         var payload = token.split(".")[1];
@@ -518,6 +723,8 @@
       normalizeBottomNav();
       enhanceLegacyDmChrome();
       enhanceLegacyDmActions();
+      installNativeEmojiPicker();
+      installNativeAttachmentPreview();
       installNativeNotificationSessionCapture();
       syncHomeState();
 
@@ -586,28 +793,18 @@
           return "handled";
         }
 
-        if (window.location.pathname.indexOf("/settings") === 0) {
-          window.location.href = "/home";
+        if (document.querySelector(".avenzo-native-dm-action-overlay")) {
+          closeNativeDmSheet();
           return "handled";
         }
 
-        if (window.location.pathname === "/messages/groups") {
-          window.location.href = "/messages";
+        if (document.querySelector(".avenzo-native-emoji-overlay")) {
+          closeNativeEmojiPicker();
           return "handled";
         }
 
-        if (window.location.pathname === "/channels") {
-          window.location.href = "/messages";
-          return "handled";
-        }
-
-        if (
-          window.location.pathname === "/messages" ||
-          window.location.pathname === "/reels" ||
-          window.location.pathname.indexOf("/u/") === 0 ||
-          window.location.pathname.indexOf("/admin/") === 0
-        ) {
-          window.location.href = "/home";
+        if (document.querySelector(".avenzo-native-attachment-preview")) {
+          closeNativeAttachmentPreview();
           return "handled";
         }
 
@@ -621,6 +818,23 @@
         }
 
         if (window.history.length > 1) return "history";
+
+        if (
+          window.location.pathname.indexOf("/settings") === 0 ||
+          window.location.pathname === "/messages/groups" ||
+          window.location.pathname === "/channels" ||
+          window.location.pathname === "/messages" ||
+          window.location.pathname === "/reels" ||
+          window.location.pathname.indexOf("/u/") === 0 ||
+          window.location.pathname.indexOf("/p/") === 0 ||
+          window.location.pathname.indexOf("/r/") === 0 ||
+          window.location.pathname.indexOf("/mobile/") === 0 ||
+          window.location.pathname.indexOf("/admin/") === 0
+        ) {
+          navigateApp("/home");
+          return "handled";
+        }
+
         return "root";
       } catch (e) {
         return "root";

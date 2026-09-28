@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import EmptyState from "./empty-state";
 import { avatarFor, formatProfileStat, formatRelativeTime, normalizeProfileWebsite } from "../lib/profile";
 import type { Post, Profile, ProfileStats, Reel } from "../types";
@@ -33,10 +34,27 @@ export default function ProfileView({
   onCreateReel: () => void;
   onCreateStory: () => void;
 }) {
+  const router = useRouter();
   const [tab, setTab] =
     useState<"posts" | "reels" | "tagged">("posts");
   const [shareLabel, setShareLabel] = useState("Share Profile");
   const website = normalizeProfileWebsite(profile.website);
+
+  function openMobileProfilePost(postId: string) {
+    if (
+      typeof document === "undefined" ||
+      !document.documentElement.classList.contains("avenzo-android-app")
+    ) {
+      return;
+    }
+
+    router.push(
+      "/mobile/profile-posts/" +
+        encodeURIComponent(profile.username) +
+        "/" +
+        encodeURIComponent(postId)
+    );
+  }
 
   async function shareProfile() {
     const url =
@@ -212,7 +230,12 @@ export default function ProfileView({
               {posts.map((post) => {
                 if (!post.media_path) {
                   return (
-                    <article className="profile-text-post" key={post.id}>
+                    <article
+                      className="profile-text-post avenzo-mobile-profile-post"
+                      key={post.id}
+                      data-avenzo-post-id={post.id}
+                      onClick={() => openMobileProfilePost(post.id)}
+                    >
                       <span>TEXT POST</span>
                       <p>{post.caption}</p>
                       <small>{formatRelativeTime(post.created_at)}</small>
@@ -223,6 +246,9 @@ export default function ProfileView({
                 return post.media_type === "video" ? (
                   <video
                     key={post.id}
+                    className="avenzo-mobile-profile-post"
+                    data-avenzo-post-id={post.id}
+                    onClick={() => openMobileProfilePost(post.id)}
                     src={media(post.media_path)}
                     preload="metadata"
                     controls
@@ -232,6 +258,9 @@ export default function ProfileView({
                 ) : (
                   <UserMediaImage
                     key={post.id}
+                    className="avenzo-mobile-profile-post"
+                    dataAvenzoPostId={post.id}
+                    onClick={() => openMobileProfilePost(post.id)}
                     src={media(post.media_path)}
                     alt={post.caption || "AVENZO post"}
                     width={post.media_width}

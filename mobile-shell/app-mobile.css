@@ -8435,3 +8435,697 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
     animation: none !important;
   }
 }
+
+
+/* AVENZO FINAL MOBILE UX PASS */
+@media(max-width:820px){
+  html.avenzo-android-app{
+    scroll-behavior:smooth;
+  }
+
+  html.avenzo-android-app body{
+    overscroll-behavior-y:contain;
+  }
+
+  /* Remove branded full-screen loading interruptions. Keep only progressive content skeletons. */
+  html.avenzo-android-app .system-page{
+    display:flex!important;
+    align-items:flex-start!important;
+    justify-content:center!important;
+    min-height:100dvh!important;
+    padding:calc(72px + env(safe-area-inset-top)) 14px 20px!important;
+    background:var(--ref-canvas,#f7f9fb)!important;
+  }
+
+  html.avenzo-android-app .system-loading{
+    width:min(100%,420px)!important;
+    display:grid!important;
+    gap:10px!important;
+    padding:0!important;
+    border:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+  }
+
+  html.avenzo-android-app .system-loading .system-mark,
+  html.avenzo-android-app .system-loading>b{
+    display:none!important;
+  }
+
+  html.avenzo-android-app .system-loading>i{
+    width:100%!important;
+    height:84px!important;
+    border:0!important;
+    border-radius:16px!important;
+    background:
+      linear-gradient(
+        105deg,
+        #eceff2 25%,
+        #f7f8fa 42%,
+        #eceff2 60%
+      )!important;
+    background-size:220% 100%!important;
+    animation:avenzo-mobile-soft-shimmer 1.15s linear infinite!important;
+  }
+
+  html.avenzo-android-app .system-loading::before,
+  html.avenzo-android-app .system-loading::after{
+    content:"";
+    display:block;
+    width:100%;
+    height:84px;
+    border-radius:16px;
+    background:
+      linear-gradient(
+        105deg,
+        #eceff2 25%,
+        #f7f8fa 42%,
+        #eceff2 60%
+      );
+    background-size:220% 100%;
+    animation:avenzo-mobile-soft-shimmer 1.15s linear infinite;
+  }
+
+  @keyframes avenzo-mobile-soft-shimmer{
+    to{background-position-x:-220%}
+  }
+
+  /* Own profile: one connected hierarchy instead of duplicate desktop/mobile chunks. */
+  html.avenzo-android-app .screen-profile .profile-hero{
+    display:block!important;
+    padding:14px 14px 12px!important;
+    background:var(--ref-surface,#fff)!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-desktop-avatar,
+  html.avenzo-android-app .screen-profile .profile-stats,
+  html.avenzo-android-app .screen-profile .profile-title-row>.profile-edit{
+    display:none!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-mobile-top{
+    display:grid!important;
+    grid-template-columns:78px repeat(3,minmax(0,1fr))!important;
+    gap:8px!important;
+    align-items:center!important;
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-mobile-avatar-wrap{
+    width:72px!important;
+    height:72px!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-mobile-avatar-wrap>img{
+    width:72px!important;
+    height:72px!important;
+    border:2px solid var(--ref-surface,#fff)!important;
+    outline:2px solid var(--ref-accent,#ff2d78)!important;
+    box-shadow:0 5px 18px rgba(19,27,38,.11)!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-mobile-avatar-wrap>button{
+    width:24px!important;
+    height:24px!important;
+    right:-2px!important;
+    bottom:-2px!important;
+    border:2px solid var(--ref-surface,#fff)!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-mobile-stat{
+    display:grid!important;
+    justify-items:center!important;
+    gap:2px!important;
+    min-width:0!important;
+    padding:8px 2px!important;
+    border-radius:10px!important;
+    color:var(--ref-muted,#8b929a)!important;
+    text-decoration:none!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-mobile-stat b{
+    color:var(--ref-text,#111419)!important;
+    font-size:15px!important;
+    font-weight:800!important;
+    line-height:1!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-mobile-stat small{
+    font-size:10px!important;
+    line-height:1.1!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-hero-copy{
+    width:100%!important;
+    margin-top:12px!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-title-row{
+    display:block!important;
+    text-align:left!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-identity{
+    display:flex!important;
+    flex-direction:column-reverse!important;
+    align-items:flex-start!important;
+    gap:2px!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-identity h1{
+    margin:0!important;
+    color:var(--ref-text,#111419)!important;
+    font-size:17px!important;
+    font-weight:800!important;
+    letter-spacing:-.025em!important;
+    text-align:left!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-identity .eyebrow{
+    margin:0!important;
+    color:var(--ref-muted,#8b929a)!important;
+    font-size:11px!important;
+    font-weight:600!important;
+    letter-spacing:0!important;
+    text-transform:none!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-bio{
+    margin:7px 0 0!important;
+    max-width:none!important;
+    color:var(--ref-text,#111419)!important;
+    font-size:12px!important;
+    line-height:1.45!important;
+    text-align:left!important;
+    white-space:pre-wrap!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-website{
+    display:inline-flex!important;
+    margin-top:6px!important;
+    color:var(--ref-blue,#1677ff)!important;
+    font-size:11px!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-mobile-actions{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:8px!important;
+    margin-top:11px!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-mobile-actions button{
+    min-height:38px!important;
+    border:1px solid var(--ref-line,#e8ecef)!important;
+    border-radius:10px!important;
+    background:var(--ref-soft,#f1f3f5)!important;
+    color:var(--ref-text,#111419)!important;
+    font-size:11px!important;
+    font-weight:750!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-create-panel{
+    margin-top:10px!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-create-actions{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:7px!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-create-actions .btn{
+    min-height:36px!important;
+    font-size:10px!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-grid{
+    gap:2px!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-grid .avenzo-mobile-profile-post{
+    cursor:pointer!important;
+    touch-action:manipulation!important;
+    transition:transform .12s ease,opacity .12s ease!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-grid .avenzo-mobile-profile-post:active{
+    transform:scale(.975)!important;
+    opacity:.84!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-grid video.avenzo-mobile-profile-post{
+    pointer-events:auto!important;
+  }
+
+  /* Public profiles share the same connected identity hierarchy. */
+  html.avenzo-android-app .public-profile-wrap{
+    padding:0!important;
+  }
+
+  html.avenzo-android-app .public-profile-hero{
+    display:grid!important;
+    grid-template-columns:78px minmax(0,1fr)!important;
+    align-items:start!important;
+    gap:12px!important;
+    padding:15px 14px 12px!important;
+    border:0!important;
+    border-bottom:1px solid var(--ref-line,#e8ecef)!important;
+    border-radius:0!important;
+  }
+
+  html.avenzo-android-app .public-profile-hero>img{
+    width:72px!important;
+    height:72px!important;
+  }
+
+  html.avenzo-android-app .public-profile-copy{
+    min-width:0!important;
+  }
+
+  html.avenzo-android-app .public-profile-copy .eyebrow{
+    font-size:11px!important;
+    letter-spacing:0!important;
+    text-transform:none!important;
+  }
+
+  html.avenzo-android-app .public-profile-copy h1{
+    margin:2px 0 0!important;
+    font-size:17px!important;
+    line-height:1.15!important;
+  }
+
+  html.avenzo-android-app .public-profile-copy>p{
+    margin:6px 0 0!important;
+    font-size:12px!important;
+    line-height:1.45!important;
+  }
+
+  html.avenzo-android-app .public-profile-stats{
+    grid-column:1/-1!important;
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    width:100%!important;
+    margin:11px 0 0!important;
+    padding:9px 0!important;
+    border-top:1px solid var(--ref-line,#e8ecef)!important;
+    border-bottom:1px solid var(--ref-line,#e8ecef)!important;
+  }
+
+  html.avenzo-android-app .public-profile-actions{
+    grid-column:1/-1!important;
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:8px!important;
+    width:100%!important;
+    margin-top:8px!important;
+  }
+
+  /* Full profile post feed. */
+  html.avenzo-android-app .avenzo-mobile-profile-feed{
+    --feed-head:calc(56px + env(safe-area-inset-top));
+    width:100%!important;
+    min-height:100dvh!important;
+    overflow:hidden!important;
+    background:#07080a!important;
+    color:#f7f8fa!important;
+  }
+
+  html.avenzo-android-app .avenzo-mobile-profile-feed-head{
+    position:fixed!important;
+    inset:0 0 auto 0!important;
+    z-index:100!important;
+    display:grid!important;
+    grid-template-columns:48px minmax(0,1fr) 48px!important;
+    align-items:center!important;
+    min-height:var(--feed-head)!important;
+    padding:env(safe-area-inset-top) 8px 0!important;
+    border-bottom:1px solid rgba(255,255,255,.09)!important;
+    background:rgba(8,9,11,.91)!important;
+    backdrop-filter:blur(18px)!important;
+  }
+
+  html.avenzo-android-app .avenzo-mobile-profile-feed-head>button{
+    display:grid!important;
+    place-items:center!important;
+    width:44px!important;
+    height:44px!important;
+    border:0!important;
+    border-radius:50%!important;
+    background:transparent!important;
+    color:#fff!important;
+  }
+
+  html.avenzo-android-app .avenzo-mobile-profile-feed-head>span{
+    display:grid!important;
+    min-width:0!important;
+    text-align:center!important;
+  }
+
+  html.avenzo-android-app .avenzo-mobile-profile-feed-head b{
+    overflow:hidden!important;
+    font-size:13px!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+  }
+
+  html.avenzo-android-app .avenzo-mobile-profile-feed-head small{
+    overflow:hidden!important;
+    color:#8f969e!important;
+    font-size:9px!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+  }
+
+  html.avenzo-android-app .avenzo-mobile-profile-feed-scroll{
+    height:100dvh!important;
+    padding-top:var(--feed-head)!important;
+    overflow-y:auto!important;
+    scroll-snap-type:y mandatory!important;
+    overscroll-behavior-y:contain!important;
+    -webkit-overflow-scrolling:touch!important;
+    scrollbar-width:none!important;
+  }
+
+  html.avenzo-android-app .avenzo-mobile-profile-feed-scroll::-webkit-scrollbar{
+    display:none!important;
+  }
+
+  html.avenzo-android-app .avenzo-mobile-post-slide{
+    min-height:calc(100dvh - var(--feed-head))!important;
+    scroll-snap-align:start!important;
+    scroll-snap-stop:always!important;
+    display:flex!important;
+    align-items:flex-start!important;
+    background:#07080a!important;
+  }
+
+  html.avenzo-android-app .avenzo-mobile-post-slide>.post-card{
+    width:100%!important;
+    min-height:calc(100dvh - var(--feed-head))!important;
+    margin:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:#0d0f12!important;
+    color:#f7f8fa!important;
+  }
+
+  html.avenzo-android-app .avenzo-mobile-post-slide .post-head,
+  html.avenzo-android-app .avenzo-mobile-post-slide .post-content{
+    color:#f7f8fa!important;
+    background:#0d0f12!important;
+  }
+
+  html.avenzo-android-app .avenzo-mobile-post-slide .post-media,
+  html.avenzo-android-app .avenzo-mobile-post-slide .post-carousel-shell{
+    width:100%!important;
+    max-height:58dvh!important;
+    border-radius:0!important;
+    background:#050607!important;
+  }
+
+  html.avenzo-android-app .avenzo-mobile-post-slide .post-media{
+    object-fit:contain!important;
+  }
+
+  html.avenzo-android-app .avenzo-mobile-post-slide .comment-input{
+    margin-bottom:max(12px,env(safe-area-inset-bottom))!important;
+  }
+
+  html.avenzo-android-app .avenzo-mobile-profile-feed-notice{
+    position:fixed!important;
+    z-index:110!important;
+    top:calc(var(--feed-head) + 8px)!important;
+    left:50%!important;
+    transform:translateX(-50%)!important;
+    max-width:90vw!important;
+    padding:8px 12px!important;
+    border:1px solid rgba(255,255,255,.12)!important;
+    border-radius:999px!important;
+    background:rgba(18,20,24,.92)!important;
+    color:#fff!important;
+    font-size:10px!important;
+    backdrop-filter:blur(12px)!important;
+  }
+
+  /* Messages: cleaner mobile hierarchy and larger touch targets. */
+  html.avenzo-android-app .messages-page{
+    background:#f7f8fa!important;
+  }
+
+  html.avenzo-android-app .messages-page-topbar{
+    min-height:calc(56px + env(safe-area-inset-top))!important;
+    padding-top:env(safe-area-inset-top)!important;
+    background:rgba(255,255,255,.96)!important;
+    backdrop-filter:blur(16px)!important;
+  }
+
+  html.avenzo-android-app .messages-brand{
+    min-height:44px!important;
+    gap:8px!important;
+  }
+
+  html.avenzo-android-app .dm-conversation{
+    min-height:70px!important;
+    padding:9px 10px!important;
+    border-radius:0!important;
+    background:#fff!important;
+    touch-action:manipulation!important;
+  }
+
+  html.avenzo-android-app .dm-conversation:active{
+    background:#f2f4f7!important;
+  }
+
+  html.avenzo-android-app .dm-conversation img{
+    width:48px!important;
+    height:48px!important;
+  }
+
+  html.avenzo-android-app .dm-conversation-copy b{
+    font-size:13px!important;
+    line-height:1.25!important;
+  }
+
+  html.avenzo-android-app .dm-conversation-copy small{
+    font-size:10px!important;
+  }
+
+  html.avenzo-android-app .dm-conversation-copy em{
+    max-width:100%!important;
+    overflow:hidden!important;
+    font-size:11px!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+  }
+
+  html.avenzo-android-app .dm-conversation-meta{
+    min-width:42px!important;
+  }
+
+  html.avenzo-android-app .dm-conversation-meta>i{
+    display:grid!important;
+    place-items:center!important;
+    min-width:20px!important;
+    height:20px!important;
+    padding:0 5px!important;
+    border-radius:999px!important;
+    font-size:9px!important;
+  }
+
+  html.avenzo-android-app .dm-chat-head{
+    min-height:58px!important;
+    padding:6px 7px!important;
+  }
+
+  html.avenzo-android-app .dm-back,
+  html.avenzo-android-app .dm-call-button,
+  html.avenzo-android-app .dm-head-search-button,
+  html.avenzo-android-app .dm-more-button{
+    width:44px!important;
+    height:44px!important;
+    min-width:44px!important;
+    min-height:44px!important;
+  }
+
+  html.avenzo-android-app .dm-message-area{
+    scroll-behavior:smooth!important;
+    overscroll-behavior-y:contain!important;
+  }
+
+  html.avenzo-android-app .dm-bubble{
+    max-width:100%!important;
+    font-size:13px!important;
+  }
+
+  html.avenzo-android-app .dm-compose-row{
+    min-height:48px!important;
+    padding:4px!important;
+  }
+
+  html.avenzo-android-app .dm-compose-row textarea{
+    min-height:40px!important;
+    max-height:120px!important;
+    padding:9px 6px!important;
+  }
+
+  html.avenzo-android-app .dm-simple-plus,
+  html.avenzo-android-app .dm-emoji-button,
+  html.avenzo-android-app .dm-send-button,
+  html.avenzo-android-app .dm-voice-button{
+    width:40px!important;
+    height:40px!important;
+    min-width:40px!important;
+    min-height:40px!important;
+  }
+
+  /* Native emoji and attachment preview sheets. */
+  html.avenzo-android-app .avenzo-native-emoji-overlay,
+  html.avenzo-android-app .avenzo-native-attachment-preview{
+    align-items:flex-end!important;
+    padding:12px max(12px,env(safe-area-inset-right))
+      max(12px,env(safe-area-inset-bottom))
+      max(12px,env(safe-area-inset-left))!important;
+    background:rgba(0,0,0,.42)!important;
+    backdrop-filter:blur(3px)!important;
+  }
+
+  html.avenzo-android-app .avenzo-native-emoji-sheet,
+  html.avenzo-android-app .avenzo-native-attachment-card{
+    width:100%!important;
+    max-width:520px!important;
+    margin:0 auto!important;
+    padding:14px!important;
+    border:1px solid #e7eaee!important;
+    border-radius:20px!important;
+    background:#fff!important;
+    color:#17191d!important;
+    box-shadow:0 20px 60px rgba(0,0,0,.2)!important;
+  }
+
+  html.avenzo-android-app .avenzo-native-sheet-title,
+  html.avenzo-android-app .avenzo-native-attachment-head{
+    display:flex!important;
+    align-items:baseline!important;
+    justify-content:space-between!important;
+    gap:10px!important;
+    margin-bottom:12px!important;
+  }
+
+  html.avenzo-android-app .avenzo-native-sheet-title b,
+  html.avenzo-android-app .avenzo-native-attachment-head b{
+    font-size:15px!important;
+  }
+
+  html.avenzo-android-app .avenzo-native-sheet-title span,
+  html.avenzo-android-app .avenzo-native-attachment-head span{
+    color:#8b929a!important;
+    font-size:10px!important;
+  }
+
+  html.avenzo-android-app .avenzo-native-emoji-grid{
+    display:grid!important;
+    grid-template-columns:repeat(6,minmax(0,1fr))!important;
+    gap:8px!important;
+  }
+
+  html.avenzo-android-app .avenzo-native-emoji-grid button{
+    display:grid!important;
+    place-items:center!important;
+    aspect-ratio:1!important;
+    border:0!important;
+    border-radius:12px!important;
+    background:#f4f5f7!important;
+    font-size:24px!important;
+  }
+
+  html.avenzo-android-app .avenzo-native-attachment-card>img{
+    display:block!important;
+    width:100%!important;
+    max-height:52dvh!important;
+    object-fit:contain!important;
+    border-radius:14px!important;
+    background:#0b0c0e!important;
+  }
+
+  html.avenzo-android-app .avenzo-native-attachment-actions{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:8px!important;
+    margin-top:12px!important;
+  }
+
+  html.avenzo-android-app .avenzo-native-attachment-actions button{
+    min-height:44px!important;
+    border:0!important;
+    border-radius:12px!important;
+    background:#eef1f4!important;
+    color:#1c2025!important;
+    font-weight:750!important;
+  }
+
+  html.avenzo-android-app .avenzo-native-attachment-actions button.primary{
+    background:#7554ff!important;
+    color:#fff!important;
+  }
+
+  html.avenzo-android-app[data-theme="dark"] .avenzo-native-emoji-sheet,
+  html.avenzo-android-app[data-theme="dark"] .avenzo-native-attachment-card{
+    border-color:#272b31!important;
+    background:#111317!important;
+    color:#f7f8fa!important;
+  }
+
+  html.avenzo-android-app[data-theme="dark"] .avenzo-native-emoji-grid button{
+    background:#1b1e23!important;
+  }
+
+  html.avenzo-android-app[data-theme="dark"] .avenzo-native-attachment-actions button{
+    background:#1b1e23!important;
+    color:#f7f8fa!important;
+  }
+}
+
+@media(max-width:390px){
+  html.avenzo-android-app .screen-profile .profile-mobile-top{
+    grid-template-columns:68px repeat(3,minmax(0,1fr))!important;
+    gap:4px!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-mobile-avatar-wrap,
+  html.avenzo-android-app .screen-profile .profile-mobile-avatar-wrap>img{
+    width:64px!important;
+    height:64px!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-mobile-stat b{
+    font-size:14px!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-mobile-stat small{
+    font-size:9px!important;
+  }
+
+  html.avenzo-android-app .avenzo-native-emoji-grid{
+    grid-template-columns:repeat(6,minmax(0,1fr))!important;
+    gap:5px!important;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  html.avenzo-android-app,
+  html.avenzo-android-app .dm-message-area{
+    scroll-behavior:auto!important;
+  }
+
+  html.avenzo-android-app .system-loading>i,
+  html.avenzo-android-app .system-loading::before,
+  html.avenzo-android-app .system-loading::after{
+    animation:none!important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-grid .avenzo-mobile-profile-post{
+    transition:none!important;
+  }
+}

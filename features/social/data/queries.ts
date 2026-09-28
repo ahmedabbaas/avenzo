@@ -481,6 +481,79 @@ export async function fetchProfilePosts(
   return hydratePosts(supabase, userId, rows);
 }
 
+export async function fetchProfilePostsForViewer(
+  supabase: SupabaseClient,
+  viewerId: string,
+  profileId: string,
+  limit = 60
+) {
+  const [ownResult, collabResult] = await Promise.all([
+    supabase
+      .from("posts")
+      .select("*")
+      .eq("author_id", profileId)
+      .order("created_at", { ascending: false })
+      .limit(limit),
+    supabase
+      .from("post_collaborators")
+      .select("post_id")
+      .eq("user_id", profileId)
+      .eq("status", "accepted"),
+  ]);
+
+  assertNoError(ownResult.error);
+  assertNoError(collabResult.error);
+
+  const collabIds = (collabResult.data || []).map(
+    (row: { post_id: string }) => row.post_id
+  );
+
+  let collabPosts: PostRow[] = [];
+  if (collabIds.length) {
+    const result = await supabase
+      .from("posts")
+      .select("*")
+      .in("id", collabIds);
+    assertNoError(result.error);
+    collabPosts = (result.data || []) as PostRow[];
+  }
+
+  const map = new Map<string, PostRow>();
+  for (const row of [
+    ...((ownResult.data || []) as PostRow[]),
+    ...collabPosts,
+  ]) {
+    map.set(row.id, row);
+  }
+
+  const rows = [...map.values()]
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() -
+        new Date(a.created_at).getTime()
+    )
+    .slice(0, limit);
+
+  return hydratePosts(supabase, viewerId, rows);
+}
+
+export async function fetchAuthorPosts(
+  supabase: SupabaseClient,
+  viewerId: string,
+  authorId: string,
+  limit = 60
+) {
+  const { data, error } = await supabase
+    .from("posts")
+    .select("*")
+    .eq("author_id", authorId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  assertNoError(error);
+  return hydratePosts(supabase, viewerId, (data || []) as PostRow[]);
+}
+
 export async function fetchPostById(
   supabase: SupabaseClient,
   userId: string,
