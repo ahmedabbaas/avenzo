@@ -142,3 +142,34 @@ Before considering a release complete:
 <!-- production-redeploy: self-badge-realtime-reels-v2 -->
 
 <!-- production-redeploy: strict-media-badge-liveviews-v3 -->
+
+
+## Android APK
+
+AVENZO ships with a tracked Capacitor Android project. The Android shell points at the production AVENZO web app and is built from the same repository.
+
+Requirements:
+
+- Node.js 22
+- JDK 21
+- Android SDK Platform 36
+
+Useful commands:
+
+```bash
+npm run android:sync
+npm run android:debug
+npm run android:open
+```
+
+On Windows, `npm run android:debug` automatically looks for JDK 21 in `JAVA_HOME`, the local `DevTools/jdk-21` folder, Eclipse Adoptium, or Android Studio's bundled runtime.
+
+The debug APK is written to:
+
+```text
+android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+The UI is designed to stay smooth on 60 Hz and high-refresh displays. Android may request the highest compatible refresh mode, but actual refresh rate remains device- and OS-dependent.
+
+Do not pad the APK with unused files just to increase its size. Package size should reflect real code, native dependencies, and assets.

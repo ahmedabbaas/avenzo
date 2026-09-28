@@ -49,14 +49,11 @@ jobs:
           test -d "$ANDROID_HOME"
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --version || true
 
-      - name: Install Capacitor
-        run: npm install --no-save @capacitor/core@7 @capacitor/android@7 @capacitor/cli@7
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Add Android project
-        run: npx cap add android
-
-      - name: Sync Android project
-        run: npx cap sync android
+      - name: Sync tracked Android project
+        run: npm run android:sync
 
       - name: Apply AVENZO Android branding and phone frame
         shell: bash
