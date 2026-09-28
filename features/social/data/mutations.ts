@@ -408,6 +408,9 @@ export async function publishContent({
         media_path: uploadedPath,
         media_type: mediaType,
         cover_path: uploadedCoverPath,
+        expires_at: new Date(
+          Date.now() + 24 * 60 * 60 * 1000
+        ).toISOString(),
         media_width: dimensions?.width || null,
         media_height: dimensions?.height || null,
       });

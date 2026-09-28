@@ -32,7 +32,6 @@ import {
   fetchMessagingPrivacy,
   fetchPinnedMessages,
   fetchScheduledMessages,
-  getExistingConversation,
   hideMessageForMe,
   markMessageDelivered,
   markMessagesRead,
@@ -193,6 +192,9 @@ export default function MessagesWorkspace({
   const [otherAllowsOnline, setOtherAllowsOnline] = useState(false);
   const [ownOnlineEnabled, setOwnOnlineEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatError, setChatError] = useState("");
   const [sending, setSending] = useState(false);
   const [recording, setRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
@@ -327,51 +329,63 @@ export default function MessagesWorkspace({
   const loadConversation = useCallback(
     async (conversation: InboxConversation) => {
       setActive(conversation);
+      setChatLoading(true);
+      setChatError("");
       stickToBottomRef.current = true;
-      const [nextMessages, nextPinnedMessages, nextScheduledMessages] =
-        await Promise.all([
-          fetchConversationMessages(
-            supabase,
-            conversation.conversation_id
-          ),
-          fetchPinnedMessages(
-            supabase,
-            conversation.conversation_id
-          ),
-          fetchScheduledMessages(
-            supabase,
-            conversation.conversation_id
-          ),
-        ]);
-      setMessages(nextMessages);
-      setPinnedMessages(nextPinnedMessages);
-      setScheduledMessages(nextScheduledMessages);
 
-      if (!conversation.request_incoming) {
-        await markMessagesRead(
+      try {
+        const [nextMessages, nextPinnedMessages, nextScheduledMessages] =
+          await Promise.all([
+            fetchConversationMessages(
+              supabase,
+              conversation.conversation_id
+            ),
+            fetchPinnedMessages(
+              supabase,
+              conversation.conversation_id
+            ),
+            fetchScheduledMessages(
+              supabase,
+              conversation.conversation_id
+            ),
+          ]);
+        setMessages(nextMessages);
+        setPinnedMessages(nextPinnedMessages);
+        setScheduledMessages(nextScheduledMessages);
+
+        if (!conversation.request_incoming) {
+          await markMessagesRead(
+            supabase,
+            conversation.conversation_id
+          );
+        }
+
+        const privacy = await fetchMessagingPrivacy(
           supabase,
-          conversation.conversation_id
+          conversation.other_user_id
         );
+        setOtherAllowsOnline(privacy.onlineStatus);
+        await loadLists();
+        window.setTimeout(() => scrollToLatest("auto"), 0);
+      } catch {
+        setChatError(
+          "Conversation could not be loaded. Check your connection and try again."
+        );
+      } finally {
+        setChatLoading(false);
       }
-
-      const privacy = await fetchMessagingPrivacy(
-        supabase,
-        conversation.other_user_id
-      );
-      setOtherAllowsOnline(privacy.onlineStatus);
-      await loadLists();
-      window.setTimeout(() => scrollToLatest("auto"), 0);
     },
-    [supabase, currentUser.id, loadLists, scrollToLatest]
+    [supabase, loadLists, scrollToLatest]
   );
 
   useEffect(() => {
     let activeEffect = true;
 
     const timer = window.setTimeout(() => {
+      setLoadError("");
       void Promise.all([
         loadLists(),
-        loadPeople(),
+        loadPeople(initialUsername || ""),
         loadNotes(),
         supabase
           .from("privacy_settings")
@@ -384,34 +398,53 @@ export default function MessagesWorkspace({
           setOwnOnlineEnabled(privacyResult.data?.online_status ?? true);
           setLoading(false);
 
+          setLoadError("");
+
           if (initialUsername) {
             const person = users.find(
               (item) =>
                 item.username.toLowerCase() === initialUsername.toLowerCase()
             );
             if (person) {
-              const existingId = await getExistingConversation(
-                supabase,
-                person.id
-              );
-              if (existingId) {
-                const all = [
-                  ...(await fetchInbox(supabase, false)),
-                  ...(await fetchInbox(supabase, true)),
-                ];
-                const found = all.find(
-                  (item) => item.conversation_id === existingId
-                );
-                if (found) await loadConversation(found);
-              } else {
-                setNewMessageOpen(true);
-                setQuery(person.username);
-              }
+              const ensured = await ensureConversation(supabase, person.id);
+              const all = [
+                ...(await fetchInbox(supabase, false)),
+                ...(await fetchInbox(supabase, true)),
+              ];
+              const found =
+                all.find(
+                  (item) =>
+                    item.conversation_id === ensured.conversationId
+                ) || {
+                  conversation_id: ensured.conversationId,
+                  other_user_id: person.id,
+                  username: person.username,
+                  display_name: person.display_name,
+                  avatar_url: person.avatar_url,
+                  verified: Boolean(person.verified),
+                  last_message: "",
+                  last_message_type: null,
+                  last_message_at: new Date().toISOString(),
+                  unread_count: 0,
+                  request_status:
+                    ensured.requestStatus as InboxConversation["request_status"],
+                  request_incoming: false,
+                  muted: false,
+                  theme: "violet" as InboxConversation["theme"],
+                  inbox_folder: "primary" as InboxConversation["inbox_folder"],
+                  pinned: false,
+                  pinned_at: null,
+                };
+
+              await loadConversation(found);
             }
           }
         })
         .catch(() => {
           if (activeEffect) {
+            setLoadError(
+              "Messages could not be loaded. Check your connection and try again."
+            );
             setNotice("Messages could not be loaded right now.");
             setLoading(false);
           }
@@ -1532,6 +1565,32 @@ export default function MessagesWorkspace({
         <div className="dm-conversation-list">
           {loading ? (
             <p className="dm-list-empty">Loading conversations…</p>
+          ) : loadError ? (
+            <div className="dm-empty-state dm-network-error" role="alert">
+              <Icon name="messages" size={28} />
+              <b>Could not load messages</b>
+              <p>{loadError}</p>
+              <button
+                className="btn small"
+                onClick={() => {
+                  setLoading(true);
+                  setLoadError("");
+                  void Promise.all([loadLists(), loadPeople(), loadNotes()])
+                    .then(() => {
+                      setLoadError("");
+                      setLoading(false);
+                    })
+                    .catch(() => {
+                      setLoadError(
+                        "Messages could not be loaded. Check your connection and try again."
+                      );
+                      setLoading(false);
+                    });
+                }}
+              >
+                Retry
+              </button>
+            </div>
           ) : shown.length === 0 ? (
             <div className="dm-empty-state">
               <Icon name="messages" size={28} />
@@ -1862,7 +1921,25 @@ export default function MessagesWorkspace({
               ref={bodyRef}
               onScroll={handleMessageScroll}
             >
-              {filteredMessages.length === 0 ? (
+              {chatLoading ? (
+                <div className="dm-chat-load-state" aria-live="polite">
+                  <span className="dm-chat-loader" />
+                  <b>Loading conversation…</b>
+                </div>
+              ) : chatError ? (
+                <div className="dm-chat-load-state dm-network-error" role="alert">
+                  <Icon name="messages" size={28} />
+                  <b>Conversation unavailable</b>
+                  <span>{chatError}</span>
+                  <button
+                    type="button"
+                    className="btn small"
+                    onClick={() => void loadConversation(active)}
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : filteredMessages.length === 0 ? (
                 <div className="conversation-start">
                   <AvatarImage
                     src={avatarFor(activeProfile)}

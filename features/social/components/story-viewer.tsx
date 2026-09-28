@@ -68,6 +68,8 @@ export default function StoryViewer({
   const own = story.author_id === currentUserId;
   const [viewers, setViewers] = useState<StoryViewerPerson[]>([]);
   const [showViewers, setShowViewers] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const [draggingStory, setDraggingStory] = useState(false);
   const progressRef = useRef<HTMLElement | null>(null);
   const touchStartY = useRef<number | null>(null);
   const onViewedRef = useRef(onViewed);
@@ -211,21 +213,47 @@ export default function StoryViewer({
       <div
         className="story-viewer"
         onClick={(event) => event.stopPropagation()}
+        style={{
+          transform:
+            dragY > 0 ? "translate3d(0," + dragY + "px,0)" : undefined,
+          transition: draggingStory ? "none" : "transform 180ms ease",
+        }}
         onTouchStart={(event) => {
           touchStartY.current = event.touches[0]?.clientY ?? null;
+          setDraggingStory(true);
+          setDragY(0);
+        }}
+        onTouchMove={(event) => {
+          const startY = touchStartY.current;
+          const currentY = event.touches[0]?.clientY;
+          if (startY === null || typeof currentY !== "number") return;
+
+          const delta = currentY - startY;
+          if (delta > 0) {
+            setDragY(Math.min(180, delta));
+          }
+        }}
+        onTouchCancel={() => {
+          touchStartY.current = null;
+          setDraggingStory(false);
+          setDragY(0);
         }}
         onTouchEnd={(event) => {
           const startY = touchStartY.current;
           const endY = event.changedTouches[0]?.clientY;
           touchStartY.current = null;
+          setDraggingStory(false);
 
           if (
             startY !== null &&
             typeof endY === "number" &&
-            endY - startY > 80
+            endY - startY > 96
           ) {
             onClose();
+            return;
           }
+
+          setDragY(0);
         }}
       >
         <div
