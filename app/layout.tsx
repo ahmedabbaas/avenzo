@@ -4,6 +4,7 @@ import "./globals.css";
 import PreferencesBootstrap from "../features/settings/components/preferences-bootstrap";
 import NativeMessageNotifications from "../features/notifications/components/native-message-notifications";
 import CallManager from "../features/messages/components/call-manager";
+import NetworkStatus from "../components/network-status";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -56,6 +57,7 @@ export default function RootLayout({
         <PreferencesBootstrap />
         <NativeMessageNotifications />
         <CallManager />
+        <NetworkStatus />
         <a className="skip-link" href="#main-content">
           Skip to main content
         </a>
