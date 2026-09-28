@@ -1,15 +1,51 @@
 "use client";
 
-import { useRef, useState, type DragEvent, type FormEvent } from "react";
+import {
+  useMemo,
+  useRef,
+  useState,
+  type DragEvent,
+  type FormEvent,
+} from "react";
 import AvatarImage from "./avatar-image";
 import UserMediaImage from "./user-media-image";
 import Icon from "./icon";
 import VerifiedBadge from "./verified-badge";
 import { avatarFor } from "../lib/profile";
-import type { MediaDimensions } from "../lib/media";
+import {
+  editPostImage,
+  type MediaDimensions,
+  type PostImageCrop,
+  type PostImageEditOptions,
+  type PostImageFilter,
+} from "../lib/media";
 import type { Profile } from "../types";
 
 export type CreateContentMode = "post" | "reel" | "story";
+
+const FILTERS: Array<{ id: PostImageFilter; label: string }> = [
+  { id: "none", label: "Original" },
+  { id: "vivid", label: "Vivid" },
+  { id: "warm", label: "Warm" },
+  { id: "cool", label: "Cool" },
+  { id: "mono", label: "Mono" },
+];
+
+const CROPS: Array<{ id: PostImageCrop; label: string }> = [
+  { id: "original", label: "Original" },
+  { id: "square", label: "1:1" },
+  { id: "portrait", label: "4:5" },
+  { id: "landscape", label: "16:9" },
+];
+
+function parseMentions(value: string) {
+  return [...new Set(
+    value
+      .split(/[\s,]+/)
+      .map((item) => item.trim().replace(/^@+/, "").toLowerCase())
+      .filter(Boolean)
+  )];
+}
 
 export default function CreateContentModal({
   profile,
@@ -21,8 +57,10 @@ export default function CreateContentModal({
   location,
   file,
   preview,
+  postFiles = [],
   postPreviews = [],
   postDimensions = [],
+  postAltTexts = [],
   coverFile,
   coverPreview,
   dimensions,
@@ -37,6 +75,8 @@ export default function CreateContentModal({
   onHashtagsChange,
   onMentionsChange,
   onLocationChange,
+  onPostAltTextChange,
+  onReplacePostFile,
   onFileSelect,
   onPostFilesSelect,
   onCoverSelect,
@@ -52,8 +92,10 @@ export default function CreateContentModal({
   location: string;
   file: File | null;
   preview: string;
+  postFiles?: File[];
   postPreviews?: string[];
   postDimensions?: Array<MediaDimensions | null>;
+  postAltTexts?: string[];
   coverFile: File | null;
   coverPreview: string;
   dimensions: MediaDimensions | null;
@@ -68,19 +110,52 @@ export default function CreateContentModal({
   onHashtagsChange: (value: string) => void;
   onMentionsChange: (value: string) => void;
   onLocationChange: (value: string) => void;
+  onPostAltTextChange?: (index: number, value: string) => void;
+  onReplacePostFile?: (index: number, file: File) => Promise<void> | void;
   onFileSelect: (file: File | null) => void;
   onPostFilesSelect?: (files: File[]) => void;
   onCoverSelect: (file: File | null) => void;
   onClose: () => void;
   onSubmit: (event: FormEvent) => void;
 }) {
-  const fileInput = useRef<HTMLInputElement>(null);
+  const galleryInput = useRef<HTMLInputElement>(null);
+  const cameraInput = useRef<HTMLInputElement>(null);
+  const genericInput = useRef<HTMLInputElement>(null);
   const coverInput = useRef<HTMLInputElement>(null);
+
   const [dragging, setDragging] = useState(false);
+  const [postStep, setPostStep] = useState(1);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [editing, setEditing] = useState(false);
+  const [crop, setCrop] = useState<PostImageCrop>("original");
+  const [rotation, setRotation] =
+    useState<PostImageEditOptions["rotation"]>(0);
+  const [filter, setFilter] = useState<PostImageFilter>("none");
+  const [brightness, setBrightness] = useState(100);
+  const [contrast, setContrast] = useState(100);
+
+  const isVideo = Boolean(file?.type.startsWith("video/"));
+  const tagged = useMemo(() => parseMentions(mentions), [mentions]);
+  const safeActiveIndex = Math.min(
+    activeIndex,
+    Math.max(0, postPreviews.length - 1)
+  );
+  const activePreview = postPreviews[safeActiveIndex] || "";
+  const activeFile = postFiles[safeActiveIndex] || null;
+
+  function resetEditControls() {
+    setCrop("original");
+    setRotation(0);
+    setFilter("none");
+    setBrightness(100);
+    setContrast(100);
+  }
 
   function drop(event: DragEvent<HTMLDivElement>) {
     event.preventDefault();
     setDragging(false);
+    if (posting) return;
+
     const files = Array.from(event.dataTransfer.files || []);
     if (mode === "post" && onPostFilesSelect) {
       onPostFilesSelect(files);
@@ -89,71 +164,522 @@ export default function CreateContentModal({
     }
   }
 
-  const isVideo = Boolean(file?.type.startsWith("video/"));
+  function pickPostFiles(files: File[]) {
+    if (!onPostFilesSelect || posting) return;
+    onPostFilesSelect(files);
+  }
 
-  return (
-    <div
-      className="modal"
-      role="dialog"
-      aria-modal="true"
-      aria-label={"Create " + mode}
-    >
-      <form className="modal-box create-modal create-upload-panel" onSubmit={onSubmit}>
-        <div className="modal-header">
-          <div>
-            <div className="eyebrow">CREATE / UPLOAD</div>
-            <h2>
-              {mode === "post"
-                ? "New post"
-                : mode === "reel"
-                  ? "New reel"
-                  : "New story"}
-            </h2>
+  function toggleTaggedPerson(person: Profile) {
+    const username = person.username.toLowerCase();
+    const next = new Set(tagged);
+    if (next.has(username)) next.delete(username);
+    else next.add(username);
+    onMentionsChange([...next].map((item) => "@" + item).join(" "));
+  }
+
+  async function applyImageEdits() {
+    if (!activeFile || !onReplacePostFile || editing) return;
+
+    setEditing(true);
+    try {
+      const result = await editPostImage(activeFile, {
+        crop,
+        rotation,
+        filter,
+        brightness,
+        contrast,
+      });
+      await onReplacePostFile(safeActiveIndex, result.file);
+      resetEditControls();
+    } finally {
+      setEditing(false);
+    }
+  }
+
+  const editorFilter = [
+    `brightness(${brightness}%)`,
+    `contrast(${contrast}%)`,
+    filter === "vivid" ? "saturate(135%)" : "",
+    filter === "mono" ? "grayscale(100%)" : "",
+    filter === "warm" ? "sepia(10%) saturate(112%)" : "",
+    filter === "cool" ? "saturate(105%) contrast(103%)" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const cropClass =
+    crop === "square"
+      ? "crop-square"
+      : crop === "portrait"
+        ? "crop-portrait"
+        : crop === "landscape"
+          ? "crop-landscape"
+          : "crop-original";
+
+  function handleFormSubmit(event: FormEvent) {
+    if (mode === "post" && postStep < 4) {
+      event.preventDefault();
+      if (postStep === 1 && postPreviews.length === 0) return;
+      setPostStep((current) => Math.min(4, current + 1));
+      return;
+    }
+
+    onSubmit(event);
+  }
+
+  function renderPostStep() {
+    if (postStep === 1) {
+      return (
+        <section className="create-step-panel">
+          <div className="create-step-copy">
+            <span>STEP 1</span>
+            <h3>Choose your media</h3>
+            <p>Select from your gallery or capture a new photo.</p>
           </div>
-          <button
-            type="button"
-            className="icon-button"
-            onClick={onClose}
-            aria-label="Close"
-            disabled={posting}
+
+          <div
+            className={"upload-dropzone create-post-source " + (dragging ? "dragging" : "")}
+            onDragEnter={(event) => {
+              event.preventDefault();
+              setDragging(true);
+            }}
+            onDragOver={(event) => event.preventDefault()}
+            onDragLeave={() => setDragging(false)}
+            onDrop={drop}
           >
-            <Icon name="close" />
-          </button>
-        </div>
+            <Icon name="camera" size={30} />
+            <b>{postPreviews.length ? postPreviews.length + " image(s) selected" : "Add photos"}</b>
+            <span>Up to 10 images · JPEG, PNG, WebP or GIF · 25 MB each</span>
 
-        <div className="create-type-tabs" role="tablist" aria-label="Content type">
-          {(["post", "reel", "story"] as const).map((nextMode) => (
-            <button
-              key={nextMode}
-              type="button"
-              className={mode === nextMode ? "active" : ""}
-              onClick={() => onModeChange(nextMode)}
-              disabled={posting}
-            >
-              {nextMode === "post"
-                ? "Post"
-                : nextMode === "reel"
-                  ? "Reel"
-                  : "Story"}
-            </button>
-          ))}
-        </div>
+            <div className="create-source-actions">
+              <button
+                type="button"
+                className="btn"
+                disabled={posting}
+                onClick={() => galleryInput.current?.click()}
+              >
+                Gallery
+              </button>
+              <button
+                type="button"
+                className="btn secondary"
+                disabled={posting}
+                onClick={() => cameraInput.current?.click()}
+              >
+                Camera
+              </button>
+            </div>
+          </div>
 
-        <div className="composer-author">
-          <AvatarImage
-            src={avatarFor(profile)}
-            alt={profile.display_name}
-            size={96}
+          <input
+            ref={galleryInput}
+            type="file"
+            hidden
+            multiple
+            accept="image/*"
+            onChange={(event) => {
+              pickPostFiles(Array.from(event.target.files || []));
+              event.target.value = "";
+            }}
           />
-          <div>
-            <b>{profile.display_name}</b>
-            <small className="verified-line">
-              @{profile.username}
-              <VerifiedBadge verified={profile.verified} />
-            </small>
+          <input
+            ref={cameraInput}
+            type="file"
+            hidden
+            accept="image/*"
+            capture="environment"
+            onChange={(event) => {
+              const picked = event.target.files?.[0];
+              if (picked) pickPostFiles([picked]);
+              event.target.value = "";
+            }}
+          />
+
+          {postPreviews.length > 0 && (
+            <div className="create-carousel-preview create-step-thumbnails">
+              {postPreviews.map((itemPreview, index) => (
+                <button
+                  type="button"
+                  className={index === safeActiveIndex ? "active" : ""}
+                  key={itemPreview}
+                  onClick={() => setActiveIndex(index)}
+                >
+                  <UserMediaImage
+                    src={itemPreview}
+                    alt={"Selected image " + (index + 1)}
+                    width={postDimensions[index]?.width}
+                    height={postDimensions[index]?.height}
+                    loading="eager"
+                  />
+                  <span>{index + 1}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+      );
+    }
+
+    if (postStep === 2) {
+      return (
+        <section className="create-step-panel">
+          <div className="create-step-copy">
+            <span>STEP 2</span>
+            <h3>Edit photo</h3>
+            <p>Crop, rotate and tune the active image before publishing.</p>
+          </div>
+
+          <div className="create-editor-layout">
+            <div className={"create-editor-preview " + cropClass}>
+              {activePreview && (
+                <UserMediaImage
+                  src={activePreview}
+                  alt={"Editing image " + (safeActiveIndex + 1)}
+                  width={postDimensions[safeActiveIndex]?.width}
+                  height={postDimensions[safeActiveIndex]?.height}
+                  loading="eager"
+                  className="create-editor-image"
+                />
+              )}
+              <style>{`
+                .create-editor-preview .create-editor-image {
+                  transform: rotate(${rotation}deg);
+                  filter: ${editorFilter};
+                }
+              `}</style>
+            </div>
+
+            {postPreviews.length > 1 && (
+              <div className="create-editor-image-tabs">
+                {postPreviews.map((itemPreview, index) => (
+                  <button
+                    type="button"
+                    key={itemPreview}
+                    className={index === safeActiveIndex ? "active" : ""}
+                    onClick={() => {
+                      setActiveIndex(index);
+                      resetEditControls();
+                    }}
+                  >
+                    <UserMediaImage
+                      src={itemPreview}
+                      alt={"Image " + (index + 1)}
+                      width={postDimensions[index]?.width}
+                      height={postDimensions[index]?.height}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="create-edit-tools">
+              <div className="create-edit-group">
+                <b>Crop</b>
+                <div className="create-edit-options">
+                  {CROPS.map((item) => (
+                    <button
+                      type="button"
+                      key={item.id}
+                      className={crop === item.id ? "active" : ""}
+                      onClick={() => setCrop(item.id)}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="create-edit-group">
+                <b>Rotate</b>
+                <div className="create-edit-options">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setRotation((current) =>
+                        ((current + 270) % 360) as PostImageEditOptions["rotation"]
+                      )
+                    }
+                  >
+                    ↺ Left
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setRotation((current) =>
+                        ((current + 90) % 360) as PostImageEditOptions["rotation"]
+                      )
+                    }
+                  >
+                    Right ↻
+                  </button>
+                </div>
+              </div>
+
+              <div className="create-edit-group">
+                <b>Filters</b>
+                <div className="create-edit-options">
+                  {FILTERS.map((item) => (
+                    <button
+                      type="button"
+                      key={item.id}
+                      className={filter === item.id ? "active" : ""}
+                      onClick={() => setFilter(item.id)}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <label className="create-adjustment">
+                <span>Brightness <b>{brightness}%</b></span>
+                <input
+                  type="range"
+                  min="50"
+                  max="150"
+                  value={brightness}
+                  onChange={(event) => setBrightness(Number(event.target.value))}
+                />
+              </label>
+
+              <label className="create-adjustment">
+                <span>Contrast <b>{contrast}%</b></span>
+                <input
+                  type="range"
+                  min="50"
+                  max="150"
+                  value={contrast}
+                  onChange={(event) => setContrast(Number(event.target.value))}
+                />
+              </label>
+
+              <button
+                type="button"
+                className="btn create-apply-edits"
+                disabled={!activeFile || editing}
+                onClick={() => void applyImageEdits()}
+              >
+                {editing ? "Applying…" : "Apply edits to this image"}
+              </button>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    if (postStep === 3) {
+      return (
+        <section className="create-step-panel">
+          <div className="create-step-copy">
+            <span>STEP 3</span>
+            <h3>Add details</h3>
+            <p>Caption, people, location and accessibility details.</p>
+          </div>
+
+          <label className="create-field">
+            <span>Caption</span>
+            <textarea
+              value={caption}
+              onChange={(event) => onCaptionChange(event.target.value.slice(0, 2200))}
+              placeholder="Write a caption…"
+              maxLength={2200}
+            />
+            <small>{caption.length}/2200</small>
+          </label>
+
+          <div className="create-meta-grid">
+            <label className="create-field">
+              <span>Hashtags</span>
+              <input
+                value={hashtags}
+                onChange={(event) => onHashtagsChange(event.target.value.slice(0, 500))}
+                placeholder="#avenzo"
+              />
+            </label>
+            <label className="create-field create-location-field">
+              <span>Location</span>
+              <input
+                value={location}
+                onChange={(event) => onLocationChange(event.target.value.slice(0, 160))}
+                placeholder="Add location"
+                maxLength={160}
+              />
+            </label>
+          </div>
+
+          <div className="create-tag-section">
+            <div className="create-collab-head">
+              <div>
+                <b>Tag people</b>
+                <span>Tagged users are stored with the post and become searchable.</span>
+              </div>
+              <small>{tagged.length} tagged</small>
+            </div>
+
+            <div className="create-collab-list">
+              {people.slice(0, 40).map((person) => {
+                const selected = tagged.includes(person.username.toLowerCase());
+                return (
+                  <button
+                    type="button"
+                    key={person.id}
+                    className={selected ? "selected" : ""}
+                    onClick={() => toggleTaggedPerson(person)}
+                  >
+                    <AvatarImage
+                      src={avatarFor(person)}
+                      alt={person.display_name}
+                      size={64}
+                    />
+                    <span>
+                      <b className="verified-line">
+                        {person.display_name}
+                        <VerifiedBadge verified={person.verified} />
+                      </b>
+                      <small>@{person.username}</small>
+                    </span>
+                    <i>{selected ? "✓" : "+"}</i>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {postPreviews.length > 0 && (
+            <div className="create-alt-section">
+              <div className="create-collab-head">
+                <div>
+                  <b>Alt text</b>
+                  <span>Optional description for people using screen readers.</span>
+                </div>
+                <small>Image {safeActiveIndex + 1}/{postPreviews.length}</small>
+              </div>
+
+              <div className="create-alt-layout">
+                <div className="create-alt-thumbnails">
+                  {postPreviews.map((itemPreview, index) => (
+                    <button
+                      type="button"
+                      key={itemPreview}
+                      className={index === safeActiveIndex ? "active" : ""}
+                      onClick={() => setActiveIndex(index)}
+                    >
+                      <UserMediaImage
+                        src={itemPreview}
+                        alt={"Image " + (index + 1)}
+                        width={postDimensions[index]?.width}
+                        height={postDimensions[index]?.height}
+                      />
+                    </button>
+                  ))}
+                </div>
+                <label className="create-field">
+                  <span>Alt text for image {safeActiveIndex + 1}</span>
+                  <textarea
+                    value={postAltTexts[safeActiveIndex] || ""}
+                    onChange={(event) =>
+                      onPostAltTextChange?.(
+                        safeActiveIndex,
+                        event.target.value.slice(0, 1000)
+                      )
+                    }
+                    placeholder="Describe what is visible in this image."
+                    maxLength={1000}
+                  />
+                  <small>{(postAltTexts[safeActiveIndex] || "").length}/1000</small>
+                </label>
+              </div>
+            </div>
+          )}
+
+          <div className="create-collab-section">
+            <div className="create-collab-head">
+              <div>
+                <b>Collaborators</b>
+                <span>Optional. Invite up to 3 AVENZO users to collaborate.</span>
+              </div>
+              <small>{collaboratorIds.length}/3</small>
+            </div>
+
+            <div className="create-collab-list">
+              {people.slice(0, 30).map((person) => {
+                const selected = collaboratorIds.includes(person.id);
+                return (
+                  <button
+                    type="button"
+                    key={person.id}
+                    className={selected ? "selected" : ""}
+                    disabled={!selected && collaboratorIds.length >= 3}
+                    onClick={() => onToggleCollaborator(person.id)}
+                  >
+                    <AvatarImage
+                      src={avatarFor(person)}
+                      alt={person.display_name}
+                      size={64}
+                    />
+                    <span>
+                      <b>{person.display_name}</b>
+                      <small>@{person.username}</small>
+                    </span>
+                    <i>{selected ? "✓" : "+"}</i>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    return (
+      <section className="create-step-panel">
+        <div className="create-step-copy">
+          <span>STEP 4</span>
+          <h3>Review & publish</h3>
+          <p>Check your post before it goes live.</p>
+        </div>
+
+        <div className="create-review-card">
+          <div className="composer-author">
+            <AvatarImage
+              src={avatarFor(profile)}
+              alt={profile.display_name}
+              size={72}
+            />
+            <div>
+              <b>{profile.display_name}</b>
+              <small>@{profile.username}</small>
+            </div>
+          </div>
+
+          <div className="create-review-grid">
+            {postPreviews.map((itemPreview, index) => (
+              <UserMediaImage
+                key={itemPreview}
+                src={itemPreview}
+                alt={postAltTexts[index] || "Post image " + (index + 1)}
+                width={postDimensions[index]?.width}
+                height={postDimensions[index]?.height}
+                loading="eager"
+              />
+            ))}
+          </div>
+
+          {caption && <p className="create-review-caption">{caption}</p>}
+
+          <div className="create-review-meta">
+            {tagged.length > 0 && <span>{tagged.length} tagged</span>}
+            {location && <span>{location}</span>}
+            {hashtags.trim() && <span>{hashtags}</span>}
           </div>
         </div>
+      </section>
+    );
+  }
 
+  function renderVideoOrStoryComposer() {
+    return (
+      <>
         <div
           className={"upload-dropzone " + (dragging ? "dragging" : "")}
           onDragEnter={(event) => {
@@ -163,82 +689,45 @@ export default function CreateContentModal({
           onDragOver={(event) => event.preventDefault()}
           onDragLeave={() => setDragging(false)}
           onDrop={drop}
-          onClick={() => !posting && fileInput.current?.click()}
+          onClick={() => !posting && genericInput.current?.click()}
           role="button"
           tabIndex={0}
-          onKeyDown={(event) => {
-            if ((event.key === "Enter" || event.key === " ") && !posting) {
-              event.preventDefault();
-              fileInput.current?.click();
-            }
-          }}
         >
           <Icon name={mode === "reel" ? "reels" : "camera"} size={26} />
           <b>
             {file
               ? file.name
               : mode === "reel"
-                ? "Drop a vertical video here"
-                : mode === "post"
-                  ? "Drop up to 10 images here"
-                  : "Drop an image or video here"}
+                ? "Choose a vertical video"
+                : "Choose an image or video"}
           </b>
           <span>
             {mode === "reel"
               ? "Portrait video only · up to 25 MB"
-              : mode === "post"
-                ? "Up to 10 images · JPEG, PNG, WebP or GIF · up to 25 MB each"
-                : "JPEG, PNG, WebP, GIF, MP4, WebM or MOV · up to 25 MB"}
+              : "JPEG, PNG, WebP, GIF, MP4, WebM or MOV · up to 25 MB"}
           </span>
           <button type="button" className="btn secondary small" disabled={posting}>
             Choose file
           </button>
           <input
-            ref={fileInput}
+            ref={genericInput}
             type="file"
             hidden
-            multiple={mode === "post"}
-            accept={
-              mode === "reel"
-                ? "video/*"
-                : mode === "post"
-                  ? "image/*"
-                  : "image/*,video/*"
-            }
+            accept={mode === "reel" ? "video/*" : "image/*,video/*"}
             onChange={(event) => {
-              const files = Array.from(event.target.files || []);
-              if (mode === "post" && onPostFilesSelect) {
-                onPostFilesSelect(files);
-              } else {
-                onFileSelect(files[0] || null);
-              }
+              onFileSelect(event.target.files?.[0] || null);
               event.target.value = "";
             }}
           />
         </div>
 
-        {mode === "post" && postPreviews.length > 0 ? (
-          <div className="create-carousel-preview" aria-label="Selected carousel images">
-            {postPreviews.map((itemPreview, index) => (
-              <div className="create-carousel-preview-item" key={itemPreview}>
-                <UserMediaImage
-                  src={itemPreview}
-                  alt={"Post image " + (index + 1)}
-                  width={postDimensions[index]?.width}
-                  height={postDimensions[index]?.height}
-                  loading="eager"
-                />
-                <span>{index + 1}</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          preview &&
+        {preview &&
           (isVideo ? (
             <div className={"upload-preview-frame " + (mode === "reel" ? "vertical" : "")}>
               <video
                 src={preview}
                 controls
+                muted
                 playsInline
                 preload="metadata"
                 className="upload-preview"
@@ -248,19 +737,14 @@ export default function CreateContentModal({
             <UserMediaImage
               src={preview}
               className="upload-preview"
-              alt={mode === "story" ? "Story preview" : "Post preview"}
+              alt={mode === "story" ? "Story preview" : "Preview"}
               width={dimensions?.width}
               height={dimensions?.height}
               loading="eager"
             />
-          ))
-        )}
+          ))}
 
-        {mode === "post" && postPreviews.length > 0 ? (
-          <div className="upload-dimensions">
-            {postPreviews.length} image{postPreviews.length === 1 ? "" : "s"} selected
-          </div>
-        ) : dimensions && (
+        {dimensions && (
           <div className="upload-dimensions">
             {dimensions.width} × {dimensions.height}
             {mode === "reel" && (
@@ -290,13 +774,7 @@ export default function CreateContentModal({
           <textarea
             value={caption}
             onChange={(event) => onCaptionChange(event.target.value.slice(0, 2200))}
-            placeholder={
-              mode === "story"
-                ? "Add a story caption…"
-                : mode === "reel"
-                  ? "Tell people what this reel is about…"
-                  : "What’s worth sharing?"
-            }
+            placeholder={mode === "reel" ? "Tell people about this reel…" : "Add a story caption…"}
             maxLength={2200}
           />
           <small>{caption.length}/2200</small>
@@ -330,58 +808,11 @@ export default function CreateContentModal({
           </label>
         </div>
 
-        {mode === "post" && (
-          <div className="create-collab-section">
-            <div className="create-collab-head">
-              <div>
-                <b>Add collaborators</b>
-                <span>
-                  Invite up to 3 real AVENZO users. They must accept before
-                  the post appears on their profile.
-                </span>
-              </div>
-              <small>{collaboratorIds.length}/3</small>
-            </div>
-
-            <div className="create-collab-list">
-              {people.slice(0, 30).map((person) => {
-                const selected = collaboratorIds.includes(person.id);
-                return (
-                  <button
-                    type="button"
-                    key={person.id}
-                    className={selected ? "selected" : ""}
-                    disabled={
-                      posting ||
-                      (!selected && collaboratorIds.length >= 3)
-                    }
-                    onClick={() => onToggleCollaborator(person.id)}
-                  >
-                    <AvatarImage
-                      src={avatarFor(person)}
-                      alt={person.display_name}
-                      size={64}
-                    />
-                    <span>
-                      <b className="verified-line">
-                        {person.display_name}
-                        <VerifiedBadge verified={person.verified} />
-                      </b>
-                      <small>@{person.username}</small>
-                    </span>
-                    <i>{selected ? "✓" : "+"}</i>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
         {isVideo && (
           <div className="cover-picker">
             <div>
               <b>Cover image</b>
-              <span>Optional. Choose the image shown before the video starts.</span>
+              <span>Optional thumbnail shown before the video is ready.</span>
             </div>
             <button
               type="button"
@@ -402,59 +833,177 @@ export default function CreateContentModal({
               }}
             />
             {coverPreview && (
-              <img className="cover-preview" src={coverPreview} alt="Video cover preview" />
+              <UserMediaImage
+                className="cover-preview"
+                src={coverPreview}
+                alt="Video cover preview"
+                loading="eager"
+              />
             )}
           </div>
         )}
+      </>
+    );
+  }
 
-        {mode === "story" && (
-          <p className="create-hint">
-            Stories expire after 24 hours. Captions and metadata stay attached to the story while it is live.
-          </p>
+  return (
+    <div className="modal" role="dialog" aria-modal="true" aria-label={"Create " + mode}>
+      <form
+        className="modal-box create-modal create-upload-panel"
+        onSubmit={handleFormSubmit}
+      >
+        <div className="modal-header">
+          <div>
+            <div className="eyebrow">CREATE / UPLOAD</div>
+            <h2>
+              {mode === "post"
+                ? "Create post"
+                : mode === "reel"
+                  ? "New reel"
+                  : "New story"}
+            </h2>
+          </div>
+          <button
+            type="button"
+            className="icon-button"
+            onClick={onClose}
+            aria-label="Close"
+            disabled={posting}
+          >
+            <Icon name="close" />
+          </button>
+        </div>
+
+        <div className="create-type-tabs" role="tablist" aria-label="Content type">
+          {(["post", "reel", "story"] as const).map((nextMode) => (
+            <button
+              key={nextMode}
+              type="button"
+              className={mode === nextMode ? "active" : ""}
+              onClick={() => {
+                setPostStep(1);
+                setActiveIndex(0);
+                resetEditControls();
+                onModeChange(nextMode);
+              }}
+              disabled={posting}
+            >
+              {nextMode === "post" ? "Post" : nextMode === "reel" ? "Reel" : "Story"}
+            </button>
+          ))}
+        </div>
+
+        {mode === "post" && (
+          <div className="create-stepper" aria-label="Post creation progress">
+            {["Media", "Edit", "Details", "Publish"].map((label, index) => {
+              const number = index + 1;
+              return (
+                <button
+                  type="button"
+                  key={label}
+                  className={
+                    number === postStep
+                      ? "active"
+                      : number < postStep
+                        ? "complete"
+                        : ""
+                  }
+                  disabled={posting || number > postStep + 1}
+                  onClick={() => {
+                    if (number <= postStep || (number === postStep + 1 && postPreviews.length)) {
+                      setPostStep(number);
+                    }
+                  }}
+                >
+                  <i>{number < postStep ? "✓" : number}</i>
+                  <span>{label}</span>
+                </button>
+              );
+            })}
+          </div>
         )}
 
-        {mode === "reel" && (
-          <p className="create-hint">
-            Reels require a portrait video. Views are counted per signed-in viewer and displayed publicly.
-          </p>
-        )}
+        {mode === "post" ? renderPostStep() : renderVideoOrStoryComposer()}
 
         {posting && (
           <div className="upload-progress" aria-live="polite">
             <div>
-              <b>Uploading</b>
+              <b>Publishing securely</b>
               <span>{Math.max(0, Math.min(100, uploadProgress))}%</span>
             </div>
-            <progress max={100} value={Math.max(0, Math.min(100, uploadProgress))} />
+            <progress
+              max={100}
+              value={Math.max(0, Math.min(100, uploadProgress))}
+            />
+            <small>Keep AVENZO open until publishing finishes.</small>
           </div>
         )}
 
-        <div className="modal-actions">
-          <button
-            type="button"
-            className="btn secondary"
-            onClick={onClose}
-            disabled={posting}
-          >
-            Cancel
-          </button>
-          <button
-            className="btn"
-            disabled={
-              posting ||
-              (mode === "reel" &&
-                (!file || !dimensions || dimensions.height <= dimensions.width)) ||
-              (mode === "story" && !file)
-            }
-          >
-            {posting
-              ? "Publishing…"
-              : mode === "post"
-                ? "Publish Post"
-                : mode === "reel"
-                  ? "Publish Reel"
-                  : "Publish Story"}
-          </button>
+        <div className="modal-actions create-wizard-actions">
+          {mode === "post" ? (
+            <>
+              {postStep > 1 ? (
+                <button
+                  type="button"
+                  className="btn secondary"
+                  disabled={posting}
+                  onClick={() => setPostStep((current) => Math.max(1, current - 1))}
+                >
+                  Back
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn secondary"
+                  onClick={onClose}
+                  disabled={posting}
+                >
+                  Cancel
+                </button>
+              )}
+
+              <button
+                className="btn"
+                disabled={
+                  posting ||
+                  editing ||
+                  postPreviews.length === 0
+                }
+              >
+                {posting
+                  ? "Publishing…"
+                  : postStep < 4
+                    ? "Continue"
+                    : "Publish Post"}
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="btn secondary"
+                onClick={onClose}
+                disabled={posting}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn"
+                disabled={
+                  posting ||
+                  (mode === "reel" &&
+                    (!file || !dimensions || dimensions.height <= dimensions.width)) ||
+                  (mode === "story" && !file)
+                }
+              >
+                {posting
+                  ? "Publishing…"
+                  : mode === "reel"
+                    ? "Publish Reel"
+                    : "Publish Story"}
+              </button>
+            </>
+          )}
         </div>
       </form>
     </div>

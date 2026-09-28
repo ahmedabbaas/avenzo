@@ -194,6 +194,7 @@ export async function publishContent({
   postMedia?: Array<{
     file: File;
     dimensions: MediaDimensions | null;
+    altText?: string;
   }>;
   title?: string;
   hashtags?: string;
@@ -252,6 +253,7 @@ export async function publishContent({
     media_path: string;
     media_width: number | null;
     media_height: number | null;
+    alt_text: string;
     position: number;
   }> = [];
 
@@ -283,6 +285,7 @@ export async function publishContent({
           media_path: uploaded.path,
           media_width: item.dimensions?.width || null,
           media_height: item.dimensions?.height || null,
+          alt_text: (item.altText || "").trim().slice(0, 1000),
           position: index,
         });
       }
@@ -324,6 +327,7 @@ export async function publishContent({
               media_type: "image",
               media_width: item.media_width,
               media_height: item.media_height,
+              alt_text: item.alt_text,
               position: item.position,
             }))
           );

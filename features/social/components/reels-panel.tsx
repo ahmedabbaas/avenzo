@@ -32,12 +32,19 @@ export default function ReelsPanel({
   const router = useRouter();
   const viewportRef = useRef<HTMLDivElement>(null);
   const viewedRef = useRef(new Set<string>());
+  const videoRefs = useRef(new Map<string, HTMLVideoElement>());
+
   const [reels, setReels] = useState<Reel[]>([]);
   const [saved, setSaved] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [commentFor, setCommentFor] = useState<string | null>(null);
   const [comment, setComment] = useState("");
   const [notice, setNotice] = useState("");
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [muted, setMuted] = useState(true);
+  const [manualPaused, setManualPaused] = useState(false);
+  const [loadedIds, setLoadedIds] = useState<Set<string>>(new Set());
+  const [failedIds, setFailedIds] = useState<Set<string>>(new Set());
 
   const mediaUrl = useCallback(
     (path: string) =>
@@ -50,6 +57,7 @@ export default function ReelsPanel({
       const result = await fetchReels(supabase, currentUser.id, { limit: 100 });
       setReels(result.reels);
       setSaved(result.savedReels);
+      setNotice("");
     } catch {
       setNotice("Reels could not be loaded right now.");
     } finally {
@@ -58,10 +66,7 @@ export default function ReelsPanel({
   }, [supabase, currentUser.id]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void load();
-    }, 0);
-
+    const timer = window.setTimeout(() => void load(), 0);
     return () => window.clearTimeout(timer);
   }, [load]);
 
@@ -76,11 +81,7 @@ export default function ReelsPanel({
       .channel("reels-live-metrics")
       .on(
         "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "reels",
-        },
+        { event: "UPDATE", schema: "public", table: "reels" },
         (payload) => {
           const next = payload.new as {
             id?: string;
@@ -112,12 +113,16 @@ export default function ReelsPanel({
   }, [supabase]);
 
   useEffect(() => {
-    if (!initialReelId || loading) return;
+    if (!initialReelId || loading || reels.length === 0) return;
+    const index = reels.findIndex((reel) => reel.id === initialReelId);
+    if (index < 0) return;
+    const frame = window.requestAnimationFrame(() => setActiveIndex(index));
     const target = document.querySelector<HTMLElement>(
       '[data-reel-id="' + CSS.escape(initialReelId) + '"]'
     );
     target?.scrollIntoView({ block: "start" });
-  }, [initialReelId, loading]);
+    return () => window.cancelAnimationFrame(frame);
+  }, [initialReelId, loading, reels]);
 
   useEffect(() => {
     const root = viewportRef.current;
@@ -126,35 +131,28 @@ export default function ReelsPanel({
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
+          if (!entry.isIntersecting || entry.intersectionRatio < 0.72) continue;
           const slide = entry.target as HTMLElement;
-          const video = slide.querySelector("video");
+          const index = Number(slide.dataset.reelIndex || 0);
           const reelId = slide.dataset.reelId;
-          if (!video || !reelId) continue;
+          setActiveIndex(index);
+          setManualPaused(false);
 
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.72) {
-            root.querySelectorAll("video").forEach((candidate) => {
-              if (candidate !== video) candidate.pause();
-            });
-            void video.play().catch(() => undefined);
-
-            if (!viewedRef.current.has(reelId)) {
-              viewedRef.current.add(reelId);
-              void recordReelView(supabase, reelId)
-                .then((count) => {
-                  setReels((current) =>
-                    current.map((item) =>
-                      item.id === reelId ? { ...item, viewCount: count } : item
-                    )
-                  );
-                })
-                .catch(() => viewedRef.current.delete(reelId));
-            }
-          } else {
-            video.pause();
+          if (reelId && !viewedRef.current.has(reelId)) {
+            viewedRef.current.add(reelId);
+            void recordReelView(supabase, reelId)
+              .then((count) => {
+                setReels((current) =>
+                  current.map((item) =>
+                    item.id === reelId ? { ...item, viewCount: count } : item
+                  )
+                );
+              })
+              .catch(() => viewedRef.current.delete(reelId));
           }
         }
       },
-      { root, threshold: [0.35, 0.72, 0.9] }
+      { root, threshold: [0.4, 0.72, 0.95] }
     );
 
     root.querySelectorAll<HTMLElement>("[data-reel-id]").forEach((slide) => {
@@ -163,6 +161,31 @@ export default function ReelsPanel({
 
     return () => observer.disconnect();
   }, [reels.length, supabase]);
+
+  useEffect(() => {
+    for (const [reelId, video] of videoRefs.current.entries()) {
+      const index = reels.findIndex((reel) => reel.id === reelId);
+      const active = index === activeIndex;
+      video.muted = muted;
+      if (!active || manualPaused) {
+        video.pause();
+      } else {
+        void video.play().catch(() => undefined);
+      }
+    }
+  }, [activeIndex, manualPaused, muted, reels]);
+
+  useEffect(() => {
+    const videos = videoRefs.current;
+    return () => {
+      for (const video of videos.values()) {
+        video.pause();
+        video.removeAttribute("src");
+        video.load();
+      }
+      videos.clear();
+    };
+  }, []);
 
   async function toggleLike(reel: Reel) {
     const nextLiked = !reel.liked;
@@ -212,19 +235,12 @@ export default function ReelsPanel({
     const wasReposted = Boolean(reel.reposted);
     setReels((current) =>
       current.map((item) =>
-        item.id === reel.id
-          ? { ...item, reposted: !wasReposted }
-          : item
+        item.id === reel.id ? { ...item, reposted: !wasReposted } : item
       )
     );
 
     try {
-      await setReelReposted(
-        supabase,
-        currentUser.id,
-        reel.id,
-        wasReposted
-      );
+      await setReelReposted(supabase, currentUser.id, reel.id, wasReposted);
       setNotice(wasReposted ? "Repost removed." : "Reposted.");
     } catch {
       setNotice("Could not update repost.");
@@ -236,11 +252,41 @@ export default function ReelsPanel({
     const clean = comment.trim();
     if (!clean) return;
     setComment("");
+
     try {
       await createReelComment(supabase, currentUser.id, reel.id, clean);
       await load();
     } catch {
       setNotice("Comment could not be posted.");
+    }
+  }
+
+  function togglePlayback(reel: Reel, index: number) {
+    if (index !== activeIndex) return;
+    const video = videoRefs.current.get(reel.id);
+    if (!video) return;
+
+    if (video.paused) {
+      setManualPaused(false);
+      void video.play().catch(() => undefined);
+    } else {
+      video.pause();
+      setManualPaused(true);
+    }
+  }
+
+  function registerVideo(reelId: string, node: HTMLVideoElement | null) {
+    if (node) {
+      videoRefs.current.set(reelId, node);
+      node.muted = muted;
+    } else {
+      const previous = videoRefs.current.get(reelId);
+      if (previous) {
+        previous.pause();
+        previous.removeAttribute("src");
+        previous.load();
+      }
+      videoRefs.current.delete(reelId);
     }
   }
 
@@ -285,26 +331,95 @@ export default function ReelsPanel({
         </div>
       ) : (
         <div className="reels-viewport" ref={viewportRef}>
-          {reels.map((reel) => {
+          {reels.map((reel, index) => {
             const author = reel.profile;
             const isSaved = saved.includes(reel.id);
             const commentsOpen = commentFor === reel.id;
+            const nearby = Math.abs(index - activeIndex) <= 1;
+            const active = index === activeIndex;
+            const loaded = loadedIds.has(reel.id);
+            const failed = failedIds.has(reel.id);
+            const poster = reel.cover_path ? mediaUrl(reel.cover_path) : "";
+
             return (
               <article
-                className="reel-slide"
+                className={"reel-slide " + (active ? "active" : "")}
                 key={reel.id}
                 data-reel-id={reel.id}
+                data-reel-index={index}
               >
-                <video
-                  className="reel-slide-video"
-                  src={mediaUrl(reel.media_path)}
-                  poster={reel.cover_path ? mediaUrl(reel.cover_path) : undefined}
-                  muted
-                  playsInline
-                  loop
-                  preload="metadata"
-                  controls
-                />
+                {nearby ? (
+                  <video
+                    ref={(node) => registerVideo(reel.id, node)}
+                    className="reel-slide-video"
+                    src={mediaUrl(reel.media_path)}
+                    poster={poster || undefined}
+                    muted={muted}
+                    playsInline
+                    loop
+                    preload={active ? "auto" : "metadata"}
+                    onClick={() => togglePlayback(reel, index)}
+                    onLoadedData={() =>
+                      setLoadedIds((current) => new Set(current).add(reel.id))
+                    }
+                    onError={() =>
+                      setFailedIds((current) => new Set(current).add(reel.id))
+                    }
+                  />
+                ) : (
+                  <div
+                    className="reel-slide-placeholder"
+                    style={poster ? { backgroundImage: `url("${poster}")` } : undefined}
+                    aria-label="Video thumbnail"
+                  />
+                )}
+
+                {!loaded && nearby && !failed && (
+                  <div className="reel-video-loading" aria-hidden="true">
+                    {poster ? <span>Loading video…</span> : <span>Preparing video…</span>}
+                  </div>
+                )}
+
+                {failed && (
+                  <div className="reel-video-error" role="alert">
+                    <Icon name="reels" size={28} />
+                    <b>Video failed to load</b>
+                    <span>Check your connection and try again.</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFailedIds((current) => {
+                          const next = new Set(current);
+                          next.delete(reel.id);
+                          return next;
+                        });
+                        const video = videoRefs.current.get(reel.id);
+                        video?.load();
+                      }}
+                    >
+                      Retry
+                    </button>
+                  </div>
+                )}
+
+                {active && !failed && (
+                  <div className="reel-playback-controls">
+                    <button
+                      type="button"
+                      onClick={() => togglePlayback(reel, index)}
+                      aria-label={manualPaused ? "Play reel" : "Pause reel"}
+                    >
+                      <Icon name={manualPaused ? "play" : "pause"} size={20} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMuted((current) => !current)}
+                      aria-label={muted ? "Unmute reel" : "Mute reel"}
+                    >
+                      <Icon name={muted ? "mute" : "volume"} size={20} />
+                    </button>
+                  </div>
+                )}
 
                 <div className="reel-gradient" />
 
@@ -336,12 +451,14 @@ export default function ReelsPanel({
 
                     {(reel.hashtags.length > 0 || reel.mentions.length > 0) && (
                       <div className="reel-tags">
-                        {reel.hashtags.map((tag) => <span key={"#"+tag}>#{tag}</span>)}
-                        {reel.mentions.map((mention) => <span key={"@"+mention}>@{mention}</span>)}
+                        {reel.hashtags.map((tag) => <span key={"#" + tag}>#{tag}</span>)}
+                        {reel.mentions.map((mention) => <span key={"@" + mention}>@{mention}</span>)}
                       </div>
                     )}
 
-                    {reel.location && <small className="reel-location">⌖ {reel.location}</small>}
+                    {reel.location && (
+                      <small className="reel-location">⌖ {reel.location}</small>
+                    )}
                   </div>
 
                   <div className="reel-actions-rail">
@@ -395,7 +512,10 @@ export default function ReelsPanel({
                   <aside className="reel-comments-drawer">
                     <div className="reel-comments-head">
                       <b>Comments</b>
-                      <button onClick={() => setCommentFor(null)} aria-label="Close comments">
+                      <button
+                        onClick={() => setCommentFor(null)}
+                        aria-label="Close comments"
+                      >
                         <Icon name="close" size={18} />
                       </button>
                     </div>
@@ -424,7 +544,9 @@ export default function ReelsPanel({
                     >
                       <input
                         value={comment}
-                        onChange={(event) => setComment(event.target.value.slice(0, 1000))}
+                        onChange={(event) =>
+                          setComment(event.target.value.slice(0, 1000))
+                        }
                         placeholder="Add a comment…"
                       />
                       <button disabled={!comment.trim()}>Post</button>

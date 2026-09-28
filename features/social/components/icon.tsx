@@ -30,7 +30,11 @@ export type IconName =
   | "grid"
   | "tag"
   | "menu"
-  | "chevronDown";
+  | "chevronDown"
+  | "play"
+  | "pause"
+  | "volume"
+  | "mute";
 
 
 export default function Icon({ name, size = 19 }: { name: IconName; size?: number }) {
@@ -188,6 +192,26 @@ export default function Icon({ name, size = 19 }: { name: IconName; size?: numbe
       </>
     ),
     chevronDown: <path d="m7 9 5 5 5-5" />,
+    play: <path d="m9 6 9 6-9 6V6Z" />,
+    pause: (
+      <>
+        <path d="M8 6v12" />
+        <path d="M16 6v12" />
+      </>
+    ),
+    volume: (
+      <>
+        <path d="M5 10v4h4l5 4V6l-5 4H5Z" />
+        <path d="M17 9.5a4 4 0 0 1 0 5" />
+        <path d="M19 7a7 7 0 0 1 0 10" />
+      </>
+    ),
+    mute: (
+      <>
+        <path d="M5 10v4h4l5 4V6l-5 4H5Z" />
+        <path d="m17 10 4 4M21 10l-4 4" />
+      </>
+    ),
   };
 
   return (

@@ -130,6 +130,7 @@ export default function HomeClient({
     file: File;
     preview: string;
     dimensions: MediaDimensions | null;
+    altText: string;
   }>>([]);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
@@ -465,6 +466,7 @@ export default function HomeClient({
       file: File;
       preview: string;
       dimensions: MediaDimensions | null;
+      altText: string;
     }> = [];
 
     for (const picked of selected) {
@@ -479,6 +481,7 @@ export default function HomeClient({
         file: picked,
         preview: URL.createObjectURL(picked),
         dimensions: await readMediaDimensions(picked),
+        altText: "",
       });
     }
 
@@ -489,6 +492,30 @@ export default function HomeClient({
 
     if (files.length > 10) {
       showToast("A carousel can contain up to 10 images.");
+    }
+  }
+
+  async function replacePostFile(index: number, nextFile: File) {
+    const nextDimensions = await readMediaDimensions(nextFile);
+
+    setPostMedia((current) =>
+      current.map((item, itemIndex) => {
+        if (itemIndex !== index) return item;
+        URL.revokeObjectURL(item.preview);
+        return {
+          ...item,
+          file: nextFile,
+          preview: URL.createObjectURL(nextFile),
+          dimensions: nextDimensions,
+        };
+      })
+    );
+
+    if (index === 0) {
+      if (preview) URL.revokeObjectURL(preview);
+      setFile(nextFile);
+      setPreview(URL.createObjectURL(nextFile));
+      setMediaDimensions(nextDimensions);
     }
   }
 
@@ -553,6 +580,7 @@ export default function HomeClient({
 
   async function createContent(event: FormEvent) {
     event.preventDefault();
+    if (posting) return;
 
     const validationError =
       validateContentFile(file, createMode) ||
@@ -596,6 +624,7 @@ export default function HomeClient({
             ? postMedia.map((item) => ({
                 file: item.file,
                 dimensions: item.dimensions,
+                altText: item.altText,
               }))
             : [],
         highQualityUploads: runtimePreferences.high_quality_uploads,
@@ -1113,7 +1142,7 @@ export default function HomeClient({
             <>
               <section className="home-dashboard-head">
                 <div>
-                  <div className="eyebrow">REAL PEOPLE · REAL STORIES</div>
+                  <div className="eyebrow">REAL PEOPLE Â· REAL STORIES</div>
                   <h1>Stories</h1>
                   <p>Updates shared by real AVENZO accounts you can actually open and follow.</p>
                 </div>
@@ -1512,8 +1541,10 @@ export default function HomeClient({
           location={location}
           file={file}
           preview={preview}
+          postFiles={postMedia.map((item) => item.file)}
           postPreviews={postMedia.map((item) => item.preview)}
           postDimensions={postMedia.map((item) => item.dimensions)}
+          postAltTexts={postMedia.map((item) => item.altText)}
           coverFile={coverFile}
           coverPreview={coverPreview}
           dimensions={mediaDimensions}
@@ -1536,6 +1567,16 @@ export default function HomeClient({
           onHashtagsChange={setHashtags}
           onMentionsChange={setMentions}
           onLocationChange={setLocation}
+          onPostAltTextChange={(index, value) =>
+            setPostMedia((current) =>
+              current.map((item, itemIndex) =>
+                itemIndex === index ? { ...item, altText: value } : item
+              )
+            )
+          }
+          onReplacePostFile={(index, nextFile) =>
+            void replacePostFile(index, nextFile)
+          }
           onFileSelect={(nextFile) => void pickFile(nextFile)}
           onPostFilesSelect={(files) => void pickPostFiles(files)}
           onCoverSelect={pickCover}
