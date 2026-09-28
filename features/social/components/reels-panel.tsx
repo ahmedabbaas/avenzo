@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import BrandLogo from "../../../components/brand-logo";
+import MobileBottomNav from "../../../components/mobile-bottom-nav";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
@@ -436,41 +437,14 @@ export default function ReelsPanel({
         </div>
       )}
 
-      <nav className="mobile-nav" aria-label="Mobile navigation">
-        <button type="button" onClick={() => router.push("/home")} aria-label="Home">
-          <span className="mobile-icon-wrap"><Icon name="home" /></span>
-          <small>Home</small>
-        </button>
-        <button
-          type="button"
-          onClick={() => router.push("/home?screen=explore")}
-          aria-label="Search"
-        >
-          <span className="mobile-icon-wrap"><Icon name="explore" /></span>
-          <small>Search</small>
-        </button>
-        <button
-          type="button"
-          className="mobile-create"
-          onClick={() => router.push("/home?create=post")}
-          aria-label="Create"
-        >
-          <span className="mobile-icon-wrap"><Icon name="plus" /></span>
-          <small>Create</small>
-        </button>
-        <button type="button" className="active" aria-label="Reels" aria-current="page">
-          <span className="mobile-icon-wrap"><Icon name="reels" /></span>
-          <small>Reels</small>
-        </button>
-        <button
-          type="button"
-          onClick={() => router.push("/home?screen=profile")}
-          aria-label="Profile"
-        >
-          <span className="mobile-icon-wrap"><Icon name="profile" /></span>
-          <small>Profile</small>
-        </button>
-      </nav>
+      <MobileBottomNav
+        active="reels"
+        onHome={() => router.push("/home?screen=home")}
+        onSearch={() => router.push("/home?screen=explore")}
+        onCreate={() => router.push("/home?screen=home&create=post")}
+        onReels={() => viewportRef.current?.scrollTo({ top: 0, behavior: "smooth" })}
+        onProfile={() => router.push("/home?screen=profile")}
+      />
     </main>
   );
 }

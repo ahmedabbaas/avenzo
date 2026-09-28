@@ -10,6 +10,7 @@ import {
 } from "react";
 import Link from "next/link";
 import BrandLogo from "../components/brand-logo";
+import MobileBottomNav from "../components/mobile-bottom-nav";
 import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase/client";
 import { fetchInbox } from "../features/messages/data";
@@ -1021,6 +1022,22 @@ export default function HomeClient({
   const homeFeedPosts =
     homeFeedMode === "following" ? posts : explorePosts;
 
+  function selectPrimaryScreen(nextScreen: "home" | "explore" | "profile") {
+    setScreen(nextScreen);
+
+    const params = new URLSearchParams(window.location.search);
+    params.set("screen", nextScreen);
+    params.delete("create");
+    params.delete("chat");
+    const queryString = params.toString();
+
+    window.history.replaceState(
+      window.history.state,
+      "",
+      "/home" + (queryString ? "?" + queryString : "")
+    );
+  }
+
   return (
     <div className={"social-app screen-" + screen}>
       <header className="top">
@@ -1621,51 +1638,14 @@ export default function HomeClient({
         </aside>
       </div>
 
-      <nav className="mobile-nav" aria-label="Mobile navigation">
-        <button
-          className={screen === "home" ? "active" : ""}
-          onClick={() => setScreen("home")}
-          aria-label="Home"
-        >
-          <span className="mobile-icon-wrap"><Icon name="home" /></span>
-          <small>Home</small>
-        </button>
-
-        <button
-          className={screen === "explore" ? "active" : ""}
-          onClick={() => setScreen("explore")}
-          aria-label="Search"
-        >
-          <span className="mobile-icon-wrap"><Icon name="explore" /></span>
-          <small>Search</small>
-        </button>
-
-        <button
-          className="mobile-create"
-          onClick={() => openComposer("post")}
-          aria-label="Create"
-        >
-          <span className="mobile-icon-wrap"><Icon name="plus" /></span>
-          <small>Create</small>
-        </button>
-
-        <button
-          onClick={() => router.push("/reels")}
-          aria-label="Reels"
-        >
-          <span className="mobile-icon-wrap"><Icon name="reels" /></span>
-          <small>Reels</small>
-        </button>
-
-        <button
-          className={screen === "profile" ? "active" : ""}
-          onClick={() => setScreen("profile")}
-          aria-label="Profile"
-        >
-          <span className="mobile-icon-wrap"><Icon name="profile" /></span>
-          <small>Profile</small>
-        </button>
-      </nav>
+      <MobileBottomNav
+        active={showCreate ? "create" : screen === "home" ? "home" : screen === "explore" ? "search" : screen === "profile" ? "profile" : null}
+        onHome={() => selectPrimaryScreen("home")}
+        onSearch={() => selectPrimaryScreen("explore")}
+        onCreate={() => openComposer("post")}
+        onReels={() => router.push("/reels")}
+        onProfile={() => selectPrimaryScreen("profile")}
+      />
 
       {showCreate && (
         <CreateContentModal
