@@ -144,6 +144,8 @@ export type NotificationRow = {
     | "follow_request_accepted"
     | "like"
     | "comment"
+    | "reply"
+    | "comment_like"
     | "message"
     | "message_request"
     | "message_reply"
@@ -152,4 +154,6 @@ export type NotificationRow = {
     | "collab_accepted";
   created_at: string;
   actor_id: string;
+  entity_id?: string | null;
+  read_at?: string | null;
 };

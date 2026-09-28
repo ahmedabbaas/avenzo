@@ -1,13 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import Icon from "./icon";
 import { avatarFor, formatRelativeTime, initialsAvatar } from "../lib/profile";
-import type { Comment, Post } from "../types";
+import type { Comment, Post, Profile } from "../types";
 import AvatarImage from "./avatar-image";
 import UserMediaImage from "./user-media-image";
 import VerifiedBadge from "./verified-badge";
+
+function renderCommentBody(body: string) {
+  const parts = body.split(/(@[a-zA-Z0-9._-]{1,30})/g);
+
+  return parts.map((part, index) => {
+    if (/^@[a-zA-Z0-9._-]{1,30}$/.test(part)) {
+      const username = part.slice(1);
+      return (
+        <Link
+          className="comment-mention"
+          href={"/u/" + encodeURIComponent(username)}
+          key={part + "-" + index}
+        >
+          {part}
+        </Link>
+      );
+    }
+
+    return <span key={"text-" + index}>{part}</span>;
+  });
+}
 
 export default function PostCard({
   post,
@@ -48,6 +69,10 @@ export default function PostCard({
 }) {
   const [comment, setComment] = useState("");
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
+  const [visibleRootCount, setVisibleRootCount] = useState(3);
+  const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({});
+  const [visibleReplyCounts, setVisibleReplyCounts] = useState<Record<string, number>>({});
+  const commentInputRef = useRef<HTMLInputElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [editingCaption, setEditingCaption] = useState(false);
   const [captionDraft, setCaptionDraft] = useState(post.caption || "");
@@ -56,6 +81,27 @@ export default function PostCard({
   const [heartBurst, setHeartBurst] = useState(false);
   const author = post.profile;
   const authorName = author?.display_name || "Account unavailable";
+  const rootComments = post.comments.filter((item) => !item.parent_id);
+  const hiddenRootCount = Math.max(0, rootComments.length - visibleRootCount);
+  const visibleRootComments = rootComments.slice(hiddenRootCount);
+  const participantMap = new Map<string, Profile>();
+
+  if (author) participantMap.set(author.username.toLowerCase(), author);
+  for (const item of post.comments) {
+    if (item.profile) {
+      participantMap.set(item.profile.username.toLowerCase(), item.profile);
+    }
+  }
+
+  const mentionMatch = comment.match(/(?:^|\s)@([a-zA-Z0-9._-]*)$/);
+  const mentionQuery = mentionMatch?.[1]?.toLowerCase() || "";
+  const mentionSuggestions = mentionMatch
+    ? [...participantMap.values()]
+        .filter((profile) =>
+          profile.username.toLowerCase().startsWith(mentionQuery)
+        )
+        .slice(0, 5)
+    : [];
 
   if (!author) return null;
 
@@ -355,83 +401,303 @@ export default function PostCard({
 
         {post.comments.length > 0 && (
           <div className="comment-list">
-            {post.comments
-              .filter((item) => !item.parent_id)
-              .slice(-3)
-              .map((item) => (
+            {hiddenRootCount > 0 && (
+              <button
+                type="button"
+                className="comments-load-more"
+                onClick={() =>
+                  setVisibleRootCount((current) =>
+                    Math.min(rootComments.length, current + 5)
+                  )
+                }
+              >
+                View {Math.min(5, hiddenRootCount)} more comment
+                {Math.min(5, hiddenRootCount) === 1 ? "" : "s"}
+                <small>{hiddenRootCount} remaining</small>
+              </button>
+            )}
+
+            {visibleRootComments.map((item) => {
+              const replies = post.comments.filter(
+                (reply) => reply.parent_id === item.id
+              );
+              const repliesOpen = Boolean(expandedReplies[item.id]);
+              const replyLimit = visibleReplyCounts[item.id] || 3;
+              const visibleReplies = replies.slice(0, replyLimit);
+              const remainingReplies = Math.max(
+                0,
+                replies.length - visibleReplies.length
+              );
+
+              return (
                 <div className="post-comment-thread" key={item.id}>
                   <div className="post-comment-row">
-                    <div className="post-comment-copy">
-                      <b className="verified-line">
-                        @{item.profile?.username || "user"}
-                        <VerifiedBadge verified={item.profile?.verified} />
-                      </b>
-                      <span>{item.body}</span>
-                    </div>
-                    <div className="post-comment-tools">
-                      <button
-                        type="button"
-                        className={item.liked ? "active" : ""}
-                        onClick={() => onCommentLike(item)}
-                      >
-                        <Icon name="heart" size={13} />
-                        {item.likeCount ? <span>{item.likeCount}</span> : null}
-                      </button>
-                      <button type="button" onClick={() => setReplyTo(item)}>
-                        Reply
-                      </button>
-                      {item.user_id === currentUserId && (
+                    <Link
+                      className="post-comment-avatar"
+                      href={
+                        item.profile?.username
+                          ? "/u/" + encodeURIComponent(item.profile.username)
+                          : "#"
+                      }
+                      aria-label={
+                        item.profile?.username
+                          ? "Open @" + item.profile.username
+                          : "Comment author"
+                      }
+                    >
+                      <AvatarImage
+                        src={
+                          item.profile
+                            ? avatarFor(item.profile)
+                            : initialsAvatar("User")
+                        }
+                        alt={item.profile?.display_name || "User"}
+                        size={48}
+                      />
+                    </Link>
+
+                    <div className="post-comment-main">
+                      <div className="post-comment-copy">
+                        <p>
+                          {item.profile?.username ? (
+                            <Link
+                              className="post-comment-username verified-line"
+                              href={
+                                "/u/" +
+                                encodeURIComponent(item.profile.username)
+                              }
+                            >
+                              @{item.profile.username}
+                              <VerifiedBadge
+                                verified={item.profile.verified}
+                              />
+                            </Link>
+                          ) : (
+                            <b>@user</b>
+                          )}
+                          <span>{renderCommentBody(item.body)}</span>
+                        </p>
+                        <small>{formatRelativeTime(item.created_at)}</small>
+                      </div>
+
+                      <div className="post-comment-tools">
                         <button
                           type="button"
-                          className="danger"
-                          onClick={() => onCommentDelete(item)}
+                          className={item.liked ? "active" : ""}
+                          onClick={() => onCommentLike(item)}
+                          aria-label={item.liked ? "Unlike comment" : "Like comment"}
                         >
-                          Delete
+                          <Icon name="heart" size={13} />
+                          {item.likeCount ? <span>{item.likeCount}</span> : null}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setReplyTo(item);
+                            const username = item.profile?.username;
+                            if (username && !comment.trim()) {
+                              setComment("@" + username + " ");
+                            }
+                            window.requestAnimationFrame(() =>
+                              commentInputRef.current?.focus()
+                            );
+                          }}
+                        >
+                          Reply
+                        </button>
+                        {item.user_id === currentUserId && (
+                          <button
+                            type="button"
+                            className="danger"
+                            onClick={() => onCommentDelete(item)}
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {replies.length > 0 && (
+                    <button
+                      type="button"
+                      className="comment-replies-toggle"
+                      onClick={() =>
+                        setExpandedReplies((current) => ({
+                          ...current,
+                          [item.id]: !current[item.id],
+                        }))
+                      }
+                    >
+                      <span />
+                      {repliesOpen
+                        ? "Hide replies"
+                        : "View " +
+                          replies.length +
+                          " " +
+                          (replies.length === 1 ? "reply" : "replies")}
+                    </button>
+                  )}
+
+                  {repliesOpen && (
+                    <div className="post-comment-replies">
+                      {visibleReplies.map((reply) => (
+                        <div className="post-comment-reply" key={reply.id}>
+                          <Link
+                            className="post-comment-avatar"
+                            href={
+                              reply.profile?.username
+                                ? "/u/" +
+                                  encodeURIComponent(reply.profile.username)
+                                : "#"
+                            }
+                            aria-label={
+                              reply.profile?.username
+                                ? "Open @" + reply.profile.username
+                                : "Reply author"
+                            }
+                          >
+                            <AvatarImage
+                              src={
+                                reply.profile
+                                  ? avatarFor(reply.profile)
+                                  : initialsAvatar("User")
+                              }
+                              alt={reply.profile?.display_name || "User"}
+                              size={42}
+                            />
+                          </Link>
+
+                          <div className="post-comment-main">
+                            <div className="post-comment-copy">
+                              <p>
+                                {reply.profile?.username ? (
+                                  <Link
+                                    className="post-comment-username verified-line"
+                                    href={
+                                      "/u/" +
+                                      encodeURIComponent(
+                                        reply.profile.username
+                                      )
+                                    }
+                                  >
+                                    @{reply.profile.username}
+                                    <VerifiedBadge
+                                      verified={reply.profile.verified}
+                                    />
+                                  </Link>
+                                ) : (
+                                  <b>@user</b>
+                                )}
+                                <span>{renderCommentBody(reply.body)}</span>
+                              </p>
+                              <small>
+                                {formatRelativeTime(reply.created_at)}
+                              </small>
+                            </div>
+
+                            <div className="post-comment-tools">
+                              <button
+                                type="button"
+                                className={reply.liked ? "active" : ""}
+                                onClick={() => onCommentLike(reply)}
+                                aria-label={
+                                  reply.liked
+                                    ? "Unlike reply"
+                                    : "Like reply"
+                                }
+                              >
+                                <Icon name="heart" size={12} />
+                                {reply.likeCount ? (
+                                  <span>{reply.likeCount}</span>
+                                ) : null}
+                              </button>
+                              {reply.user_id === currentUserId && (
+                                <button
+                                  type="button"
+                                  className="danger"
+                                  onClick={() => onCommentDelete(reply)}
+                                >
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      {remainingReplies > 0 && (
+                        <button
+                          type="button"
+                          className="comments-load-more replies"
+                          onClick={() =>
+                            setVisibleReplyCounts((current) => ({
+                              ...current,
+                              [item.id]:
+                                (current[item.id] || 3) + 3,
+                            }))
+                          }
+                        >
+                          View {Math.min(3, remainingReplies)} more repl
+                          {Math.min(3, remainingReplies) === 1 ? "y" : "ies"}
                         </button>
                       )}
                     </div>
-                  </div>
-                  {post.comments
-                    .filter((reply) => reply.parent_id === item.id)
-                    .map((reply) => (
-                      <div className="post-comment-reply" key={reply.id}>
-                        <div className="post-comment-copy">
-                          <b className="verified-line">
-                            @{reply.profile?.username || "user"}
-                            <VerifiedBadge verified={reply.profile?.verified} />
-                          </b>
-                          <span>{reply.body}</span>
-                        </div>
-                        <div className="post-comment-tools">
-                          <button
-                            type="button"
-                            className={reply.liked ? "active" : ""}
-                            onClick={() => onCommentLike(reply)}
-                          >
-                            <Icon name="heart" size={12} />
-                            {reply.likeCount ? <span>{reply.likeCount}</span> : null}
-                          </button>
-                          {reply.user_id === currentUserId && (
-                            <button
-                              type="button"
-                              className="danger"
-                              onClick={() => onCommentDelete(reply)}
-                            >
-                              Delete
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                  )}
                 </div>
-              ))}
+              );
+            })}
           </div>
         )}
 
         {replyTo && (
           <div className="comment-replying">
-            Replying to @{replyTo.profile?.username || "user"}
-            <button type="button" onClick={() => setReplyTo(null)}>×</button>
+            <span>
+              Replying to{" "}
+              <b>@{replyTo.profile?.username || "user"}</b>
+            </span>
+            <button
+              type="button"
+              onClick={() => setReplyTo(null)}
+              aria-label="Cancel reply"
+            >
+              <Icon name="close" size={13} />
+            </button>
+          </div>
+        )}
+
+        {mentionSuggestions.length > 0 && (
+          <div
+            className="comment-mention-suggestions"
+            aria-label="Mention suggestions"
+          >
+            {mentionSuggestions.map((profile) => (
+              <button
+                type="button"
+                key={profile.id}
+                onClick={() => {
+                  setComment((current) =>
+                    current.replace(
+                      /(^|\s)@[a-zA-Z0-9._-]*$/,
+                      "$1@" + profile.username + " "
+                    )
+                  );
+                  window.requestAnimationFrame(() =>
+                    commentInputRef.current?.focus()
+                  );
+                }}
+              >
+                <AvatarImage
+                  src={avatarFor(profile)}
+                  alt={profile.display_name}
+                  size={38}
+                />
+                <span>
+                  <b>@{profile.username}</b>
+                  <small>{profile.display_name}</small>
+                </span>
+              </button>
+            ))}
           </div>
         )}
 
@@ -446,10 +712,13 @@ export default function PostCard({
           className="comment-input"
         >
           <input
+            ref={commentInputRef}
             value={comment}
-            onChange={(event) => setComment(event.target.value.slice(0, 1000))}
+            onChange={(event) =>
+              setComment(event.target.value.slice(0, 1000))
+            }
             placeholder={replyTo ? "Write a reply…" : "Add a comment…"}
-            aria-label="Add a comment"
+            aria-label={replyTo ? "Write a reply" : "Add a comment"}
           />
           <button disabled={!comment.trim()}>Post</button>
         </form>
