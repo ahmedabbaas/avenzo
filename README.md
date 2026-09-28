@@ -142,3 +142,35 @@ Before considering a release complete:
 <!-- production-redeploy: self-badge-realtime-reels-v2 -->
 
 <!-- production-redeploy: strict-media-badge-liveviews-v3 -->
+
+
+## Android APK
+
+The Android app is a Capacitor shell for the production AVENZO web experience.
+
+Requirements:
+
+- JDK 21
+- Android SDK Platform 36
+- Android build tools installed
+
+Useful commands:
+
+```bash
+npm run android:sync
+npm run android:open
+```
+
+On Windows, create a debug APK with:
+
+```bash
+npm run android:debug
+```
+
+The generated debug APK is written to:
+
+```text
+android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+Do not pad the APK with unused assets. Package size should grow only when real native features, libraries or bundled media require it.
