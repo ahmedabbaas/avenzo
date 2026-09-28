@@ -5,6 +5,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import BrandLogo from "../../../components/brand-logo";
@@ -73,6 +74,7 @@ export default function ConnectionsList({
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
   const [retryNonce, setRetryNonce] = useState(0);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const ownList = target.id === viewerId;
   const title = kind === "followers" ? "Followers" : "Following";
   const requestKey =
@@ -147,22 +149,47 @@ export default function ConnectionsList({
     };
   }, [fetchPage, requestKey]);
 
-  async function loadMore() {
-    if (loadingMore || items.length >= total) return;
+  const loadMore = useCallback(async () => {
+    if (loadingMore || loading || items.length >= total) return;
 
     setLoadingMore(true);
     setError("");
 
     try {
       const result = await fetchPage(items.length);
-      setItems((current) => [...current, ...result.items]);
+      setItems((current) => {
+        const known = new Set(current.map((entry) => entry.profile.id));
+        return [
+          ...current,
+          ...result.items.filter((entry) => !known.has(entry.profile.id)),
+        ];
+      });
       if (result.total) setTotal(result.total);
     } catch {
       setError("Could not load more people. Please try again.");
     } finally {
       setLoadingMore(false);
     }
-  }
+  }, [fetchPage, items.length, loading, loadingMore, total]);
+
+  useEffect(() => {
+    const node = loadMoreRef.current;
+    if (!node || loading || loadingMore || error || items.length >= total) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          void loadMore();
+        }
+      },
+      { rootMargin: "360px 0px" }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [error, items.length, loadMore, loading, loadingMore, total]);
 
   async function toggleFollow(item: ConnectionItem) {
     if (busyId) return;
@@ -435,14 +462,17 @@ export default function ConnectionsList({
             </div>
 
             {items.length < total && (
-              <div className="connections-load-more">
+              <div className="connections-load-more" ref={loadMoreRef}>
+                <span className="connections-auto-load" aria-live="polite">
+                  {loadingMore ? "Loading more people…" : "Scroll for more"}
+                </span>
                 <button
                   type="button"
                   className="btn secondary"
                   disabled={loadingMore}
                   onClick={() => void loadMore()}
                 >
-                  {loadingMore ? "Loading..." : "Load more"}
+                  {loadingMore ? "Loading…" : "Load more"}
                 </button>
               </div>
             )}

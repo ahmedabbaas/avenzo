@@ -16,20 +16,15 @@ import { createClient } from "../lib/supabase/client";
 import { fetchInbox } from "../features/messages/data";
 import {
   createPostComment,
-  createReelComment,
   publishContent,
   removePost,
   removePostComment,
-  removeReel,
   reportPost,
   setFollowing,
   setPostCommentLike,
   setPostLike,
   setPostSaved,
   setPostReposted,
-  setReelLike,
-  setReelReposted,
-  setReelSaved,
   updatePostCaption,
 } from "../features/social/data/mutations";
 import {
@@ -47,12 +42,12 @@ import {
 import ActivityPanel from "../features/social/components/activity-panel";
 import AvatarImage from "../features/social/components/avatar-image";
 import EmptyState from "../features/social/components/empty-state";
+import ExploreMediaGrid from "../features/social/components/explore-media-grid";
 import ProfileView from "../features/social/components/profile-view";
 import FeedSkeleton from "../features/social/components/feed-skeleton";
 import Icon, { type IconName } from "../features/social/components/icon";
 import PersonCard from "../features/social/components/person-card";
 import PostCard from "../features/social/components/post-card";
-import ReelCard from "../features/social/components/reel-card";
 import PageTitle from "../features/social/components/page-title";
 import CreateContentModal from "../features/social/components/create-content-modal";
 import StoryViewer from "../features/social/components/story-viewer";
@@ -115,7 +110,6 @@ export default function HomeClient({
   const [reels, setReels] = useState<Reel[]>([]);
   const [profileReels, setProfileReels] = useState<Reel[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
-  const [savedReels, setSavedReels] = useState<string[]>([]);
   const [storyViewer, setStoryViewer] = useState<Story | null>(null);
   const [createMode, setCreateMode] = useState<"post" | "reel" | "story">(
     initialCreateMode || "post"
@@ -149,6 +143,8 @@ export default function HomeClient({
   const [unreadMessages, setUnreadMessages] = useState(0);
   const toastTimerRef = useRef<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exploreLoading, setExploreLoading] = useState(true);
+  const [exploreError, setExploreError] = useState("");
   const [unreadActivity, setUnreadActivity] = useState(0);
   const [stats, setStats] = useState<ProfileStats>({
     posts: 0,
@@ -298,7 +294,19 @@ export default function HomeClient({
   async function loadReels() {
     const result = await fetchReels(supabase, initialProfile.id);
     setReels(result.reels);
-    setSavedReels(result.savedReels);
+  }
+
+  async function loadExploreData(showLoading = true) {
+    if (showLoading) setExploreLoading(true);
+    setExploreError("");
+
+    try {
+      await Promise.all([loadPeople(), loadExplorePosts(), loadReels()]);
+    } catch {
+      setExploreError("Could not load Explore right now. Please try again.");
+    } finally {
+      if (showLoading) setExploreLoading(false);
+    }
   }
 
   async function loadStories() {
@@ -335,11 +343,9 @@ export default function HomeClient({
     try {
       await Promise.all([
         loadProfile(),
-        loadPeople(),
         loadPosts(),
         loadProfileContent(),
-        loadExplorePosts(),
-        loadReels(),
+        loadExploreData(),
         loadStories(),
         loadSavedPosts(),
         loadUnreadMessages(),
@@ -778,90 +784,6 @@ export default function HomeClient({
     }
   }
 
-  async function toggleReelLike(reel: Reel) {
-    setReels((current) =>
-      current.map((item) =>
-        item.id === reel.id
-          ? {
-              ...item,
-              liked: !item.liked,
-              likeCount: Math.max(
-                0,
-                item.likeCount + (item.liked ? -1 : 1)
-              ),
-            }
-          : item
-      )
-    );
-
-    try {
-      await setReelLike(
-        supabase,
-        initialProfile.id,
-        reel.id,
-        reel.liked
-      );
-    } catch {
-      showToast("Could not update reel like.");
-      await Promise.all([loadReels(), loadProfileContent()]);
-    }
-  }
-
-  async function toggleReelSave(reel: Reel) {
-    const isSaved = savedReels.includes(reel.id);
-
-    setSavedReels((current) =>
-      isSaved
-        ? current.filter((id) => id !== reel.id)
-        : [...current, reel.id]
-    );
-
-    try {
-      await setReelSaved(
-        supabase,
-        initialProfile.id,
-        reel.id,
-        isSaved
-      );
-    } catch {
-      showToast("Could not update saved reels.");
-      await loadReels();
-    }
-  }
-
-  async function addReelComment(reel: Reel, body: string) {
-    const clean = body.trim();
-    if (!clean) return;
-
-    try {
-      await createReelComment(
-        supabase,
-        initialProfile.id,
-        reel.id,
-        clean
-      );
-      await loadReels();
-    } catch {
-      showToast("Could not post reel comment.");
-    }
-  }
-
-  async function deleteReel(reel: Reel) {
-    if (reel.author_id !== initialProfile.id) return;
-    if (
-      runtimePreferences.confirm_delete_content &&
-      !window.confirm("Delete this reel? This cannot be undone.")
-    ) return;
-
-    try {
-      await removeReel(supabase, initialProfile.id, reel);
-      showToast("Reel deleted.");
-      await Promise.all([loadReels(), loadProfileContent()]);
-    } catch {
-      showToast("Could not delete reel.");
-    }
-  }
-
   async function togglePostRepost(post: Post) {
     const wasReposted = Boolean(post.reposted);
 
@@ -888,40 +810,9 @@ export default function HomeClient({
     }
   }
 
-  async function toggleReelRepost(reel: Reel) {
-    const wasReposted = Boolean(reel.reposted);
-
-    const update = (items: Reel[]) =>
-      items.map((item) =>
-        item.id === reel.id ? { ...item, reposted: !wasReposted } : item
-      );
-
-    setReels(update);
-    setProfileReels(update);
-
-    try {
-      await setReelReposted(
-        supabase,
-        initialProfile.id,
-        reel.id,
-        wasReposted
-      );
-      showToast(wasReposted ? "Repost removed." : "Reposted.");
-    } catch {
-      showToast("Could not update repost.");
-      await Promise.all([loadReels(), loadProfileContent()]);
-    }
-  }
-
   async function sharePost(post: Post) {
     router.push(
       "/messages?sharePost=" + encodeURIComponent(post.id)
-    );
-  }
-
-  function shareReel(reel: Reel) {
-    router.push(
-      "/messages?shareReel=" + encodeURIComponent(reel.id)
     );
   }
 
@@ -1379,166 +1270,129 @@ export default function HomeClient({
           )}
 
           {screen === "explore" && (
-            <>
+            <section className="explore-page">
               <PageTitle
                 eyebrow="DISCOVER"
-                title="Explore"
-                text="Real people and real content created inside AVENZO."
+                title="Search & Explore"
+                text="Find real AVENZO users, posts and reels."
               />
 
-              {query && (
+              <label className="explore-search-box">
+                <Icon name="search" size={19} />
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value.slice(0, 120))}
+                  placeholder="Search users, posts or reels"
+                  aria-label="Search users, posts or reels"
+                  autoComplete="off"
+                  inputMode="search"
+                />
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => setQuery("")}
+                    aria-label="Clear search"
+                  >
+                    <Icon name="close" size={16} />
+                  </button>
+                )}
+              </label>
+
+              {query && !exploreLoading && !exploreError && (
                 <div className="search-summary">
                   {searchResultCount} results for <strong>&quot;{query}&quot;</strong>
-                  <button onClick={() => setQuery("")}>Clear</button>
+                  <button type="button" onClick={() => setQuery("")}>Clear</button>
                 </div>
               )}
 
-              <section className="explore-section">
-                <div className="section-inline-head">
-                  <div>
-                    <div className="eyebrow">PEOPLE</div>
-                    <h3>Find people</h3>
-                  </div>
-                </div>
-
-                <div className="people-grid">
-                  {filteredPeople.map((person) => (
-                    <PersonCard
-                      key={person.id}
-                      person={person}
-                      following={followed.includes(person.id)}
-                      requested={requested.includes(person.id)}
-                      onFollow={() => void toggleFollow(person)}
-                      onMessage={() =>
-                        router.push(
-                          "/messages?user=" +
-                            encodeURIComponent(person.username)
-                        )
-                      }
-                    />
-                  ))}
-                </div>
-
-                {!loading && filteredPeople.length === 0 && (
-                  <EmptyState
-                    title={query ? "No people match that search." : "No other accounts yet."}
-                    text={
-                      query
-                        ? "Try another username or display name."
-                        : "Real registered accounts will appear here as AVENZO grows."
-                    }
-                  />
-                )}
-              </section>
-
-              <section className="explore-section">
-                <div className="section-inline-head">
-                  <div>
-                    <div className="eyebrow">REELS</div>
-                    <h3>Community reels</h3>
-                  </div>
-                  <div className="section-actions">
-                    <button
-                      className="btn secondary small"
-                      onClick={() => router.push("/reels")}
-                    >
-                      Open Reels
-                    </button>
-                    <button
-                      className="btn secondary small"
-                      onClick={() => openComposer("reel")}
-                    >
-                      Create Reel
-                    </button>
-                  </div>
-                </div>
-
-                {filteredReels.length === 0 ? (
-                  <EmptyState
-                    title="No reels yet."
-                    text="Reels will appear here only after real users upload videos."
-                    action={() => {
-                      openComposer("reel");
-                    }}
-                    actionLabel="Create Reel"
-                  />
-                ) : (
-                  <div className="reels-grid">
-                    {filteredReels.map((reel) => (
-                      <ReelCard
-                        key={reel.id}
-                        reel={reel}
-                        mediaUrl={mediaUrl(reel.media_path)}
-                        coverUrl={reel.cover_path ? mediaUrl(reel.cover_path) : ""}
-                        saved={savedReels.includes(reel.id)}
-                        own={reel.author_id === initialProfile.id}
-                        onLike={() => void toggleReelLike(reel)}
-                        onSave={() => void toggleReelSave(reel)}
-                        onComment={(body) => void addReelComment(reel, body)}
-                        onShare={() => shareReel(reel)}
-                        onRepost={() => void toggleReelRepost(reel)}
-                        onDelete={() => void deleteReel(reel)}
-                        autoplayVideo={runtimePreferences.media_autoplay_videos}
-                        dataSaving={
-                          runtimePreferences.data_saving_mode ||
-                          runtimePreferences.use_less_mobile_data
-                        }
-                      />
+              {exploreLoading ? (
+                <div className="explore-loading" aria-label="Loading Explore">
+                  <div className="explore-user-skeletons">
+                    {Array.from({ length: 4 }, (_, index) => (
+                      <span key={index} />
                     ))}
                   </div>
-                )}
-              </section>
-
-              <section className="explore-section">
-                <div className="section-inline-head">
-                  <div>
-                    <div className="eyebrow">POSTS</div>
-                    <h3>Community posts</h3>
+                  <div className="explore-grid-skeleton">
+                    {Array.from({ length: 12 }, (_, index) => (
+                      <span key={index} />
+                    ))}
                   </div>
                 </div>
+              ) : exploreError ? (
+                <div className="explore-error" role="alert">
+                  <strong>Explore could not load.</strong>
+                  <span>{exploreError}</span>
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    onClick={() => void loadExploreData()}
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : query && searchResultCount === 0 ? (
+                <div className="explore-no-results">
+                  <Icon name="search" size={28} />
+                  <strong>No results for &quot;{query}&quot;</strong>
+                  <span>Try a username, display name, caption, hashtag or reel title.</span>
+                </div>
+              ) : (
+                <>
+                  <section className="explore-section explore-people-section">
+                    <div className="section-inline-head">
+                      <div>
+                        <div className="eyebrow">PEOPLE</div>
+                        <h3>{query ? "Users" : "People to discover"}</h3>
+                      </div>
+                    </div>
 
-                {filteredExplorePosts.length === 0 ? (
-                  <EmptyState
-                    title="No posts to explore yet."
-                    text="Explore fills up naturally as real people publish posts."
-                  />
-                ) : (
-                  filteredExplorePosts.map((post) => (
-                    <PostCard
-                      key={"explore-" + post.id}
-                      post={post}
-                      saved={saved.includes(post.id)}
-                      mediaUrl={post.media_path ? mediaUrl(post.media_path) : ""}
-                      onLike={() => void toggleLike(post)}
-                      onSave={() => void toggleSave(post)}
-                      onShare={() => void sharePost(post)}
-                      onRepost={() => void togglePostRepost(post)}
-                      onComment={(body, parentId) =>
-                        void addComment(post, body, parentId || null)
-                      }
-                      onCommentLike={(comment) =>
-                        void toggleCommentLike(post, comment)
-                      }
-                      onCommentDelete={(comment) =>
-                        void deleteComment(post, comment)
-                      }
-                      onEditCaption={(nextCaption) =>
-                        void editPostCaption(post, nextCaption)
-                      }
-                      onReport={() => void submitPostReport(post)}
-                      currentUserId={initialProfile.id}
-                      own={post.author_id === initialProfile.id}
-                      onDelete={() => void deletePost(post)}
-                      autoplayVideo={runtimePreferences.feed_autoplay_videos}
-                      dataSaving={
-                        runtimePreferences.data_saving_mode ||
-                        runtimePreferences.use_less_mobile_data
-                      }
-                    />
-                  ))
-                )}
-              </section>
-            </>
+                    {filteredPeople.length ? (
+                      <div className="people-grid explore-people-grid">
+                        {filteredPeople.map((person) => (
+                          <PersonCard
+                            key={person.id}
+                            person={person}
+                            following={followed.includes(person.id)}
+                            requested={requested.includes(person.id)}
+                            onFollow={() => void toggleFollow(person)}
+                            onMessage={() =>
+                              router.push(
+                                "/messages?user=" + encodeURIComponent(person.username)
+                              )
+                            }
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="explore-inline-empty">
+                        No matching users.
+                      </div>
+                    )}
+                  </section>
+
+                  <section className="explore-section explore-media-section">
+                    <div className="section-inline-head">
+                      <div>
+                        <div className="eyebrow">MEDIA</div>
+                        <h3>{query ? "Posts & reels" : "Explore"}</h3>
+                      </div>
+                    </div>
+
+                    {filteredExplorePosts.length || filteredReels.length ? (
+                      <ExploreMediaGrid
+                        posts={filteredExplorePosts}
+                        reels={filteredReels}
+                        mediaUrl={mediaUrl}
+                      />
+                    ) : (
+                      <div className="explore-inline-empty">
+                        No matching posts or reels.
+                      </div>
+                    )}
+                  </section>
+                </>
+              )}
+            </section>
           )}
 
           {screen === "saved" && (
