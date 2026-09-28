@@ -39,11 +39,22 @@ export function isValidDisplayName(value: string) {
   return clean.length > 0 && clean.length <= DISPLAY_NAME_MAX_LENGTH;
 }
 
+export function passwordValidationError(value: string) {
+  if (!value) return "Enter a password.";
+  if (value.length < PASSWORD_MIN_LENGTH) {
+    return "Use at least 8 characters.";
+  }
+  if (value.length > PASSWORD_MAX_LENGTH) {
+    return "Password is too long.";
+  }
+  if (!/[A-Za-z]/.test(value) || !/\d/.test(value)) {
+    return "Use at least one letter and one number.";
+  }
+  return "";
+}
+
 export function isValidPassword(value: string) {
-  return (
-    value.length >= PASSWORD_MIN_LENGTH &&
-    value.length <= PASSWORD_MAX_LENGTH
-  );
+  return !passwordValidationError(value);
 }
 
 export function isValidAvatar(file: File | null) {

@@ -17,6 +17,7 @@ import {
   isValidDisplayName,
   isValidEmail,
   isValidPassword,
+  passwordValidationError,
   normalizeEmail,
   normalizeUsername,
 } from "../../features/auth/validation";
@@ -36,10 +37,14 @@ export default function SignupPage() {
   const [checking, setChecking] = useState(false);
   const [usernameMessage, setUsernameMessage] = useState("");
   const [formMessage, setFormMessage] = useState("");
+  const [fullNameError, setFullNameError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [avatarError, setAvatarError] = useState("");
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const passwordReady = isValidPassword(password);
   const passwordsMatch =
     confirmPassword.length > 0 && password === confirmPassword;
 
@@ -133,48 +138,54 @@ export default function SignupPage() {
     }
 
     if (!file.type.startsWith("image/")) {
-      setFormMessage("Profile picture must be an image.");
+      setAvatarError("Profile picture must be an image.");
       event.target.value = "";
       return;
     }
 
     if (file.size > AVATAR_MAX_BYTES) {
-      setFormMessage("Profile picture must be 5 MB or smaller.");
+      setAvatarError("Profile picture must be 5 MB or smaller.");
       event.target.value = "";
       return;
     }
 
     setAvatar(file);
     setAvatarPreview(URL.createObjectURL(file));
+    setAvatarError("");
     setFormMessage("");
   }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
     setFormMessage("");
+    setFullNameError("");
+    setEmailError("");
+    setPasswordError("");
+    setConfirmPasswordError("");
+    setAvatarError("");
 
     const cleanName = fullName.trim();
     const cleanEmail = normalizeEmail(email);
 
     if (!isValidDisplayName(cleanName)) {
-      setFormMessage("Enter a valid full name.");
+      setFullNameError("Enter your full name.");
       return;
     }
 
     if (!USERNAME_PATTERN.test(username)) {
-      setFormMessage(
-        "Username must be 3–30 characters using letters, numbers, underscores or periods."
+      setUsernameMessage(
+        "Use 3–30 letters, numbers, underscores or periods."
       );
       return;
     }
 
     if (serviceUnavailable) {
-      setFormMessage(SERVICE_MESSAGE);
+      setUsernameMessage(SERVICE_MESSAGE);
       return;
     }
 
     if (available !== true) {
-      setFormMessage(
+      setUsernameMessage(
         available === false
           ? "This username is already taken. Please choose another one."
           : "Wait for username availability to finish checking."
@@ -183,17 +194,17 @@ export default function SignupPage() {
     }
 
     if (!isValidEmail(cleanEmail)) {
-      setFormMessage("Enter your email address.");
+      setEmailError("Enter a valid email address.");
       return;
     }
 
     if (!isValidPassword(password)) {
-      setFormMessage("Password must be at least 8 characters.");
+      setPasswordError(passwordValidationError(password));
       return;
     }
 
     if (password !== confirmPassword) {
-      setFormMessage("Passwords do not match.");
+      setConfirmPasswordError("Passwords do not match.");
       return;
     }
 
@@ -218,14 +229,28 @@ export default function SignupPage() {
 
       if (!response.ok) {
         resetTurnstile();
+        const message = result.error || "Unable to create your account.";
+
         if (response.status === 503) {
           setServiceUnavailable(true);
           setFormMessage(SERVICE_MESSAGE);
+        } else if (result.field === "fullName") {
+          setFullNameError(message);
+        } else if (result.field === "username") {
+          setAvailable(false);
+          setUsernameMessage(message);
+        } else if (result.field === "email") {
+          setEmailError(message);
+        } else if (result.field === "password") {
+          setPasswordError(message);
+        } else if (result.field === "confirmPassword") {
+          setConfirmPasswordError(message);
+        } else if (result.field === "avatar") {
+          setAvatarError(message);
         } else {
-          setFormMessage(result.error || "Unable to create your account.");
+          setFormMessage(message);
         }
 
-        if (response.status === 409) setAvailable(false);
         return;
       }
 
@@ -269,12 +294,22 @@ export default function SignupPage() {
           <input
             id="signup-full-name"
             value={fullName}
-            onChange={(event) => setFullName(event.target.value.slice(0, 80))}
+            onChange={(event) => {
+              setFullName(event.target.value.slice(0, 80));
+              setFullNameError("");
+            }}
             placeholder="Full name"
             autoComplete="name"
             maxLength={DISPLAY_NAME_MAX_LENGTH}
             required
+            aria-invalid={Boolean(fullNameError)}
+            aria-describedby={fullNameError ? "signup-full-name-error" : undefined}
           />
+          {fullNameError && (
+            <p className="auth-field-error" id="signup-full-name-error" role="alert">
+              {fullNameError}
+            </p>
+          )}
 
           <div>
             <label className="auth-label" htmlFor="signup-username">
@@ -307,35 +342,58 @@ export default function SignupPage() {
             id="signup-email"
             type="email"
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            onChange={(event) => {
+              setEmail(event.target.value);
+              setEmailError("");
+              setFormMessage("");
+            }}
             placeholder="Email"
             autoComplete="email"
             required
+            aria-invalid={Boolean(emailError)}
+            aria-describedby={emailError ? "signup-email-error" : undefined}
           />
+          {emailError && (
+            <p className="auth-field-error" id="signup-email-error" role="alert">
+              {emailError}
+            </p>
+          )}
 
           <PasswordField
             id="new-password"
             value={password}
-            onChange={setPassword}
+            onChange={(value) => {
+              setPassword(value);
+              setPasswordError("");
+              setConfirmPasswordError("");
+            }}
             placeholder="Password"
             autoComplete="new-password"
             minLength={8}
             label="Password"
+            error={passwordError}
           />
 
           <PasswordField
             id="confirm-password"
             value={confirmPassword}
-            onChange={setConfirmPassword}
+            onChange={(value) => {
+              setConfirmPassword(value);
+              setConfirmPasswordError("");
+            }}
             placeholder="Confirm password"
             autoComplete="new-password"
             minLength={8}
             label="Confirm password"
+            error={confirmPasswordError}
           />
 
           <div className="password-hints">
-            <span className={passwordReady ? "done" : ""}>
+            <span className={password.length >= 8 ? "done" : ""}>
               <i /> 8+ characters
+            </span>
+            <span className={/[A-Za-z]/.test(password) && /\d/.test(password) ? "done" : ""}>
+              <i /> Letter + number
             </span>
             <span className={passwordsMatch ? "done" : ""}>
               <i /> Passwords match
@@ -348,6 +406,9 @@ export default function SignupPage() {
             </span>
             <input type="file" accept="image/*" onChange={chooseAvatar} />
           </label>
+          {avatarError && (
+            <p className="auth-field-error" role="alert">{avatarError}</p>
+          )}
 
           {avatarPreview && (
             <div className="signup-avatar-row">

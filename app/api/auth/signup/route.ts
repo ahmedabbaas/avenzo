@@ -5,6 +5,7 @@ import {
   isValidDisplayName,
   isValidEmail,
   isValidPassword,
+  passwordValidationError,
   isValidUsername,
   normalizeEmail,
 } from "../../../../features/auth/validation";
@@ -59,32 +60,33 @@ export async function POST(request: Request) {
         : null;
 
     if (!isValidDisplayName(fullName)) {
-      return json({ error: "Enter a valid full name." }, 400);
+      return json({ error: "Enter your full name.", field: "fullName" }, 400);
     }
 
     if (!isValidUsername(username)) {
       return json(
         {
           error:
-            "Username must be 3–30 characters using letters, numbers, underscores or periods.",
+            "Use 3–30 letters, numbers, underscores or periods.",
+          field: "username",
         },
         400
       );
     }
 
     if (!isValidEmail(email)) {
-      return json({ error: "Enter a valid email address." }, 400);
+      return json({ error: "Enter a valid email address.", field: "email" }, 400);
     }
 
     if (!isValidPassword(password)) {
       return json(
-        { error: "Password must be at least 8 characters." },
+        { error: passwordValidationError(password), field: "password" },
         400
       );
     }
 
     if (password !== confirmPassword) {
-      return json({ error: "Passwords do not match." }, 400);
+      return json({ error: "Passwords do not match.", field: "confirmPassword" }, 400);
     }
 
     if (!isValidAvatar(avatar)) {
@@ -92,6 +94,7 @@ export async function POST(request: Request) {
         {
           error:
             "Profile picture must be an image no larger than 5 MB.",
+          field: "avatar",
         },
         400
       );
@@ -137,6 +140,7 @@ export async function POST(request: Request) {
         {
           error:
             "This username is already taken. Please choose another one.",
+          field: "username",
         },
         409
       );
@@ -167,6 +171,7 @@ export async function POST(request: Request) {
           {
             error:
               "This username is already taken. Please choose another one.",
+            field: "username",
           },
           409
         );
@@ -177,12 +182,26 @@ export async function POST(request: Request) {
         message.includes("already exists")
       ) {
         return json(
-          { error: "An account with this email already exists." },
+          { error: "An account with this email already exists.", field: "email" },
           409
         );
       }
 
-      return json({ error: "Unable to create account." }, 400);
+      return json({ error: "Unable to create account.", field: "form" }, 400);
+    }
+
+    if (
+      data.user &&
+      Array.isArray(data.user.identities) &&
+      data.user.identities.length === 0
+    ) {
+      return json(
+        {
+          error: "An account with this email already exists.",
+          field: "email",
+        },
+        409
+      );
     }
 
     let avatarWarning = "";

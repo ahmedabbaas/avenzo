@@ -1169,6 +1169,19 @@ export default function HomeClient({
                   <small>Add story</small>
                 </button>
 
+                {stories.length === 0 && (
+                  <div className="story-empty-inline">
+                    <Icon name="camera" size={19} />
+                    <span>
+                      <b>No active stories</b>
+                      <small>Stories from people you follow will appear here for 24 hours.</small>
+                    </span>
+                    <button type="button" onClick={() => openComposer("story")}>
+                      Create story
+                    </button>
+                  </div>
+                )}
+
                 {stories.map((story) => (
                   <button
                     className={"story " + (story.viewed ? "viewed" : "unseen")}

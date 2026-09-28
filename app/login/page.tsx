@@ -10,12 +10,16 @@ import TurnstileWidget, {
 } from "../_components/turnstile-widget";
 import SiteFooter from "../_components/site-footer";
 import { useRouter } from "next/navigation";
+import { isValidEmail } from "../../features/auth/validation";
 
 export default function LoginPage() {
   const router = useRouter();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
+  const [identifierError, setIdentifierError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [rememberSession, setRememberSession] = useState(true);
   const [busy, setBusy] = useState(false);
   const [mfaRequired, setMfaRequired] = useState(false);
   const [mfaCode, setMfaCode] = useState("");
@@ -32,6 +36,9 @@ export default function LoginPage() {
     }
     if (error === "backend") {
       nextStatus = "Account services are temporarily unavailable.";
+    }
+    if (error === "session") {
+      nextStatus = "Your session expired. Sign in again to continue.";
     }
     if (params.get("registered") === "1") {
       nextStatus = "Account created. Check your email, then sign in.";
@@ -57,16 +64,37 @@ export default function LoginPage() {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    setBusy(true);
     setStatus("");
+    setIdentifierError("");
+    setPasswordError("");
+
+    const cleanIdentifier = identifier.trim();
+
+    if (!cleanIdentifier) {
+      setIdentifierError("Enter your username or email.");
+      return;
+    }
+
+    if (cleanIdentifier.includes("@") && !isValidEmail(cleanIdentifier)) {
+      setIdentifierError("Enter a valid email address.");
+      return;
+    }
+
+    if (!password) {
+      setPasswordError("Enter your password.");
+      return;
+    }
+
+    setBusy(true);
 
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          identifier: identifier.trim(),
+          identifier: cleanIdentifier,
           password,
+          rememberSession,
           turnstileToken: readTurnstileToken(),
         }),
       });
@@ -75,11 +103,18 @@ export default function LoginPage() {
 
       if (!response.ok) {
         resetTurnstile();
-        setStatus(
+        const message =
           response.status === 503
             ? "Account services are temporarily unavailable."
-            : result.error || "Unable to sign in."
-        );
+            : result.error || "Unable to sign in.";
+
+        if (result.field === "identifier") {
+          setIdentifierError(message);
+        } else if (result.field === "password" || result.field === "credentials") {
+          setPasswordError(message);
+        } else {
+          setStatus(message);
+        }
         return;
       }
 
@@ -214,20 +249,36 @@ export default function LoginPage() {
                         <input
                           id="identifier"
                           value={identifier}
-                          onChange={(event) => setIdentifier(event.target.value)}
+                          onChange={(event) => {
+                            setIdentifier(event.target.value);
+                            setIdentifierError("");
+                            setStatus("");
+                          }}
                           placeholder="Username or email"
                           autoComplete="username"
                           spellCheck={false}
                           required
+                          aria-invalid={Boolean(identifierError)}
+                          aria-describedby={identifierError ? "identifier-error" : undefined}
                         />
+                        {identifierError && (
+                          <p className="auth-field-error" id="identifier-error" role="alert">
+                            {identifierError}
+                          </p>
+                        )}
               
                         <PasswordField
                           id="password"
                           label="Password"
                           value={password}
-                          onChange={setPassword}
+                          onChange={(value) => {
+                            setPassword(value);
+                            setPasswordError("");
+                            setStatus("");
+                          }}
                           placeholder="Password"
                           autoComplete="current-password"
+                          error={passwordError}
                         />
               
               
@@ -236,7 +287,15 @@ export default function LoginPage() {
 
           {!mfaRequired && (
             <>
-              <div className="auth-links">
+              <div className="auth-login-options">
+                <label className="auth-remember">
+                  <input
+                    type="checkbox"
+                    checked={rememberSession}
+                    onChange={(event) => setRememberSession(event.target.checked)}
+                  />
+                  <span>Remember session</span>
+                </label>
                 <a href="/forgot-password">Forgot Password?</a>
               </div>
               <TurnstileWidget action="login" />
@@ -282,7 +341,9 @@ export default function LoginPage() {
         </form>
 
         <p className="auth-session-note">
-          Your session stays signed in on this device until you sign out.
+          {rememberSession
+            ? "This device will stay signed in until you sign out or the session expires."
+            : "This sign-in is limited to the current browser session."}
         </p>
 
         <div className="auth-divider">

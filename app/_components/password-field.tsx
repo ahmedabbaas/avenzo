@@ -10,6 +10,7 @@ export default function PasswordField({
   autoComplete,
   minLength,
   label,
+  error = "",
 }: {
   id: string;
   value: string;
@@ -18,6 +19,7 @@ export default function PasswordField({
   autoComplete: string;
   minLength?: number;
   label?: string;
+  error?: string;
 }) {
   const [visible, setVisible] = useState(false);
 
@@ -38,6 +40,8 @@ export default function PasswordField({
           autoComplete={autoComplete}
           minLength={minLength}
           required
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? id + "-error" : undefined}
         />
         <button
           type="button"
@@ -47,6 +51,11 @@ export default function PasswordField({
           {visible ? "Hide" : "Show"}
         </button>
       </div>
+      {error && (
+        <p className="auth-field-error" id={id + "-error"} role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

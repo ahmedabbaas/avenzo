@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import EmptyState from "./empty-state";
-import FeedSkeleton from "./feed-skeleton";
 import PageTitle from "./page-title";
 import {
   avatarFor,
@@ -17,6 +16,7 @@ import AvatarImage from "./avatar-image";
 import UserMediaImage from "./user-media-image";
 import VerifiedBadge from "./verified-badge";
 import Icon from "./icon";
+import { NotificationSkeleton } from "./loading-skeletons";
 
 type ActivityEntity = {
   id: string;
@@ -344,7 +344,7 @@ export default function ActivityPanel({
       )}
 
       {loading ? (
-        <FeedSkeleton />
+        <NotificationSkeleton />
       ) : loadError ? (
         <div className="activity-error" role="alert">
           <Icon name="activity" size={28} />

@@ -17,6 +17,7 @@ import { fetchReels } from "../data/queries";
 import type { Profile, Reel } from "../types";
 import AvatarImage from "./avatar-image";
 import EmptyState from "./empty-state";
+import { ReelsSkeleton } from "./loading-skeletons";
 import Icon from "./icon";
 import VerifiedBadge from "./verified-badge";
 import { avatarFor, formatRelativeTime } from "../lib/profile";
@@ -291,16 +292,7 @@ export default function ReelsPanel({
   }
 
   if (loading) {
-    return (
-      <main className="reels-page">
-        <header className="reels-topbar">
-          <Link href="/home" className="messages-brand">
-            <BrandLogo size={32} /><b>AVENZO</b>
-          </Link>
-        </header>
-        <div className="reels-loading">Loading reels…</div>
-      </main>
-    );
+    return <ReelsSkeleton />;
   }
 
   return (

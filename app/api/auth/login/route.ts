@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { logServerError } from "../../../../lib/observability/server";
 import {
   consumeRateLimit,
@@ -26,6 +27,7 @@ export async function POST(request: Request) {
     const identifier = String(body.identifier || "").trim().toLowerCase();
     const password = String(body.password || "");
     const turnstileToken = String(body.turnstileToken || "");
+    const rememberSession = body.rememberSession !== false;
 
     if (
       !identifier ||
@@ -34,7 +36,10 @@ export async function POST(request: Request) {
       password.length > 1024
     ) {
       return json(
-        { error: "Username/email and password are required." },
+        {
+          error: "Enter your username/email and password.",
+          field: !identifier ? "identifier" : "password",
+        },
         400
       );
     }
@@ -85,9 +90,28 @@ export async function POST(request: Request) {
 
     if (!response.ok || !result.access_token || !result.refresh_token) {
       return json(
-        { error: result.error || "Invalid username/email or password." },
+        {
+          error:
+            response.status === 401
+              ? "The username/email or password is incorrect."
+              : result.error || "Account services are temporarily unavailable.",
+          field: response.status === 401 ? "credentials" : "form",
+        },
         response.status === 401 ? 401 : 503
       );
+    }
+
+    const cookieStore = await cookies();
+
+    if (rememberSession) {
+      cookieStore.delete("avenzo-session-scope");
+    } else {
+      cookieStore.set("avenzo-session-scope", "session", {
+        path: "/",
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24 * 30,
+      });
     }
 
     const { error } = await supabase.auth.setSession({
@@ -96,7 +120,10 @@ export async function POST(request: Request) {
     });
 
     if (error) {
-      return json({ error: "Unable to start your session." }, 503);
+      return json(
+        { error: "Your session could not be started. Please try again.", field: "form" },
+        503
+      );
     }
 
     await supabase

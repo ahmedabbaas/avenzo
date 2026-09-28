@@ -28,6 +28,12 @@ export async function updateSession(request: NextRequest) {
     pathname === "/signup" ||
     pathname === "/forgot-password";
 
+  const sessionOnly =
+    request.cookies.get("avenzo-session-scope")?.value === "session";
+  const hadAuthCookie = request.cookies
+    .getAll()
+    .some((cookie) => cookie.name.startsWith("sb-"));
+
   let response = NextResponse.next({
     request: { headers: requestHeaders },
   });
@@ -44,7 +50,17 @@ export async function updateSession(request: NextRequest) {
         response = NextResponse.next({
           request: { headers: requestHeaders },
         });
-        cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+        cookiesToSet.forEach(({ name, value, options }) => {
+          if (sessionOnly && name.startsWith("sb-")) {
+            const sessionOptions = { ...(options || {}) };
+            delete sessionOptions.maxAge;
+            delete sessionOptions.expires;
+            response.cookies.set(name, value, sessionOptions);
+            return;
+          }
+
+          response.cookies.set(name, value, options);
+        });
       },
     },
   });
@@ -62,7 +78,11 @@ export async function updateSession(request: NextRequest) {
   if ((!user || !user.email_confirmed_at) && !publicPath) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/login";
-    redirectUrl.search = user ? "error=verify" : "";
+    redirectUrl.search = user
+      ? "error=verify"
+      : hadAuthCookie
+        ? "error=session"
+        : "";
     const redirectResponse = NextResponse.redirect(redirectUrl);
     redirectResponse.headers.set("x-request-id", requestId);
     return redirectResponse;

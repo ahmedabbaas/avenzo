@@ -392,6 +392,11 @@ export default function ConnectionsList({
                   ? "Connections will appear here as your AVENZO network grows."
                   : "There is nothing to show here yet."}
             </p>
+            {!debouncedSearch && ownList && (
+              <Link className="btn small" href="/home?screen=explore">
+                Explore people
+              </Link>
+            )}
           </div>
         ) : (
           <>

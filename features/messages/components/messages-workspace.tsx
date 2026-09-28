@@ -13,6 +13,7 @@ import Link from "next/link";
 import { createClient } from "../../../lib/supabase/client";
 import AvatarImage from "../../social/components/avatar-image";
 import VerifiedBadge from "../../social/components/verified-badge";
+import { MessagesSkeleton } from "../../social/components/loading-skeletons";
 import UserMediaImage from "../../social/components/user-media-image";
 import Icon from "../../social/components/icon";
 import { avatarFor, formatRelativeTime } from "../../social/lib/profile";
@@ -1564,7 +1565,7 @@ export default function MessagesWorkspace({
 
         <div className="dm-conversation-list">
           {loading ? (
-            <p className="dm-list-empty">Loading conversations…</p>
+            <MessagesSkeleton />
           ) : loadError ? (
             <div className="dm-empty-state dm-network-error" role="alert">
               <Icon name="messages" size={28} />

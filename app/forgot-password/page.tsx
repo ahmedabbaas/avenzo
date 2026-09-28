@@ -7,24 +7,39 @@ import TurnstileWidget, {
   resetTurnstile,
 } from "../_components/turnstile-widget";
 import SiteFooter from "../_components/site-footer";
+import { isValidEmail, normalizeEmail } from "../../features/auth/validation";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    setBusy(true);
     setStatus("");
+    setEmailError("");
+    const cleanEmail = normalizeEmail(email);
+
+    if (!cleanEmail) {
+      setEmailError("Enter your email address.");
+      return;
+    }
+
+    if (!isValidEmail(cleanEmail)) {
+      setEmailError("Enter a valid email address.");
+      return;
+    }
+
+    setBusy(true);
 
     try {
       const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: email.trim().toLowerCase(),
+          email: cleanEmail,
           turnstileToken: readTurnstileToken(),
         }),
       });
@@ -76,11 +91,22 @@ export default function ForgotPasswordPage() {
             id="recovery-email"
             type="email"
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            onChange={(event) => {
+              setEmail(event.target.value);
+              setEmailError("");
+              setStatus("");
+            }}
             placeholder="Email address"
             autoComplete="email"
             required
+            aria-invalid={Boolean(emailError)}
+            aria-describedby={emailError ? "recovery-email-error" : undefined}
           />
+          {emailError && (
+            <p className="auth-field-error" id="recovery-email-error" role="alert">
+              {emailError}
+            </p>
+          )}
 
           <TurnstileWidget action="password_reset" />
 

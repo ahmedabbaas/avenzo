@@ -6,25 +6,30 @@ import PasswordField from "../_components/password-field";
 import { createClient } from "../../lib/supabase/client";
 import SiteFooter from "../_components/site-footer";
 import { useRouter } from "next/navigation";
+import { isValidPassword, passwordValidationError } from "../../features/auth/validation";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [status, setStatus] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
     setStatus("");
+    setPasswordError("");
+    setConfirmPasswordError("");
 
-    if (password.length < 8) {
-      setStatus("Password must be at least 8 characters.");
+    if (!isValidPassword(password)) {
+      setPasswordError(passwordValidationError(password));
       return;
     }
 
     if (password !== confirmPassword) {
-      setStatus("Passwords do not match.");
+      setConfirmPasswordError("Passwords do not match.");
       return;
     }
 
@@ -35,7 +40,14 @@ export default function ResetPasswordPage() {
       const { error } = await supabase.auth.updateUser({ password });
 
       if (error) {
-        setStatus(error.message);
+        const message = error.message.toLowerCase();
+        setStatus(
+          message.includes("expired") ||
+          message.includes("session") ||
+          message.includes("token")
+            ? "This reset link is invalid or expired. Request a new reset link."
+            : "Your password could not be updated. Please try again."
+        );
         return;
       }
 
@@ -67,26 +79,40 @@ export default function ResetPasswordPage() {
           <PasswordField
             id="new-password"
             value={password}
-            onChange={setPassword}
+            onChange={(value) => {
+              setPassword(value);
+              setPasswordError("");
+              setStatus("");
+            }}
             placeholder="New password"
             autoComplete="new-password"
             minLength={8}
             label="New password"
+            error={passwordError}
           />
 
           <PasswordField
             id="confirm-password"
             value={confirmPassword}
-            onChange={setConfirmPassword}
+            onChange={(value) => {
+              setConfirmPassword(value);
+              setConfirmPasswordError("");
+            }}
             placeholder="Confirm new password"
             autoComplete="new-password"
             minLength={8}
             label="Confirm new password"
+            error={confirmPasswordError}
           />
 
           {status && (
             <div className="auth-message" role="status">
               {status}
+              {status.includes("reset link") && (
+                <a className="auth-inline-action" href="/forgot-password">
+                  Request a new link
+                </a>
+              )}
             </div>
           )}
 

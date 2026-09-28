@@ -370,21 +370,25 @@ export default function SavedCollectionsPanel({
       )}
 
       {loading ? (
-        <div className="saved-collections-empty">
-          <b>Loading saved content…</b>
+        <div className="saved-grid-skeleton" aria-label="Loading saved posts">
+          {Array.from({ length: 9 }, (_, index) => <i key={index} />)}
         </div>
       ) : visibleEntries.length === 0 ? (
-        <div className="saved-collections-empty">
+        <div className="saved-collections-empty saved-empty-designed">
+          <span className="empty-mark">A</span>
           <b>
             {activeCollection
               ? "This collection is empty."
-              : "Nothing saved yet."}
+              : "No saved posts yet."}
           </b>
           <p>
             {activeCollection
               ? "Add one of your saved posts or Reels to this collection."
-              : "Save real posts and Reels to keep them here privately."}
+              : "Save posts and Reels you want to find again. They stay private to you."}
           </p>
+          <Link className="btn small" href="/home?screen=explore">
+            Explore content
+          </Link>
         </div>
       ) : (
         <div className="saved-content-grid">

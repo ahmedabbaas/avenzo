@@ -12,9 +12,20 @@ export async function createClient() {
       },
       setAll(cookiesToSet) {
         try {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          );
+          const sessionOnly =
+            cookieStore.get("avenzo-session-scope")?.value === "session";
+
+          cookiesToSet.forEach(({ name, value, options }) => {
+            if (sessionOnly && name.startsWith("sb-")) {
+              const sessionOptions = { ...(options || {}) };
+              delete sessionOptions.maxAge;
+              delete sessionOptions.expires;
+              cookieStore.set(name, value, sessionOptions);
+              return;
+            }
+
+            cookieStore.set(name, value, options);
+          });
         } catch {
           // Server Components cannot always write cookies. The proxy refreshes them.
         }
