@@ -12,6 +12,7 @@ export type Profile = {
   display_name: string;
   bio: string;
   avatar_url: string | null;
+  website?: string | null;
   verified?: boolean;
   is_admin?: boolean;
   created_at?: string;

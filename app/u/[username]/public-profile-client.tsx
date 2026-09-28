@@ -1,16 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import BrandLogo from "../../../components/brand-logo";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
 import AvatarImage from "../../../features/social/components/avatar-image";
 import UserMediaImage from "../../../features/social/components/user-media-image";
-import { initialsAvatar } from "../../../features/social/lib/profile";
+import { formatProfileStat, initialsAvatar, normalizeProfileWebsite } from "../../../features/social/lib/profile";
 import VerifiedBadge from "../../../features/social/components/verified-badge";
+import Icon from "../../../features/social/components/icon";
 import ProfileHighlightsRow from "../../../features/social/components/profile-highlights-row";
-import RepostsGrid from "../../../features/social/components/reposts-grid";
 import TaggedPostsGrid from "../../../features/social/components/tagged-posts-grid";
 
 type PublicProfile = {
@@ -19,6 +18,7 @@ type PublicProfile = {
   display_name: string;
   bio: string;
   avatar_url: string | null;
+  website?: string | null;
   verified?: boolean;
   created_at?: string;
 };
@@ -85,7 +85,7 @@ export default function PublicProfileClient({
   const following = followState === "following";
   const requested = followState === "requested";
   const [contentTab, setContentTab] =
-    useState<"posts" | "reels" | "reposts" | "tagged">(
+    useState<"posts" | "reels" | "tagged">(
     reels.length > 0 && posts.length === 0 ? "reels" : "posts"
   );
   const [reelItems, setReelItems] = useState(reels);
@@ -248,19 +248,41 @@ export default function PublicProfileClient({
 
   const avatar =
     profile.avatar_url || initialsAvatar(profile.display_name);
-  const mediaPosts = posts.filter((post) => post.media_path);
+  const website = normalizeProfileWebsite(profile.website);
 
   return (
     <main className="public-profile-shell">
-      <header className="public-profile-top">
-        <Link className="public-brand" href="/home">
-          <BrandLogo size={34} />
-          <span>AVENZO</span>
-        </Link>
+      <header className="public-profile-top public-profile-route-top">
+        <button
+          type="button"
+          className="public-profile-back"
+          onClick={() => {
+            if (window.history.length > 1) router.back();
+            else router.push("/home?screen=explore");
+          }}
+          aria-label="Back"
+        >
+          <Icon name="back" size={22} />
+        </button>
 
-        <Link className="btn secondary small" href="/home">
-          Back to feed
-        </Link>
+        <div className="public-profile-top-identity">
+          <strong>@{profile.username}</strong>
+          <small>Profile</small>
+        </div>
+
+        <details className="profile-safety-menu public-profile-top-menu">
+          <summary aria-label="More profile actions">
+            <Icon name="more" size={22} />
+          </summary>
+          <div>
+            <button type="button" onClick={() => setShowReport(true)}>
+              Report account
+            </button>
+            <button type="button" className="danger" onClick={blockUser}>
+              Block @{profile.username}
+            </button>
+          </div>
+        </details>
       </header>
 
       <section className="public-profile-wrap">
@@ -272,9 +294,20 @@ export default function PublicProfileClient({
             <h1>{profile.display_name}</h1>
             <p>{profile.bio || "New to AVENZO."}</p>
 
+            {website && (
+              <a
+                className="public-profile-website"
+                href={website.href}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+              >
+                {website.label}
+              </a>
+            )}
+
             <div className="public-profile-stats">
               <span>
-                <b>{stats.posts}</b>
+                <b>{formatProfileStat(stats.posts)}</b>
                 posts
               </span>
               <Link
@@ -283,7 +316,7 @@ export default function PublicProfileClient({
                   encodeURIComponent(profile.username)
                 }
               >
-                <b>{stats.followers}</b>
+                <b>{formatProfileStat(stats.followers)}</b>
                 followers
               </Link>
               <Link
@@ -292,7 +325,7 @@ export default function PublicProfileClient({
                   encodeURIComponent(profile.username)
                 }
               >
-                <b>{stats.following}</b>
+                <b>{formatProfileStat(stats.following)}</b>
                 following
               </Link>
             </div>
@@ -316,34 +349,7 @@ export default function PublicProfileClient({
                 Message
               </Link>
 
-              <Link
-                className="btn secondary"
-                href={
-                  "/messages?shareProfile=" +
-                  encodeURIComponent(profile.id)
-                }
-              >
-                Share Profile
-              </Link>
 
-              <details className="profile-safety-menu">
-                <summary aria-label="More profile actions">•••</summary>
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => setShowReport(true)}
-                  >
-                    Report account
-                  </button>
-                  <button
-                    type="button"
-                    className="danger"
-                    onClick={blockUser}
-                  >
-                    Block @{profile.username}
-                  </button>
-                </div>
-              </details>
             </div>
 
             {notice && (
@@ -382,12 +388,6 @@ export default function PublicProfileClient({
             Reels <span>{reelItems.length}</span>
           </button>
           <button
-            className={contentTab === "reposts" ? "active" : ""}
-            onClick={() => setContentTab("reposts")}
-          >
-            Reposts
-          </button>
-          <button
             className={contentTab === "tagged" ? "active" : ""}
             onClick={() => setContentTab("tagged")}
           >
@@ -404,25 +404,43 @@ export default function PublicProfileClient({
               </div>
             </div>
 
-            {mediaPosts.length > 0 ? (
+            {posts.length > 0 ? (
               <div className="public-profile-grid">
-                {mediaPosts.map((post) =>
-                  post.media_type === "video" ? (
-                    <video
+                {posts.map((post) =>
+                  !post.media_path ? (
+                    <Link
                       key={post.id}
-                      src={post.media_url}
-                      controls
-                      muted
-                      preload="metadata"
-                    />
+                      className="public-text-post"
+                      href={"/p/" + encodeURIComponent(post.id)}
+                    >
+                      <span>{post.caption || "Text post"}</span>
+                    </Link>
+                  ) : post.media_type === "video" ? (
+                    <Link
+                      key={post.id}
+                      className="public-profile-media-tile"
+                      href={"/p/" + encodeURIComponent(post.id)}
+                    >
+                      <video
+                        src={post.media_url}
+                        muted
+                        playsInline
+                        preload="metadata"
+                      />
+                    </Link>
                   ) : (
-                    <UserMediaImage
+                    <Link
                       key={post.id}
-                      src={post.media_url}
-                      alt={post.caption || "AVENZO post"}
-                      width={post.media_width}
-                      height={post.media_height}
-                    />
+                      className="public-profile-media-tile"
+                      href={"/p/" + encodeURIComponent(post.id)}
+                    >
+                      <UserMediaImage
+                        src={post.media_url}
+                        alt={post.caption || "AVENZO post"}
+                        width={post.media_width}
+                        height={post.media_height}
+                      />
+                    </Link>
                   )
                 )}
               </div>
@@ -452,7 +470,10 @@ export default function PublicProfileClient({
                     href={"/reels?reel=" + encodeURIComponent(reel.id)}
                   >
                     {reel.cover_url ? (
-                      <img src={reel.cover_url} alt={reel.title || reel.caption || "AVENZO reel"} />
+                      <UserMediaImage
+                        src={reel.cover_url}
+                        alt={reel.title || reel.caption || "AVENZO reel"}
+                      />
                     ) : (
                       <video src={reel.media_url} muted playsInline preload="metadata" />
                     )}
@@ -468,16 +489,6 @@ export default function PublicProfileClient({
                 <p>This account has not uploaded a reel.</p>
               </div>
             )}
-          </>
-        ) : contentTab === "reposts" ? (
-          <>
-            <div className="public-profile-section-title">
-              <div>
-                <div className="eyebrow">REPOSTS</div>
-                <h2>Reposted by @{profile.username}</h2>
-              </div>
-            </div>
-            <RepostsGrid profileId={profile.id} />
           </>
         ) : (
           <>

@@ -3,13 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import EmptyState from "./empty-state";
-import { avatarFor, formatRelativeTime } from "../lib/profile";
+import { avatarFor, formatProfileStat, formatRelativeTime, normalizeProfileWebsite } from "../lib/profile";
 import type { Post, Profile, ProfileStats, Reel } from "../types";
 import AvatarImage from "./avatar-image";
 import UserMediaImage from "./user-media-image";
 import VerifiedBadge from "./verified-badge";
 import Icon from "./icon";
-import RepostsGrid from "./reposts-grid";
 import TaggedPostsGrid from "./tagged-posts-grid";
 import ProfileHighlightsRow from "./profile-highlights-row";
 
@@ -35,8 +34,9 @@ export default function ProfileView({
   onCreateStory: () => void;
 }) {
   const [tab, setTab] =
-    useState<"posts" | "reels" | "reposts" | "tagged">("posts");
-  const [shareLabel, setShareLabel] = useState("Share profile");
+    useState<"posts" | "reels" | "tagged">("posts");
+  const [shareLabel, setShareLabel] = useState("Share Profile");
+  const website = normalizeProfileWebsite(profile.website);
 
   async function shareProfile() {
     const url =
@@ -67,7 +67,7 @@ export default function ProfileView({
       }
     }
 
-    window.setTimeout(() => setShareLabel("Share profile"), 1600);
+    window.setTimeout(() => setShareLabel("Share Profile"), 1600);
   }
 
   return (
@@ -89,15 +89,15 @@ export default function ProfileView({
             </button>
           </span>
           <span className="profile-mobile-stat">
-            <b>{stats.posts}</b>
+            <b>{formatProfileStat(stats.posts)}</b>
             <small>Posts</small>
           </span>
           <Link className="profile-mobile-stat" href="/connections/followers">
-            <b>{stats.followers}</b>
+            <b>{formatProfileStat(stats.followers)}</b>
             <small>Followers</small>
           </Link>
           <Link className="profile-mobile-stat" href="/connections/following">
-            <b>{stats.following}</b>
+            <b>{formatProfileStat(stats.following)}</b>
             <small>Following</small>
           </Link>
         </div>
@@ -120,7 +120,7 @@ export default function ProfileView({
             </div>
 
             <button className="btn secondary small profile-edit" onClick={onEdit}>
-              Edit profile
+              Edit Profile
             </button>
             <button
               className="btn secondary small profile-edit"
@@ -133,16 +133,26 @@ export default function ProfileView({
 
           <p className="profile-bio">{profile.bio || "Welcome to AVENZO."}</p>
 
+          {website && (
+            <a
+              className="profile-website"
+              href={website.href}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+            >
+              {website.label}
+            </a>
+          )}
+
           <div className="profile-mobile-actions" aria-label="Profile actions">
-            <button type="button" onClick={onEdit}>Edit profile</button>
+            <button type="button" onClick={onEdit}>Edit Profile</button>
             <button type="button" onClick={() => void shareProfile()}>{shareLabel}</button>
-            <button type="button" className="primary" onClick={onCreateStory}>Add story</button>
           </div>
 
           <div className="profile-stats" aria-label="Profile statistics">
-            <span><b>{stats.posts}</b><small>Posts</small></span>
-            <Link href="/connections/followers"><b>{stats.followers}</b><small>Followers</small></Link>
-            <Link href="/connections/following"><b>{stats.following}</b><small>Following</small></Link>
+            <span><b>{formatProfileStat(stats.posts)}</b><small>Posts</small></span>
+            <Link href="/connections/followers"><b>{formatProfileStat(stats.followers)}</b><small>Followers</small></Link>
+            <Link href="/connections/following"><b>{formatProfileStat(stats.following)}</b><small>Following</small></Link>
           </div>
 
           <div className="profile-create-panel">
@@ -176,14 +186,6 @@ export default function ProfileView({
           <Icon name="reels" size={20} />
           <span className="profile-tab-label">Reels</span>
           <span className="profile-tab-count">{reels.length}</span>
-        </button>
-        <button
-          className={tab === "reposts" ? "active" : ""}
-          onClick={() => setTab("reposts")}
-          aria-label="Reposts"
-        >
-          <Icon name="repost" size={20} />
-          <span className="profile-tab-label">Reposts</span>
         </button>
         <button
           className={tab === "tagged" ? "active" : ""}
@@ -266,7 +268,10 @@ export default function ProfileView({
                   href={"/reels?reel=" + encodeURIComponent(reel.id)}
                 >
                   {reel.cover_path ? (
-                    <img src={media(reel.cover_path)} alt={reel.title || reel.caption || "AVENZO reel"} />
+                    <UserMediaImage
+                      src={media(reel.cover_path)}
+                      alt={reel.title || reel.caption || "AVENZO reel"}
+                    />
                   ) : (
                     <video
                       src={media(reel.media_path)}
@@ -291,16 +296,6 @@ export default function ProfileView({
               actionLabel="Create Reel"
             />
           )}
-        </section>
-      ) : tab === "reposts" ? (
-        <section className="profile-content-section" aria-labelledby="profile-reposts-title">
-          <div className="profile-section-head">
-            <div>
-              <div className="eyebrow">SHARED</div>
-              <h2 id="profile-reposts-title">Reposts</h2>
-            </div>
-          </div>
-          <RepostsGrid profileId={profile.id} own />
         </section>
       ) : (
         <section className="profile-content-section" aria-labelledby="profile-tagged-title">

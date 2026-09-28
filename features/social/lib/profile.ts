@@ -44,3 +44,31 @@ export function formatRelativeTime(value: string) {
     day: "numeric",
   });
 }
+
+export function formatProfileStat(value: number) {
+  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(
+    Math.max(0, Number(value) || 0)
+  );
+}
+
+export function normalizeProfileWebsite(value?: string | null) {
+  const raw = value?.trim();
+  if (!raw) return null;
+
+  const candidate = /^[a-z][a-z0-9+.-]*:\/\//i.test(raw)
+    ? raw
+    : "https://" + raw;
+
+  try {
+    const url = new URL(candidate);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+
+    const path = url.pathname === "/" ? "" : url.pathname.replace(/\/$/, "");
+    return {
+      href: url.toString(),
+      label: url.hostname.replace(/^www\./i, "") + path,
+    };
+  } catch {
+    return null;
+  }
+}

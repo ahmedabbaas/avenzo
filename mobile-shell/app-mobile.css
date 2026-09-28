@@ -6040,3 +6040,355 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
     display: block !important;
   }
 }
+
+
+/* AVENZO PROFILE STEP — aligned identity, stats, actions and media grids */
+.profile-website,
+.public-profile-website {
+  display: inline-flex;
+  max-width: 100%;
+  margin-top: 7px;
+  overflow: hidden;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.35;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-website:hover,
+.public-profile-website:hover {
+  text-decoration: underline;
+}
+
+.profile-stats,
+.public-profile-stats {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  align-items: stretch !important;
+  width: min(100%, 420px) !important;
+  gap: 8px !important;
+}
+
+.profile-stats > span,
+.profile-stats > a,
+.public-profile-stats > span,
+.public-profile-stats > a {
+  display: grid !important;
+  grid-template-rows: auto auto !important;
+  place-items: center !important;
+  align-content: center !important;
+  min-width: 0 !important;
+  min-height: 48px !important;
+  gap: 4px !important;
+  margin: 0 !important;
+  padding: 6px 4px !important;
+  color: var(--muted) !important;
+  text-align: center !important;
+  text-decoration: none !important;
+}
+
+.profile-stats b,
+.public-profile-stats b,
+.profile-mobile-stat b {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.profile-stats small,
+.public-profile-stats small,
+.public-profile-stats > span,
+.public-profile-stats > a {
+  text-transform: none !important;
+}
+
+.profile-content-tabs,
+.public-profile-tabs {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  width: 100% !important;
+}
+
+.public-profile-route-top {
+  display: grid !important;
+  grid-template-columns: 44px minmax(0, 1fr) 44px !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.public-profile-back,
+.public-profile-top-menu > summary {
+  display: grid !important;
+  place-items: center !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+  color: var(--text) !important;
+  cursor: pointer;
+  list-style: none !important;
+}
+
+.public-profile-top-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.public-profile-top-identity {
+  display: grid;
+  justify-items: center;
+  min-width: 0;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.public-profile-top-identity strong {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.public-profile-top-identity small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.public-profile-top-menu {
+  position: relative;
+  justify-self: end;
+}
+
+.public-profile-top-menu > div {
+  right: 0 !important;
+  left: auto !important;
+}
+
+.public-profile-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 3px !important;
+  width: 100% !important;
+}
+
+.public-profile-media-tile,
+.public-text-post,
+.public-reel-tile {
+  position: relative;
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  aspect-ratio: 1 !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: 4px !important;
+  background: var(--panel-2) !important;
+}
+
+.public-profile-media-tile > img,
+.public-profile-media-tile > video,
+.public-reel-tile > img,
+.public-reel-tile > video {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: 1 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  object-fit: cover !important;
+}
+
+.public-text-post {
+  display: grid !important;
+  place-items: center !important;
+  padding: 12px !important;
+  color: var(--text) !important;
+  text-align: center !important;
+  text-decoration: none !important;
+}
+
+.public-text-post > span {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: clamp(10px, 2vw, 13px);
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+}
+
+@media (max-width: 820px) {
+  .screen-profile .profile-mobile-top {
+    grid-template-columns: 82px repeat(3, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    max-width: 100% !important;
+  }
+
+  .screen-profile .profile-mobile-stat {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 52px !important;
+    place-content: center !important;
+  }
+
+  .screen-profile .profile-mobile-stat b {
+    font-size: 14px !important;
+    line-height: 1.05 !important;
+  }
+
+  .screen-profile .profile-mobile-stat small {
+    font-size: 9px !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+  }
+
+  .screen-profile .profile-bio {
+    margin-bottom: 4px !important;
+  }
+
+  .screen-profile .profile-website {
+    display: flex !important;
+    justify-content: center !important;
+    width: fit-content !important;
+    max-width: min(330px, 100%) !important;
+    margin: 0 auto 10px !important;
+    font-size: 10px !important;
+  }
+
+  .screen-profile .profile-content-tabs {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .screen-profile .profile-grid,
+  .public-profile-grid,
+  .tagged-posts-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 2px !important;
+  }
+
+  .screen-profile .profile-grid > img,
+  .screen-profile .profile-grid > video,
+  .screen-profile .profile-reel-tile,
+  .screen-profile .profile-text-post,
+  .public-profile-media-tile,
+  .public-text-post,
+  .public-reel-tile,
+  .tagged-post-tile > a {
+    width: 100% !important;
+    min-width: 0 !important;
+    aspect-ratio: 1 !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .screen-profile .profile-grid > img,
+  .screen-profile .profile-grid > video,
+  .screen-profile .profile-reel-tile > img,
+  .screen-profile .profile-reel-tile > video,
+  .public-profile-media-tile > img,
+  .public-profile-media-tile > video,
+  .public-reel-tile > img,
+  .public-reel-tile > video,
+  .tagged-post-tile img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+
+  .public-profile-wrap {
+    padding-inline: 10px !important;
+  }
+
+  .public-profile-hero {
+    grid-template-columns: 82px minmax(0, 1fr) !important;
+    gap: 14px !important;
+  }
+
+  .public-profile-hero > img {
+    width: 82px !important;
+    height: 82px !important;
+    object-fit: cover !important;
+  }
+
+  .public-profile-copy {
+    min-width: 0 !important;
+  }
+
+  .public-profile-copy h1 {
+    font-size: 20px !important;
+  }
+
+  .public-profile-copy > p {
+    font-size: 11px !important;
+  }
+
+  .public-profile-website {
+    max-width: 100% !important;
+    font-size: 10px !important;
+  }
+
+  .public-profile-stats {
+    grid-column: 1 / -1;
+    width: 100% !important;
+    max-width: none !important;
+    margin-top: 12px !important;
+  }
+
+  .public-profile-stats > span,
+  .public-profile-stats > a {
+    min-height: 50px !important;
+    padding: 5px 2px !important;
+  }
+
+  .public-profile-stats b {
+    font-size: 14px !important;
+    line-height: 1 !important;
+  }
+
+  .public-profile-stats > span,
+  .public-profile-stats > a {
+    font-size: 9px !important;
+  }
+
+  .public-profile-actions {
+    grid-column: 1 / -1;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    gap: 7px !important;
+  }
+
+  .public-profile-actions .btn,
+  .public-profile-actions > a {
+    display: grid !important;
+    place-items: center !important;
+    min-width: 0 !important;
+    min-height: 38px !important;
+    padding: 0 7px !important;
+    text-align: center !important;
+  }
+
+  .public-profile-tabs {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Profile action count seal */
+@media (max-width: 820px) {
+  .screen-profile .profile-mobile-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    max-width: 340px !important;
+  }
+
+  .public-profile-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}

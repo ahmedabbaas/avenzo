@@ -11,7 +11,7 @@ import type {
 } from "../types";
 
 const PROFILE_COLUMNS =
-  "id,username,display_name,bio,avatar_url,verified,created_at";
+  "id,username,display_name,bio,avatar_url,website,verified,created_at";
 
 type PostRow = {
   id: string;
