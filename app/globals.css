@@ -15005,3 +15005,52 @@ a {
     animation: none !important;
   }
 }
+
+
+/* AVENZO VERIFIED BADGE REFERENCE */
+.verified-line{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  flex-wrap:nowrap;
+}
+
+.verified-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:16px;
+  height:16px;
+  flex:0 0 16px;
+  margin:0;
+  line-height:0;
+  vertical-align:middle;
+  filter:none;
+  transform:translateY(.25px);
+}
+
+.verified-badge svg{
+  display:block;
+  width:16px;
+  height:16px;
+  overflow:visible;
+}
+
+.verified-badge-seal{
+  fill:#0095F6;
+}
+
+.verified-badge-check{
+  fill:none;
+  stroke:#FFFFFF;
+  stroke-width:2.35;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+.profile-identity .verified-badge,
+.public-profile-copy .verified-badge{
+  width:16px;
+  height:16px;
+  flex-basis:16px;
+}

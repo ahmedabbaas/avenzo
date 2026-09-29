@@ -24,7 +24,7 @@ export default function VerifiedBadge({
         />
         <path
           className="verified-badge-check"
-          d="m7.4 12.2 3 3.1 6.4-6.8"
+          d="m7.2 12.15 3.05 3.05 6.55-6.55"
         />
       </svg>
     </span>

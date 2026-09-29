@@ -12312,3 +12312,46 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
     padding-inline:5px!important;
   }
 }
+
+
+/* AVENZO VERIFIED BADGE MOBILE REFERENCE */
+@media(max-width:820px){
+  html.avenzo-android-app .verified-line{
+    gap:5px!important;
+    flex-wrap:nowrap!important;
+    align-items:center!important;
+  }
+
+  html.avenzo-android-app .verified-badge,
+  html.avenzo-android-app .screen-home .post-name-verified .verified-badge,
+  html.avenzo-android-app .screen-profile .profile-reference-identity h1 .verified-badge{
+    display:inline-flex!important;
+    width:16px!important;
+    height:16px!important;
+    flex:0 0 16px!important;
+    margin:0!important;
+    vertical-align:middle!important;
+    filter:none!important;
+    transform:translateY(.25px)!important;
+  }
+
+  html.avenzo-android-app .verified-badge svg{
+    width:16px!important;
+    height:16px!important;
+  }
+
+  html.avenzo-android-app .verified-badge-seal,
+  html.avenzo-android-app .screen-home .post-name-verified .verified-badge-seal,
+  html.avenzo-android-app .screen-profile .profile-reference-identity h1 .verified-badge-seal{
+    fill:#0095F6!important;
+  }
+
+  html.avenzo-android-app .verified-badge-check,
+  html.avenzo-android-app .screen-home .post-name-verified .verified-badge-check,
+  html.avenzo-android-app .screen-profile .profile-reference-identity h1 .verified-badge-check{
+    stroke:#FFFFFF!important;
+    stroke-width:2.35!important;
+    stroke-linecap:round!important;
+    stroke-linejoin:round!important;
+  }
+}
