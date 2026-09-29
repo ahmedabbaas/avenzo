@@ -1026,7 +1026,10 @@ export default function HomeClient({
         >
           <Icon name="activity" size={20} />
           {unreadActivity > 0 && (
-            <i className="top-badge">{Math.min(unreadActivity, 9)}</i>
+            <i
+              className="top-badge top-badge-dot"
+              aria-label="Unread notifications"
+            />
           )}
         </button>
 
@@ -1037,7 +1040,10 @@ export default function HomeClient({
         >
           <Icon name="messages" size={20} />
           {unreadMessages > 0 && (
-            <i className="top-badge">{Math.min(unreadMessages, 9)}</i>
+            <i
+              className="top-badge top-badge-dot"
+              aria-label="Unread messages"
+            />
           )}
         </button>
 
