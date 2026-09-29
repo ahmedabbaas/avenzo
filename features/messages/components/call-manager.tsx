@@ -96,6 +96,7 @@ export default function CallManager() {
   const offerStartedRef = useRef(false);
   const pendingIceRef = useRef<RTCIceCandidateInit[]>([]);
   const handledSignalIdsRef = useRef<Set<number>>(new Set());
+  const acceptingCallIdRef = useRef<string | null>(null);
 
   function setCall(next: ActiveCall | null) {
     callRef.current = next;
@@ -157,6 +158,7 @@ export default function CallManager() {
     offerStartedRef.current = false;
     pendingIceRef.current = [];
     handledSignalIdsRef.current.clear();
+    acceptingCallIdRef.current = null;
     setMuted(false);
     setError("");
     setCall(null);
@@ -468,8 +470,33 @@ export default function CallManager() {
   async function acceptIncoming() {
     const current = callRef.current;
     if (!current || current.direction !== "incoming") return;
+    if (acceptingCallIdRef.current === current.id) return;
 
+    acceptingCallIdRef.current = current.id;
     setError("");
+
+    // Acquire media first. Android WebView can take time to resolve its native
+    // permission flow; publishing "accepted" before media exists makes the
+    // caller start WebRTC too early and can tear the session down.
+    try {
+      await getMedia(current.callType);
+    } catch {
+      acceptingCallIdRef.current = null;
+      setError(
+        current.callType === "video"
+          ? "Camera and microphone permission are required for video calls."
+          : "Microphone permission is required for calls."
+      );
+      patchCall({ status: "incoming" });
+      return;
+    }
+
+    if (callRef.current?.id !== current.id) {
+      acceptingCallIdRef.current = null;
+      stopMedia();
+      return;
+    }
+
     patchCall({ status: "connecting" });
 
     const { error: updateError } = await supabase
@@ -478,9 +505,12 @@ export default function CallManager() {
         status: "accepted",
         answered_at: new Date().toISOString(),
       })
-      .eq("id", current.id);
+      .eq("id", current.id)
+      .eq("status", "ringing");
 
     if (updateError) {
+      acceptingCallIdRef.current = null;
+      stopMedia();
       setError("Could not accept the call. Tap Accept to try again.");
       patchCall({ status: "incoming" });
       return;
@@ -489,12 +519,10 @@ export default function CallManager() {
     try {
       await ensurePeer(current.otherUserId, current.id);
       startSignalSync(current.id);
+      acceptingCallIdRef.current = null;
     } catch {
-      setError(
-        current.callType === "video"
-          ? "Allow camera and microphone access, then tap Retry."
-          : "Allow microphone access, then tap Retry."
-      );
+      acceptingCallIdRef.current = null;
+      setError("Call connection failed. Tap Retry to reconnect.");
       patchCall({ status: "connecting" });
     }
   }
