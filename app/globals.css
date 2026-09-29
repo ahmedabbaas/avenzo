@@ -33,7 +33,7 @@ img{max-width:100%}
 :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .social-app{min-height:100vh;background:
   radial-gradient(circle at 8% -10%,rgba(223,255,99,.055),transparent 28%),
-  radial-gradient(circle at 100% 18%,rgba(100,122,255,.05),transparent 24%),
+  radial-gradient(circle at 100% 18%,rgba(223,255,99,.05),transparent 24%),
   var(--bg)
 }
 .muted{color:var(--muted)}
@@ -60,12 +60,12 @@ img{max-width:100%}
   overflow:hidden;
   background:
     radial-gradient(circle at 18% 18%,rgba(223,255,99,.075),transparent 26%),
-    radial-gradient(circle at 90% 12%,rgba(93,111,255,.07),transparent 24%),
+    radial-gradient(circle at 90% 12%,rgba(223,255,99,.07),transparent 24%),
     #07090b
 }
 .auth-glow{position:absolute;border-radius:999px;filter:blur(90px);opacity:.13;pointer-events:none}
 .auth-glow-a{width:360px;height:360px;background:var(--accent);left:-150px;bottom:-120px}
-.auth-glow-b{width:420px;height:420px;background:#7181ff;right:-170px;top:-170px}
+.auth-glow-b{width:420px;height:420px;background:#dfff63;right:-170px;top:-170px}
 .auth-brand{position:relative;z-index:2;align-self:start;display:flex;align-items:center;gap:15px}
 .auth-brand>div span,.auth-brand>div strong{display:block}
 .auth-brand>div strong{font:700 30px -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;letter-spacing:-.055em}
@@ -15033,7 +15033,7 @@ a {
 }
 
 .verified-badge-seal{
-  fill:#258CF4;
+  fill:#dfff63;
 }
 
 .verified-badge-check{
