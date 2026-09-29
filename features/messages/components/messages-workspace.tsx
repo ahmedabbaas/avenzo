@@ -84,6 +84,8 @@ const ALLOWED_ATTACHMENT_TYPES = new Set([
   "audio/webm",
   "audio/mpeg",
   "audio/mp4",
+  "audio/ogg",
+  "audio/aac",
   "application/pdf",
   "text/plain",
 ]);
@@ -1003,11 +1005,17 @@ export default function MessagesWorkspace({
       return;
     }
 
-    const extension = mimeType.includes("mp4") ? "m4a" : "webm";
+    const normalizedMime = (mimeType || "audio/webm").split(";")[0] || "audio/webm";
+    const extension =
+      normalizedMime === "audio/mp4"
+        ? "m4a"
+        : normalizedMime === "audio/ogg"
+          ? "ogg"
+          : "webm";
     const file = new File(
       [blob],
       "voice-" + Date.now() + "." + extension,
-      { type: mimeType || "audio/webm" }
+      { type: normalizedMime }
     );
 
     setSending(true);
@@ -1067,17 +1075,24 @@ export default function MessagesWorkspace({
       recordingChunksRef.current = [];
       cancelRecordingRef.current = false;
 
-      const preferredMime = MediaRecorder.isTypeSupported(
-        "audio/webm;codecs=opus"
-      )
-        ? "audio/webm;codecs=opus"
-        : MediaRecorder.isTypeSupported("audio/webm")
-          ? "audio/webm"
-          : "";
+      const preferredMime = [
+        "audio/mp4",
+        "audio/webm;codecs=opus",
+        "audio/webm",
+        "audio/ogg;codecs=opus",
+      ].find((candidate) => MediaRecorder.isTypeSupported(candidate)) || "";
 
-      const recorder = preferredMime
-        ? new MediaRecorder(stream, { mimeType: preferredMime })
-        : new MediaRecorder(stream);
+      let recorder: MediaRecorder;
+      try {
+        recorder = preferredMime
+          ? new MediaRecorder(stream, {
+              mimeType: preferredMime,
+              audioBitsPerSecond: 64000,
+            })
+          : new MediaRecorder(stream, { audioBitsPerSecond: 64000 });
+      } catch {
+        recorder = new MediaRecorder(stream);
+      }
 
       mediaRecorderRef.current = recorder;
 
@@ -1085,6 +1100,16 @@ export default function MessagesWorkspace({
         if (event.data.size > 0) {
           recordingChunksRef.current.push(event.data);
         }
+      };
+
+      recorder.onerror = () => {
+        clearRecordingTimer();
+        stopRecordingStream();
+        mediaRecorderRef.current = null;
+        recordingChunksRef.current = [];
+        setRecording(false);
+        setRecordingSeconds(0);
+        setNotice("Voice recording failed on this device. Try again.");
       };
 
       recorder.onstop = () => {
@@ -1113,10 +1138,21 @@ export default function MessagesWorkspace({
           return next;
         });
       }, 1000);
-    } catch {
+    } catch (error) {
       stopRecordingStream();
       setRecording(false);
-      setNotice("Allow microphone access to record a voice message.");
+      clearRecordingTimer();
+      const errorName =
+        error && typeof error === "object" && "name" in error
+          ? String((error as { name?: unknown }).name || "")
+          : "";
+      setNotice(
+        errorName === "NotAllowedError" || errorName === "SecurityError"
+          ? "Microphone permission is required for voice messages."
+          : errorName === "NotFoundError"
+            ? "No microphone was found on this device."
+            : "Could not start voice recording. Try again."
+      );
     }
   }
 
@@ -1125,6 +1161,11 @@ export default function MessagesWorkspace({
     if (!recorder || recorder.state === "inactive") return;
 
     cancelRecordingRef.current = !sendRecording;
+    try {
+      if (recorder.state === "recording") recorder.requestData();
+    } catch {
+      // Some WebViews do not support requestData while stopping.
+    }
     recorder.stop();
   }
 
@@ -2429,6 +2470,7 @@ export default function MessagesWorkspace({
                                       key={attachment.id}
                                       src={url}
                                       controls
+                                      preload="metadata"
                                       className="dm-audio-attachment"
                                     />
                                   );

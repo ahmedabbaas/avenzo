@@ -2152,9 +2152,9 @@ html[data-theme="dark"] button{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  width:16px;
-  height:16px;
-  flex:0 0 16px;
+  width:18px;
+  height:18px;
+  flex:0 0 18px;
   line-height:0;
   vertical-align:-2px;
   filter:drop-shadow(0 1px 1px rgba(0,0,0,.18));
@@ -15037,7 +15037,7 @@ a {
 }
 
 .verified-badge-seal{
-  fill:#0095F6;
+  fill:#258CF4;
 }
 
 .verified-badge-check{

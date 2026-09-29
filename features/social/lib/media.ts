@@ -101,7 +101,6 @@ export async function optimizeImageForUpload(
   highQuality: boolean
 ): Promise<File> {
   if (
-    highQuality ||
     !file.type.startsWith("image/") ||
     file.type === "image/gif" ||
     typeof document === "undefined"
@@ -111,7 +110,10 @@ export async function optimizeImageForUpload(
 
   try {
     const bitmap = await createImageBitmap(file);
-    const maxDimension = 1600;
+    // "High quality" should preserve detail, not blindly upload a 20+ MB
+    // camera original. Mobile uploads are much more reliable when huge
+    // images are resized before they touch the network.
+    const maxDimension = highQuality ? 2560 : 1600;
     const scale = Math.min(
       1,
       maxDimension / Math.max(bitmap.width, bitmap.height)
@@ -133,7 +135,7 @@ export async function optimizeImageForUpload(
     bitmap.close();
 
     const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, "image/webp", 0.8)
+      canvas.toBlob(resolve, "image/webp", highQuality ? 0.9 : 0.8)
     );
 
     if (!blob || blob.size >= file.size) return file;

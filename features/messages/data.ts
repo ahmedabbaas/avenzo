@@ -386,6 +386,8 @@ export async function sendMessageAttachment({
   });
   assertNoError(upload.error);
 
+  let createdMessageId: string | null = null;
+
   try {
     const message = await sendDirectMessage({
       supabase,
@@ -396,6 +398,7 @@ export async function sendMessageAttachment({
       replyToId,
       messageType: kind,
     });
+    createdMessageId = message.id;
 
     const { error } = await supabase.from("message_attachments").insert({
       message_id: message.id,
@@ -410,6 +413,13 @@ export async function sendMessageAttachment({
 
     return message;
   } catch (error) {
+    if (createdMessageId) {
+      await supabase
+        .from("messages")
+        .delete()
+        .eq("id", createdMessageId)
+        .eq("sender_id", senderId);
+    }
     await supabase.storage.from("media").remove([path]);
     throw error;
   }

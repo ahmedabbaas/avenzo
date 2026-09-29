@@ -874,6 +874,7 @@ export default function CreateContentModal({
           </button>
         </div>
 
+        <div className="create-scroll-area">
         <div className="create-type-tabs" role="tablist" aria-label="Content type">
           {(["post", "reel", "story"] as const).map((nextMode) => (
             <button
@@ -928,7 +929,7 @@ export default function CreateContentModal({
         {posting && (
           <div className="upload-progress" aria-live="polite">
             <div>
-              <b>Publishing securely</b>
+              <b>{uploadProgress < 90 ? "Uploading media" : "Finishing publish"}</b>
               <span>{Math.max(0, Math.min(100, uploadProgress))}%</span>
             </div>
             <progress
@@ -938,6 +939,7 @@ export default function CreateContentModal({
             <small>Keep AVENZO open until publishing finishes.</small>
           </div>
         )}
+        </div>
 
         <div className="modal-actions create-wizard-actions">
           {mode === "post" ? (

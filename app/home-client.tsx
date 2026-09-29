@@ -608,7 +608,7 @@ export default function HomeClient({
     }
 
     setPosting(true);
-    setUploadProgress(0);
+    setUploadProgress(2);
 
     try {
       await publishContent({
@@ -1019,9 +1019,27 @@ export default function HomeClient({
               >
                 <Icon name="chatRound" size={20} />
                 {unreadMessages > 0 && (
+                  <span
+                    className="avenzo-home-count-badge"
+                    aria-label={unreadMessages + " unread messages"}
+                  >
+                    {Math.min(unreadMessages, 99)}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setScreen("activity");
+                  setUnreadActivity(0);
+                }}
+                aria-label="Notifications"
+              >
+                <Icon name="bellModern" size={20} />
+                {unreadActivity > 0 && (
                   <i
                     className="top-badge top-badge-dot"
-                    aria-label="Unread messages"
+                    aria-label="Unread notifications"
                   />
                 )}
               </button>

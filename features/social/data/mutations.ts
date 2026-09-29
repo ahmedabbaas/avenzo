@@ -77,6 +77,7 @@ async function uploadObjectWithProgress({
       .map((part) => encodeURIComponent(part))
       .join("/");
     const request = new XMLHttpRequest();
+    request.timeout = 120000;
 
     request.open(
       "POST",
@@ -100,7 +101,8 @@ async function uploadObjectWithProgress({
       );
     };
 
-    request.onerror = () => reject(new Error("Upload connection failed."));
+    request.onerror = () => reject(new Error("Upload connection failed. Check your internet and try again."));
+    request.ontimeout = () => reject(new Error("Upload timed out. Try again on a stable connection."));
     request.onabort = () => reject(new Error("Upload was cancelled."));
     request.onload = () => {
       if (request.status >= 200 && request.status < 300) {
@@ -274,8 +276,8 @@ export async function publishContent({
           mode,
           file: preparedFile,
           onProgress: (percent) => {
-            const base = (index / totalItems) * 92;
-            const slice = (percent / 100) * (92 / totalItems);
+            const base = (index / totalItems) * 88;
+            const slice = (percent / 100) * (88 / totalItems);
             onProgress?.(Math.round(base + slice));
           },
         });
@@ -293,6 +295,8 @@ export async function publishContent({
       const first = uploadedPostItems[0] || null;
       uploadedPath = first?.media_path || null;
       mediaType = first ? "image" : null;
+
+      onProgress?.(90);
 
       const postResult = await supabase
         .from("posts")
@@ -316,6 +320,7 @@ export async function publishContent({
         throw new Error("Post could not be created.");
       }
       insertedPostId = postResult.data.id;
+      onProgress?.(94);
 
       if (uploadedPostItems.length) {
         const mediaResult = await supabase
@@ -334,6 +339,7 @@ export async function publishContent({
 
         assertNoError(mediaResult.error);
       }
+      onProgress?.(97);
 
       const cleanCollaboratorIds = [...new Set(
         collaboratorIds.filter((id) => id && id !== userId)
@@ -355,7 +361,8 @@ export async function publishContent({
     }
 
     const usesCover = Boolean(coverFile && file?.type.startsWith("video/"));
-    const mainProgressEnd = usesCover ? 82 : 100;
+    const mainProgressEnd = usesCover ? 76 : 90;
+    const mediaProgressEnd = 90;
 
     if (file) {
       const preparedFile = await optimizeImageForUpload(
@@ -391,12 +398,14 @@ export async function publishContent({
         onProgress: (percent) =>
           onProgress?.(
             mainProgressEnd +
-              Math.round((percent / 100) * (100 - mainProgressEnd))
+              Math.round((percent / 100) * (mediaProgressEnd - mainProgressEnd))
           ),
       });
       uploadedCoverPath = cover.path;
       uploadedPaths.push(cover.path);
     }
+
+    onProgress?.(92);
 
     if (mode === "story") {
       const { error } = await supabase.from("stories").insert({
