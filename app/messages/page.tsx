@@ -14,6 +14,7 @@ export default async function MessagesPage({
     sharePost?: string;
     shareReel?: string;
     shareProfile?: string;
+    tab?: string;
   }>;
 }) {
   const supabase = await createClient();
@@ -54,6 +55,7 @@ export default async function MessagesPage({
         shareProfileId={
           typeof params.shareProfile === "string" ? params.shareProfile : ""
         }
+        initialTab={params.tab === "requests" ? "requests" : "primary"}
       />
     </main>
   );

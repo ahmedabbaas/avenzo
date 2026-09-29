@@ -122,6 +122,29 @@ function messageTime(value: string) {
   });
 }
 
+function inboxTime(value: string) {
+  const date = new Date(value);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diff = Math.round((today.getTime() - target.getTime()) / 86400000);
+
+  if (diff === 0) {
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  if (diff === 1) return "Yesterday";
+
+  return date.toLocaleDateString(undefined, {
+    day: "2-digit",
+    month: "short",
+    year: date.getFullYear() === now.getFullYear() ? undefined : "2-digit",
+  });
+}
+
 function recordingTime(value: number) {
   const minutes = Math.floor(value / 60);
   const seconds = value % 60;
@@ -155,12 +178,14 @@ export default function MessagesWorkspace({
   sharePostId = "",
   shareReelId = "",
   shareProfileId = "",
+  initialTab = "primary",
 }: {
   currentUser: Profile;
   initialUsername?: string;
   sharePostId?: string;
   shareReelId?: string;
   shareProfileId?: string;
+  initialTab?: "primary" | "requests";
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [inbox, setInbox] = useState<InboxConversation[]>([]);
@@ -180,10 +205,12 @@ export default function MessagesWorkspace({
   const [text, setText] = useState("");
   const [replyTo, setReplyTo] = useState<DirectMessage | null>(null);
   const [tab, setTab] =
-    useState<"primary" | "general" | "requests">("primary");
+    useState<"primary" | "general" | "requests">(initialTab);
   const [newMessageOpen, setNewMessageOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [mobileInboxMenuOpen, setMobileInboxMenuOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduleAt, setScheduleAt] = useState("");
@@ -1122,6 +1149,27 @@ export default function MessagesWorkspace({
     );
   }
 
+  function startVideoCall() {
+    if (!active || active.request_incoming) return;
+
+    if (active.request_status !== "accepted") {
+      setNotice("The message request must be accepted before starting a video call.");
+      return;
+    }
+
+    window.dispatchEvent(
+      new CustomEvent("avenzo:start-video-call", {
+        detail: {
+          conversationId: active.conversation_id,
+          otherUserId: active.other_user_id,
+          username: active.username,
+          displayName: active.display_name,
+          avatarUrl: active.avatar_url,
+        },
+      })
+    );
+  }
+
   async function refreshPinnedMessages(conversationId: string) {
     setPinnedMessages(
       await fetchPinnedMessages(supabase, conversationId)
@@ -1424,6 +1472,13 @@ export default function MessagesWorkspace({
       .includes(query.toLowerCase().trim())
   );
 
+  const mobileBaseConversations = tab === "requests" ? requests : inbox;
+  const mobileShown = mobileBaseConversations.filter((item) =>
+    (item.display_name + " " + item.username + " " + item.last_message)
+      .toLowerCase()
+      .includes(query.toLowerCase().trim())
+  );
+
   const filteredMessages = messageQuery.trim()
     ? messages.filter((message) =>
         message.body
@@ -1438,6 +1493,113 @@ export default function MessagesWorkspace({
   return (
     <div className="dm-workspace">
       <section className={"dm-sidebar " + (active ? "dm-mobile-hidden" : "")}>
+        <div className="dm-mobile-inbox-head" style={{ display: "none" }}>
+          <div className="dm-mobile-inbox-copy">
+            <span className="dm-mobile-brand">AVENZO.</span>
+            <small>Hello,</small>
+            <h1>{currentUser.display_name}</h1>
+          </div>
+          <div className="dm-mobile-inbox-actions">
+            <button
+              type="button"
+              onClick={() => setMobileSearchOpen((value) => !value)}
+              aria-label="Search conversations"
+            >
+              <Icon name="search" size={22} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileInboxMenuOpen((value) => !value)}
+              aria-label="Message options"
+            >
+              <Icon name="more" size={22} />
+            </button>
+          </div>
+
+          {mobileInboxMenuOpen && (
+            <div className="dm-mobile-inbox-menu">
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileInboxMenuOpen(false);
+                  setNewMessageOpen(true);
+                }}
+              >
+                <Icon name="edit" size={17} />
+                New message
+              </button>
+              <Link href="/messages/groups">
+                <Icon name="messages" size={17} />
+                Groups
+              </Link>
+              <Link href="/channels">
+                <Icon name="activity" size={17} />
+                Channels
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileInboxMenuOpen(false);
+                  openOwnNote();
+                }}
+              >
+                <Icon name="edit" size={17} />
+                Your note
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div
+          className={
+            "dm-mobile-search" + (mobileSearchOpen ? " open" : "")
+          }
+          style={{ display: "none" }}
+        >
+          <Icon name="search" size={18} />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={tab === "requests" ? "Search requests" : "Search chats"}
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              aria-label="Clear search"
+            >
+              <Icon name="close" size={15} />
+            </button>
+          )}
+        </div>
+
+        <div
+          className="dm-mobile-tabs"
+          style={{ display: "none" }}
+          role="tablist"
+        >
+          <button
+            className={tab !== "requests" ? "active" : ""}
+            onClick={() => {
+              setTab("primary");
+              setActive(null);
+            }}
+          >
+            All Chats
+          </button>
+          <Link href="/messages/groups">Groups</Link>
+          <button
+            className={tab === "requests" ? "active" : ""}
+            onClick={() => {
+              setTab("requests");
+              setActive(null);
+            }}
+          >
+            Requests
+            {requests.length > 0 && <span>{requests.length}</span>}
+          </button>
+        </div>
+
         <div className="dm-sidebar-head">
           <div>
             <div className="eyebrow">MESSAGES</div>
@@ -1568,6 +1730,110 @@ export default function MessagesWorkspace({
           </div>
         )}
 
+        <div
+          className="dm-mobile-conversation-list"
+          style={{ display: "none" }}
+        >
+          {loading ? (
+            <MessagesSkeleton />
+          ) : loadError ? (
+            <div className="dm-empty-state dm-network-error" role="alert">
+              <Icon name="messages" size={28} />
+              <b>Could not load messages</b>
+              <p>{loadError}</p>
+              <button
+                className="btn small"
+                onClick={() => {
+                  setLoading(true);
+                  setLoadError("");
+                  void Promise.all([loadLists(), loadPeople(), loadNotes()])
+                    .then(() => setLoading(false))
+                    .catch(() => {
+                      setLoadError(
+                        "Messages could not be loaded. Check your connection and try again."
+                      );
+                      setLoading(false);
+                    });
+                }}
+              >
+                Retry
+              </button>
+            </div>
+          ) : mobileShown.length === 0 ? (
+            <div className="dm-empty-state">
+              <Icon name="messages" size={28} />
+              <b>
+                {tab === "requests"
+                  ? "No message requests"
+                  : query.trim()
+                    ? "No chats found"
+                    : "No chats yet"}
+              </b>
+              <p>
+                {tab === "requests"
+                  ? "New requests from real AVENZO users will appear here."
+                  : query.trim()
+                    ? "Try another username or name."
+                    : "Start a conversation with another AVENZO user."}
+              </p>
+              {tab !== "requests" && !query.trim() && (
+                <button
+                  className="btn small"
+                  onClick={() => setNewMessageOpen(true)}
+                >
+                  New message
+                </button>
+              )}
+            </div>
+          ) : (
+            mobileShown.map((item) => (
+              <button
+                key={"mobile-" + item.conversation_id}
+                className={
+                  "dm-mobile-conversation " +
+                  (item.unread_count ? "unread " : "") +
+                  (item.pinned ? "pinned" : "")
+                }
+                onClick={() => void loadConversation(item)}
+              >
+                <span className="dm-mobile-conversation-avatar">
+                  <AvatarImage
+                    src={avatarFor(profileFromInbox(item))}
+                    alt={item.display_name}
+                    size={88}
+                  />
+                </span>
+                <span className="dm-mobile-conversation-copy">
+                  <span className="dm-mobile-conversation-name">
+                    <b>{item.username}</b>
+                    <VerifiedBadge verified={item.verified} />
+                    {item.pinned && (
+                      <span className="dm-mobile-pin" title="Pinned">
+                        <Icon name="pin" size={15} />
+                      </span>
+                    )}
+                  </span>
+                  <em>{item.last_message || "New conversation"}</em>
+                </span>
+                <span className="dm-mobile-conversation-meta">
+                  <small>{inboxTime(item.last_message_at)}</small>
+                  {item.unread_count > 0 && <i>{item.unread_count}</i>}
+                </span>
+              </button>
+            ))
+          )}
+        </div>
+
+        <button
+          className="dm-mobile-compose-fab"
+          style={{ display: "none" }}
+          type="button"
+          onClick={() => setNewMessageOpen(true)}
+          aria-label="New message"
+        >
+          <Icon name="edit" size={23} />
+        </button>
+
         <div className="dm-conversation-list">
           {loading ? (
             <MessagesSkeleton />
@@ -1688,6 +1954,67 @@ export default function MessagesWorkspace({
         ) : (
           <>
             <header className="dm-chat-head">
+              <div className="dm-mobile-chat-head" style={{ display: "none" }}>
+                <button
+                  className="dm-mobile-chat-back"
+                  type="button"
+                  onClick={() => setActive(null)}
+                  aria-label="Back to conversations"
+                >
+                  <Icon name="back" size={22} />
+                </button>
+
+                <button
+                  type="button"
+                  className="dm-mobile-chat-person"
+                  onClick={() => setMoreOpen((value) => !value)}
+                  aria-label="Conversation options"
+                >
+                  <span className="dm-mobile-chat-avatar">
+                    <AvatarImage
+                      src={avatarFor(activeProfile)}
+                      alt={activeProfile.display_name}
+                      size={84}
+                    />
+                    {otherAllowsOnline && otherOnline && (
+                      <i aria-label="Online" />
+                    )}
+                  </span>
+                  <span className="dm-mobile-chat-copy">
+                    <span className="verified-line">
+                      <b>{active.username}</b>
+                      <VerifiedBadge verified={active.verified} />
+                    </span>
+                    <small>
+                      {typing
+                        ? "Typing…"
+                        : otherAllowsOnline
+                          ? otherOnline
+                            ? "Online"
+                            : "Offline"
+                          : active.display_name}
+                    </small>
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  className="dm-mobile-video-call"
+                  onClick={startVideoCall}
+                  aria-label="Start video call"
+                >
+                  <Icon name="video" size={21} />
+                </button>
+                <button
+                  type="button"
+                  className="dm-mobile-audio-call"
+                  onClick={startAudioCall}
+                  aria-label="Start audio call"
+                >
+                  <Icon name="phone" size={21} />
+                </button>
+              </div>
+
               <button
                 className="dm-back"
                 onClick={() => setActive(null)}
@@ -1744,6 +2071,20 @@ export default function MessagesWorkspace({
 
               {moreOpen && (
                 <div className="dm-more-menu">
+                  <button
+                    onClick={() => {
+                      setSearchOpen(true);
+                      setMoreOpen(false);
+                    }}
+                  >
+                    Search messages
+                  </button>
+                  <Link
+                    href={"/u/" + encodeURIComponent(active.username)}
+                    onClick={() => setMoreOpen(false)}
+                  >
+                    View profile
+                  </Link>
                   <button
                     onClick={() => {
                       setThemeOpen((value) => !value);

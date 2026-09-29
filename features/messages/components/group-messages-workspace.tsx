@@ -56,6 +56,7 @@ export default function GroupMessagesWorkspace({
   const [people, setPeople] = useState<Profile[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [groupTitle, setGroupTitle] = useState("");
+  const [groupQuery, setGroupQuery] = useState("");
   const [peopleQuery, setPeopleQuery] = useState("");
   const [messageText, setMessageText] = useState("");
   const [replyTo, setReplyTo] = useState<GroupMessage | null>(null);
@@ -327,6 +328,12 @@ export default function GroupMessagesWorkspace({
     }
   }
 
+  const visibleGroups = groups.filter((group) =>
+    (group.title + " " + (group.last_message || ""))
+      .toLowerCase()
+      .includes(groupQuery.toLowerCase().trim())
+  );
+
   async function leaveCurrentGroup() {
     if (!active) return;
     if (!window.confirm("Leave this group?")) return;
@@ -351,6 +358,36 @@ export default function GroupMessagesWorkspace({
           "group-sidebar " + (active ? "group-mobile-hidden" : "")
         }
       >
+        <div className="group-mobile-inbox-head" style={{ display: "none" }}>
+          <div>
+            <span>AVENZO.</span>
+            <small>Hello,</small>
+            <h1>{currentUser.display_name}</h1>
+          </div>
+          <button
+            type="button"
+            onClick={() => setNewGroupOpen(true)}
+            aria-label="Create group"
+          >
+            <Icon name="plus" size={22} />
+          </button>
+        </div>
+
+        <label className="group-mobile-search" style={{ display: "none" }}>
+          <Icon name="search" size={18} />
+          <input
+            value={groupQuery}
+            onChange={(event) => setGroupQuery(event.target.value)}
+            placeholder="Search groups"
+          />
+        </label>
+
+        <div className="group-mobile-tabs" style={{ display: "none" }}>
+          <Link href="/messages">All Chats</Link>
+          <span>Groups</span>
+          <Link href="/messages?tab=requests">Requests</Link>
+        </div>
+
         <div className="group-sidebar-head">
           <div>
             <div className="eyebrow">MESSAGES</div>
@@ -378,23 +415,29 @@ export default function GroupMessagesWorkspace({
               <span className="loader" />
               <p>Loading groups…</p>
             </div>
-          ) : groups.length === 0 ? (
+          ) : visibleGroups.length === 0 ? (
             <div className="group-empty">
               <div className="group-empty-icon">
                 <Icon name="messages" size={24} />
               </div>
-              <h3>No groups yet</h3>
-              <p>Create a group with real AVENZO users to start chatting.</p>
-              <button
-                type="button"
-                className="btn small"
-                onClick={() => setNewGroupOpen(true)}
-              >
-                Create Group
-              </button>
+              <h3>{groupQuery.trim() ? "No groups found" : "No groups yet"}</h3>
+              <p>
+                {groupQuery.trim()
+                  ? "Try another group name or message."
+                  : "Create a group with real AVENZO users to start chatting."}
+              </p>
+              {!groupQuery.trim() && (
+                <button
+                  type="button"
+                  className="btn small"
+                  onClick={() => setNewGroupOpen(true)}
+                >
+                  Create Group
+                </button>
+              )}
             </div>
           ) : (
-            groups.map((group) => (
+            visibleGroups.map((group) => (
               <button
                 type="button"
                 key={group.id}

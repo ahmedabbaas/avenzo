@@ -44,7 +44,10 @@ export type IconName =
   | "commentModern"
   | "shareModern"
   | "repostModern"
-  | "bookmarkModern";
+  | "bookmarkModern"
+  | "pin"
+  | "edit"
+  | "video";
 
 
 export default function Icon({ name, size = 19 }: { name: IconName; size?: number }) {
@@ -277,6 +280,24 @@ export default function Icon({ name, size = 19 }: { name: IconName; size?: numbe
     ),
     bookmarkModern: (
       <path d="M6.8 4.2h10.4v15.6L12 16.6l-5.2 3.2V4.2Z" />
+    ),
+    pin: (
+      <>
+        <path d="m14.8 4.2 5 5-3.2 1.1-3 3 .5 3.2-1.3 1.3-6.6-6.6 1.3-1.3 3.2.5 3-3 1.1-3.2Z" />
+        <path d="m9.8 16.2-5.6 5.6" />
+      </>
+    ),
+    edit: (
+      <>
+        <path d="M4.5 19.5h4l10.4-10.4a2.1 2.1 0 0 0-3-3L5.5 16.5l-1 3Z" />
+        <path d="m13.8 8.2 3 3" />
+      </>
+    ),
+    video: (
+      <>
+        <rect x="3.5" y="6" width="12.5" height="12" rx="2.5" />
+        <path d="m16 10 4.5-2.5v9L16 14v-4Z" />
+      </>
     ),
   };
 

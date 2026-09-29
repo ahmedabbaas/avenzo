@@ -21,6 +21,13 @@ declare global {
       displayName: string;
       avatarUrl: string | null;
     }>;
+    "avenzo:start-video-call": CustomEvent<{
+      conversationId: string;
+      otherUserId: string;
+      username: string;
+      displayName: string;
+      avatarUrl: string | null;
+    }>;
   }
 }
 
@@ -38,6 +45,7 @@ type ActiveCall = {
   displayName: string;
   avatarUrl: string | null;
   direction: "incoming" | "outgoing";
+  callType: "audio" | "video";
   status: CallStatus;
 };
 
@@ -47,6 +55,7 @@ type CallSession = {
   caller_id: string;
   callee_id: string;
   status: "ringing" | "accepted" | "declined" | "ended" | "missed";
+  call_type: "audio" | "video";
   created_at: string;
 };
 
@@ -79,6 +88,8 @@ export default function CallManager() {
   const peerRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const ringTimerRef = useRef<number | null>(null);
 
   function setCall(next: ActiveCall | null) {
@@ -104,6 +115,12 @@ export default function CallManager() {
     localStreamRef.current = null;
     if (remoteAudioRef.current) {
       remoteAudioRef.current.srcObject = null;
+    }
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = null;
+    }
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = null;
     }
   }
 
@@ -143,11 +160,11 @@ export default function CallManager() {
     if (signalError) throw signalError;
   }
 
-  async function getMicrophone() {
+  async function getMedia(callType: "audio" | "video") {
     if (localStreamRef.current) return localStreamRef.current;
 
     if (!navigator.mediaDevices?.getUserMedia) {
-      throw new Error("Microphone is not available on this device.");
+      throw new Error("Media access is not available on this device.");
     }
 
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -156,9 +173,23 @@ export default function CallManager() {
         noiseSuppression: true,
         autoGainControl: true,
       },
-      video: false,
+      video:
+        callType === "video"
+          ? {
+              facingMode: "user",
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            }
+          : false,
     });
+
     localStreamRef.current = stream;
+
+    if (callType === "video" && localVideoRef.current) {
+      localVideoRef.current.srcObject = stream;
+      void localVideoRef.current.play().catch(() => undefined);
+    }
+
     return stream;
   }
 
@@ -168,7 +199,8 @@ export default function CallManager() {
   ) {
     if (peerRef.current) return peerRef.current;
 
-    const stream = await getMicrophone();
+    const current = callRef.current;
+    const stream = await getMedia(current?.callType || "audio");
     const peer = new RTCPeerConnection({ iceServers: ICE_SERVERS });
 
     for (const track of stream.getTracks()) {
@@ -187,9 +219,17 @@ export default function CallManager() {
 
     peer.ontrack = (event) => {
       const remoteStream = event.streams[0];
-      if (!remoteStream || !remoteAudioRef.current) return;
-      remoteAudioRef.current.srcObject = remoteStream;
-      void remoteAudioRef.current.play().catch(() => undefined);
+      if (!remoteStream) return;
+
+      const currentCall = callRef.current;
+      if (currentCall?.callType === "video" && remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = remoteStream;
+        void remoteVideoRef.current.play().catch(() => undefined);
+      } else if (remoteAudioRef.current) {
+        remoteAudioRef.current.srcObject = remoteStream;
+        void remoteAudioRef.current.play().catch(() => undefined);
+      }
+
       patchCall({ status: "connected" });
     };
 
@@ -307,6 +347,7 @@ export default function CallManager() {
       displayName: caller.displayName,
       avatarUrl: caller.avatarUrl,
       direction: "incoming",
+      callType: session.call_type === "video" ? "video" : "audio",
       status: "incoming",
     };
 
@@ -337,7 +378,11 @@ export default function CallManager() {
         .eq("id", current.id);
       if (updateError) throw updateError;
     } catch {
-      setError("Microphone permission is required for calls.");
+      setError(
+        current.callType === "video"
+          ? "Camera and microphone permission are required for video calls."
+          : "Microphone permission is required for calls."
+      );
       patchCall({ status: "incoming" });
     }
   }
@@ -489,11 +534,12 @@ export default function CallManager() {
   }, [supabase]);
 
   useEffect(() => {
-    const handler = async (
-      event: WindowEventMap["avenzo:start-audio-call"]
-    ) => {
+    async function startOutgoing(
+      detail: WindowEventMap["avenzo:start-audio-call"]["detail"],
+      callType: "audio" | "video"
+    ) {
       if (callRef.current) return;
-      const detail = event.detail;
+
       const userId = userIdRef.current;
       if (!userId) return;
 
@@ -506,8 +552,11 @@ export default function CallManager() {
           caller_id: userId,
           callee_id: detail.otherUserId,
           status: "ringing",
+          call_type: callType,
         })
-        .select("id,conversation_id,caller_id,callee_id,status,created_at")
+        .select(
+          "id,conversation_id,caller_id,callee_id,status,call_type,created_at"
+        )
         .single();
 
       if (insertError || !data) {
@@ -523,6 +572,7 @@ export default function CallManager() {
         displayName: detail.displayName,
         avatarUrl: detail.avatarUrl,
         direction: "outgoing",
+        callType,
         status: "calling",
       };
       setCall(next);
@@ -542,11 +592,25 @@ export default function CallManager() {
           .eq("id", data.id)
           .then(() => resetCallRef.current());
       }, 30000);
+    }
+
+    const audioHandler = (
+      event: WindowEventMap["avenzo:start-audio-call"]
+    ) => {
+      void startOutgoing(event.detail, "audio");
+    };
+    const videoHandler = (
+      event: WindowEventMap["avenzo:start-video-call"]
+    ) => {
+      void startOutgoing(event.detail, "video");
     };
 
-    window.addEventListener("avenzo:start-audio-call", handler);
+    window.addEventListener("avenzo:start-audio-call", audioHandler);
+    window.addEventListener("avenzo:start-video-call", videoHandler);
+
     return () => {
-      window.removeEventListener("avenzo:start-audio-call", handler);
+      window.removeEventListener("avenzo:start-audio-call", audioHandler);
+      window.removeEventListener("avenzo:start-video-call", videoHandler);
     };
   }, [supabase]);
 
@@ -565,8 +629,32 @@ export default function CallManager() {
       <audio ref={remoteAudioRef} autoPlay playsInline />
 
       {call && profile && (
-        <div className="avenzo-call-overlay" role="dialog" aria-modal="true">
+        <div
+          className={
+            "avenzo-call-overlay " +
+            (call.callType === "video" ? "avenzo-video-call" : "")
+          }
+          role="dialog"
+          aria-modal="true"
+        >
           <div className="avenzo-call-card">
+            {call.callType === "video" && (
+              <div className="avenzo-video-stage">
+                <video
+                  ref={remoteVideoRef}
+                  className="avenzo-remote-video"
+                  autoPlay
+                  playsInline
+                />
+                <video
+                  ref={localVideoRef}
+                  className="avenzo-local-video"
+                  autoPlay
+                  muted
+                  playsInline
+                />
+              </div>
+            )}
             <div className="avenzo-call-avatar">
               <AvatarImage
                 src={avatarFor(profile)}
@@ -575,7 +663,11 @@ export default function CallManager() {
               />
             </div>
 
-            <small>AVENZO AUDIO CALL</small>
+            <small>
+              {call.callType === "video"
+                ? "AVENZO VIDEO CALL"
+                : "AVENZO AUDIO CALL"}
+            </small>
             <h2>{call.displayName}</h2>
             <p>
               {call.status === "incoming"
