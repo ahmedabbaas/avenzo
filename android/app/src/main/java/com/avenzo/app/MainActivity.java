@@ -1,10 +1,14 @@
 package com.avenzo.app;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Base64;
 import android.webkit.WebView;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebViewClient;
@@ -15,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 
 public class MainActivity extends BridgeActivity {
 
+    private static final int AVENZO_MEDIA_PERMISSION_REQUEST = 4201;
     private String mobileScript = "";
 
     @Override
@@ -22,6 +27,18 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
 
         mobileScript = buildMobileScript();
+
+        // The web app uses getUserMedia for calls. Ensure Android grants the
+        // native microphone permission before WebView/Capacitor handles the
+        // corresponding web permission request.
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                this,
+                new String[] { Manifest.permission.RECORD_AUDIO },
+                AVENZO_MEDIA_PERMISSION_REQUEST
+            );
+        }
 
         if (bridge != null) {
             bridge.setWebViewClient(new BridgeWebViewClient(bridge) {
