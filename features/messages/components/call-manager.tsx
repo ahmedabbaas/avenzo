@@ -91,6 +91,11 @@ export default function CallManager() {
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const ringTimerRef = useRef<number | null>(null);
+  const acceptancePollRef = useRef<number | null>(null);
+  const signalSyncTimerRef = useRef<number | null>(null);
+  const offerStartedRef = useRef(false);
+  const pendingIceRef = useRef<RTCIceCandidateInit[]>([]);
+  const handledSignalIdsRef = useRef<Set<number>>(new Set());
 
   function setCall(next: ActiveCall | null) {
     callRef.current = next;
@@ -107,6 +112,20 @@ export default function CallManager() {
     if (ringTimerRef.current !== null) {
       window.clearTimeout(ringTimerRef.current);
       ringTimerRef.current = null;
+    }
+  }
+
+  function clearAcceptancePoll() {
+    if (acceptancePollRef.current !== null) {
+      window.clearInterval(acceptancePollRef.current);
+      acceptancePollRef.current = null;
+    }
+  }
+
+  function clearSignalSync() {
+    if (signalSyncTimerRef.current !== null) {
+      window.clearInterval(signalSyncTimerRef.current);
+      signalSyncTimerRef.current = null;
     }
   }
 
@@ -132,7 +151,12 @@ export default function CallManager() {
 
   function resetCall() {
     clearRingTimer();
+    clearAcceptancePoll();
+    clearSignalSync();
     destroyPeer();
+    offerStartedRef.current = false;
+    pendingIceRef.current = [];
+    handledSignalIdsRef.current.clear();
     setMuted(false);
     setError("");
     setCall(null);
@@ -235,14 +259,13 @@ export default function CallManager() {
 
     peer.onconnectionstatechange = () => {
       if (peer.connectionState === "connected") {
+        clearSignalSync();
+        setError("");
         patchCall({ status: "connected" });
       }
 
-      if (
-        peer.connectionState === "failed" ||
-        peer.connectionState === "closed"
-      ) {
-        setError("Call connection ended.");
+      if (peer.connectionState === "failed") {
+        setError("Call connection failed. Tap Retry to reconnect.");
       }
     };
 
@@ -252,9 +275,21 @@ export default function CallManager() {
 
   async function beginOffer(session: CallSession) {
     const current = callRef.current;
-    if (!current || current.id !== session.id) return;
+    if (
+      !current ||
+      current.id !== session.id ||
+      current.direction !== "outgoing" ||
+      offerStartedRef.current
+    ) {
+      return;
+    }
+
+    offerStartedRef.current = true;
 
     try {
+      clearRingTimer();
+      clearAcceptancePoll();
+      setError("");
       patchCall({ status: "connecting" });
       const peer = await ensurePeer(current.otherUserId, current.id);
       const offer = await peer.createOffer();
@@ -265,25 +300,51 @@ export default function CallManager() {
         "offer",
         offer
       );
+      startSignalSync(current.id);
     } catch {
-      setError("Could not connect the call.");
-      await endCall();
+      offerStartedRef.current = false;
+      setError("Could not connect the call. Tap Retry to reconnect.");
+      patchCall({ status: "connecting" });
+    }
+  }
+
+  async function flushPendingIce(peer: RTCPeerConnection) {
+    if (!peer.remoteDescription || pendingIceRef.current.length === 0) return;
+
+    const pending = pendingIceRef.current;
+    pendingIceRef.current = [];
+
+    for (const candidate of pending) {
+      try {
+        await peer.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch {
+        pendingIceRef.current.push(candidate);
+      }
     }
   }
 
   async function handleSignal(signal: CallSignal) {
     const current = callRef.current;
-    if (!current || current.id !== signal.call_id) return;
+    if (
+      !current ||
+      current.id !== signal.call_id ||
+      handledSignalIdsRef.current.has(signal.id)
+    ) {
+      return;
+    }
 
     try {
       const peer = await ensurePeer(current.otherUserId, current.id);
 
       if (signal.signal_type === "offer") {
+        if (peer.signalingState !== "stable") return;
+
         await peer.setRemoteDescription(
           new RTCSessionDescription(
             signal.payload as RTCSessionDescriptionInit
           )
         );
+        await flushPendingIce(peer);
         const answer = await peer.createAnswer();
         await peer.setLocalDescription(answer);
         await sendSignal(
@@ -292,27 +353,69 @@ export default function CallManager() {
           "answer",
           answer
         );
+        handledSignalIdsRef.current.add(signal.id);
         patchCall({ status: "connecting" });
+        startSignalSync(current.id);
         return;
       }
 
       if (signal.signal_type === "answer") {
+        if (peer.signalingState !== "have-local-offer") return;
+
         await peer.setRemoteDescription(
           new RTCSessionDescription(
             signal.payload as RTCSessionDescriptionInit
           )
         );
+        await flushPendingIce(peer);
+        handledSignalIdsRef.current.add(signal.id);
         return;
       }
 
       if (signal.signal_type === "ice") {
-        await peer.addIceCandidate(
-          new RTCIceCandidate(signal.payload as RTCIceCandidateInit)
-        );
+        const candidate = signal.payload as RTCIceCandidateInit;
+        if (!peer.remoteDescription) {
+          pendingIceRef.current.push(candidate);
+        } else {
+          await peer.addIceCandidate(new RTCIceCandidate(candidate));
+        }
+        handledSignalIdsRef.current.add(signal.id);
       }
     } catch {
-      setError("Call connection failed.");
+      setError("Call connection failed. Tap Retry to reconnect.");
     }
+  }
+
+  async function syncSignals(callId: string) {
+    const userId = userIdRef.current;
+    const current = callRef.current;
+    if (!userId || !current || current.id !== callId) return;
+
+    const { data, error: syncError } = await supabase
+      .from("call_signals")
+      .select("id,call_id,sender_id,recipient_id,signal_type,payload")
+      .eq("call_id", callId)
+      .eq("recipient_id", userId)
+      .order("id", { ascending: true });
+
+    if (syncError || !data) return;
+
+    for (const signal of data as CallSignal[]) {
+      await handleSignalRef.current(signal);
+    }
+  }
+
+  function startSignalSync(callId: string) {
+    clearSignalSync();
+    void syncSignals(callId);
+    signalSyncTimerRef.current = window.setInterval(() => {
+      const current = callRef.current;
+      if (!current || current.id !== callId || current.status === "connected") {
+        clearSignalSync();
+        return;
+      }
+      void syncSignals(callId);
+    }, 1200);
   }
 
   async function profileFor(userId: string) {
@@ -377,6 +480,7 @@ export default function CallManager() {
         })
         .eq("id", current.id);
       if (updateError) throw updateError;
+      startSignalSync(current.id);
     } catch {
       setError(
         current.callType === "video"
@@ -415,6 +519,34 @@ export default function CallManager() {
       .eq("id", current.id);
 
     resetCallRef.current();
+  }
+
+  async function retryConnection() {
+    const current = callRef.current;
+    if (!current) return;
+
+    setError("");
+
+    if (current.direction === "outgoing") {
+      offerStartedRef.current = false;
+      await beginOffer({
+        id: current.id,
+        conversation_id: current.conversationId,
+        caller_id: userIdRef.current,
+        callee_id: current.otherUserId,
+        status: "accepted",
+        call_type: current.callType,
+        created_at: new Date().toISOString(),
+      });
+      return;
+    }
+
+    try {
+      await ensurePeer(current.otherUserId, current.id);
+      startSignalSync(current.id);
+    } catch {
+      setError("Microphone access is required to reconnect the call.");
+    }
   }
 
   function toggleMute() {
@@ -493,6 +625,7 @@ export default function CallManager() {
               current.direction === "outgoing"
             ) {
               clearRingTimer();
+              clearAcceptancePoll();
               await beginOfferRef.current(session);
               return;
             }
@@ -545,6 +678,18 @@ export default function CallManager() {
 
       setError("");
 
+      try {
+        await getMedia(callType);
+      } catch {
+        setError(
+          callType === "video"
+            ? "Camera and microphone permission are required for video calls."
+            : "Microphone permission is required for calls."
+        );
+        stopMedia();
+        return;
+      }
+
       const { data, error: insertError } = await supabase
         .from("call_sessions")
         .insert({
@@ -560,6 +705,7 @@ export default function CallManager() {
         .single();
 
       if (insertError || !data) {
+        stopMedia();
         setError("Could not start the call.");
         return;
       }
@@ -576,6 +722,40 @@ export default function CallManager() {
         status: "calling",
       };
       setCall(next);
+
+      clearAcceptancePoll();
+      acceptancePollRef.current = window.setInterval(() => {
+        const current = callRef.current;
+        if (!current || current.id !== data.id || current.direction !== "outgoing") {
+          clearAcceptancePoll();
+          return;
+        }
+
+        void supabase
+          .from("call_sessions")
+          .select("id,conversation_id,caller_id,callee_id,status,call_type,created_at")
+          .eq("id", data.id)
+          .maybeSingle()
+          .then(({ data: latest }) => {
+            if (!latest || callRef.current?.id !== data.id) return;
+
+            if (latest.status === "accepted") {
+              clearRingTimer();
+              clearAcceptancePoll();
+              void beginOfferRef.current(latest as CallSession);
+              return;
+            }
+
+            if (
+              latest.status === "declined" ||
+              latest.status === "ended" ||
+              latest.status === "missed"
+            ) {
+              clearAcceptancePoll();
+              resetCallRef.current();
+            }
+          });
+      }, 900);
 
       ringTimerRef.current = window.setTimeout(() => {
         const current = callRef.current;
@@ -709,6 +889,14 @@ export default function CallManager() {
                       onClick={toggleMute}
                     >
                       {muted ? "Unmute" : "Mute"}
+                    </button>
+                  )}
+                  {error && call.status === "connecting" && (
+                    <button
+                      type="button"
+                      onClick={() => void retryConnection()}
+                    >
+                      Retry
                     </button>
                   )}
                   <button
