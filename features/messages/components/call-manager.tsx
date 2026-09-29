@@ -469,25 +469,33 @@ export default function CallManager() {
     const current = callRef.current;
     if (!current || current.direction !== "incoming") return;
 
+    setError("");
+    patchCall({ status: "connecting" });
+
+    const { error: updateError } = await supabase
+      .from("call_sessions")
+      .update({
+        status: "accepted",
+        answered_at: new Date().toISOString(),
+      })
+      .eq("id", current.id);
+
+    if (updateError) {
+      setError("Could not accept the call. Tap Accept to try again.");
+      patchCall({ status: "incoming" });
+      return;
+    }
+
     try {
-      patchCall({ status: "connecting" });
       await ensurePeer(current.otherUserId, current.id);
-      const { error: updateError } = await supabase
-        .from("call_sessions")
-        .update({
-          status: "accepted",
-          answered_at: new Date().toISOString(),
-        })
-        .eq("id", current.id);
-      if (updateError) throw updateError;
       startSignalSync(current.id);
     } catch {
       setError(
         current.callType === "video"
-          ? "Camera and microphone permission are required for video calls."
-          : "Microphone permission is required for calls."
+          ? "Allow camera and microphone access, then tap Retry."
+          : "Allow microphone access, then tap Retry."
       );
-      patchCall({ status: "incoming" });
+      patchCall({ status: "connecting" });
     }
   }
 
