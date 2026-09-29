@@ -47,7 +47,14 @@ export type IconName =
   | "bookmarkModern"
   | "pin"
   | "edit"
-  | "video";
+  | "video"
+  | "palette"
+  | "plane"
+  | "gamepad"
+  | "shield"
+  | "globe"
+  | "sliders"
+  | "info";
 
 
 export default function Icon({ name, size = 19 }: { name: IconName; size?: number }) {
@@ -297,6 +304,53 @@ export default function Icon({ name, size = 19 }: { name: IconName; size?: numbe
       <>
         <rect x="3.5" y="6" width="12.5" height="12" rx="2.5" />
         <path d="m16 10 4.5-2.5v9L16 14v-4Z" />
+      </>
+    ),
+    palette: (
+      <>
+        <path d="M12 3.5a8.5 8.5 0 1 0 0 17h1.2a1.8 1.8 0 0 0 0-3.6h-1.1a1.5 1.5 0 0 1 0-3h2.2A5.7 5.7 0 0 0 20 8.2C20 5.6 16.7 3.5 12 3.5Z" />
+        <circle cx="7.7" cy="8.6" r=".8" />
+        <circle cx="11.2" cy="6.7" r=".8" />
+        <circle cx="15.2" cy="7.8" r=".8" />
+      </>
+    ),
+    plane: (
+      <>
+        <path d="m3.8 13.2 16.4-8-6.5 15-2.2-6.7-7.7-.3Z" />
+        <path d="m11.5 13.5 8.7-8.3" />
+      </>
+    ),
+    gamepad: (
+      <>
+        <path d="M8.2 7.2h7.6c2.2 0 3.8 1.4 4.2 3.5l.9 4.8c.4 2.2-2.1 3.6-3.6 2l-2.2-2.3H8.9l-2.2 2.3c-1.5 1.6-4 .2-3.6-2l.9-4.8c.4-2.1 2-3.5 4.2-3.5Z" />
+        <path d="M7 10.2v4M5 12.2h4" />
+        <circle cx="16.6" cy="11.2" r=".8" />
+        <circle cx="18.5" cy="13.1" r=".8" />
+      </>
+    ),
+    shield: (
+      <>
+        <path d="M12 3.2 19 6v5.4c0 4.5-2.7 7.7-7 9.4-4.3-1.7-7-4.9-7-9.4V6l7-2.8Z" />
+        <path d="m9 12 2 2 4-4" />
+      </>
+    ),
+    globe: (
+      <>
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M3.7 12h16.6M12 3.5c2.1 2.4 3.2 5.2 3.2 8.5S14.1 18.1 12 20.5M12 3.5C9.9 5.9 8.8 8.7 8.8 12s1.1 6.1 3.2 8.5" />
+      </>
+    ),
+    sliders: (
+      <>
+        <path d="M4 7h7M15 7h5M4 17h3M11 17h9" />
+        <circle cx="13" cy="7" r="2" />
+        <circle cx="9" cy="17" r="2" />
+      </>
+    ),
+    info: (
+      <>
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M12 10.5v6M12 7.5h.01" />
       </>
     ),
   };

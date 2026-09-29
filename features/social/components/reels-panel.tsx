@@ -12,8 +12,9 @@ import {
   setReelLike,
   setReelReposted,
   setReelSaved,
+  setFollowing,
 } from "../data/mutations";
-import { fetchReels } from "../data/queries";
+import { fetchPeopleAndFollowing, fetchReels } from "../data/queries";
 import type { Profile, Reel } from "../types";
 import AvatarImage from "./avatar-image";
 import EmptyState from "./empty-state";
@@ -21,6 +22,16 @@ import { ReelsSkeleton } from "./loading-skeletons";
 import Icon from "./icon";
 import VerifiedBadge from "./verified-badge";
 import { avatarFor, formatRelativeTime } from "../lib/profile";
+
+function formatReelMetric(value: number) {
+  if (value >= 1_000_000) {
+    return (value / 1_000_000).toFixed(value >= 10_000_000 ? 0 : 1).replace(".0", "") + "M";
+  }
+  if (value >= 1_000) {
+    return (value / 1_000).toFixed(value >= 100_000 ? 0 : 1).replace(".0", "") + "K";
+  }
+  return String(value);
+}
 
 export default function ReelsPanel({
   currentUser,
@@ -37,6 +48,11 @@ export default function ReelsPanel({
 
   const [reels, setReels] = useState<Reel[]>([]);
   const [saved, setSaved] = useState<string[]>([]);
+  const [followed, setFollowed] = useState<string[]>([]);
+  const [requested, setRequested] = useState<string[]>([]);
+  const [reelTab, setReelTab] = useState<
+    "for-you" | "following" | "trending" | "music" | "gaming" | "travel"
+  >("for-you");
   const [loading, setLoading] = useState(true);
   const [commentFor, setCommentFor] = useState<string | null>(null);
   const [comment, setComment] = useState("");
@@ -53,11 +69,59 @@ export default function ReelsPanel({
     [supabase]
   );
 
+  const displayedReels = useMemo(() => {
+    const categoryMatches = (reel: Reel, category: "music" | "gaming" | "travel") => {
+      const text = [
+        reel.title,
+        reel.caption,
+        reel.location,
+        ...(reel.hashtags || []),
+        ...(reel.mentions || []),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      if (category === "music") {
+        return /(^|\s|#)(music|song|audio|singer|singing|beat|remix)(\s|$)/i.test(text);
+      }
+      if (category === "gaming") {
+        return /(^|\s|#)(gaming|game|gamer|games|playstation|xbox|pcgaming|esports)(\s|$)/i.test(text);
+      }
+      return /(^|\s|#)(travel|trip|tour|vacation|nature|city|karachi|islamabad|lahore)(\s|$)/i.test(text);
+    };
+
+    if (reelTab === "following") {
+      return reels.filter((reel) => followed.includes(reel.author_id));
+    }
+
+    if (reelTab === "trending") {
+      return [...reels].sort((a, b) => {
+        const scoreA =
+          a.viewCount + a.likeCount * 6 + a.commentCount * 10 + a.shareCount * 12;
+        const scoreB =
+          b.viewCount + b.likeCount * 6 + b.commentCount * 10 + b.shareCount * 12;
+        return scoreB - scoreA;
+      });
+    }
+
+    if (reelTab === "music" || reelTab === "gaming" || reelTab === "travel") {
+      return reels.filter((reel) => categoryMatches(reel, reelTab));
+    }
+
+    return reels;
+  }, [followed, reelTab, reels]);
+
   const load = useCallback(async () => {
     try {
-      const result = await fetchReels(supabase, currentUser.id, { limit: 100 });
+      const [result, relationships] = await Promise.all([
+        fetchReels(supabase, currentUser.id, { limit: 100 }),
+        fetchPeopleAndFollowing(supabase, currentUser.id),
+      ]);
       setReels(result.reels);
       setSaved(result.savedReels);
+      setFollowed(relationships.followed);
+      setRequested(relationships.requested);
       setNotice("");
     } catch {
       setNotice("Reels could not be loaded right now.");
@@ -114,8 +178,8 @@ export default function ReelsPanel({
   }, [supabase]);
 
   useEffect(() => {
-    if (!initialReelId || loading || reels.length === 0) return;
-    const index = reels.findIndex((reel) => reel.id === initialReelId);
+    if (!initialReelId || loading || displayedReels.length === 0) return;
+    const index = displayedReels.findIndex((reel) => reel.id === initialReelId);
     if (index < 0) return;
     const frame = window.requestAnimationFrame(() => setActiveIndex(index));
     const target = document.querySelector<HTMLElement>(
@@ -123,11 +187,11 @@ export default function ReelsPanel({
     );
     target?.scrollIntoView({ block: "start" });
     return () => window.cancelAnimationFrame(frame);
-  }, [initialReelId, loading, reels]);
+  }, [displayedReels, initialReelId, loading]);
 
   useEffect(() => {
     const root = viewportRef.current;
-    if (!root || reels.length === 0) return;
+    if (!root || displayedReels.length === 0) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -161,11 +225,11 @@ export default function ReelsPanel({
     });
 
     return () => observer.disconnect();
-  }, [reels.length, supabase]);
+  }, [displayedReels.length, supabase]);
 
   useEffect(() => {
     for (const [reelId, video] of videoRefs.current.entries()) {
-      const index = reels.findIndex((reel) => reel.id === reelId);
+      const index = displayedReels.findIndex((reel) => reel.id === reelId);
       const active = index === activeIndex;
       video.muted = muted;
       if (!active || manualPaused) {
@@ -174,7 +238,7 @@ export default function ReelsPanel({
         void video.play().catch(() => undefined);
       }
     }
-  }, [activeIndex, manualPaused, muted, reels]);
+  }, [activeIndex, displayedReels, manualPaused, muted]);
 
   useEffect(() => {
     const videos = videoRefs.current;
@@ -187,6 +251,51 @@ export default function ReelsPanel({
       videos.clear();
     };
   }, []);
+
+  function changeReelTab(
+    next: "for-you" | "following" | "trending" | "music" | "gaming" | "travel"
+  ) {
+    setReelTab(next);
+    setActiveIndex(0);
+    setManualPaused(false);
+    window.requestAnimationFrame(() => {
+      viewportRef.current?.scrollTo({ top: 0, behavior: "auto" });
+    });
+  }
+
+  async function toggleAuthorFollow(reel: Reel) {
+    const author = reel.profile;
+    if (!author || author.id === currentUser.id) return;
+
+    const activeRelationship =
+      followed.includes(author.id) || requested.includes(author.id);
+
+    try {
+      const nextState = await setFollowing(
+        supabase,
+        currentUser.id,
+        author.id,
+        activeRelationship
+      );
+
+      setFollowed((current) =>
+        nextState === "following"
+          ? current.includes(author.id)
+            ? current
+            : [...current, author.id]
+          : current.filter((id) => id !== author.id)
+      );
+      setRequested((current) =>
+        nextState === "requested"
+          ? current.includes(author.id)
+            ? current
+            : [...current, author.id]
+          : current.filter((id) => id !== author.id)
+      );
+    } catch {
+      setNotice("Could not update follow status.");
+    }
+  }
 
   async function toggleLike(reel: Reel) {
     const nextLiked = !reel.liked;
@@ -297,6 +406,53 @@ export default function ReelsPanel({
 
   return (
     <main className="reels-page">
+      <div className="avenzo-mobile-reels-head" style={{ display: "none" }}>
+        <b>AVENZO</b>
+        <div>
+          <button
+            type="button"
+            onClick={() => router.push("/home?screen=explore")}
+            aria-label="Search AVENZO"
+          >
+            <Icon name="search" size={21} />
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push("/home?screen=home&create=reel")}
+            aria-label="Create reel"
+          >
+            <Icon name="camera" size={21} />
+          </button>
+        </div>
+      </div>
+
+      <div
+        className="avenzo-mobile-reels-tabs"
+        style={{ display: "none" }}
+        role="tablist"
+        aria-label="Reel categories"
+      >
+        {([
+          ["for-you", "For You"],
+          ["following", "Following"],
+          ["trending", "Trending"],
+          ["music", "Music"],
+          ["gaming", "Gaming"],
+          ["travel", "Travel"],
+        ] as const).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            className={reelTab === id ? "active" : ""}
+            onClick={() => changeReelTab(id)}
+            role="tab"
+            aria-selected={reelTab === id}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       <header className="reels-topbar">
         <Link href="/home" className="messages-brand">
           <BrandLogo size={32} /><b>AVENZO</b>
@@ -313,17 +469,21 @@ export default function ReelsPanel({
 
       {notice && <div className="reels-notice">{notice}</div>}
 
-      {reels.length === 0 ? (
+      {displayedReels.length === 0 ? (
         <div className="reels-empty-wrap">
           <EmptyState
-            title="No reels yet."
-            text="Upload the first vertical video and it will appear here."
+            title={reelTab === "for-you" ? "No reels yet." : "No reels in this category."}
+            text={
+              reelTab === "for-you"
+                ? "Upload the first vertical video and it will appear here."
+                : "Real AVENZO reels matching this category will appear here."
+            }
           />
           <Link className="btn" href="/home?create=reel">Upload Reel</Link>
         </div>
       ) : (
         <div className="reels-viewport" ref={viewportRef}>
-          {reels.map((reel, index) => {
+          {displayedReels.map((reel, index) => {
             const author = reel.profile;
             const isSaved = saved.includes(reel.id);
             const commentsOpen = commentFor === reel.id;
@@ -418,24 +578,65 @@ export default function ReelsPanel({
                 <div className="reel-overlay">
                   <div className="reel-overlay-copy">
                     {author && (
-                      <Link
-                        className="reel-author"
-                        href={"/u/" + encodeURIComponent(author.username)}
-                      >
-                        <AvatarImage
-                          src={avatarFor(author)}
-                          alt={author.display_name}
-                          size={72}
-                        />
-                        <span>
-                          <b>{author.display_name}</b>
-                          <small className="verified-line">
-                            @{author.username}
-                            <VerifiedBadge verified={author.verified} />
-                            {" · "}{formatRelativeTime(reel.created_at)}
-                          </small>
-                        </span>
-                      </Link>
+                      <>
+                        <Link
+                          className="reel-author"
+                          href={"/u/" + encodeURIComponent(author.username)}
+                        >
+                          <AvatarImage
+                            src={avatarFor(author)}
+                            alt={author.display_name}
+                            size={72}
+                          />
+                          <span>
+                            <b>{author.display_name}</b>
+                            <small className="verified-line">
+                              @{author.username}
+                              <VerifiedBadge verified={author.verified} />
+                              {" · "}{formatRelativeTime(reel.created_at)}
+                            </small>
+                          </span>
+                        </Link>
+
+                        <div
+                          className="reel-mobile-author-row"
+                          style={{ display: "none" }}
+                        >
+                          <Link
+                            href={"/u/" + encodeURIComponent(author.username)}
+                            className="reel-mobile-author"
+                          >
+                            <AvatarImage
+                              src={avatarFor(author)}
+                              alt={author.display_name}
+                              size={68}
+                            />
+                            <b className="verified-line">
+                              {author.username}
+                              <VerifiedBadge verified={author.verified} />
+                            </b>
+                          </Link>
+                          {author.id !== currentUser.id && (
+                            <button
+                              type="button"
+                              className={
+                                "reel-follow-button " +
+                                (followed.includes(author.id) ||
+                                requested.includes(author.id)
+                                  ? "active"
+                                  : "")
+                              }
+                              onClick={() => void toggleAuthorFollow(reel)}
+                            >
+                              {followed.includes(author.id)
+                                ? "Following"
+                                : requested.includes(author.id)
+                                  ? "Requested"
+                                  : "Follow"}
+                            </button>
+                          )}
+                        </div>
+                      </>
                     )}
 
                     {reel.title && <h2>{reel.title}</h2>}
@@ -454,7 +655,32 @@ export default function ReelsPanel({
                   </div>
 
                   <div className="reel-actions-rail">
-                    <span className="reel-metric" title="Views">
+                    {author && (
+                      <div className="reel-rail-author" style={{ display: "none" }}>
+                        <Link
+                          href={"/u/" + encodeURIComponent(author.username)}
+                          aria-label={"Open @" + author.username}
+                        >
+                          <AvatarImage
+                            src={avatarFor(author)}
+                            alt=""
+                            size={54}
+                          />
+                        </Link>
+                        {author.id !== currentUser.id &&
+                          !followed.includes(author.id) &&
+                          !requested.includes(author.id) && (
+                            <button
+                              type="button"
+                              onClick={() => void toggleAuthorFollow(reel)}
+                              aria-label={"Follow @" + author.username}
+                            >
+                              +
+                            </button>
+                          )}
+                      </div>
+                    )}
+                    <span className="reel-metric reel-view-metric" title="Views">
                       <Icon name="eye" size={22} />
                       <b>{reel.viewCount}</b>
                     </span>
@@ -463,15 +689,31 @@ export default function ReelsPanel({
                       onClick={() => void toggleLike(reel)}
                       aria-label={reel.liked ? "Unlike reel" : "Like reel"}
                     >
-                      <Icon name="heart" size={24} />
-                      <b>{reel.likeCount}</b>
+                      <span className="reel-action-icon-desktop">
+                        <Icon name="heart" size={24} />
+                      </span>
+                      <span className="reel-action-icon-mobile" style={{ display: "none" }}>
+                        <Icon name="heartModern" size={25} />
+                      </span>
+                      <b className="reel-count-desktop">{reel.likeCount}</b>
+                      <b className="reel-count-mobile" style={{ display: "none" }}>
+                        {formatReelMetric(reel.likeCount)}
+                      </b>
                     </button>
                     <button
                       onClick={() => setCommentFor(commentsOpen ? null : reel.id)}
                       aria-label="Show comments"
                     >
-                      <Icon name="comment" size={24} />
-                      <b>{reel.commentCount}</b>
+                      <span className="reel-action-icon-desktop">
+                        <Icon name="comment" size={24} />
+                      </span>
+                      <span className="reel-action-icon-mobile" style={{ display: "none" }}>
+                        <Icon name="commentModern" size={25} />
+                      </span>
+                      <b className="reel-count-desktop">{reel.commentCount}</b>
+                      <b className="reel-count-mobile" style={{ display: "none" }}>
+                        {formatReelMetric(reel.commentCount)}
+                      </b>
                     </button>
                     <button
                       onClick={() =>
@@ -479,23 +721,44 @@ export default function ReelsPanel({
                       }
                       aria-label="Share reel"
                     >
-                      <Icon name="send" size={24} />
-                      <b>{reel.shareCount}</b>
+                      <span className="reel-action-icon-desktop">
+                        <Icon name="send" size={24} />
+                      </span>
+                      <span className="reel-action-icon-mobile" style={{ display: "none" }}>
+                        <Icon name="shareModern" size={25} />
+                      </span>
+                      <b className="reel-count-desktop">{reel.shareCount}</b>
+                      <b className="reel-count-mobile" style={{ display: "none" }}>
+                        {formatReelMetric(reel.shareCount)}
+                      </b>
                     </button>
                     <button
                       className={reel.reposted ? "active" : ""}
                       onClick={() => void toggleRepost(reel)}
                       aria-label={reel.reposted ? "Undo repost" : "Repost reel"}
                     >
-                      <Icon name="repost" size={24} />
+                      <span className="reel-action-icon-desktop">
+                        <Icon name="repost" size={24} />
+                      </span>
+                      <span className="reel-action-icon-mobile" style={{ display: "none" }}>
+                        <Icon name="repostModern" size={25} />
+                      </span>
                     </button>
                     <button
                       className={isSaved ? "active" : ""}
                       onClick={() => void toggleSave(reel)}
                       aria-label={isSaved ? "Remove saved reel" : "Save reel"}
                     >
-                      <Icon name="bookmark" size={24} />
-                      <b>{reel.saveCount}</b>
+                      <span className="reel-action-icon-desktop">
+                        <Icon name="bookmark" size={24} />
+                      </span>
+                      <span className="reel-action-icon-mobile" style={{ display: "none" }}>
+                        <Icon name="bookmarkModern" size={25} />
+                      </span>
+                      <b className="reel-count-desktop">{reel.saveCount}</b>
+                      <b className="reel-count-mobile" style={{ display: "none" }}>
+                        {formatReelMetric(reel.saveCount)}
+                      </b>
                     </button>
                   </div>
                 </div>
@@ -558,6 +821,7 @@ export default function ReelsPanel({
         onCreate={() => router.push("/home?screen=home&create=post")}
         onReels={() => viewportRef.current?.scrollTo({ top: 0, behavior: "smooth" })}
         onProfile={() => router.push("/home?screen=profile")}
+        profileAvatarUrl={avatarFor(currentUser)}
       />
     </main>
   );

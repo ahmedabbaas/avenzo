@@ -37,16 +37,18 @@ type AccountProfile = {
 type UsernameState = "idle" | "checking" | "available" | "taken" | "invalid" | "error";
 
 function Section({
+  id,
   title,
   text,
   children,
 }: {
+  id?: string;
   title: string;
   text: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className="settings-form-section">
+    <section id={id} className="settings-form-section">
       <div className="settings-form-head">
         <h2>{title}</h2>
         <p>{text}</p>
@@ -746,6 +748,7 @@ export default function AccountSettingsForm({
       </Section>
 
       <Section
+        id="privacy"
         title={t("Privacy")}
         text="Control who can interact with your account."
       >

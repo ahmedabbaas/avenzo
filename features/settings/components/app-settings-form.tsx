@@ -34,16 +34,18 @@ function Toggle({
 }
 
 function Section({
+  id,
   title,
   text,
   children,
 }: {
+  id?: string;
   title: string;
   text: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className="settings-form-section">
+    <section id={id} className="settings-form-section">
       <div className="settings-form-head">
         <h2>{title}</h2>
         <p>{text}</p>
@@ -136,6 +138,7 @@ export default function AppSettingsForm({
   return (
     <div className="settings-sections">
       <Section
+        id="appearance"
         title={t("Appearance")}
         text="Choose how AVENZO looks on this device."
       >
@@ -165,6 +168,7 @@ export default function AppSettingsForm({
       </Section>
 
       <Section
+        id="language"
         title={t("Language")}
         text="Choose the language used by AVENZO."
       >
@@ -183,6 +187,7 @@ export default function AppSettingsForm({
       </Section>
 
       <Section
+        id="notifications"
         title={t("Notifications")}
         text="Control which social activity can notify you."
       >
@@ -197,6 +202,7 @@ export default function AppSettingsForm({
       </Section>
 
       <Section
+        id="feed"
         title={t("Feed Preferences")}
         text="Tune what the home feed does and how much data it uses."
       >
@@ -207,6 +213,7 @@ export default function AppSettingsForm({
       </Section>
 
       <Section
+        id="media"
         title={t("Media Settings")}
         text="Control playback quality and upload behavior."
       >

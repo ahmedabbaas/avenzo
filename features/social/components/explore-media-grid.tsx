@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Post, Reel } from "../types";
 import UserMediaImage from "./user-media-image";
 import VerifiedBadge from "./verified-badge";
+import Icon from "./icon";
 
 type ExploreMediaGridProps = {
   posts: Post[];
@@ -14,6 +15,16 @@ type ExploreMediaGridProps = {
 type ExploreItem =
   | { kind: "post"; createdAt: string; post: Post }
   | { kind: "reel"; createdAt: string; reel: Reel };
+
+function formatExploreMetric(value: number) {
+  if (value >= 1_000_000) {
+    return (value / 1_000_000).toFixed(value >= 10_000_000 ? 0 : 1).replace(".0", "") + "M";
+  }
+  if (value >= 1_000) {
+    return (value / 1_000).toFixed(value >= 100_000 ? 0 : 1).replace(".0", "") + "K";
+  }
+  return String(value);
+}
 
 export default function ExploreMediaGrid({
   posts,
@@ -105,6 +116,38 @@ export default function ExploreMediaGrid({
 
               <span className="explore-media-type">
                 {item.kind === "reel" ? "REEL" : isVideo ? "VIDEO" : "POST"}
+              </span>
+
+              <span
+                className="explore-media-type-mobile"
+                style={{ display: "none" }}
+                aria-hidden="true"
+              >
+                {item.kind === "reel" || isVideo ? (
+                  <Icon name="play" size={16} />
+                ) : item.kind === "post" &&
+                  (item.post.mediaItems?.length || 0) > 1 ? (
+                  <Icon name="grid" size={15} />
+                ) : (
+                  <Icon name="camera" size={15} />
+                )}
+              </span>
+
+              <span
+                className="explore-media-metric"
+                style={{ display: "none" }}
+              >
+                <Icon
+                  name={item.kind === "reel" ? "eye" : "heartModern"}
+                  size={14}
+                />
+                <b>
+                  {formatExploreMetric(
+                    item.kind === "reel"
+                      ? item.reel.viewCount
+                      : item.post.likeCount
+                  )}
+                </b>
               </span>
             </Link>
 

@@ -116,6 +116,10 @@ export default function HomeClient({
   );
   const [people, setPeople] = useState<Profile[]>([]);
   const [query, setQuery] = useState("");
+  const [exploreFilter, setExploreFilter] = useState<
+    "all" | "reels" | "photos" | "art" | "travel" | "gaming"
+  >("all");
+  const exploreSearchRef = useRef<HTMLInputElement | null>(null);
   const [followed, setFollowed] = useState<string[]>([]);
   const [requested, setRequested] = useState<string[]>([]);
   const [saved, setSaved] = useState<string[]>([]);
@@ -911,33 +915,62 @@ export default function HomeClient({
       .includes(normalizedQuery)
   );
 
-  const filteredReels = reels.filter((reel) => {
-    if (!normalizedQuery) return true;
+  function exploreText(
+    item: Pick<Reel, "title" | "caption" | "location" | "hashtags" | "mentions" | "profile"> |
+      Pick<Post, "caption" | "location" | "hashtags" | "mentions" | "profile">
+  ) {
     return [
-      reel.title,
-      reel.caption,
-      reel.location,
-      reel.profile?.display_name,
-      reel.profile?.username,
-      ...(reel.hashtags || []),
-      ...(reel.mentions || []),
-    ].filter(Boolean).join(" ").toLowerCase().includes(normalizedQuery);
+      "title" in item ? item.title : "",
+      item.caption,
+      item.location,
+      item.profile?.display_name,
+      item.profile?.username,
+      ...(item.hashtags || []),
+      ...(item.mentions || []),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+  }
+
+  function matchesExploreCategory(text: string) {
+    if (exploreFilter === "art") {
+      return /(^|\s|#)(art|artist|design|drawing|illustration|creative)(\s|$)/i.test(text);
+    }
+    if (exploreFilter === "travel") {
+      return /(^|\s|#)(travel|trip|tour|vacation|nature|city|karachi|islamabad|lahore)(\s|$)/i.test(text);
+    }
+    if (exploreFilter === "gaming") {
+      return /(^|\s|#)(gaming|game|gamer|games|playstation|xbox|pcgaming|esports)(\s|$)/i.test(text);
+    }
+    return true;
+  }
+
+  const filteredReels = reels.filter((reel) => {
+    const text = exploreText(reel);
+    if (normalizedQuery && !text.includes(normalizedQuery)) return false;
+    if (exploreFilter === "photos") return false;
+    return matchesExploreCategory(text);
   });
 
   const filteredExplorePosts = explorePosts.filter((post) => {
-    if (!normalizedQuery) return true;
-    return [
-      post.caption,
-      post.location,
-      post.profile?.display_name,
-      post.profile?.username,
-      ...(post.hashtags || []),
-      ...(post.mentions || []),
-    ].filter(Boolean).join(" ").toLowerCase().includes(normalizedQuery);
+    const text = exploreText(post);
+    if (normalizedQuery && !text.includes(normalizedQuery)) return false;
+    if (exploreFilter === "reels") return false;
+    if (
+      exploreFilter === "photos" &&
+      post.media_type !== "image" &&
+      !(post.mediaItems || []).some((item) => item.media_type === "image")
+    ) {
+      return false;
+    }
+    return matchesExploreCategory(text);
   });
 
   const searchResultCount =
-    filteredPeople.length + filteredReels.length + filteredExplorePosts.length;
+    (normalizedQuery ? filteredPeople.length : 0) +
+    filteredReels.length +
+    filteredExplorePosts.length;
 
   const homeFeedPosts =
     homeFeedMode === "following" ? posts : explorePosts;
@@ -1399,6 +1432,39 @@ export default function HomeClient({
 
           {screen === "explore" && (
             <section className="explore-page">
+              <div className="avenzo-mobile-explore-head" style={{ display: "none" }}>
+                <b>AVENZO</b>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => exploreSearchRef.current?.focus()}
+                    aria-label="Search Explore"
+                  >
+                    <Icon name="search" size={21} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => router.push("/messages")}
+                    aria-label="Messages"
+                  >
+                    <Icon name="chatRound" size={20} />
+                    {unreadMessages > 0 && (
+                      <span className="explore-head-badge">
+                        {Math.min(unreadMessages, 99)}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setScreen("activity")}
+                    aria-label="Notifications"
+                  >
+                    <Icon name="bellModern" size={20} />
+                    {unreadActivity > 0 && <i className="explore-head-dot" />}
+                  </button>
+                </div>
+              </div>
+
               <PageTitle
                 eyebrow="DISCOVER"
                 title="Search & Explore"
@@ -1408,10 +1474,11 @@ export default function HomeClient({
               <label className="explore-search-box">
                 <Icon name="search" size={19} />
                 <input
+                  ref={exploreSearchRef}
                   value={query}
                   onChange={(event) => setQuery(event.target.value.slice(0, 120))}
-                  placeholder="Search users, posts or reels"
-                  aria-label="Search users, posts or reels"
+                  placeholder="Search users, posts, reels or tags..."
+                  aria-label="Search users, posts, reels or tags"
                   autoComplete="off"
                   inputMode="search"
                 />
@@ -1425,6 +1492,34 @@ export default function HomeClient({
                   </button>
                 )}
               </label>
+
+              <div
+                className="avenzo-mobile-explore-filters"
+                style={{ display: "none" }}
+                role="tablist"
+                aria-label="Explore filters"
+              >
+                {([
+                  ["all", "grid", "All"],
+                  ["reels", "reels", "Reels"],
+                  ["photos", "camera", "Photos"],
+                  ["art", "palette", "Art"],
+                  ["travel", "plane", "Travel"],
+                  ["gaming", "gamepad", "Gaming"],
+                ] as const).map(([id, icon, label]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className={exploreFilter === id ? "active" : ""}
+                    onClick={() => setExploreFilter(id)}
+                    role="tab"
+                    aria-selected={exploreFilter === id}
+                  >
+                    <Icon name={icon} size={15} />
+                    <span>{label}</span>
+                  </button>
+                ))}
+              </div>
 
               {query && !exploreLoading && !exploreError && (
                 <div className="search-summary">
@@ -1466,7 +1561,12 @@ export default function HomeClient({
                 </div>
               ) : (
                 <>
-                  <section className="explore-section explore-people-section">
+                  <section
+                    className={
+                      "explore-section explore-people-section" +
+                      (!normalizedQuery ? " explore-people-idle" : "")
+                    }
+                  >
                     <div className="section-inline-head">
                       <div>
                         <div className="eyebrow">PEOPLE</div>
