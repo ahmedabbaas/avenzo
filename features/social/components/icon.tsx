@@ -37,7 +37,9 @@ export type IconName =
   | "mute"
   | "link"
   | "userPlus"
-  | "tagged";
+  | "tagged"
+  | "chatRound"
+  | "bellModern";
 
 
 export default function Icon({ name, size = 19 }: { name: IconName; size?: number }) {
@@ -234,6 +236,18 @@ export default function Icon({ name, size = 19 }: { name: IconName; size?: numbe
         <rect x="4" y="3.5" width="16" height="17" rx="2.5" />
         <circle cx="12" cy="9" r="2.5" />
         <path d="M8 17c.6-2.3 1.9-3.5 4-3.5s3.4 1.2 4 3.5" />
+      </>
+    ),
+    chatRound: (
+      <>
+        <path d="M20.5 11.5a8.5 8.5 0 0 1-8.8 8.5 9.3 9.3 0 0 1-3.8-.9L3.5 20.5l1.4-4.1A8.2 8.2 0 0 1 3.5 12 8.5 8.5 0 0 1 12 3.5a8.5 8.5 0 0 1 8.5 8Z" />
+        <path d="M8.5 10.5h7M8.5 14h4.5" />
+      </>
+    ),
+    bellModern: (
+      <>
+        <path d="M18.5 9.7c0-3.7-2.6-6.2-6.5-6.2S5.5 6 5.5 9.7c0 4.8-2 5.6-2 7.3h17c0-1.7-2-2.5-2-7.3Z" />
+        <path d="M9.3 20a3.2 3.2 0 0 0 5.4 0" />
       </>
     ),
   };

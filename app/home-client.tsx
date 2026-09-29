@@ -1032,7 +1032,7 @@ export default function HomeClient({
           onClick={() => setScreen("activity")}
           aria-label="Activity"
         >
-          <Icon name="activity" size={20} />
+          <Icon name="bellModern" size={20} />
           {unreadActivity > 0 && (
             <i
               className="top-badge top-badge-dot"
@@ -1046,7 +1046,7 @@ export default function HomeClient({
           onClick={() => router.push("/messages")}
           aria-label="Messages"
         >
-          <Icon name="messages" size={20} />
+          <Icon name="chatRound" size={20} />
           {unreadMessages > 0 && (
             <i
               className="top-badge top-badge-dot"
