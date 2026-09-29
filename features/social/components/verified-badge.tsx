@@ -1,9 +1,7 @@
-export default function VerifiedBadge({
-  verified: _verified,
-  className: _className = "",
-}: {
+export default function VerifiedBadge(props: {
   verified?: boolean;
   className?: string;
 }) {
+  void props;
   return null;
 }
