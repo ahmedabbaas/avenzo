@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Icon from "../features/social/components/icon";
+import AvatarImage from "../features/social/components/avatar-image";
 
 export type MobilePrimaryTab = "home" | "search" | "create" | "reels" | "profile";
 
@@ -12,6 +13,7 @@ type MobileBottomNavProps = {
   onCreate: () => void;
   onReels: () => void;
   onProfile: () => void;
+  profileAvatarUrl?: string;
 };
 
 const ITEMS: Array<{
@@ -43,6 +45,7 @@ export default function MobileBottomNav({
   onCreate,
   onReels,
   onProfile,
+  profileAvatarUrl = "",
 }: MobileBottomNavProps) {
   const [keyboardOpen, setKeyboardOpen] = useState(false);
 
@@ -118,7 +121,16 @@ export default function MobileBottomNav({
             aria-current={selected ? "page" : undefined}
           >
             <span className="mobile-icon-wrap" aria-hidden="true">
-              <Icon name={item.icon} />
+              {item.id === "profile" && profileAvatarUrl ? (
+                <AvatarImage
+                  src={profileAvatarUrl}
+                  alt=""
+                  size={48}
+                  className="mobile-nav-profile-avatar"
+                />
+              ) : (
+                <Icon name={item.icon} />
+              )}
             </span>
             <small>{item.label}</small>
           </button>

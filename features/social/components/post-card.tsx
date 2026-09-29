@@ -48,6 +48,7 @@ export default function PostCard({
   onDelete,
   autoplayVideo = false,
   dataSaving = false,
+  commentAvatarUrl = "",
 }: {
   post: Post;
   saved: boolean;
@@ -66,6 +67,7 @@ export default function PostCard({
   onDelete: () => void;
   autoplayVideo?: boolean;
   dataSaving?: boolean;
+  commentAvatarUrl?: string;
 }) {
   const [comment, setComment] = useState("");
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
@@ -79,6 +81,7 @@ export default function PostCard({
   const [viewerUrl, setViewerUrl] = useState("");
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [heartBurst, setHeartBurst] = useState(false);
+  const [showMobileComments, setShowMobileComments] = useState(false);
   const author = post.profile;
   const authorName = author?.display_name || "Account unavailable";
   const rootComments = post.comments.filter((item) => !item.parent_id);
@@ -137,6 +140,9 @@ export default function PostCard({
             <div>
               <b className="post-author-collab">
                 <span>{authorName}</span>
+                <span className="post-name-verified" style={{ display: "none" }}>
+                  <VerifiedBadge verified={author.verified} />
+                </span>
                 {post.collaborators?.length ? (
                   <span className="post-collab-copy">
                     {" "}with{" "}
@@ -386,7 +392,15 @@ export default function PostCard({
           </form>
         ) : post.caption ? (
           <p className="post-caption post-caption-after">
-            <b>{author?.username ? "@" + author.username : authorName}</b>
+            <b className="post-caption-author-web">
+              {author?.username ? "@" + author.username : authorName}
+            </b>
+            <b
+              className="post-caption-author-mobile"
+              style={{ display: "none" }}
+            >
+              {authorName}
+            </b>
             <span>{post.caption}</span>
           </p>
         ) : null}
@@ -399,8 +413,24 @@ export default function PostCard({
           </div>
         )}
 
+        {post.commentCount > 0 && (
+          <button
+            type="button"
+            className="post-view-comments-mobile"
+            style={{ display: "none" }}
+            onClick={() => setShowMobileComments((open) => !open)}
+          >
+            {showMobileComments ? "Hide comments" : "View all comments"}
+          </button>
+        )}
+
         {post.comments.length > 0 && (
-          <div className="comment-list">
+          <div
+            className={
+              "comment-list" +
+              (showMobileComments ? " mobile-comments-open" : "")
+            }
+          >
             {hiddenRootCount > 0 && (
               <button
                 type="button"
@@ -711,6 +741,19 @@ export default function PostCard({
           }}
           className="comment-input"
         >
+          {commentAvatarUrl && (
+            <span
+              className="post-comment-current-avatar"
+              style={{ display: "none" }}
+              aria-hidden="true"
+            >
+              <AvatarImage
+                src={commentAvatarUrl}
+                alt="Your profile"
+                size={40}
+              />
+            </span>
+          )}
           <input
             ref={commentInputRef}
             value={comment}

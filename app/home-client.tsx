@@ -987,6 +987,16 @@ export default function HomeClient({
           )}
         </button>
 
+        <button
+          className="mobile-home-search"
+          style={{ display: "none" }}
+          type="button"
+          onClick={() => selectPrimaryScreen("explore")}
+          aria-label="Search AVENZO"
+        >
+          <Icon name="search" size={21} />
+        </button>
+
         <div className="search-wrap">
           <Icon name="search" size={17} />
           <input
@@ -1196,8 +1206,18 @@ export default function HomeClient({
                       />
                     </span>
                     <small>
-                      @{story.profile?.username || profile.username}
-                      <VerifiedBadge verified={story.profile?.verified || profile.verified} />
+                      <span className="story-label-desktop">
+                        @{story.profile?.username || profile.username}
+                        <VerifiedBadge verified={story.profile?.verified || profile.verified} />
+                      </span>
+                      <span
+                        className="story-label-mobile"
+                        style={{ display: "none" }}
+                      >
+                        {story.author_id === profile.id
+                          ? "Your story"
+                          : story.profile?.username || profile.username}
+                      </span>
                     </small>
                   </button>
                 ))}
@@ -1304,6 +1324,7 @@ export default function HomeClient({
                         runtimePreferences.data_saving_mode ||
                         runtimePreferences.use_less_mobile_data
                       }
+                      commentAvatarUrl={avatarFor(profile)}
                     />
                   ))}
                 </div>
@@ -1541,6 +1562,7 @@ export default function HomeClient({
         onCreate={() => openComposer("post")}
         onReels={() => router.push("/reels")}
         onProfile={() => selectPrimaryScreen("profile")}
+        profileAvatarUrl={avatarFor(profile)}
       />
 
       {showCreate && (
