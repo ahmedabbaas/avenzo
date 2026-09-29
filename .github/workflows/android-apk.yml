@@ -58,8 +58,13 @@ jobs:
       - name: Apply AVENZO Android branding and phone frame
         shell: bash
         run: |
-          mkdir -p android/app/src/main/res/drawable-nodpi
+          mkdir -p android/app/src/main/res/drawable-nodpi android/app/src/main/res/drawable
           cp public/avenzo-logo.webp android/app/src/main/res/drawable-nodpi/avenzo_logo.webp
+          cat > android/app/src/main/res/drawable/avenzo_notification_icon.xml <<'EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+            <path android:fillColor="#FFFFFFFF" android:pathData="M4,20 L9.6,4 L14.4,4 L20,20 L16.2,20 L15.1,16.7 L8.9,16.7 L7.8,20 Z M10,13.5 L14,13.5 L12,7.5 Z"/>
+          </vector>
+          EOF
           python3 - <<'PY'
           from pathlib import Path
           import re
@@ -372,7 +377,7 @@ jobs:
                   : new Notification.Builder(this);
 
               builder
-                .setSmallIcon(android.R.drawable.ic_dialog_email)
+                .setSmallIcon(R.drawable.avenzo_notification_icon)
                 .setLargeIcon(
                   BitmapFactory.decodeResource(
                     getResources(),
