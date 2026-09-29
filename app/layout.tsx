@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import "./avenzo-ad-theme.css";
 import PreferencesBootstrap from "../features/settings/components/preferences-bootstrap";
 import NativeMessageNotifications from "../features/notifications/components/native-message-notifications";
 import CallManager from "../features/messages/components/call-manager";
