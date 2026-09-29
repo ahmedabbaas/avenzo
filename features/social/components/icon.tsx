@@ -34,7 +34,10 @@ export type IconName =
   | "play"
   | "pause"
   | "volume"
-  | "mute";
+  | "mute"
+  | "link"
+  | "userPlus"
+  | "tagged";
 
 
 export default function Icon({ name, size = 19 }: { name: IconName; size?: number }) {
@@ -210,6 +213,27 @@ export default function Icon({ name, size = 19 }: { name: IconName; size?: numbe
       <>
         <path d="M5 10v4h4l5 4V6l-5 4H5Z" />
         <path d="m17 10 4 4M21 10l-4 4" />
+      </>
+    ),
+    link: (
+      <>
+        <path d="m10 13 4-4" />
+        <path d="M8.5 16.5 6 19a3.5 3.5 0 0 1-5-5l3-3a3.5 3.5 0 0 1 5 0" />
+        <path d="m15.5 7.5 2.5-2.5a3.5 3.5 0 0 1 5 5l-3 3a3.5 3.5 0 0 1-5 0" />
+      </>
+    ),
+    userPlus: (
+      <>
+        <circle cx="9" cy="8" r="4" />
+        <path d="M2.5 21c.7-4.1 2.9-6.2 6.5-6.2 2.2 0 4 .8 5.1 2.3" />
+        <path d="M18 10v7M14.5 13.5h7" />
+      </>
+    ),
+    tagged: (
+      <>
+        <rect x="4" y="3.5" width="16" height="17" rx="2.5" />
+        <circle cx="12" cy="9" r="2.5" />
+        <path d="M8 17c.6-2.3 1.9-3.5 4-3.5s3.4 1.2 4 3.5" />
       </>
     ),
   };

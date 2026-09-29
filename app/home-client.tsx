@@ -975,10 +975,18 @@ export default function HomeClient({
           aria-label="AVENZO home"
         >
           {screen === "profile" ? (
-            <span className="brand-profile-content">
-              <span>@{profile.username}</span>
-              <Icon name="chevronDown" size={15} />
-            </span>
+            <>
+              <span className="brand-profile-content">
+                <span>@{profile.username}</span>
+                <Icon name="chevronDown" size={15} />
+              </span>
+              <span
+                className="profile-reference-wordmark"
+                style={{ display: "none" }}
+              >
+                AVENZO
+              </span>
+            </>
           ) : (
             <span className="brand-home-content">
               <BrandLogo size={34} />

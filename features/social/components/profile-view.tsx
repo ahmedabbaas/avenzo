@@ -12,6 +12,7 @@ import VerifiedBadge from "./verified-badge";
 import Icon from "./icon";
 import TaggedPostsGrid from "./tagged-posts-grid";
 import ProfileHighlightsRow from "./profile-highlights-row";
+import ProfileSavedGrid from "./profile-saved-grid";
 
 export default function ProfileView({
   profile,
@@ -36,7 +37,7 @@ export default function ProfileView({
 }) {
   const router = useRouter();
   const [tab, setTab] =
-    useState<"posts" | "reels" | "tagged">("posts");
+    useState<"posts" | "reels" | "saved" | "tagged">("posts");
   const [shareLabel, setShareLabel] = useState("Share Profile");
   const website = normalizeProfileWebsite(profile.website);
 
@@ -91,64 +92,83 @@ export default function ProfileView({
   return (
     <div className="profile-page">
       <section className="profile-hero">
-        <div className="profile-reference-mobile" style={{ display: "none" }} aria-label="Profile overview">
-          <div className="profile-reference-avatar">
-            <AvatarImage
-              src={avatarFor(profile)}
-              alt={profile.display_name}
-              size={180}
-            />
-            <button
-              type="button"
-              onClick={onCreateStory}
-              aria-label="Add story"
+        <div
+          className="profile-reference-mobile"
+          style={{ display: "none" }}
+          aria-label="Profile overview"
+        >
+          <div className="profile-reference-top">
+            <div className="profile-reference-avatar">
+              <AvatarImage
+                src={avatarFor(profile)}
+                alt={profile.display_name}
+                size={180}
+              />
+              <button
+                type="button"
+                onClick={onCreateStory}
+                aria-label="Add story"
+              >
+                <Icon name="plus" size={15} />
+              </button>
+            </div>
+
+            <div
+              className="profile-reference-stats"
+              aria-label="Profile statistics"
             >
-              <Icon name="plus" size={15} />
-            </button>
+              <span>
+                <b>{formatProfileStat(stats.posts)}</b>
+                <small>Posts</small>
+              </span>
+              <Link href="/connections/followers">
+                <b>{formatProfileStat(stats.followers)}</b>
+                <small>Followers</small>
+              </Link>
+              <Link href="/connections/following">
+                <b>{formatProfileStat(stats.following)}</b>
+                <small>Following</small>
+              </Link>
+            </div>
           </div>
 
-          <div className="profile-reference-identity">
-            <h1 className="verified-line">
-              {profile.display_name}
-              <VerifiedBadge verified={profile.verified} />
-            </h1>
-            <span>@{profile.username}</span>
-          </div>
+          <div className="profile-reference-copy">
+            <div className="profile-reference-identity">
+              <h1 className="verified-line">
+                {profile.display_name}
+                <VerifiedBadge verified={profile.verified} />
+              </h1>
+              <span>@{profile.username}</span>
+            </div>
 
-          <p className="profile-reference-bio">
-            {profile.bio || "Welcome to AVENZO."}
-          </p>
+            {profile.bio && (
+              <p className="profile-reference-bio">{profile.bio}</p>
+            )}
 
-          {website && (
-            <a
-              className="profile-reference-website"
-              href={website.href}
-              target="_blank"
-              rel="noopener noreferrer nofollow"
-            >
-              {website.label}
-            </a>
-          )}
-
-          <div className="profile-reference-stats" aria-label="Profile statistics">
-            <span>
-              <b>{formatProfileStat(stats.posts)}</b>
-              <small>Posts</small>
-            </span>
-            <Link href="/connections/followers">
-              <b>{formatProfileStat(stats.followers)}</b>
-              <small>Followers</small>
-            </Link>
-            <Link href="/connections/following">
-              <b>{formatProfileStat(stats.following)}</b>
-              <small>Following</small>
-            </Link>
+            {website && (
+              <a
+                className="profile-reference-website"
+                href={website.href}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+              >
+                <Icon name="link" size={15} />
+                <span>{website.label}</span>
+              </a>
+            )}
           </div>
 
           <div className="profile-reference-actions">
-            <button type="button" onClick={onEdit}>Edit Profile</button>
-            <button type="button" onClick={() => void shareProfile()}>
-              {shareLabel}
+            <button type="button" onClick={onEdit}>
+              Edit profile
+            </button>
+            <button
+              className="profile-reference-discover"
+              type="button"
+              onClick={() => router.push("/home?screen=explore")}
+              aria-label="Discover people"
+            >
+              <Icon name="userPlus" size={20} />
             </button>
           </div>
         </div>
@@ -268,11 +288,19 @@ export default function ProfileView({
           <span className="profile-tab-count">{reels.length}</span>
         </button>
         <button
+          className={tab === "saved" ? "active" : ""}
+          onClick={() => setTab("saved")}
+          aria-label="Saved"
+        >
+          <Icon name="saved" size={20} />
+          <span className="profile-tab-label">Saved</span>
+        </button>
+        <button
           className={tab === "tagged" ? "active" : ""}
           onClick={() => setTab("tagged")}
           aria-label="Tagged"
         >
-          <Icon name="tag" size={20} />
+          <Icon name="tagged" size={20} />
           <span className="profile-tab-label">Tagged</span>
         </button>
       </div>
@@ -387,6 +415,13 @@ export default function ProfileView({
               actionLabel="Create Reel"
             />
           )}
+        </section>
+      ) : tab === "saved" ? (
+        <section
+          className="profile-content-section profile-saved-section"
+          aria-label="Saved content"
+        >
+          <ProfileSavedGrid userId={profile.id} />
         </section>
       ) : (
         <section className="profile-content-section" aria-labelledby="profile-tagged-title">
