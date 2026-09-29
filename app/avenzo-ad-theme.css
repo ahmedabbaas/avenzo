@@ -1402,3 +1402,48 @@
     }
   }
 }
+
+
+/* Keep the approved campaign art direction coherent on mobile even when
+   a previously saved light preference is present. Desktop theme preference
+   remains untouched. */
+@media(max-width:820px){
+  html[data-theme="light"],
+  html[data-theme="light"] body{
+    background:var(--avenzo-ad-bg)!important;
+    color-scheme:dark!important;
+  }
+
+  html[data-theme="light"] .social-app,
+  html[data-theme="light"] .social-layout,
+  html[data-theme="light"] .social-main,
+  html[data-theme="light"] .stories-row,
+  html[data-theme="light"] .post-card,
+  html[data-theme="light"] .post-head,
+  html[data-theme="light"] .post-content,
+  html[data-theme="light"] .explore-page,
+  html[data-theme="light"] .profile-page,
+  html[data-theme="light"] .reels-page,
+  html[data-theme="light"] .messages-page,
+  html[data-theme="light"] .dm-workspace,
+  html[data-theme="light"] .dm-sidebar,
+  html[data-theme="light"] .dm-chat{
+    background:var(--avenzo-ad-bg)!important;
+    color:var(--avenzo-ad-text)!important;
+  }
+
+  html[data-theme="light"] .top,
+  html[data-theme="light"] .mobile-nav,
+  html[data-theme="light"] .mobile-bottom-nav{
+    background:rgba(5,6,6,.97)!important;
+    color:var(--avenzo-ad-text)!important;
+  }
+
+  html[data-theme="light"] .post-head .person-line b,
+  html[data-theme="light"] .post-caption-after,
+  html[data-theme="light"] .post-caption-after b,
+  html[data-theme="light"] .post-actions button,
+  html[data-theme="light"] .post-actions .post-stat{
+    color:#f4f5f5!important;
+  }
+}
