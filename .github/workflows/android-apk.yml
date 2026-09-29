@@ -47,32 +47,20 @@ jobs:
         with:
           path: ~/.android/debug.keystore
           key: avenzo-android-debug-keystore-v2
-
-      - name: Bootstrap stable AVENZO signing key
-        if: steps.signing-cache.outputs.cache-hit != 'true'
-        shell: bash
-        run: |
-          mkdir -p "$HOME/.android"
-          keytool -genkeypair -v \
-            -keystore "$HOME/.android/debug.keystore" \
-            -storepass android \
-            -alias androiddebugkey \
-            -keypass android \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -dname "CN=AVENZO Android,O=AVENZO,C=PK"
-          test -s "$HOME/.android/debug.keystore"
+          fail-on-cache-miss: true
 
       - name: Verify stable AVENZO signing key
         shell: bash
         run: |
           test -s "$HOME/.android/debug.keystore"
-          keytool -list -v \
+          expected="5F:C5:51:B7:A2:09:12:A5:42:EE:7B:B6:27:73:C5:51:CE:CA:73:2D:2D:53:B6:19:6D:6E:5D:5B:AA:3A:D9:D2"
+          actual="$(keytool -list -v \
             -keystore "$HOME/.android/debug.keystore" \
             -storepass android \
             -alias androiddebugkey \
-            | grep -E "Alias name:|SHA256:"
+            | sed -n 's/.*SHA256: //p' | head -n 1)"
+          test "$actual" = "$expected"
+          echo "AVENZO signing certificate verified: $actual"
 
       - name: Verify Android SDK
         run: |
