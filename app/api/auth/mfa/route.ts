@@ -17,7 +17,14 @@ function json(body: unknown, status = 200) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    let body: Record<string, unknown>;
+
+    try {
+      body = (await request.json()) as Record<string, unknown>;
+    } catch {
+      return json({ error: "Invalid verification request." }, 400);
+    }
+
     const code = String(body.code || "").replace(/\D/g, "").slice(0, 6);
 
     if (code.length !== 6) {

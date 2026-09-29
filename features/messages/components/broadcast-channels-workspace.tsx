@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import {
@@ -50,16 +51,17 @@ export default function BroadcastChannelsWorkspace({
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const bodyRef = useRef<HTMLDivElement | null>(null);
+  const activeChannelId = active?.id || null;
 
   const loadChannels = useCallback(async () => {
     const next = await fetchBroadcastChannels(supabase, currentUser.id);
     setChannels(next);
-    if (active) {
-      const replacement = next.find((item) => item.id === active.id);
+    if (activeChannelId) {
+      const replacement = next.find((item) => item.id === activeChannelId);
       if (replacement) setActive(replacement);
     }
     return next;
-  }, [supabase, currentUser.id, active]);
+  }, [supabase, currentUser.id, activeChannelId]);
 
   const loadChannel = useCallback(async (channel: BroadcastChannel) => {
     setActive(channel);
@@ -97,8 +99,8 @@ export default function BroadcastChannelsWorkspace({
         async ({ new: inserted }) => {
           const row = inserted as { channel_id: string };
           await loadChannels();
-          if (active?.id === row.channel_id) {
-            setPosts(await fetchBroadcastPosts(supabase, active.id));
+          if (activeChannelId === row.channel_id) {
+            setPosts(await fetchBroadcastPosts(supabase, activeChannelId));
             window.setTimeout(() => {
               const node = bodyRef.current;
               if (node) node.scrollTop = node.scrollHeight;
@@ -114,8 +116,8 @@ export default function BroadcastChannelsWorkspace({
           table: "broadcast_channel_reactions",
         },
         () => {
-          if (active) {
-            void fetchBroadcastPosts(supabase, active.id).then(setPosts);
+          if (activeChannelId) {
+            void fetchBroadcastPosts(supabase, activeChannelId).then(setPosts);
           }
         }
       )
@@ -124,7 +126,7 @@ export default function BroadcastChannelsWorkspace({
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [supabase, currentUser.id, active?.id, loadChannels]);
+  }, [supabase, currentUser.id, activeChannelId, loadChannels]);
 
   useEffect(() => {
     if (!notice) return;
@@ -148,8 +150,8 @@ export default function BroadcastChannelsWorkspace({
         emoji,
         mine?.emoji === emoji
       );
-      if (active) {
-        setPosts(await fetchBroadcastPosts(supabase, active.id));
+      if (activeChannelId) {
+        setPosts(await fetchBroadcastPosts(supabase, activeChannelId));
       }
     } catch {
       setNotice("Reaction could not be updated.");

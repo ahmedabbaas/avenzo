@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import {
@@ -122,6 +123,8 @@ export default function GroupMessagesWorkspace({
     return () => window.clearTimeout(timer);
   }, [peopleQuery, loadPeople]);
 
+  const activeGroupId = active?.id || null;
+
   useEffect(() => {
     const channel = supabase
       .channel("avenzo-group-list-" + currentUser.id)
@@ -136,8 +139,8 @@ export default function GroupMessagesWorkspace({
         async ({ new: inserted }) => {
           const row = inserted as GroupMessage;
           await loadGroups();
-          if (active?.id === row.group_id) {
-            setMessages(await fetchGroupMessages(supabase, active.id));
+          if (activeGroupId === row.group_id) {
+            setMessages(await fetchGroupMessages(supabase, activeGroupId));
             window.setTimeout(() => {
               const node = bodyRef.current;
               if (node) node.scrollTop = node.scrollHeight;
@@ -153,8 +156,8 @@ export default function GroupMessagesWorkspace({
           table: "group_message_reactions",
         },
         () => {
-          if (active) {
-            void fetchGroupMessages(supabase, active.id).then(setMessages);
+          if (activeGroupId) {
+            void fetchGroupMessages(supabase, activeGroupId).then(setMessages);
           }
         }
       )
@@ -163,7 +166,7 @@ export default function GroupMessagesWorkspace({
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [supabase, currentUser.id, active?.id, loadGroups]);
+  }, [supabase, currentUser.id, activeGroupId, loadGroups]);
 
   useEffect(() => {
     if (!notice) return;

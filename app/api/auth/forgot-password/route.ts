@@ -22,7 +22,14 @@ function json(body: unknown, status = 200) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    let body: Record<string, unknown>;
+
+    try {
+      body = (await request.json()) as Record<string, unknown>;
+    } catch {
+      return json({ error: "Invalid password reset request." }, 400);
+    }
+
     const email = normalizeEmail(String(body.email || ""));
     const turnstileToken = String(body.turnstileToken || "");
 

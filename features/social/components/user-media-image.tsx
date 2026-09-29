@@ -33,8 +33,8 @@ export default function UserMediaImage({
 
   if (requiresNativeImage) {
     // Legacy media may predate stored dimensions and local previews use blob URLs.
-    // eslint-disable-next-line @next/next/no-img-element
     return (
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={src}
         alt={alt}

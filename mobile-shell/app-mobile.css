@@ -3071,7 +3071,7 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
   }
 
   html.avenzo-android-app .messages-page-topbar>.btn::before{
-    content:"â€¹";
+    content:"\2190";
     display:grid;
     place-items:center;
     width:44px;
@@ -3980,10 +3980,10 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
     color:currentColor!important;
   }
 
-  html.avenzo-android-app .screen-profile .profile-content-tabs button:nth-child(1):before{content:"â–¦"}
-  html.avenzo-android-app .screen-profile .profile-content-tabs button:nth-child(2):before{content:"â–»"}
-  html.avenzo-android-app .screen-profile .profile-content-tabs button:nth-child(3):before{content:"â†»"}
-  html.avenzo-android-app .screen-profile .profile-content-tabs button:nth-child(4):before{content:"âŒ"}
+  html.avenzo-android-app .screen-profile .profile-content-tabs button:nth-child(1):before{content:""}
+  html.avenzo-android-app .screen-profile .profile-content-tabs button:nth-child(2):before{content:""}
+  html.avenzo-android-app .screen-profile .profile-content-tabs button:nth-child(3):before{content:""}
+  html.avenzo-android-app .screen-profile .profile-content-tabs button:nth-child(4):before{content:""}
 
   html.avenzo-android-app .screen-profile .profile-content-tabs button.active{
     color:#17191d!important;
@@ -5801,7 +5801,7 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
 }
 
 
-/* AVENZO STEP 2 â€” authoritative mobile bottom navigation */
+/* AVENZO STEP 2 - authoritative mobile bottom navigation */
 @media (max-width: 820px) {
   :root {
     --avenzo-mobile-nav-height: 66px;
@@ -6042,7 +6042,7 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
 }
 
 
-/* AVENZO PROFILE STEP â€” aligned identity, stats, actions and media grids */
+/* AVENZO PROFILE STEP - aligned identity, stats, actions and media grids */
 .profile-website,
 .public-profile-website {
   display: inline-flex;

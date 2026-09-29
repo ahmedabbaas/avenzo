@@ -41,7 +41,16 @@ function extensionFor(file: File) {
 
 export async function POST(request: Request) {
   try {
-    const form = await request.formData();
+    let form: FormData;
+
+    try {
+      form = await request.formData();
+    } catch {
+      return json(
+        { error: "Invalid signup request.", field: "form" },
+        400
+      );
+    }
 
     const fullName = String(form.get("fullName") || "").trim();
     const username = String(form.get("username") || "")
@@ -67,7 +76,7 @@ export async function POST(request: Request) {
       return json(
         {
           error:
-            "Use 3–30 letters, numbers, underscores or periods.",
+            "Use 3-30 letters, numbers, underscores or periods.",
           field: "username",
         },
         400

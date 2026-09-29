@@ -567,7 +567,12 @@ export default function MessagesWorkspace({
           table: "message_pins",
           filter: "conversation_id=eq." + active.conversation_id,
         },
-        () => void refreshPinnedMessages(active.conversation_id)
+        () => {
+          void fetchPinnedMessages(
+            supabase,
+            active.conversation_id
+          ).then(setPinnedMessages);
+        }
       )
       .subscribe();
 

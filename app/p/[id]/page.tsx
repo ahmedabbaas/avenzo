@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "../../../lib/supabase/server";

@@ -1142,7 +1142,7 @@ export default function HomeClient({
             <>
               <section className="home-dashboard-head">
                 <div>
-                  <div className="eyebrow">REAL PEOPLE Â· REAL STORIES</div>
+                  <div className="eyebrow">REAL PEOPLE · REAL STORIES</div>
                   <h1>Stories</h1>
                   <p>Updates shared by real AVENZO accounts you can actually open and follow.</p>
                 </div>

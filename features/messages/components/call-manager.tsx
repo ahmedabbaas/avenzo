@@ -354,7 +354,7 @@ export default function CallManager() {
       })
       .eq("id", current.id);
 
-    resetCall();
+    resetCallRef.current();
   }
 
   async function endCall() {
@@ -369,7 +369,7 @@ export default function CallManager() {
       })
       .eq("id", current.id);
 
-    resetCall();
+    resetCallRef.current();
   }
 
   function toggleMute() {
@@ -382,6 +382,18 @@ export default function CallManager() {
     });
     setMuted(next);
   }
+
+  const resetCallRef = useRef(resetCall);
+  const beginOfferRef = useRef(beginOffer);
+  const handleSignalRef = useRef(handleSignal);
+  const receiveIncomingRef = useRef(receiveIncoming);
+
+  useEffect(() => {
+    resetCallRef.current = resetCall;
+    beginOfferRef.current = beginOffer;
+    handleSignalRef.current = handleSignal;
+    receiveIncomingRef.current = receiveIncoming;
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -424,7 +436,7 @@ export default function CallManager() {
               session.callee_id === userId &&
               session.status === "ringing"
             ) {
-              await receiveIncoming(session);
+              await receiveIncomingRef.current(session);
               return;
             }
 
@@ -436,7 +448,7 @@ export default function CallManager() {
               current.direction === "outgoing"
             ) {
               clearRingTimer();
-              await beginOffer(session);
+              await beginOfferRef.current(session);
               return;
             }
 
@@ -445,7 +457,7 @@ export default function CallManager() {
               session.status === "ended" ||
               session.status === "missed"
             ) {
-              resetCall();
+              resetCallRef.current();
             }
           }
         )
@@ -462,7 +474,7 @@ export default function CallManager() {
             filter: "recipient_id=eq." + userId,
           },
           ({ new: inserted }) => {
-            void handleSignal(inserted as CallSignal);
+            void handleSignalRef.current(inserted as CallSignal);
           }
         )
         .subscribe();
@@ -472,7 +484,7 @@ export default function CallManager() {
       cancelled = true;
       if (sessionsChannel) void supabase.removeChannel(sessionsChannel);
       if (signalsChannel) void supabase.removeChannel(signalsChannel);
-      resetCall();
+      resetCallRef.current();
     };
   }, [supabase]);
 
@@ -528,7 +540,7 @@ export default function CallManager() {
             ended_at: new Date().toISOString(),
           })
           .eq("id", data.id)
-          .then(() => resetCall());
+          .then(() => resetCallRef.current());
       }, 30000);
     };
 

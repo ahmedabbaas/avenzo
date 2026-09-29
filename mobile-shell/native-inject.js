@@ -13,18 +13,6 @@
         el.getClientRects().length > 0;
     }
 
-    function escapeHtml(value) {
-      return String(value || "").replace(/[&<>"']/g, function(ch){
-        return ({
-          "&":"&amp;",
-          "<":"&lt;",
-          ">":"&gt;",
-          '"':"&quot;",
-          "'":"&#039;"
-        })[ch];
-      });
-    }
-
     var styleId = "avenzo-android-mobile-style";
     var style = document.getElementById(styleId);
     if (!style) {
@@ -112,7 +100,7 @@
             url.pathname === targetUrl.pathname &&
             url.search === targetUrl.search
           );
-        } catch (error) {
+        } catch {
           return false;
         }
       });
@@ -264,7 +252,7 @@
       if (!isHomeScreenActive()) return;
       try {
         sessionStorage.setItem(HOME_SCROLL_KEY, String(Math.max(0, window.scrollY || 0)));
-      } catch (e) {}
+      } catch {}
     }
 
     function restoreHomeScroll() {
@@ -275,7 +263,7 @@
           if (stored > 0 && isHomeScreenActive()) {
             window.scrollTo({ top: stored, left: 0, behavior: "auto" });
           }
-        } catch (e) {}
+        } catch {}
       }, 120);
     }
 
@@ -310,7 +298,7 @@
         '<button type="button" class="avenzo-native-dm-cancel" aria-label="Close message actions">Cancel</button>';
 
       var reactionBox = sheet.querySelector(".avenzo-native-dm-reactions");
-      ["❤️","😂","👍","😮","😢","😡"].forEach(function(emoji){
+      ["\u2764\uFE0F","\uD83D\uDC4D","\uD83D\uDE02","\uD83D\uDD25","\uD83D\uDE2E","\uD83D\uDE22"].forEach(function(emoji){
         var button = document.createElement("button");
         button.type = "button";
         button.textContent = emoji;
@@ -563,7 +551,7 @@
         transfer.items.add(file);
         originalInput.files = transfer.files;
         originalInput.dispatchEvent(new Event("change", { bubbles: true }));
-      } catch (error) {
+      } catch {
         closeNativeAttachmentPreview();
       }
     }
@@ -652,7 +640,7 @@
         while (payload.length % 4) payload += "=";
         var decoded = JSON.parse(atob(payload));
         return decoded && decoded.sub ? String(decoded.sub) : "";
-      } catch (e) {
+      } catch {
         return "";
       }
     }
@@ -664,7 +652,7 @@
 
       try {
         window.AvenzoNative.registerSession(token, userId);
-      } catch (e) {}
+      } catch {}
     }
 
     function extractBearer(headers) {
@@ -686,7 +674,7 @@
         });
         var objectValue = key ? String(headers[key]) : "";
         return objectValue.indexOf("Bearer ") === 0 ? objectValue.slice(7) : "";
-      } catch (e) {
+      } catch {
         return "";
       }
     }
@@ -711,7 +699,7 @@
             }
             if (token) registerNativeNotificationSession(token);
           }
-        } catch (e) {}
+        } catch {}
 
         return originalFetch(input, init);
       };
@@ -868,7 +856,7 @@
         }
 
         return "root";
-      } catch (e) {
+      } catch {
         return "root";
       }
     };
@@ -915,5 +903,5 @@
       window.addEventListener("popstate", scheduleSync);
       window.addEventListener("pageshow", scheduleSync);
     }
-  } catch (e) {}
+  } catch {}
 })();
