@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Icon from "../../social/components/icon";
 import type { ReactNode } from "react";
 import { useUiTranslation } from "../lib/i18n";
@@ -28,7 +28,17 @@ export default function SettingsShell({
   children: ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const t = useUiTranslation();
+
+  function goBackOneStep() {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+      return;
+    }
+
+    router.replace("/home?screen=profile");
+  }
 
   return (
     <main className="settings-page-shell">
@@ -74,12 +84,14 @@ export default function SettingsShell({
 
       <section className="settings-content">
         <div className="settings-mobile-head">
-          <Link
-            href={pathname === "/settings" ? "/home?screen=profile" : "/settings"}
-            aria-label={pathname === "/settings" ? "Back to AVENZO" : "Back to settings"}
+          <button
+            className="settings-mobile-back"
+            type="button"
+            onClick={goBackOneStep}
+            aria-label="Go back"
           >
             <Icon name="back" size={18} />
-          </Link>
+          </button>
           <b>{t("Settings")}</b>
         </div>
 

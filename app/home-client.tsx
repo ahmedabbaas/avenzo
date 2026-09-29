@@ -1066,9 +1066,9 @@ export default function HomeClient({
         <button
           className="top-profile-menu"
           onClick={() => router.push("/settings")}
-          aria-label="Profile menu"
+          aria-label="Settings"
         >
-          <Icon name="menu" size={22} />
+          <Icon name="settings" size={21} />
         </button>
 
         <button
