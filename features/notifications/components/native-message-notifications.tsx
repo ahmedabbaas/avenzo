@@ -31,18 +31,22 @@ export default function NativeMessageNotifications() {
     let disposed = false;
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
-    void supabase.auth.getUser().then(({ data }) => {
-      if (disposed || !data.user) return;
+    void supabase.auth.getSession().then(({ data }) => {
+      const session = data.session;
+      if (disposed || !session?.user) return;
+
+      window.AvenzoNative?.registerSession?.(session.access_token, session.user.id);
+      const user = session.user;
 
       channel = supabase
-        .channel("avenzo-native-message-notifications-" + data.user.id)
+        .channel("avenzo-native-message-notifications-" + user.id)
         .on(
           "postgres_changes",
           {
             event: "INSERT",
             schema: "public",
             table: "notifications",
-            filter: "recipient_id=eq." + data.user.id,
+            filter: "recipient_id=eq." + user.id,
           },
           async ({ new: inserted }) => {
             const notification = inserted as MessageNotificationRow;
