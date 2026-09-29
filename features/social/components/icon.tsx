@@ -39,7 +39,12 @@ export type IconName =
   | "userPlus"
   | "tagged"
   | "chatRound"
-  | "bellModern";
+  | "bellModern"
+  | "heartModern"
+  | "commentModern"
+  | "shareModern"
+  | "repostModern"
+  | "bookmarkModern";
 
 
 export default function Icon({ name, size = 19 }: { name: IconName; size?: number }) {
@@ -249,6 +254,29 @@ export default function Icon({ name, size = 19 }: { name: IconName; size?: numbe
         <path d="M18.5 9.7c0-3.7-2.6-6.2-6.5-6.2S5.5 6 5.5 9.7c0 4.8-2 5.6-2 7.3h17c0-1.7-2-2.5-2-7.3Z" />
         <path d="M9.3 20a3.2 3.2 0 0 0 5.4 0" />
       </>
+    ),
+    heartModern: (
+      <path d="M20.8 8.7c0 5.2-8.8 10.4-8.8 10.4S3.2 13.9 3.2 8.7A4.7 4.7 0 0 1 12 6.3a4.7 4.7 0 0 1 8.8 2.4Z" />
+    ),
+    commentModern: (
+      <path d="M20.2 11.4a8.2 8.2 0 0 1-8.4 8.2c-1.5 0-2.9-.4-4.1-1.1L3.8 20l1.3-3.7A8 8 0 0 1 3.8 12a8.2 8.2 0 0 1 8.2-8.2 8.2 8.2 0 0 1 8.2 7.6Z" />
+    ),
+    shareModern: (
+      <>
+        <path d="M3.8 11.2 20.4 4.3l-6.8 16.4-2.1-7.2-7.7-2.3Z" />
+        <path d="m11.5 13.5 8.9-9.2" />
+      </>
+    ),
+    repostModern: (
+      <>
+        <path d="M6.2 8h9.9l-2.2-2.2" />
+        <path d="m16.1 8-2.2 2.2" />
+        <path d="M17.8 16H7.9l2.2 2.2" />
+        <path d="m7.9 16 2.2-2.2" />
+      </>
+    ),
+    bookmarkModern: (
+      <path d="M6.8 4.2h10.4v15.6L12 16.6l-5.2 3.2V4.2Z" />
     ),
   };
 

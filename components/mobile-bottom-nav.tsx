@@ -132,7 +132,7 @@ export default function MobileBottomNav({
                 <Icon name={item.icon} />
               )}
             </span>
-            <small>{item.label}</small>
+            {item.id !== "create" && <small>{item.label}</small>}
           </button>
         );
       })}

@@ -961,6 +961,57 @@ export default function HomeClient({
   return (
     <div className={"social-app screen-" + screen}>
       <header className="top">
+        {screen === "home" && (
+          <div className="avenzo-mobile-home-bar" style={{ display: "none" }}>
+            <button
+              type="button"
+              className="avenzo-mobile-home-wordmark"
+              onClick={() => selectPrimaryScreen("home")}
+              aria-label="AVENZO home"
+            >
+              AVENZO
+            </button>
+            <div className="avenzo-mobile-home-actions">
+              <button
+                type="button"
+                onClick={() => selectPrimaryScreen("explore")}
+                aria-label="Search AVENZO"
+              >
+                <Icon name="search" size={21} />
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push("/messages")}
+                aria-label="Messages"
+              >
+                <Icon name="chatRound" size={20} />
+                {unreadMessages > 0 && (
+                  <i
+                    className="top-badge top-badge-dot"
+                    aria-label="Unread messages"
+                  />
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {screen === "profile" && (
+          <div className="avenzo-mobile-profile-bar" style={{ display: "none" }}>
+            <b className="avenzo-mobile-profile-username">
+              @{profile.username}
+            </b>
+            <button
+              type="button"
+              className="avenzo-mobile-profile-settings"
+              onClick={() => router.push("/settings")}
+              aria-label="Settings"
+            >
+              <Icon name="settings" size={21} />
+            </button>
+          </div>
+        )}
+
         <button
           className="mobile-home-create mobile-home-settings"
           onClick={() => router.push("/settings")}

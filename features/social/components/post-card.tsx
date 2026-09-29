@@ -334,17 +334,41 @@ export default function PostCard({
             onClick={onLike}
             aria-label={post.liked ? "Unlike post" : "Like post"}
           >
-            <Icon name="heart" size={20} />
+            <span className="post-action-icon-web">
+              <Icon name="heart" size={20} />
+            </span>
+            <span
+              className="post-action-icon-mobile"
+              style={{ display: "none" }}
+            >
+              <Icon name="heartModern" size={21} />
+            </span>
             <span>{post.likeCount}</span>
           </button>
 
           <span className="post-stat">
-            <Icon name="comment" size={20} />
+            <span className="post-action-icon-web">
+              <Icon name="comment" size={20} />
+            </span>
+            <span
+              className="post-action-icon-mobile"
+              style={{ display: "none" }}
+            >
+              <Icon name="commentModern" size={21} />
+            </span>
             <span>{post.commentCount}</span>
           </span>
 
           <button onClick={onShare} aria-label="Share post">
-            <Icon name="send" size={20} />
+            <span className="post-action-icon-web">
+              <Icon name="send" size={20} />
+            </span>
+            <span
+              className="post-action-icon-mobile"
+              style={{ display: "none" }}
+            >
+              <Icon name="shareModern" size={21} />
+            </span>
           </button>
 
           {onRepost && (
@@ -354,7 +378,15 @@ export default function PostCard({
               aria-label={post.reposted ? "Undo repost" : "Repost"}
               title={post.reposted ? "Undo repost" : "Repost"}
             >
-              <Icon name="repost" size={20} />
+              <span className="post-action-icon-web">
+                <Icon name="repost" size={20} />
+              </span>
+              <span
+                className="post-action-icon-mobile"
+                style={{ display: "none" }}
+              >
+                <Icon name="repostModern" size={21} />
+              </span>
             </button>
           )}
 
@@ -363,7 +395,15 @@ export default function PostCard({
             onClick={onSave}
             aria-label={saved ? "Remove from saved" : "Save post"}
           >
-            <Icon name="bookmark" size={20} />
+            <span className="post-action-icon-web">
+              <Icon name="bookmark" size={20} />
+            </span>
+            <span
+              className="post-action-icon-mobile"
+              style={{ display: "none" }}
+            >
+              <Icon name="bookmarkModern" size={21} />
+            </span>
           </button>
         </div>
 
