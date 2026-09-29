@@ -15797,3 +15797,6 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
  html.avenzo-android-app .dm-message-row.me .dm-bubble{background:linear-gradient(135deg,#b8f126,#dfff63)!important;color:#0c1200!important}
  html.avenzo-android-app .dm-send-button{background:#c8ff38!important;color:#0c1200!important}
 }
+
+/* Exact uploaded badge asset overrides old SVG-specific rules */
+html.avenzo-android-app .verified-badge img{display:block!important;width:100%!important;height:100%!important;object-fit:contain!important}
