@@ -102,6 +102,18 @@ jobs:
                   '<uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <application',
                   1
               )
+          if 'android.permission.CAMERA' not in s:
+              s = s.replace(
+                  '<application',
+                  '<uses-permission android:name="android.permission.CAMERA" />\n    <application',
+                  1
+              )
+          if 'android.permission.MODIFY_AUDIO_SETTINGS' not in s:
+              s = s.replace(
+                  '<application',
+                  '<uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\n    <application',
+                  1
+              )
           if 'android:hardwareAccelerated=' not in s:
               s = s.replace(
                   '<application',
@@ -224,6 +236,8 @@ jobs:
 
             private boolean avenzoClientInstalled = false;
             private boolean activityVisible = false;
+            private PermissionRequest pendingMediaPermissionRequest = null;
+            private String[] pendingMediaResources = null;
             private long lastRootBackPress = 0L;
             private String supabaseAccessToken = "";
             private String supabaseUserId = "";
@@ -263,7 +277,6 @@ jobs:
 
               createMessageNotificationChannel();
               requestNotificationPermission();
-              requestMicrophonePermission();
 
               getOnBackPressedDispatcher().addCallback(
                 this,
@@ -343,16 +356,98 @@ jobs:
               }
             }
 
-            private void requestMicrophonePermission() {
-              if (
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-                checkSelfPermission(Manifest.permission.RECORD_AUDIO)
-                  != PackageManager.PERMISSION_GRANTED
-              ) {
+            private boolean mediaResourcesGranted(String[] resources) {
+              if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true;
+
+              for (String resource : resources) {
+                if (
+                  PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(resource) &&
+                  checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+                    != PackageManager.PERMISSION_GRANTED
+                ) {
+                  return false;
+                }
+
+                if (
+                  PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(resource) &&
+                  checkSelfPermission(Manifest.permission.CAMERA)
+                    != PackageManager.PERMISSION_GRANTED
+                ) {
+                  return false;
+                }
+              }
+
+              return true;
+            }
+
+            private void requestRuntimeMediaPermissions(String[] resources) {
+              boolean needsAudio = false;
+              boolean needsCamera = false;
+
+              for (String resource : resources) {
+                if (
+                  PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(resource) &&
+                  checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+                    != PackageManager.PERMISSION_GRANTED
+                ) {
+                  needsAudio = true;
+                }
+
+                if (
+                  PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(resource) &&
+                  checkSelfPermission(Manifest.permission.CAMERA)
+                    != PackageManager.PERMISSION_GRANTED
+                ) {
+                  needsCamera = true;
+                }
+              }
+
+              if (needsAudio && needsCamera) {
+                requestPermissions(
+                  new String[]{
+                    Manifest.permission.RECORD_AUDIO,
+                    Manifest.permission.CAMERA
+                  },
+                  4202
+                );
+              } else if (needsAudio) {
                 requestPermissions(
                   new String[]{Manifest.permission.RECORD_AUDIO},
                   4202
                 );
+              } else if (needsCamera) {
+                requestPermissions(
+                  new String[]{Manifest.permission.CAMERA},
+                  4202
+                );
+              }
+            }
+
+            @Override
+            public void onRequestPermissionsResult(
+              int requestCode,
+              String[] permissions,
+              int[] grantResults
+            ) {
+              super.onRequestPermissionsResult(
+                requestCode,
+                permissions,
+                grantResults
+              );
+
+              if (requestCode != 4202) return;
+
+              PermissionRequest pending = pendingMediaPermissionRequest;
+              String[] resources = pendingMediaResources;
+              pendingMediaPermissionRequest = null;
+              pendingMediaResources = null;
+
+              if (pending == null || resources == null) return;
+
+              if (mediaResourcesGranted(resources)) {
+                pending.grant(resources);
+              } else {
+                pending.deny();
               }
             }
 
@@ -624,21 +719,41 @@ jobs:
                 @Override
                 public void onPermissionRequest(PermissionRequest request) {
                   runOnUiThread(() -> {
-                    boolean asksForAudio = false;
-                    for (String resource : request.getResources()) {
-                      if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(resource)) {
-                        asksForAudio = true;
-                        break;
-                      }
-                    }
-                    if (asksForAudio && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-                        checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                      requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, 4202);
+                    String host =
+                      request.getOrigin() == null
+                        ? ""
+                        : request.getOrigin().getHost();
+
+                    if (!"avenzo-ivory.vercel.app".equalsIgnoreCase(host)) {
                       request.deny();
                       return;
                     }
-                    request.grant(request.getResources());
+
+                    String[] resources = request.getResources();
+                    if (mediaResourcesGranted(resources)) {
+                      request.grant(resources);
+                      return;
+                    }
+
+                    if (pendingMediaPermissionRequest != null) {
+                      pendingMediaPermissionRequest.deny();
+                    }
+
+                    pendingMediaPermissionRequest = request;
+                    pendingMediaResources = resources;
+                    requestRuntimeMediaPermissions(resources);
                   });
+                }
+
+                @Override
+                public void onPermissionRequestCanceled(
+                  PermissionRequest request
+                ) {
+                  if (pendingMediaPermissionRequest == request) {
+                    pendingMediaPermissionRequest = null;
+                    pendingMediaResources = null;
+                  }
+                  super.onPermissionRequestCanceled(request);
                 }
               });
 
