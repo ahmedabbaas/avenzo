@@ -714,18 +714,10 @@ export default function CallManager() {
 
       setError("");
 
-      try {
-        await getMedia(callType);
-      } catch {
-        setError(
-          callType === "video"
-            ? "Camera and microphone permission are required for video calls."
-            : "Microphone permission is required for calls."
-        );
-        stopMedia();
-        return;
-      }
-
+      // Do not block the call button on getUserMedia. Some Android WebViews
+      // wait on the native permission bridge here, which made the button look
+      // completely dead. Ring first; acquire caller media only after the
+      // recipient accepts, inside beginOffer/ensurePeer.
       const { data, error: insertError } = await supabase
         .from("call_sessions")
         .insert({
