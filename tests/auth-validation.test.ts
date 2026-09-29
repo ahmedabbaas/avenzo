@@ -33,7 +33,8 @@ Deno.test("normalizes and validates email addresses", () => {
 
 Deno.test("enforces AVENZO password bounds", () => {
   assert(!isValidPassword("1234567"), "short password accepted");
-  assert(isValidPassword("12345678"), "minimum password rejected");
+  assert(!isValidPassword("12345678"), "numeric-only password accepted");
+  assert(isValidPassword("avenzo12"), "minimum valid password rejected");
   assert(!isValidPassword("x".repeat(1025)), "oversized password accepted");
 });
 
