@@ -1,15 +1,3 @@
-export default function VerifiedBadge({
-  verified,
-  className = "",
-}: {
-  verified?: boolean;
-  className?: string;
-}) {
-  if (!verified) return null;
-
-  return (
-    <span className={"verified-badge " + className} title="Verified account" aria-label="Verified account">
-      <img src="/verified-badge.png" alt="" aria-hidden="true" draggable={false} />
-    </span>
-  );
+export default function VerifiedBadge() {
+  return null;
 }
