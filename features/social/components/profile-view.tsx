@@ -91,6 +91,68 @@ export default function ProfileView({
   return (
     <div className="profile-page">
       <section className="profile-hero">
+        <div className="profile-reference-mobile" style={{ display: "none" }} aria-label="Profile overview">
+          <div className="profile-reference-avatar">
+            <AvatarImage
+              src={avatarFor(profile)}
+              alt={profile.display_name}
+              size={180}
+            />
+            <button
+              type="button"
+              onClick={onCreateStory}
+              aria-label="Add story"
+            >
+              <Icon name="plus" size={15} />
+            </button>
+          </div>
+
+          <div className="profile-reference-identity">
+            <h1 className="verified-line">
+              {profile.display_name}
+              <VerifiedBadge verified={profile.verified} />
+            </h1>
+            <span>@{profile.username}</span>
+          </div>
+
+          <p className="profile-reference-bio">
+            {profile.bio || "Welcome to AVENZO."}
+          </p>
+
+          {website && (
+            <a
+              className="profile-reference-website"
+              href={website.href}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+            >
+              {website.label}
+            </a>
+          )}
+
+          <div className="profile-reference-stats" aria-label="Profile statistics">
+            <span>
+              <b>{formatProfileStat(stats.posts)}</b>
+              <small>Posts</small>
+            </span>
+            <Link href="/connections/followers">
+              <b>{formatProfileStat(stats.followers)}</b>
+              <small>Followers</small>
+            </Link>
+            <Link href="/connections/following">
+              <b>{formatProfileStat(stats.following)}</b>
+              <small>Following</small>
+            </Link>
+          </div>
+
+          <div className="profile-reference-actions">
+            <button type="button" onClick={onEdit}>Edit Profile</button>
+            <button type="button" onClick={() => void shareProfile()}>
+              {shareLabel}
+            </button>
+          </div>
+        </div>
+
         <div className="profile-mobile-top" aria-label="Profile overview">
           <span className="profile-mobile-avatar-wrap">
             <AvatarImage

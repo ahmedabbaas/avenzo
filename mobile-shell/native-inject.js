@@ -717,6 +717,37 @@
       };
     }
 
+    function enhanceReferenceProfileHeader() {
+      var profileScreen = document.querySelector(".screen-profile");
+      if (!profileScreen) return;
+
+      var backButton = profileScreen.querySelector(".mobile-home-settings");
+      if (backButton && backButton.dataset.avenzoProfileBack !== "1") {
+        backButton.dataset.avenzoProfileBack = "1";
+        backButton.setAttribute("aria-label", "Back");
+        backButton.innerHTML =
+          '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+          '<path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>' +
+          '</svg>';
+
+        backButton.addEventListener("click", function(event){
+          event.preventDefault();
+          event.stopImmediatePropagation();
+
+          if (window.history.length > 1) {
+            window.history.back();
+            return;
+          }
+
+          var home = homeButton();
+          if (home) home.click();
+        }, true);
+      }
+
+      var brand = profileScreen.querySelector(".brand-profile-content");
+      if (brand) brand.setAttribute("aria-hidden", "true");
+    }
+
     function syncMobileState() {
       applyBranding();
       ensureDrawer();
@@ -725,6 +756,7 @@
       enhanceLegacyDmActions();
       installNativeEmojiPicker();
       installNativeAttachmentPreview();
+      enhanceReferenceProfileHeader();
       installNativeNotificationSessionCapture();
       syncHomeState();
 
