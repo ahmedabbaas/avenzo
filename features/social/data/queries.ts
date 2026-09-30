@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { countBy, groupBy } from "../../../lib/collections";
 import type {
   Chat,
   Message,
@@ -310,40 +311,55 @@ async function hydratePosts(
     collaboratorProfiles.map((profile) => [profile.id, profile])
   );
 
-  return rows.map((post) => ({
-    ...post,
-    profile: authorMap.get(post.author_id),
-    likeCount: likes.filter((like) => like.post_id === post.id).length,
-    liked: likes.some(
-      (like) => like.post_id === post.id && like.user_id === userId
-    ),
-    commentCount: commentRows.filter(
-      (comment) => comment.post_id === post.id
-    ).length,
-    comments: commentRows
-      .filter((comment) => comment.post_id === post.id)
-      .map((comment) => ({
-        id: comment.id,
-        body: comment.body,
-        user_id: comment.user_id,
-        created_at: comment.created_at,
-        parent_id: comment.parent_id,
-        likeCount: commentLikes.filter(
-          (like) => like.comment_id === comment.id
-        ).length,
-        liked: commentLikes.some(
-          (like) =>
-            like.comment_id === comment.id && like.user_id === userId
-        ),
-        profile: commentUserMap.get(comment.user_id),
-      })),
-    reposted: repostedPostIds.has(post.id),
-    mediaItems: mediaItems.filter((item) => item.post_id === post.id),
-    collaborators: collaboratorRows
-      .filter((row) => row.post_id === post.id)
-      .map((row) => collaboratorProfileMap.get(row.user_id))
-      .filter((profile): profile is Profile => Boolean(profile)),
-  }));
+  const likesByPost = groupBy(likes, (like) => like.post_id);
+  const commentsByPost = groupBy(commentRows, (comment) => comment.post_id);
+  const commentLikesByComment = groupBy(
+    commentLikes,
+    (like) => like.comment_id
+  );
+  const mediaItemsByPost = groupBy(
+    mediaItems,
+    (item) => item.post_id
+  );
+  const collaboratorsByPost = groupBy(
+    collaboratorRows,
+    (row) => row.post_id
+  );
+
+  return rows.map((post) => {
+    const postLikes = likesByPost.get(post.id) || [];
+    const postComments = commentsByPost.get(post.id) || [];
+
+    return {
+      ...post,
+      profile: authorMap.get(post.author_id),
+      likeCount: postLikes.length,
+      liked: postLikes.some((like) => like.user_id === userId),
+      commentCount: postComments.length,
+      comments: postComments.map((comment) => {
+        const likesForComment =
+          commentLikesByComment.get(comment.id) || [];
+
+        return {
+          id: comment.id,
+          body: comment.body,
+          user_id: comment.user_id,
+          created_at: comment.created_at,
+          parent_id: comment.parent_id,
+          likeCount: likesForComment.length,
+          liked: likesForComment.some(
+            (like) => like.user_id === userId
+          ),
+          profile: commentUserMap.get(comment.user_id),
+        };
+      }),
+      reposted: repostedPostIds.has(post.id),
+      mediaItems: mediaItemsByPost.get(post.id) || [],
+      collaborators: (collaboratorsByPost.get(post.id) || [])
+        .map((row) => collaboratorProfileMap.get(row.user_id))
+        .filter((profile): profile is Profile => Boolean(profile)),
+    };
+  });
 }
 
 export async function fetchSavedPostIds(
@@ -706,35 +722,40 @@ export async function fetchReels(
       .filter((id): id is string => Boolean(id))
   );
 
+  const likesByReel = groupBy(likes, (like) => like.reel_id);
+  const commentsByReel = groupBy(
+    comments,
+    (comment) => comment.reel_id
+  );
+
   return {
-    reels: rows.map((reel) => ({
-      ...reel,
-      title: reel.title || "",
-      hashtags: reel.hashtags || [],
-      mentions: reel.mentions || [],
-      location: reel.location || "",
-      viewCount: Number(reel.view_count || 0),
-      shareCount: Number(reel.share_count || 0),
-      saveCount: Number(reel.save_count || 0),
-      profile: authorMap.get(reel.author_id),
-      likeCount: likes.filter((like) => like.reel_id === reel.id).length,
-      liked: likes.some(
-        (like) => like.reel_id === reel.id && like.user_id === userId
-      ),
-      commentCount: comments.filter(
-        (comment) => comment.reel_id === reel.id
-      ).length,
-      comments: comments
-        .filter((comment) => comment.reel_id === reel.id)
-        .map((comment) => ({
+    reels: rows.map((reel) => {
+      const reelLikes = likesByReel.get(reel.id) || [];
+      const reelComments = commentsByReel.get(reel.id) || [];
+
+      return {
+        ...reel,
+        title: reel.title || "",
+        hashtags: reel.hashtags || [],
+        mentions: reel.mentions || [],
+        location: reel.location || "",
+        viewCount: Number(reel.view_count || 0),
+        shareCount: Number(reel.share_count || 0),
+        saveCount: Number(reel.save_count || 0),
+        profile: authorMap.get(reel.author_id),
+        likeCount: reelLikes.length,
+        liked: reelLikes.some((like) => like.user_id === userId),
+        commentCount: reelComments.length,
+        comments: reelComments.map((comment) => ({
           id: comment.id,
           body: comment.body,
           user_id: comment.user_id,
           created_at: comment.created_at,
           profile: commentUserMap.get(comment.user_id),
         })),
-      reposted: repostedReelIds.has(reel.id),
-    })),
+        reposted: repostedReelIds.has(reel.id),
+      };
+    }),
     savedReels: (savedResult.data || []).map(
       (row: { reel_id: string }) => row.reel_id
     ),
@@ -785,21 +806,26 @@ export async function fetchStories(
     viewer_id: string;
   }>;
 
-  return rows.map((story) => ({
-    ...story,
-    profile: authorMap.get(story.author_id),
-    viewed:
-      story.author_id === user?.id ||
-      views.some(
-        (view) =>
-          view.story_id === story.id &&
-          view.viewer_id === user?.id
-      ),
-    viewerCount:
-      story.author_id === user?.id
-        ? views.filter((view) => view.story_id === story.id).length
-        : undefined,
-  }));
+  const viewsByStory = groupBy(
+    views,
+    (view) => view.story_id
+  );
+
+  return rows.map((story) => {
+    const storyViews = viewsByStory.get(story.id) || [];
+
+    return {
+      ...story,
+      profile: authorMap.get(story.author_id),
+      viewed:
+        story.author_id === user?.id ||
+        storyViews.some((view) => view.viewer_id === user?.id),
+      viewerCount:
+        story.author_id === user?.id
+          ? storyViews.length
+          : undefined,
+    };
+  });
 }
 
 export async function fetchChats(
@@ -855,6 +881,15 @@ export async function fetchChats(
     }
   }
 
+  const unreadBySender = countBy(
+    rows.filter(
+      (message) =>
+        message.recipient_id === userId &&
+        !message.read_at
+    ),
+    (message) => message.sender_id
+  );
+
   const chats: Chat[] = [];
 
   for (const [otherId, latestMessage] of latest.entries()) {
@@ -865,12 +900,7 @@ export async function fetchChats(
       profile,
       last: latestMessage.body,
       updated: latestMessage.created_at,
-      unread: rows.filter(
-        (message) =>
-          message.sender_id === otherId &&
-          message.recipient_id === userId &&
-          !message.read_at
-      ).length,
+      unread: unreadBySender.get(otherId) || 0,
     });
   }
 
