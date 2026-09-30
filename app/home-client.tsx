@@ -347,26 +347,23 @@ export default function HomeClient({
 
   async function refreshEverything() {
     try {
-      const coreLoads: Promise<unknown>[] = [
-        loadProfile(),
-        loadPosts(),
-        loadStories(),
-        loadUnreadMessages(),
-        loadUnreadActivity(),
-      ];
+      const criticalLoads: Promise<unknown>[] = [];
 
-      if (screen === "profile") {
-        coreLoads.push(loadProfileContent(), loadStats());
+      if (screen === "home") {
+        loadedScreensRef.current.add("home");
+        criticalLoads.push(loadPosts(), loadStories());
+      } else if (screen === "profile") {
         loadedScreensRef.current.add("profile");
+        criticalLoads.push(loadProfileContent(), loadStats());
       } else if (screen === "explore") {
-        coreLoads.push(loadExploreData());
         loadedScreensRef.current.add("explore");
+        criticalLoads.push(loadExploreData());
       } else if (screen === "saved") {
-        coreLoads.push(loadSavedPosts());
         loadedScreensRef.current.add("saved");
+        criticalLoads.push(loadSavedPosts());
       }
 
-      await Promise.all(coreLoads);
+      await Promise.all(criticalLoads);
     } catch {
       showToast(
         "Some AVENZO data could not be loaded. Refresh to try again."
@@ -374,6 +371,14 @@ export default function HomeClient({
     } finally {
       setLoading(false);
     }
+
+    // Counters and the already-rendered profile are useful, but they should
+    // never keep the first useful screen behind a loading skeleton.
+    void Promise.allSettled([
+      loadProfile(),
+      loadUnreadMessages(),
+      loadUnreadActivity(),
+    ]);
   }
 
   useEffect(() => {
@@ -389,6 +394,15 @@ export default function HomeClient({
   }, []);
 
   useEffect(() => {
+    if (screen === "home" && !loadedScreensRef.current.has("home")) {
+      loadedScreensRef.current.add("home");
+      setLoading(true);
+      void Promise.all([loadPosts(), loadStories()]).finally(() => {
+        setLoading(false);
+      });
+      return;
+    }
+
     if (screen === "explore" && !loadedScreensRef.current.has("explore")) {
       loadedScreensRef.current.add("explore");
       void loadExploreData();

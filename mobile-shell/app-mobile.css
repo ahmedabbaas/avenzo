@@ -15870,3 +15870,45 @@ html.avenzo-android-app .verified-badge{display:none!important}
     transform: scale(.985);
   }
 }
+
+
+/* 2026-09 render pipeline pass v2 */
+@media(max-width:820px){
+  html.avenzo-android-app .screen-home>.top,
+  html.avenzo-android-app .screen-home .mobile-bottom-nav,
+  html.avenzo-android-app .profile-content-tabs,
+  html.avenzo-android-app .create-type-tabs,
+  html.avenzo-android-app .messages-page-topbar,
+  html.avenzo-android-app .reels-topbar{
+    -webkit-backdrop-filter:none!important;
+    backdrop-filter:none!important;
+  }
+
+  html.avenzo-android-app .screen-home .post-card{
+    content-visibility:auto;
+    contain-intrinsic-size:auto 620px;
+  }
+
+  html.avenzo-android-app .screen-home .post-actions button,
+  html.avenzo-android-app .mobile-bottom-nav button,
+  html.avenzo-android-app .avenzo-mobile-home-actions>button{
+    transition:
+      transform 140ms cubic-bezier(.2,.8,.2,1),
+      opacity 140ms ease,
+      background-color 160ms ease,
+      color 160ms ease!important;
+  }
+
+  html.avenzo-android-app .screen-home .post-actions button:active,
+  html.avenzo-android-app .mobile-bottom-nav button:active,
+  html.avenzo-android-app .avenzo-mobile-home-actions>button:active{
+    transform:scale(.965)!important;
+  }
+
+  html.avenzo-android-app .screen-home .person-line,
+  html.avenzo-android-app .screen-home .person-line>div,
+  html.avenzo-android-app .dm-conversation-copy,
+  html.avenzo-android-app .profile-identity{
+    min-width:0!important;
+  }
+}
