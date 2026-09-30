@@ -2008,8 +2008,10 @@ export default function MessagesWorkspace({
                 <button
                   type="button"
                   className="dm-mobile-chat-person"
-                  onClick={() => setMoreOpen((value) => !value)}
-                  aria-label="Conversation options"
+                  onClick={() =>
+                    router.push("/u/" + encodeURIComponent(active.username))
+                  }
+                  aria-label={"View @" + active.username + " profile"}
                 >
                   <span className="dm-mobile-chat-avatar">
                     <AvatarImage
@@ -2054,6 +2056,14 @@ export default function MessagesWorkspace({
                 >
                   <Icon name="phone" size={21} />
                 </button>
+                <button
+                  type="button"
+                  className="dm-mobile-more"
+                  onClick={() => setMoreOpen((value) => !value)}
+                  aria-label="Conversation options"
+                >
+                  <Icon name="more" size={21} />
+                </button>
               </div>
 
               <button
@@ -2068,7 +2078,10 @@ export default function MessagesWorkspace({
                 alt={activeProfile.display_name}
                 size={84}
               />
-              <div className="dm-head-identity">
+              <Link
+                className="dm-head-identity"
+                href={"/u/" + encodeURIComponent(active.username)}
+              >
                 <b>{active.display_name}</b>
                 <small>
                   <span className="verified-line">@{active.username}<VerifiedBadge verified={active.verified} /></span>
@@ -2079,7 +2092,7 @@ export default function MessagesWorkspace({
                     (otherOnline ? " · Online" : " · Offline")
                   )}
                 </small>
-              </div>
+              </Link>
               <Link
                 className="btn secondary small dm-view-profile"
                 href={"/u/" + encodeURIComponent(active.username)}
