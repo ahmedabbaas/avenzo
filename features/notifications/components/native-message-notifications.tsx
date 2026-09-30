@@ -53,12 +53,8 @@ export default function NativeMessageNotifications() {
             if (!MESSAGE_TYPES.has(notification.type)) return;
             if (!window.AvenzoNative?.notifyMessage) return;
 
-            if (
-              document.visibilityState === "visible" &&
-              window.location.pathname.startsWith("/messages")
-            ) {
-              return;
-            }
+            if (document.visibilityState !== "visible") return;
+            if (window.location.pathname.startsWith("/messages")) return;
 
             const actorResult = await supabase
               .from("profiles")
