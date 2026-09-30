@@ -219,6 +219,8 @@ jobs:
           import android.webkit.WebSettings;
           import android.widget.Toast;
           import androidx.activity.OnBackPressedCallback;
+          import androidx.core.view.WindowCompat;
+          import androidx.core.view.WindowInsetsControllerCompat;
           import com.getcapacitor.BridgeActivity;
           import com.getcapacitor.BridgeWebViewClient;
           import com.getcapacitor.BridgeWebChromeClient;
@@ -260,6 +262,7 @@ jobs:
               @Override
               public void run() {
                 if (
+                  !activityVisible &&
                   !supabaseAccessToken.isEmpty() &&
                   !supabaseUserId.isEmpty()
                 ) {
@@ -666,7 +669,9 @@ jobs:
 
             private void applySystemTheme(String theme) {
               final boolean light = "light".equalsIgnoreCase(theme);
+              final View decor = getWindow().getDecorView();
 
+              WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
               getWindow().setStatusBarColor(Color.TRANSPARENT);
               getWindow().setNavigationBarColor(Color.TRANSPARENT);
 
@@ -683,7 +688,12 @@ jobs:
                 flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
               }
 
-              getWindow().getDecorView().setSystemUiVisibility(flags);
+              decor.setSystemUiVisibility(flags);
+
+              WindowInsetsControllerCompat controller =
+                WindowCompat.getInsetsController(getWindow(), decor);
+              controller.setAppearanceLightStatusBars(light);
+              controller.setAppearanceLightNavigationBars(light);
 
               if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 getWindow().setStatusBarContrastEnforced(false);
