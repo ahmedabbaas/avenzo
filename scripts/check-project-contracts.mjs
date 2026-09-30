@@ -62,7 +62,7 @@ if (layout.indexOf(designImport) < layout.indexOf(adImport)) {
 
 requireText(
   design,
-  "AVENZO DESIGN SYSTEM — PHASE 1 STABILIZATION",
+  "AVENZO DESIGN SYSTEM — MIDNIGHT COBALT",
   "Design system"
 );
 requireText(design, "--av-accent:#5b7cff", "Design system");
