@@ -28,6 +28,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Project contracts
+        run: npm run contracts
+
       - name: Lint
         run: npm run lint
 
