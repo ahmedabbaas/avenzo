@@ -948,7 +948,7 @@ html[data-theme="light"] .modal-actions{
     width:42px;
     height:32px;
     border-radius:12px;
-    box-shadow:0 7px 18px rgba(196,231,53,.18);
+    box-shadow:0 7px 18px rgba(124,108,255,.18);
   }
 
   html.avenzo-android-app .mobile-create small{
@@ -3109,7 +3109,7 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
     width:18px!important;
     height:18px!important;
     border-radius:50%!important;
-    background:rgba(216,255,63,.1)!important;
+    background:rgba(124,108,255,.1)!important;
     color:var(--accent)!important;
     font-size:11px!important;
     font-weight:800!important;
