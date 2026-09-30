@@ -14,7 +14,7 @@ import {
   setReelSaved,
   setFollowing,
 } from "../data/mutations";
-import { fetchPeopleAndFollowing, fetchReels } from "../data/queries";
+import { fetchFollowingState, fetchReels } from "../data/queries";
 import type { Profile, Reel } from "../types";
 import AvatarImage from "./avatar-image";
 import EmptyState from "./empty-state";
@@ -22,6 +22,19 @@ import { ReelsSkeleton } from "./loading-skeletons";
 import Icon from "./icon";
 import VerifiedBadge from "./verified-badge";
 import { avatarFor, formatRelativeTime } from "../lib/profile";
+
+function playVideoSafely(video: HTMLVideoElement) {
+  const start = () => {
+    void video.play().catch(() => undefined);
+  };
+
+  if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+    start();
+    return;
+  }
+
+  video.addEventListener("canplay", start, { once: true });
+}
 
 function formatReelMetric(value: number) {
   if (value >= 1_000_000) {
@@ -115,8 +128,8 @@ export default function ReelsPanel({
   const load = useCallback(async () => {
     try {
       const [result, relationships] = await Promise.all([
-        fetchReels(supabase, currentUser.id, { limit: 100 }),
-        fetchPeopleAndFollowing(supabase, currentUser.id),
+        fetchReels(supabase, currentUser.id, { limit: 32 }),
+        fetchFollowingState(supabase, currentUser.id),
       ]);
       setReels(result.reels);
       setSaved(result.savedReels);
@@ -235,10 +248,10 @@ export default function ReelsPanel({
       if (!active || manualPaused) {
         video.pause();
       } else {
-        void video.play().catch(() => undefined);
+        playVideoSafely(video);
       }
     }
-  }, [activeIndex, displayedReels, manualPaused, muted]);
+  }, [activeIndex, displayedReels, loadedIds, manualPaused, muted]);
 
   useEffect(() => {
     const videos = videoRefs.current;
@@ -378,7 +391,7 @@ export default function ReelsPanel({
 
     if (video.paused) {
       setManualPaused(false);
-      void video.play().catch(() => undefined);
+      playVideoSafely(video);
     } else {
       video.pause();
       setManualPaused(true);
@@ -389,15 +402,14 @@ export default function ReelsPanel({
     if (node) {
       videoRefs.current.set(reelId, node);
       node.muted = muted;
-    } else {
-      const previous = videoRefs.current.get(reelId);
-      if (previous) {
-        previous.pause();
-        previous.removeAttribute("src");
-        previous.load();
-      }
-      videoRefs.current.delete(reelId);
+      node.playsInline = true;
+      return;
     }
+
+    // React can clear an inline ref during an ordinary re-render. Mutating the
+    // previous video element here used to reset its src while it was loading,
+    // which left Android WebView reels stuck on "Preparing video…".
+    videoRefs.current.delete(reelId);
   }
 
   if (loading) {
@@ -509,9 +521,25 @@ export default function ReelsPanel({
                     muted={muted}
                     playsInline
                     loop
+                    autoPlay={active && !manualPaused}
                     preload={active ? "auto" : "metadata"}
                     onClick={() => togglePlayback(reel, index)}
-                    onLoadedData={() =>
+                    onLoadedData={() => {
+                      setLoadedIds((current) => new Set(current).add(reel.id));
+                      setFailedIds((current) => {
+                        const next = new Set(current);
+                        next.delete(reel.id);
+                        return next;
+                      });
+                    }}
+                    onCanPlay={(event) => {
+                      setLoadedIds((current) => new Set(current).add(reel.id));
+                      if (index === activeIndex && !manualPaused) {
+                        event.currentTarget.muted = muted;
+                        playVideoSafely(event.currentTarget);
+                      }
+                    }}
+                    onPlaying={() =>
                       setLoadedIds((current) => new Set(current).add(reel.id))
                     }
                     onError={() =>
