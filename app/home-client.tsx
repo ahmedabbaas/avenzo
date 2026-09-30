@@ -283,7 +283,7 @@ export default function HomeClient({
       fetchProfilePosts(supabase, initialProfile.id),
       fetchReels(supabase, initialProfile.id, {
         authorId: initialProfile.id,
-        limit: 120,
+        limit: 60,
       }),
     ]);
 
@@ -374,13 +374,21 @@ export default function HomeClient({
 
     // Counters and the already-rendered profile are useful, but they should
     // never keep the first useful screen behind a loading skeleton.
-    void Promise.allSettled([
-      loadProfile(),
-      loadStats(),
-      loadPeople(),
-      loadUnreadMessages(),
-      loadUnreadActivity(),
-    ]);
+    const loadSecondary = () => {
+      void Promise.allSettled([
+        loadProfile(),
+        loadStats(),
+        loadPeople(),
+        loadUnreadMessages(),
+        loadUnreadActivity(),
+      ]);
+    };
+
+    if ("requestIdleCallback" in window) {
+      window.requestIdleCallback(loadSecondary, { timeout: 900 });
+    } else {
+      window.setTimeout(loadSecondary, 180);
+    }
   }
 
   useEffect(() => {
