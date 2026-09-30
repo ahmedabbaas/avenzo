@@ -345,6 +345,13 @@ export default function MessagesWorkspace({
     }
   }, [supabase]);
 
+  useEffect(() => {
+    const candidates = [...inbox, ...requests].slice(0, 8);
+    for (const item of candidates) {
+      router.prefetch("/u/" + encodeURIComponent(item.username));
+    }
+  }, [inbox, requests, router]);
+
   const loadPeople = useCallback(
     async (search = "") => {
       const next = await fetchMessageUsers(
@@ -361,6 +368,7 @@ export default function MessagesWorkspace({
   const loadConversation = useCallback(
     async (conversation: InboxConversation) => {
       setActive(conversation);
+      router.prefetch("/u/" + encodeURIComponent(conversation.username));
       setChatLoading(true);
       setChatError("");
       stickToBottomRef.current = true;
@@ -386,18 +394,19 @@ export default function MessagesWorkspace({
         setScheduledMessages(nextScheduledMessages);
 
         if (!conversation.request_incoming) {
-          await markMessagesRead(
+          void markMessagesRead(
             supabase,
             conversation.conversation_id
-          );
+          ).catch(() => undefined);
         }
 
-        const privacy = await fetchMessagingPrivacy(
+        void fetchMessagingPrivacy(
           supabase,
           conversation.other_user_id
-        );
-        setOtherAllowsOnline(privacy.onlineStatus);
-        await loadLists();
+        )
+          .then((privacy) => setOtherAllowsOnline(privacy.onlineStatus))
+          .catch(() => undefined);
+        void loadLists().catch(() => undefined);
         window.setTimeout(() => scrollToLatest("auto"), 0);
       } catch {
         setChatError(
@@ -407,7 +416,7 @@ export default function MessagesWorkspace({
         setChatLoading(false);
       }
     },
-    [supabase, loadLists, scrollToLatest]
+    [supabase, loadLists, router, scrollToLatest]
   );
 
   useEffect(() => {
@@ -417,59 +426,63 @@ export default function MessagesWorkspace({
       setLoadError("");
       void Promise.all([
         loadLists(),
-        loadPeople(initialUsername || ""),
-        loadNotes(),
         supabase
           .from("privacy_settings")
           .select("online_status")
           .eq("user_id", currentUser.id)
           .single(),
       ])
-        .then(async ([, users, , privacyResult]) => {
+        .then(async ([, privacyResult]) => {
           if (!activeEffect) return;
           setOwnOnlineEnabled(privacyResult.data?.online_status ?? true);
           setLoading(false);
-
           setLoadError("");
 
-          if (initialUsername) {
-            const person = users.find(
-              (item) =>
-                item.username.toLowerCase() === initialUsername.toLowerCase()
-            );
-            if (person) {
-              const ensured = await ensureConversation(supabase, person.id);
-              const all = [
-                ...(await fetchInbox(supabase, false)),
-                ...(await fetchInbox(supabase, true)),
-              ];
-              const found =
-                all.find(
-                  (item) =>
-                    item.conversation_id === ensured.conversationId
-                ) || {
-                  conversation_id: ensured.conversationId,
-                  other_user_id: person.id,
-                  username: person.username,
-                  display_name: person.display_name,
-                  avatar_url: person.avatar_url,
-                  verified: Boolean(person.verified),
-                  last_message: "",
-                  last_message_type: null,
-                  last_message_at: new Date().toISOString(),
-                  unread_count: 0,
-                  request_status:
-                    ensured.requestStatus as InboxConversation["request_status"],
-                  request_incoming: false,
-                  muted: false,
-                  theme: "violet" as InboxConversation["theme"],
-                  inbox_folder: "primary" as InboxConversation["inbox_folder"],
-                  pinned: false,
-                  pinned_at: null,
-                };
+          void loadNotes().catch(() => undefined);
 
-              await loadConversation(found);
-            }
+          if (!initialUsername) {
+            void loadPeople("").catch(() => undefined);
+            return;
+          }
+
+          const users = await loadPeople(initialUsername);
+          if (!activeEffect) return;
+          const person = users.find(
+            (item) =>
+              item.username.toLowerCase() === initialUsername.toLowerCase()
+          );
+          if (person) {
+            const ensured = await ensureConversation(supabase, person.id);
+            const all = [
+              ...(await fetchInbox(supabase, false)),
+              ...(await fetchInbox(supabase, true)),
+            ];
+            const found =
+              all.find(
+                (item) =>
+                  item.conversation_id === ensured.conversationId
+              ) || {
+                conversation_id: ensured.conversationId,
+                other_user_id: person.id,
+                username: person.username,
+                display_name: person.display_name,
+                avatar_url: person.avatar_url,
+                verified: Boolean(person.verified),
+                last_message: "",
+                last_message_type: null,
+                last_message_at: new Date().toISOString(),
+                unread_count: 0,
+                request_status:
+                  ensured.requestStatus as InboxConversation["request_status"],
+                request_incoming: false,
+                muted: false,
+                theme: "violet" as InboxConversation["theme"],
+                inbox_folder: "primary" as InboxConversation["inbox_folder"],
+                pinned: false,
+                pinned_at: null,
+              };
+
+            await loadConversation(found);
           }
         })
         .catch(() => {

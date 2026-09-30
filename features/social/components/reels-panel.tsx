@@ -58,6 +58,7 @@ export default function ReelsPanel({
   const viewportRef = useRef<HTMLDivElement>(null);
   const viewedRef = useRef(new Set<string>());
   const videoRefs = useRef(new Map<string, HTMLVideoElement>());
+  const lastLoadAtRef = useRef(0);
 
   const [reels, setReels] = useState<Reel[]>([]);
   const [saved, setSaved] = useState<string[]>([]);
@@ -136,6 +137,7 @@ export default function ReelsPanel({
       setFollowed(relationships.followed);
       setRequested(relationships.requested);
       setNotice("");
+      lastLoadAtRef.current = Date.now();
     } catch {
       setNotice("Reels could not be loaded right now.");
     } finally {
@@ -149,10 +151,23 @@ export default function ReelsPanel({
   }, [load]);
 
   useEffect(() => {
-    const handleFocus = () => void load();
+    const handleFocus = () => {
+      if (Date.now() - lastLoadAtRef.current > 60_000) {
+        void load();
+        return;
+      }
+
+      const activeReel = displayedReels[activeIndex];
+      const video = activeReel ? videoRefs.current.get(activeReel.id) : null;
+      if (video && !manualPaused) {
+        video.muted = muted;
+        playVideoSafely(video);
+      }
+    };
+
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
-  }, [load]);
+  }, [activeIndex, displayedReels, load, manualPaused, muted]);
 
   useEffect(() => {
     const channel = supabase
@@ -403,6 +418,16 @@ export default function ReelsPanel({
       videoRefs.current.set(reelId, node);
       node.muted = muted;
       node.playsInline = true;
+
+      const index = displayedReels.findIndex((reel) => reel.id === reelId);
+      if (index === activeIndex && !manualPaused) {
+        window.requestAnimationFrame(() => {
+          if (videoRefs.current.get(reelId) !== node) return;
+          node.muted = muted;
+          if (node.readyState === HTMLMediaElement.HAVE_NOTHING) node.load();
+          playVideoSafely(node);
+        });
+      }
       return;
     }
 
@@ -522,8 +547,14 @@ export default function ReelsPanel({
                     playsInline
                     loop
                     autoPlay={active && !manualPaused}
-                    preload={active ? "auto" : "metadata"}
+                    preload={nearby ? "auto" : "metadata"}
                     onClick={() => togglePlayback(reel, index)}
+                    onLoadedMetadata={(event) => {
+                      if (index === activeIndex && !manualPaused) {
+                        event.currentTarget.muted = muted;
+                        playVideoSafely(event.currentTarget);
+                      }
+                    }}
                     onLoadedData={() => {
                       setLoadedIds((current) => new Set(current).add(reel.id));
                       setFailedIds((current) => {
