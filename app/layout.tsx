@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import "./avenzo-ad-theme.css";
+import "./avenzo-design-system.css";
 import PreferencesBootstrap from "../features/settings/components/preferences-bootstrap";
 import NetworkStatus from "../components/network-status";
 import AuthenticatedRuntime from "../components/authenticated-runtime";
@@ -43,8 +44,8 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   colorScheme: "light dark",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f7f8" },
-    { media: "(prefers-color-scheme: dark)", color: "#06080a" },
+    { media: "(prefers-color-scheme: light)", color: "#f7f8fb" },
+    { media: "(prefers-color-scheme: dark)", color: "#090a0f" },
   ],
 };
 
