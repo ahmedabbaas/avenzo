@@ -269,8 +269,8 @@ jobs:
               getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
               );
-              getWindow().setStatusBarColor(Color.rgb(6, 8, 10));
-              getWindow().setNavigationBarColor(Color.rgb(6, 8, 10));
+              getWindow().setStatusBarColor(Color.rgb(9, 10, 13));
+              getWindow().setNavigationBarColor(Color.rgb(9, 10, 13));
               getWindow().getDecorView().setSystemUiVisibility(0);
 
               preferHighRefreshRate();
