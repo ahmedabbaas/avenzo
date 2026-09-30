@@ -9,6 +9,7 @@ import TurnstileWidget, {
   resetTurnstile,
 } from "../_components/turnstile-widget";
 import SiteFooter from "../_components/site-footer";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { isValidEmail } from "../../features/auth/validation";
 
@@ -166,194 +167,183 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="auth-shell login-shell">
+    <main className="auth-shell login-shell login-reference-shell">
       <div className="auth-glow auth-glow-a" />
       <div className="auth-glow auth-glow-b" />
 
-      <section className="login-showcase-card" aria-label="About AVENZO">
-        <div className="login-showcase-icons" aria-hidden="true">
-          <span><Icon name="heart" size={28} /></span>
-          <span><Icon name="plus" size={31} /></span>
-          <span><Icon name="camera" size={28} /></span>
-          <span><Icon name="messages" size={28} /></span>
-          <span><Icon name="activity" size={28} /></span>
-          <span><Icon name="search" size={28} /></span>
-        </div>
-
-        <div className="login-showcase-brand">
-          <BrandLogo size={62} priority />
-          <div>
-            <strong>AVENZO</strong>
-            <span>Connect. Share. Belong.</span>
+      <section className="auth-card login-card login-reference-card">
+        <header className="login-reference-hero">
+          <div className="login-reference-topbar">
+            <Link className="login-reference-brand" href="/" aria-label="AVENZO home">
+              <BrandLogo size={34} priority />
+              <span>AVENZO</span>
+            </Link>
+            {!mfaRequired && (
+              <Link className="login-reference-signup" href="/signup">
+                <Icon name="userPlus" size={15} />
+                <span>Sign Up</span>
+              </Link>
+            )}
           </div>
-        </div>
 
-        <p>
-          Sign in to your real feed, conversations, stories and people.
-          No demo accounts. No fake activity.
-        </p>
+          <div className="login-reference-heading">
+            <span className="login-reference-kicker">
+              {mfaRequired ? "SECURE ACCESS" : "WELCOME BACK"}
+            </span>
+            <h1>{mfaRequired ? "Verify" : "Sign In"}</h1>
+            <p>
+              {mfaRequired
+                ? "Confirm your identity to continue."
+                : "Your people, posts and conversations are waiting."}
+            </p>
+          </div>
+        </header>
 
-        <a className="login-showcase-cta" href="/signup">
-          Create your account
-        </a>
-      </section>
+        <div className="login-reference-body">
+          <form
+            className="auth-form login-reference-form"
+            onSubmit={mfaRequired ? verifyMfa : submit}
+          >
+            {mfaRequired ? (
+              <label className="auth-label login-reference-field" htmlFor="mfa-code">
+                <span>Authenticator code</span>
+                <input
+                  id="mfa-code"
+                  value={mfaCode}
+                  onChange={(event) =>
+                    setMfaCode(
+                      event.target.value.replace(/\D/g, "").slice(0, 6)
+                    )
+                  }
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  placeholder="000000"
+                  maxLength={6}
+                  required
+                />
+              </label>
+            ) : (
+              <>
+                <label className="auth-label login-reference-field" htmlFor="identifier">
+                  <span>Email or username</span>
+                  <input
+                    id="identifier"
+                    value={identifier}
+                    onChange={(event) => {
+                      setIdentifier(event.target.value);
+                      setIdentifierError("");
+                      setStatus("");
+                    }}
+                    placeholder="you@example.com"
+                    autoComplete="username"
+                    spellCheck={false}
+                    required
+                    aria-invalid={Boolean(identifierError)}
+                    aria-describedby={identifierError ? "identifier-error" : undefined}
+                  />
+                </label>
 
-      <section className="auth-card login-card">
-        <div className="login-card-visual" aria-hidden="true">
-          <span><Icon name="saved" size={28} /></span>
-          <span><Icon name="profile" size={28} /></span>
-          <span><Icon name="messages" size={28} /></span>
-        </div>
+                {identifierError && (
+                  <p className="auth-field-error" id="identifier-error" role="alert">
+                    {identifierError}
+                  </p>
+                )}
 
-        <div className="login-card-brand">
-          <BrandLogo size={38} priority />
-          <strong>AVENZO</strong>
-        </div>
-        <div className="eyebrow">
-          {mfaRequired ? "TWO-FACTOR AUTHENTICATION" : "WELCOME BACK"}
-        </div>
-        <h1>{mfaRequired ? "Verify your sign-in." : "Let’s sign you in."}</h1>
-        <p className="auth-sub">
-          {mfaRequired
-            ? "Enter the 6-digit code from your authenticator app."
-            : "Welcome back. Your AVENZO world has been waiting for you."}
-        </p>
+                <PasswordField
+                  id="password"
+                  label="Password"
+                  value={password}
+                  onChange={(value) => {
+                    setPassword(value);
+                    setPasswordError("");
+                    setStatus("");
+                  }}
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                  error={passwordError}
+                />
 
-        <form
-          className="auth-form"
-          onSubmit={mfaRequired ? verifyMfa : submit}
-        >
-          {mfaRequired ? (
-            <label className="auth-label" htmlFor="mfa-code">
-              Authenticator code
-              <input
-                id="mfa-code"
-                value={mfaCode}
-                onChange={(event) =>
-                  setMfaCode(
-                    event.target.value.replace(/\D/g, "").slice(0, 6)
-                  )
-                }
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                placeholder="000000"
-                maxLength={6}
-                required
-              />
-            </label>
-          ) : (
-            <>
-                        <label className="auth-label" htmlFor="identifier">
-                          Username or email
-                        </label>
-                        <input
-                          id="identifier"
-                          value={identifier}
-                          onChange={(event) => {
-                            setIdentifier(event.target.value);
-                            setIdentifierError("");
-                            setStatus("");
-                          }}
-                          placeholder="Username or email"
-                          autoComplete="username"
-                          spellCheck={false}
-                          required
-                          aria-invalid={Boolean(identifierError)}
-                          aria-describedby={identifierError ? "identifier-error" : undefined}
-                        />
-                        {identifierError && (
-                          <p className="auth-field-error" id="identifier-error" role="alert">
-                            {identifierError}
-                          </p>
-                        )}
-              
-                        <PasswordField
-                          id="password"
-                          label="Password"
-                          value={password}
-                          onChange={(value) => {
-                            setPassword(value);
-                            setPasswordError("");
-                            setStatus("");
-                          }}
-                          placeholder="Password"
-                          autoComplete="current-password"
-                          error={passwordError}
-                        />
-              
-              
-            </>
-          )}
+                <div className="auth-login-options login-reference-options">
+                  <label className="auth-remember">
+                    <input
+                      type="checkbox"
+                      checked={rememberSession}
+                      onChange={(event) => setRememberSession(event.target.checked)}
+                    />
+                    <span>Remember me</span>
+                  </label>
+                  <Link href="/forgot-password">Forgot password?</Link>
+                </div>
+
+                <TurnstileWidget action="login" />
+              </>
+            )}
+
+            {status && (
+              <div className="auth-message login-reference-message" role="status">
+                {status}
+              </div>
+            )}
+
+            <button
+              className="auth-submit login-reference-submit"
+              disabled={
+                busy ||
+                (mfaRequired
+                  ? mfaCode.length !== 6
+                  : !identifier.trim() || !password)
+              }
+            >
+              <span className="login-reference-submit-icon" aria-hidden="true">
+                <Icon name={mfaRequired ? "shield" : "send"} size={16} />
+              </span>
+              <span>
+                {busy
+                  ? "Please wait..."
+                  : mfaRequired
+                    ? "Verify & Continue"
+                    : "Sign In"}
+              </span>
+            </button>
+
+            {mfaRequired && (
+              <button
+                type="button"
+                className="auth-secondary-button login-reference-back"
+                onClick={async () => {
+                  await fetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
+                  setMfaRequired(false);
+                  setMfaCode("");
+                  setStatus("");
+                }}
+              >
+                Back to password login
+              </button>
+            )}
+          </form>
 
           {!mfaRequired && (
             <>
-              <div className="auth-login-options">
-                <label className="auth-remember">
-                  <input
-                    type="checkbox"
-                    checked={rememberSession}
-                    onChange={(event) => setRememberSession(event.target.checked)}
-                  />
-                  <span>Remember session</span>
-                </label>
-                <a href="/forgot-password">Forgot Password?</a>
+              <div className="login-reference-divider">
+                <span>New to AVENZO?</span>
               </div>
-              <TurnstileWidget action="login" />
+
+              <Link className="login-reference-register" href="/signup">
+                Create account
+              </Link>
             </>
           )}
 
-          {status && (
-            <div className="auth-message" role="status">
-              {status}
-            </div>
-          )}
-
-          <button
-            className="auth-submit"
-            disabled={
-              busy ||
-              (mfaRequired
-                ? mfaCode.length !== 6
-                : !identifier.trim() || !password)
-            }
-          >
-            {busy
-              ? "Please wait…"
-              : mfaRequired
-                ? "Verify & Continue"
-                : "Sign in"}
-          </button>
-
-          {mfaRequired && (
-            <button
-              type="button"
-              className="auth-secondary-button"
-              onClick={async () => {
-                await fetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
-                setMfaRequired(false);
-                setMfaCode("");
-                setStatus("");
-              }}
-            >
-              Back to password login
-            </button>
-          )}
-        </form>
-
-        <p className="auth-session-note">
-          {rememberSession
-            ? "This device will stay signed in until you sign out or the session expires."
-            : "This sign-in is limited to the current browser session."}
-        </p>
-
-        <div className="auth-divider">
-          <span>Don’t have an account?</span>
+          <p className="login-reference-session-note">
+            {mfaRequired
+              ? "Two-factor verification protects your account."
+              : rememberSession
+                ? "This device stays signed in until you sign out or the session expires."
+                : "This sign-in is limited to the current browser session."}
+          </p>
         </div>
-
-        <a className="auth-secondary-button login-register-button" href="/signup">
-          Register
-        </a>
       </section>
+
       <SiteFooter />
     </main>
   );
