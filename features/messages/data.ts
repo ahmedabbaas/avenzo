@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { groupBy } from "../../lib/collections";
 import type { Profile } from "../social/types";
 import type {
   DirectMessage,
@@ -214,6 +215,15 @@ export async function fetchConversationMessages(
     ])
   );
 
+  const attachmentsByMessage = groupBy(
+    attachments,
+    (attachment) => attachment.message_id
+  );
+  const reactionsByMessage = groupBy(
+    reactions,
+    (reaction) => reaction.message_id
+  );
+
   return rows.map((message) => {
     const replied = message.reply_to_id
       ? byId.get(message.reply_to_id)
@@ -221,12 +231,8 @@ export async function fetchConversationMessages(
 
     return {
       ...message,
-      attachments: attachments.filter(
-        (attachment) => attachment.message_id === message.id
-      ),
-      reactions: reactions.filter(
-        (reaction) => reaction.message_id === message.id
-      ),
+      attachments: attachmentsByMessage.get(message.id) || [],
+      reactions: reactionsByMessage.get(message.id) || [],
       reply_to: replied
         ? {
             ...replied,
