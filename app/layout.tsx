@@ -3,9 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import "./avenzo-ad-theme.css";
 import PreferencesBootstrap from "../features/settings/components/preferences-bootstrap";
-import NativeMessageNotifications from "../features/notifications/components/native-message-notifications";
-import CallManager from "../features/messages/components/call-manager";
 import NetworkStatus from "../components/network-status";
+import AuthenticatedRuntime from "../components/authenticated-runtime";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -56,8 +55,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.variable}>
         <PreferencesBootstrap />
-        <NativeMessageNotifications />
-        <CallManager />
+        <AuthenticatedRuntime />
         <NetworkStatus />
         <a className="skip-link" href="#main-content">
           Skip to main content
