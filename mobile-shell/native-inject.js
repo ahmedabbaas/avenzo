@@ -235,6 +235,94 @@
       });
     }
 
+    function nativeNavIcon(name) {
+      var paths = {
+        home: '<path d="M4 11.2 12 4l8 7.2v8.3h-5.3v-5.7H9.3v5.7H4z"/>',
+        search: '<circle cx="10.5" cy="10.5" r="6.3"/><path d="m15.2 15.2 4.8 4.8"/>',
+        create: '<path d="M12 5v14M5 12h14"/>',
+        reels: '<rect x="5" y="3.5" width="14" height="17" rx="3"/><path d="m10 9 5 3-5 3z"/>',
+        profile: '<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c.8-4 3.3-6 7.5-6s6.7 2 7.5 6"/>'
+      };
+      return '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
+        (paths[name] || paths.home) +
+        '</svg>';
+    }
+
+    function syncGlobalBottomNavActive(nav) {
+      if (!nav) return;
+      var path = window.location.pathname;
+      var params = new URLSearchParams(window.location.search);
+      var screen = params.get("screen") || "";
+      var active = "";
+
+      if (path === "/reels") active = "reels";
+      else if (path.indexOf("/u/") === 0) active = "profile";
+      else if (path === "/home" && screen === "profile") active = "profile";
+      else if (path === "/home" && screen === "explore") active = "search";
+      else if (path === "/home") active = "home";
+
+      nav.querySelectorAll(":scope > button").forEach(function(button){
+        button.classList.toggle(
+          "active",
+          Boolean(active && button.dataset.avenzoTab === active)
+        );
+      });
+    }
+
+    function ensureGlobalBottomNav() {
+      var path = window.location.pathname;
+      var authRoute =
+        path === "/login" ||
+        path === "/signup" ||
+        path === "/forgot-password" ||
+        path === "/reset-password" ||
+        path.indexOf("/auth") === 0;
+
+      var fallback = document.querySelector(".avenzo-native-global-nav");
+      var appNav = document.querySelector(".mobile-nav:not(.avenzo-native-global-nav)");
+
+      if (authRoute) {
+        if (fallback) fallback.remove();
+        return;
+      }
+
+      if (appNav) {
+        if (fallback) fallback.remove();
+        return;
+      }
+
+      if (!fallback) {
+        fallback = document.createElement("nav");
+        fallback.className = "mobile-nav mobile-bottom-nav avenzo-native-global-nav";
+        fallback.setAttribute("aria-label", "Primary mobile navigation");
+        fallback.innerHTML =
+          '<button type="button" data-avenzo-tab="home" aria-label="Home"><span class="mobile-icon-wrap">' + nativeNavIcon("home") + '</span><small>Home</small></button>' +
+          '<button type="button" data-avenzo-tab="search" aria-label="Search"><span class="mobile-icon-wrap">' + nativeNavIcon("search") + '</span><small>Search</small></button>' +
+          '<button type="button" data-avenzo-tab="create" class="mobile-create" aria-label="Create"><span class="mobile-icon-wrap">' + nativeNavIcon("create") + '</span><small>Create</small></button>' +
+          '<button type="button" data-avenzo-tab="reels" aria-label="Reels"><span class="mobile-icon-wrap">' + nativeNavIcon("reels") + '</span><small>Reels</small></button>' +
+          '<button type="button" data-avenzo-tab="profile" aria-label="Profile"><span class="mobile-icon-wrap">' + nativeNavIcon("profile") + '</span><small>Profile</small></button>';
+
+        var destinations = {
+          home: "/home",
+          search: "/home?screen=explore",
+          create: "/home?create=post",
+          reels: "/reels",
+          profile: "/home?screen=profile"
+        };
+
+        fallback.querySelectorAll(":scope > button").forEach(function(button){
+          button.addEventListener("click", function(){
+            var tab = button.dataset.avenzoTab || "home";
+            navigateApp(destinations[tab] || "/home");
+          });
+        });
+
+        document.body.appendChild(fallback);
+      }
+
+      syncGlobalBottomNavActive(fallback);
+    }
+
     function homeButton() {
       return document.querySelector(".mobile-nav .avenzo-primary-home");
     }
@@ -739,6 +827,7 @@
     function syncMobileState() {
       applyBranding();
       ensureDrawer();
+      ensureGlobalBottomNav();
       normalizeBottomNav();
       enhanceLegacyDmChrome();
       enhanceLegacyDmActions();
