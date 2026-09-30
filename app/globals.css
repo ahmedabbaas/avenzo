@@ -15054,3 +15054,49 @@ a {
 /* AVENZO lime theme hard lock */
 :root{--accent:#c8ff38;--accent-strong:#dfff63;--accent-soft:rgba(200,255,56,.14)}
 .verified-badge{display:none!important}
+
+
+/* 2026-09 performance + layout stabilization */
+@media (max-width: 780px) {
+  .glass,
+  .glass-panel,
+  .topbar,
+  .mobile-bottom-nav,
+  .app-nav,
+  .modal-card {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  main,
+  .app-shell,
+  .app-main,
+  .feed-shell,
+  .explore-shell,
+  .profile-shell,
+  .messages-shell {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  h1, h2, h3, p, span, button, a { overflow-wrap: anywhere; }
+  img, video { max-width: 100%; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  button, a, [role="button"] {
+    transition-property: transform, opacity, background-color, border-color, color;
+    transition-duration: 160ms;
+    transition-timing-function: cubic-bezier(.2,.8,.2,1);
+  }
+  button:active, [role="button"]:active { transform: scale(.985); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
