@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
 import AvatarImage from "../../social/components/avatar-image";
 import VerifiedBadge from "../../social/components/verified-badge";
@@ -189,6 +190,7 @@ export default function MessagesWorkspace({
   shareProfileId?: string;
   initialTab?: "primary" | "requests";
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [inbox, setInbox] = useState<InboxConversation[]>([]);
   const [requests, setRequests] = useState<InboxConversation[]>([]);
