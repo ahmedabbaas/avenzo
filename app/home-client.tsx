@@ -148,7 +148,8 @@ export default function HomeClient({
   const [unreadMessages, setUnreadMessages] = useState(0);
   const toastTimerRef = useRef<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [exploreLoading, setExploreLoading] = useState(true);
+  const [exploreLoading, setExploreLoading] = useState(false);
+  const loadedScreensRef = useRef(new Set<string>());
   const [exploreError, setExploreError] = useState("");
   const [unreadActivity, setUnreadActivity] = useState(0);
   const [stats, setStats] = useState<ProfileStats>({
@@ -346,17 +347,26 @@ export default function HomeClient({
 
   async function refreshEverything() {
     try {
-      await Promise.all([
+      const coreLoads: Promise<unknown>[] = [
         loadProfile(),
         loadPosts(),
-        loadProfileContent(),
-        loadExploreData(),
         loadStories(),
-        loadSavedPosts(),
         loadUnreadMessages(),
-        loadStats(),
         loadUnreadActivity(),
-      ]);
+      ];
+
+      if (screen === "profile") {
+        coreLoads.push(loadProfileContent(), loadStats());
+        loadedScreensRef.current.add("profile");
+      } else if (screen === "explore") {
+        coreLoads.push(loadExploreData());
+        loadedScreensRef.current.add("explore");
+      } else if (screen === "saved") {
+        coreLoads.push(loadSavedPosts());
+        loadedScreensRef.current.add("saved");
+      }
+
+      await Promise.all(coreLoads);
     } catch {
       showToast(
         "Some AVENZO data could not be loaded. Refresh to try again."
@@ -377,6 +387,28 @@ export default function HomeClient({
     // loader graph reactive would refetch the full social shell after each state update.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (screen === "explore" && !loadedScreensRef.current.has("explore")) {
+      loadedScreensRef.current.add("explore");
+      void loadExploreData();
+      return;
+    }
+
+    if (screen === "profile" && !loadedScreensRef.current.has("profile")) {
+      loadedScreensRef.current.add("profile");
+      void Promise.all([loadProfileContent(), loadStats()]);
+      return;
+    }
+
+    if (screen === "saved" && !loadedScreensRef.current.has("saved")) {
+      loadedScreensRef.current.add("saved");
+      void loadSavedPosts();
+    }
+
+    // Screen loaders are intentionally one-shot per mounted social shell.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screen]);
 
   useEffect(() => {
     const channel = supabase
