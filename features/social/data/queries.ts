@@ -137,6 +137,35 @@ export async function fetchProfileStats(
   };
 }
 
+export async function fetchFollowingState(
+  supabase: SupabaseClient,
+  userId: string
+) {
+  const [followResult, requestResult] = await Promise.all([
+    supabase
+      .from("follows")
+      .select("following_id")
+      .eq("follower_id", userId),
+    supabase
+      .from("follow_requests")
+      .select("target_id")
+      .eq("requester_id", userId)
+      .eq("status", "pending"),
+  ]);
+
+  assertNoError(followResult.error);
+  assertNoError(requestResult.error);
+
+  return {
+    followed: (followResult.data || []).map(
+      (row: { following_id: string }) => row.following_id
+    ),
+    requested: (requestResult.data || []).map(
+      (row: { target_id: string }) => row.target_id
+    ),
+  };
+}
+
 export async function fetchPeopleAndFollowing(
   supabase: SupabaseClient,
   userId: string
