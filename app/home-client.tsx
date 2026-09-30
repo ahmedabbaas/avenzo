@@ -151,7 +151,6 @@ export default function HomeClient({
   const [exploreLoading, setExploreLoading] = useState(false);
   const loadedScreensRef = useRef(new Set<string>());
   const followingFeedLoadedRef = useRef(false);
-  const forYouFeedLoadedRef = useRef(false);
   const [exploreError, setExploreError] = useState("");
   const [unreadActivity, setUnreadActivity] = useState(0);
   const [stats, setStats] = useState<ProfileStats>({
@@ -298,7 +297,6 @@ export default function HomeClient({
   async function loadExplorePosts() {
     const nextPosts = await fetchExplorePosts(supabase, initialProfile.id);
     setExplorePosts(nextPosts);
-    forYouFeedLoadedRef.current = true;
   }
 
   async function loadReels() {
