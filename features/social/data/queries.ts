@@ -168,7 +168,8 @@ export async function fetchFollowingState(
 
 export async function fetchPeopleAndFollowing(
   supabase: SupabaseClient,
-  userId: string
+  userId: string,
+  limit = 40
 ) {
   const [profilesResult, followResult, requestResult] = await Promise.all([
     supabase
@@ -176,7 +177,7 @@ export async function fetchPeopleAndFollowing(
       .select(PROFILE_COLUMNS)
       .neq("id", userId)
       .order("created_at", { ascending: false })
-      .limit(80),
+      .limit(limit),
     supabase
       .from("follows")
       .select("following_id")
@@ -428,7 +429,7 @@ export async function fetchFeedPosts(
       .select("*")
       .in("author_id", feedAuthors)
       .order("created_at", { ascending: false })
-      .limit(60),
+      .limit(36),
     supabase
       .from("post_collaborators")
       .select("post_id")
@@ -467,7 +468,7 @@ export async function fetchFeedPosts(
         new Date(b.created_at).getTime() -
         new Date(a.created_at).getTime()
     )
-    .slice(0, 60);
+    .slice(0, 36);
 
   return hydratePosts(supabase, userId, rows);
 }
@@ -482,7 +483,7 @@ export async function fetchProfilePosts(
       .select("*")
       .eq("author_id", userId)
       .order("created_at", { ascending: false })
-      .limit(120),
+      .limit(72),
     supabase
       .from("post_collaborators")
       .select("post_id")
@@ -521,7 +522,7 @@ export async function fetchProfilePosts(
         new Date(b.created_at).getTime() -
         new Date(a.created_at).getTime()
     )
-    .slice(0, 120);
+    .slice(0, 72);
 
   return hydratePosts(supabase, userId, rows);
 }
@@ -631,7 +632,7 @@ export async function fetchExplorePosts(
     .from("posts")
     .select("*")
     .order("created_at", { ascending: false })
-    .limit(60);
+    .limit(36);
 
   assertNoError(error);
   return hydratePosts(supabase, userId, (data || []) as PostRow[]);
@@ -655,7 +656,7 @@ export async function fetchReels(
 
   const { data, error } = await query
     .order("created_at", { ascending: false })
-    .limit(options?.limit || 60);
+    .limit(options?.limit || 32);
 
   assertNoError(error);
 
