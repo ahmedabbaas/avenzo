@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 import "./avenzo-ad-theme.css";
 import "./avenzo-design-system.css";
@@ -7,7 +7,7 @@ import PreferencesBootstrap from "../features/settings/components/preferences-bo
 import NetworkStatus from "../components/network-status";
 import AuthenticatedRuntime from "../components/authenticated-runtime";
 
-const inter = Inter({
+const manrope = Manrope({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-avenzo-ui",
@@ -23,9 +23,9 @@ export const metadata: Metadata = {
     "AVENZO is a private-first social platform for real people, posts and conversations.",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: [{ url: "/avenzo-logo.webp", type: "image/webp" }],
-    shortcut: [{ url: "/avenzo-logo.webp", type: "image/webp" }],
-    apple: [{ url: "/avenzo-logo.webp", type: "image/webp" }],
+    icon: [{ url: "/avenzo-mark.svg", type: "image/webp" }],
+    shortcut: [{ url: "/avenzo-mark.svg", type: "image/webp" }],
+    apple: [{ url: "/avenzo-mark.svg", type: "image/webp" }],
   },
   formatDetection: {
     telephone: false,
@@ -44,8 +44,8 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   colorScheme: "light dark",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7f8fb" },
-    { media: "(prefers-color-scheme: dark)", color: "#090a0f" },
+    { media: "(prefers-color-scheme: light)", color: "#f5f8ff" },
+    { media: "(prefers-color-scheme: dark)", color: "#070a12" },
   ],
 };
 
@@ -54,7 +54,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.variable}>
+      <body className={manrope.variable}>
         <PreferencesBootstrap />
         <AuthenticatedRuntime />
         <NetworkStatus />
