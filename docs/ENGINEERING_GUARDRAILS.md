@@ -48,7 +48,7 @@ The final visual authority for authenticated product surfaces is
 Do not append another competing global theme block to `app/globals.css`.
 Use centralized tokens for colors, spacing, radius, shadows, typography, and motion.
 
-The current AVENZO palette is Midnight Cobalt with Glacier blue accents. It intentionally avoids legacy lime and pink themes. Web and
+The current AVENZO palette is Obsidian Chrome with graphite, silver, and white metallic accents. It intentionally avoids legacy lime, pink, and saturated color-heavy themes. Web and
 Android must remain visually aligned.
 
 ## 5. Web and Android parity

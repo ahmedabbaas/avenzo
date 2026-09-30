@@ -1,4 +1,4 @@
-/*
+﻿/*
  * AVENZO campaign-reference mobile UI
  * Source of truth: the approved AVENZO launch-ad composition supplied by the owner.
  * Scope: mobile app surfaces only. Existing data, routes, auth and behavior stay unchanged.
@@ -11,8 +11,8 @@
   --avenzo-ad-line:var(--av-line,#292e3a);
   --avenzo-ad-text:var(--av-text,#f7f8fc);
   --avenzo-ad-muted:var(--av-muted,#9197a6);
-  --avenzo-ad-accent:var(--av-accent,#7c6cff);
-  --avenzo-ad-accent-strong:var(--av-accent-hover,#9185ff);
+  --avenzo-ad-accent:var(--av-accent,#c3c8ce);
+  --avenzo-ad-accent-strong:var(--av-accent-hover,#eef0f2);
   --avenzo-ad-accent-soft:var(--av-accent-soft,rgba(124,108,255,.13));
   --avenzo-ad-radius:18px;
 }
@@ -510,12 +510,12 @@
   }
 
   .explore-media-type:after{
-    content:"▣";
+    content:"â–£";
     font-size:13px;
   }
 
   .explore-media-tile--reel .explore-media-type:after{
-    content:"▶";
+    content:"â–¶";
   }
 
   .explore-media-author{
@@ -1457,8 +1457,8 @@
     --home-text:#101424;
     --home-muted:#737c95;
     --home-border:#e8eaf2;
-    --home-accent:#5b7cff;
-    --home-accent-2:#3cc8ff;
+    --home-accent:#d2d7dd;
+    --home-accent-2:#8d98a4;
     --home-accent-soft:#efe9ff;
     --home-accent-ink:#ffffff;
     min-height:100dvh!important;
@@ -1665,7 +1665,7 @@
     padding:3px!important;
     border:0!important;
     border-radius:50%!important;
-    background:linear-gradient(145deg,#5b7cff 0%,#7892ff 48%,#3cc8ff 100%)!important;
+    background:linear-gradient(145deg,#d2d7dd 0%,#f3f5f7 48%,#8d98a4 100%)!important;
     box-shadow:none!important;
   }
 
@@ -1943,7 +1943,7 @@
     border-radius:18px!important;
     background:var(--home-accent)!important;
     color:#fff!important;
-    box-shadow:0 8px 22px rgba(91,124,255,.24)!important;
+    box-shadow:0 8px 22px rgba(210,215,221,.24)!important;
   }
 
   .screen-home .mobile-bottom-nav small{display:block!important;font-size:9px!important}

@@ -11,7 +11,7 @@ on:
       - "features/**"
       - "lib/**"
       - "mobile-shell/**"
-      - "public/avenzo-mark.svg"
+      - "public/avenzo-logo-premium.png"
       - ".github/workflows/android-apk.yml"
 
 permissions:
@@ -85,7 +85,7 @@ jobs:
           EOF
           cat > android/app/src/main/res/drawable/avenzo_launcher_icon.xml <<'EOF'
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-            <path android:fillColor="#070A12" android:pathData="M0,0h108v108h-108z"/>
+            <path android:fillColor="#050607" android:pathData="M0,0h108v108h-108z"/>
             <path android:fillColor="#1F5B7CFF" android:pathData="M54,16a38,38 0,1 0,0 76a38,38 0,1 0,0 -76"/>
             <path android:fillColor="@android:color/transparent" android:strokeColor="#F8FAFF" android:strokeWidth="9" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M30,82 L54,25 L78,82"/>
             <path android:fillColor="@android:color/transparent" android:strokeColor="#5B7CFF" android:strokeWidth="8" android:strokeLineCap="round" android:pathData="M41,61 L67,61"/>
@@ -128,8 +128,8 @@ jobs:
                   '<application android:hardwareAccelerated="true"',
                   1
               )
-          s = s.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@drawable/avenzo_launcher_icon"')
-          s = s.replace('android:roundIcon="@mipmap/ic_launcher_round"', 'android:roundIcon="@drawable/avenzo_launcher_icon"')
+          s = s.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@drawable/avenzo_logo_premium"')
+          s = s.replace('android:roundIcon="@mipmap/ic_launcher_round"', 'android:roundIcon="@drawable/avenzo_logo_premium"')
           if 'android:screenOrientation=' not in s:
               s = s.replace(
                   'android:name=".MainActivity"',
@@ -140,8 +140,8 @@ jobs:
           styles = Path("android/app/src/main/res/values/styles.xml")
           text = styles.read_text()
           additions = (
-              '<item name="android:statusBarColor">#070a12</item>'
-              '<item name="android:navigationBarColor">#070a12</item>'
+              '<item name="android:statusBarColor">#050607</item>'
+              '<item name="android:navigationBarColor">#050607</item>'
               '<item name="android:windowLightStatusBar">false</item>'
               '<item name="android:windowLightNavigationBar">false</item>'
               '<item name="android:windowActionModeOverlay">true</item>'
@@ -161,8 +161,8 @@ jobs:
           (values_v31 / "styles.xml").write_text("""<?xml version="1.0" encoding="utf-8"?>
           <resources>
             <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-              <item name="windowSplashScreenBackground">#070a12</item>
-              <item name="windowSplashScreenAnimatedIcon">@drawable/avenzo_launcher_icon</item>
+              <item name="windowSplashScreenBackground">#050607</item>
+              <item name="windowSplashScreenAnimatedIcon">@drawable/avenzo_logo_premium</item>
               <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
             </style>
           </resources>
@@ -188,7 +188,7 @@ jobs:
           mkdir -p android/app/src/main/assets/avenzo
           cp mobile-shell/app-mobile.css android/app/src/main/assets/avenzo/app-mobile.css
           cp mobile-shell/native-inject.js android/app/src/main/assets/avenzo/native-inject.js
-          cp mobile-shell/avenzo-mark.svg android/app/src/main/assets/avenzo/avenzo-mark.svg
+          cp public/avenzo-logo-premium.png android/app/src/main/assets/avenzo/avenzo-logo-premium.png
 
           python3 - <<'PY'
           from pathlib import Path
@@ -892,8 +892,8 @@ jobs:
                   readAssetBase64("avenzo/app-mobile.css")
                 );
                 script = script.replace(
-                  "__LOGO_SVG__",
-                  readAssetBase64("avenzo/avenzo-mark.svg")
+                  "__LOGO_PNG__",
+                  readAssetBase64("avenzo/avenzo-logo-premium.png")
                 );
                 view.evaluateJavascript(script, null);
               } catch (Exception ignored) {
