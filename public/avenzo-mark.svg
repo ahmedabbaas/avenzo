@@ -1,4 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="18" fill="#dfff63"/>
-  <path d="M18 46 28.5 17h7L46 46h-7l-2.2-6.7h-10L24.5 46H18Zm10.7-12.4h6.2L31.8 24l-3.1 9.6Z" fill="#0b0e0f"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="AVENZO">
+  <defs>
+    <linearGradient id="bg" x1="10" y1="8" x2="54" y2="58" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#121C31"/>
+      <stop offset="1" stop-color="#070A12"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="20" y1="18" x2="46" y2="48" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7E97FF"/>
+      <stop offset=".58" stop-color="#5B7CFF"/>
+      <stop offset="1" stop-color="#3CC8FF"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="3.8"/>
+    </filter>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="url(#bg)"/>
+  <circle cx="47" cy="15" r="11" fill="#5B7CFF" opacity=".17" filter="url(#glow)"/>
+  <path d="M17.5 46.5 28.7 17h6.6l11.2 29.5h-7.2l-2.25-6.6H26.9l-2.2 6.6h-7.2Zm11.55-12.8h5.9L32 24.7l-2.95 9Z" fill="#F8FAFF"/>
+  <path d="M26.9 39.9h10.15l2.25 6.6h7.2L35.3 17h-1.55l-6.85 22.9Z" fill="url(#accent)" opacity=".92"/>
+  <path d="M24.2 49.5c9.2 3.5 19.3 2.5 26.4-2.1" fill="none" stroke="#3CC8FF" stroke-width="1.6" stroke-linecap="round" opacity=".9"/>
 </svg>
