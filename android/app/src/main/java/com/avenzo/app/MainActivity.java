@@ -7,12 +7,15 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Base64;
 import android.view.View;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.webkit.WebSettings;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebViewClient;
@@ -61,7 +64,9 @@ public class MainActivity extends BridgeActivity {
                 settings.setDomStorageEnabled(true);
                 settings.setDatabaseEnabled(true);
                 settings.setCacheMode(WebSettings.LOAD_DEFAULT);
-                webView.postDelayed(() -> injectMobileShell(webView), 350);
+                webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+                webView.addJavascriptInterface(new AvenzoNativeBridge(), "AvenzoNative");
+                webView.postDelayed(() -> injectMobileShell(webView), 80);
             }
         }
 
@@ -78,7 +83,9 @@ public class MainActivity extends BridgeActivity {
 
     private void applySystemTheme(String theme) {
         boolean light = "light".equalsIgnoreCase(theme);
+        View decor = getWindow().getDecorView();
 
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         getWindow().setStatusBarColor(Color.TRANSPARENT);
         getWindow().setNavigationBarColor(Color.TRANSPARENT);
 
@@ -95,11 +102,22 @@ public class MainActivity extends BridgeActivity {
             flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
         }
 
-        getWindow().getDecorView().setSystemUiVisibility(flags);
+        decor.setSystemUiVisibility(flags);
+        WindowInsetsControllerCompat controller =
+            WindowCompat.getInsetsController(getWindow(), decor);
+        controller.setAppearanceLightStatusBars(light);
+        controller.setAppearanceLightNavigationBars(light);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             getWindow().setStatusBarContrastEnforced(false);
             getWindow().setNavigationBarContrastEnforced(false);
+        }
+    }
+
+    private class AvenzoNativeBridge {
+        @JavascriptInterface
+        public void setSystemTheme(String theme) {
+            runOnUiThread(() -> applySystemTheme(theme));
         }
     }
 
