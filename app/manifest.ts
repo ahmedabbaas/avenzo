@@ -12,15 +12,15 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#06080a",
     icons: [
       {
-        src: "/avenzo-logo.webp",
-        sizes: "2048x2048",
-        type: "image/webp",
+        src: "/avenzo-logo-premium.png",
+        sizes: "500x500",
+        type: "image/png",
         purpose: "any",
       },
       {
-        src: "/avenzo-logo.webp",
-        sizes: "2048x2048",
-        type: "image/webp",
+        src: "/avenzo-logo-premium.png",
+        sizes: "500x500",
+        type: "image/png",
         purpose: "maskable",
       },
     ],
