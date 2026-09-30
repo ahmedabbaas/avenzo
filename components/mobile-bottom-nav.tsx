@@ -19,10 +19,10 @@ type MobileBottomNavProps = {
 const ITEMS: Array<{
   id: MobilePrimaryTab;
   label: string;
-  icon: "home" | "explore" | "plus" | "reels" | "profile";
+  icon: "home" | "search" | "plus" | "reels" | "profile";
 }> = [
   { id: "home", label: "Home", icon: "home" },
-  { id: "search", label: "Search", icon: "explore" },
+  { id: "search", label: "Search", icon: "search" },
   { id: "create", label: "Create", icon: "plus" },
   { id: "reels", label: "Reels", icon: "reels" },
   { id: "profile", label: "Profile", icon: "profile" },
