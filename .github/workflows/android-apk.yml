@@ -11,7 +11,7 @@ on:
       - "features/**"
       - "lib/**"
       - "mobile-shell/**"
-      - "public/avenzo-logo.webp"
+      - "public/avenzo-mark.svg"
       - ".github/workflows/android-apk.yml"
 
 permissions:
@@ -19,7 +19,7 @@ permissions:
 
 concurrency:
   group: avenzo-android-apk-signing
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build-apk:
@@ -78,10 +78,18 @@ jobs:
         shell: bash
         run: |
           mkdir -p android/app/src/main/res/drawable-nodpi android/app/src/main/res/drawable
-          cp public/avenzo-logo.webp android/app/src/main/res/drawable-nodpi/avenzo_logo.webp
           cat > android/app/src/main/res/drawable/avenzo_notification_icon.xml <<'EOF'
           <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
-            <path android:fillColor="#FFFFFFFF" android:pathData="M4,20 L9.6,4 L14.4,4 L20,20 L16.2,20 L15.1,16.7 L8.9,16.7 L7.8,20 Z M10,13.5 L14,13.5 L12,7.5 Z"/>
+            <path android:fillColor="@android:color/transparent" android:strokeColor="#FFFFFFFF" android:strokeWidth="2.4" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M5.2,19 L12,4.8 L18.8,19 M8.5,13.2 L15.5,13.2"/>
+          </vector>
+          EOF
+          cat > android/app/src/main/res/drawable/avenzo_launcher_icon.xml <<'EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+            <path android:fillColor="#070A12" android:pathData="M0,0h108v108h-108z"/>
+            <path android:fillColor="#1F5B7CFF" android:pathData="M54,16a38,38 0,1 0,0 76a38,38 0,1 0,0 -76"/>
+            <path android:fillColor="@android:color/transparent" android:strokeColor="#F8FAFF" android:strokeWidth="9" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M30,82 L54,25 L78,82"/>
+            <path android:fillColor="@android:color/transparent" android:strokeColor="#5B7CFF" android:strokeWidth="8" android:strokeLineCap="round" android:pathData="M41,61 L67,61"/>
+            <path android:fillColor="@android:color/transparent" android:strokeColor="#3CC8FF" android:strokeWidth="2.2" android:strokeLineCap="round" android:pathData="M25,90 C44,96 68,94 84,84"/>
           </vector>
           EOF
           python3 - <<'PY'
@@ -120,8 +128,8 @@ jobs:
                   '<application android:hardwareAccelerated="true"',
                   1
               )
-          s = s.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@drawable/avenzo_logo"')
-          s = s.replace('android:roundIcon="@mipmap/ic_launcher_round"', 'android:roundIcon="@drawable/avenzo_logo"')
+          s = s.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@drawable/avenzo_launcher_icon"')
+          s = s.replace('android:roundIcon="@mipmap/ic_launcher_round"', 'android:roundIcon="@drawable/avenzo_launcher_icon"')
           if 'android:screenOrientation=' not in s:
               s = s.replace(
                   'android:name=".MainActivity"',
@@ -132,8 +140,8 @@ jobs:
           styles = Path("android/app/src/main/res/values/styles.xml")
           text = styles.read_text()
           additions = (
-              '<item name="android:statusBarColor">#06080a</item>'
-              '<item name="android:navigationBarColor">#06080a</item>'
+              '<item name="android:statusBarColor">#070a12</item>'
+              '<item name="android:navigationBarColor">#070a12</item>'
               '<item name="android:windowLightStatusBar">false</item>'
               '<item name="android:windowLightNavigationBar">false</item>'
               '<item name="android:windowActionModeOverlay">true</item>'
@@ -153,8 +161,8 @@ jobs:
           (values_v31 / "styles.xml").write_text("""<?xml version="1.0" encoding="utf-8"?>
           <resources>
             <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-              <item name="windowSplashScreenBackground">#06080a</item>
-              <item name="windowSplashScreenAnimatedIcon">@drawable/avenzo_logo</item>
+              <item name="windowSplashScreenBackground">#070a12</item>
+              <item name="windowSplashScreenAnimatedIcon">@drawable/avenzo_launcher_icon</item>
               <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
             </style>
           </resources>
@@ -180,7 +188,7 @@ jobs:
           mkdir -p android/app/src/main/assets/avenzo
           cp mobile-shell/app-mobile.css android/app/src/main/assets/avenzo/app-mobile.css
           cp mobile-shell/native-inject.js android/app/src/main/assets/avenzo/native-inject.js
-          cp public/avenzo-logo.webp android/app/src/main/assets/avenzo/avenzo-logo.webp
+          cp mobile-shell/avenzo-mark.svg android/app/src/main/assets/avenzo/avenzo-mark.svg
 
           python3 - <<'PY'
           from pathlib import Path
@@ -492,12 +500,6 @@ jobs:
 
               builder
                 .setSmallIcon(R.drawable.avenzo_notification_icon)
-                .setLargeIcon(
-                  BitmapFactory.decodeResource(
-                    getResources(),
-                    R.drawable.avenzo_logo
-                  )
-                )
                 .setContentTitle(
                   title == null || title.trim().isEmpty() ? "AVENZO" : title
                 )
@@ -890,8 +892,8 @@ jobs:
                   readAssetBase64("avenzo/app-mobile.css")
                 );
                 script = script.replace(
-                  "__LOGO__",
-                  readAssetBase64("avenzo/avenzo-logo.webp")
+                  "__LOGO_SVG__",
+                  readAssetBase64("avenzo/avenzo-mark.svg")
                 );
                 view.evaluateJavascript(script, null);
               } catch (Exception ignored) {
