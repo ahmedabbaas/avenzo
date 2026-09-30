@@ -15786,40 +15786,68 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
   html.avenzo-android-app .screen-home .mobile-bottom-nav{left:9px!important;right:9px!important}
 }
 
-/* AVENZO neon-lime APK accent lock */
+/* AVENZO Aurora APK accent lock */
 @media(max-width:820px){
- html.avenzo-android-app{--accent:#c8ff38!important;--accent-strong:#dfff63!important;--accent-soft:rgba(200,255,56,.12)!important}
+ html.avenzo-android-app{
+   --accent:#8b5cf6!important;
+   --accent-strong:#a78bfa!important;
+   --accent-soft:rgba(139,92,246,.14)!important;
+   --panel:#0f1116!important;
+   --panel-2:#151820!important;
+   --line:#252a35!important;
+ }
  html.avenzo-android-app .mobile-nav button.active,
  html.avenzo-android-app .top-search,
  html.avenzo-android-app .top-messages,
- html.avenzo-android-app .top-activity{color:#c8ff38}
- html.avenzo-android-app .mobile-create .mobile-icon-wrap{background:#c8ff38!important;color:#0c1200!important;box-shadow:0 8px 22px rgba(200,255,56,.22)!important}
- html.avenzo-android-app .dm-message-row.me .dm-bubble{background:linear-gradient(135deg,#b8f126,#dfff63)!important;color:#0c1200!important}
- html.avenzo-android-app .dm-send-button{background:#c8ff38!important;color:#0c1200!important}
+ html.avenzo-android-app .top-activity{color:#a78bfa!important}
+ html.avenzo-android-app .mobile-create .mobile-icon-wrap{
+   background:linear-gradient(135deg,#8b5cf6,#f0529c)!important;
+   color:#fff!important;
+   box-shadow:0 8px 22px rgba(139,92,246,.22)!important
+ }
+ html.avenzo-android-app .dm-message-row.me .dm-bubble{
+   background:linear-gradient(135deg,#7357dc,#a44ca1)!important;
+   color:#fff!important
+ }
+ html.avenzo-android-app .dm-send-button{
+   background:linear-gradient(135deg,#8b5cf6,#f0529c)!important;
+   color:#fff!important
+ }
 }
 
 /* Exact uploaded badge asset overrides old SVG-specific rules */
 html.avenzo-android-app .verified-badge img{display:block!important;width:100%!important;height:100%!important;object-fit:contain!important}
 
-/* AVENZO lime theme hard lock */
-:root{--accent:#c8ff38;--accent-strong:#dfff63;--accent-soft:rgba(200,255,56,.14)}
+/* AVENZO Aurora theme hard lock */
+:root{--accent:#8b5cf6;--accent-strong:#a78bfa;--accent-soft:rgba(139,92,246,.14)}
 .verified-badge{display:none!important}
 @media(max-width:820px){
-html.avenzo-android-app{--accent:#c8ff38!important;--accent-strong:#dfff63!important;--accent-soft:rgba(200,255,56,.14)!important}
+html.avenzo-android-app{
+  --accent:#8b5cf6!important;
+  --accent-strong:#a78bfa!important;
+  --accent-soft:rgba(139,92,246,.14)!important
+}
 html.avenzo-android-app .screen-home .mobile-home-search,
 html.avenzo-android-app .screen-home .top-messages,
 html.avenzo-android-app .screen-home .top-activity,
 html.avenzo-android-app .screen-home .mobile-nav>button.active,
 html.avenzo-android-app .screen-profile .mobile-nav>button.active,
 html.avenzo-android-app .dm-voice-button,
-html.avenzo-android-app .dm-send-button{color:#c8ff38!important}
+html.avenzo-android-app .dm-send-button{color:#a78bfa!important}
 html.avenzo-android-app .mobile-create .mobile-icon-wrap,
 html.avenzo-android-app .screen-home .top-badge,
-html.avenzo-android-app .dm-conversation-meta i{background:#c8ff38!important;color:#0c1200!important}
+html.avenzo-android-app .dm-conversation-meta i{
+  background:linear-gradient(135deg,#8b5cf6,#f0529c)!important;
+  color:#fff!important
+}
+html.avenzo-android-app .avenzo-brand-logo{
+  filter:hue-rotate(215deg) saturate(1.28) brightness(1.02)!important;
+  box-shadow:0 0 20px rgba(139,92,246,.16)!important
+}
 html.avenzo-android-app .verified-badge{display:none!important}
 }
 
-/* AVENZO audit 2026-09-30: lime mobile shell verified */
+/* AVENZO audit 2026-09-30: Aurora mobile shell */
 
 
 /* 2026-09 APK performance stabilization */
@@ -15910,5 +15938,70 @@ html.avenzo-android-app .verified-badge{display:none!important}
   html.avenzo-android-app .dm-conversation-copy,
   html.avenzo-android-app .profile-identity{
     min-width:0!important;
+  }
+}
+
+
+/* AVENZO NATIVE AURORA FINAL OVERRIDES */
+@media(max-width:820px){
+  html.avenzo-android-app,
+  html.avenzo-android-app body{
+    background:#090a0d!important;
+    color:#f7f7fb!important;
+  }
+  html.avenzo-android-app .screen-home,
+  html.avenzo-android-app .screen-profile{
+    --home-bg:#090a0d!important;
+    --home-surface:#0f1116!important;
+    --home-panel:#151820!important;
+    --home-border:#252a35!important;
+    --home-text:#f7f7fb!important;
+    --home-muted:#858a98!important;
+    background:#090a0d!important;
+    color:#f7f7fb!important;
+  }
+  html.avenzo-android-app .screen-home .avenzo-mobile-home-bar,
+  html.avenzo-android-app .screen-home .top,
+  html.avenzo-android-app .screen-profile .top,
+  html.avenzo-android-app .screen-home .mobile-bottom-nav,
+  html.avenzo-android-app .screen-profile .mobile-bottom-nav{
+    background:rgba(15,17,22,.96)!important;
+    border-color:#252a35!important;
+    box-shadow:none!important;
+  }
+  html.avenzo-android-app .screen-home .post-card{
+    background:#0f1116!important;
+    border-color:#252a35!important;
+    box-shadow:0 14px 34px rgba(0,0,0,.28)!important;
+  }
+  html.avenzo-android-app .screen-home .story-ring{
+    background:
+      linear-gradient(#0f1116,#0f1116) padding-box,
+      conic-gradient(from 220deg,#8b5cf6,#f0529c,#ff8a5c,#8b5cf6) border-box!important;
+  }
+  html.avenzo-android-app .screen-home .story-ring i{
+    background:linear-gradient(135deg,#8b5cf6,#f0529c)!important;
+    color:#fff!important;
+  }
+  html.avenzo-android-app .screen-home .mobile-bottom-nav>.mobile-nav-item.active,
+  html.avenzo-android-app .screen-profile .mobile-bottom-nav>.mobile-nav-item.active{
+    color:#a78bfa!important;
+  }
+  html.avenzo-android-app .screen-home .mobile-create .mobile-icon-wrap,
+  html.avenzo-android-app .screen-profile .mobile-create .mobile-icon-wrap{
+    background:linear-gradient(135deg,#8b5cf6,#f0529c)!important;
+    color:#fff!important;
+    border:0!important;
+    box-shadow:0 8px 24px rgba(139,92,246,.22)!important;
+  }
+  html.avenzo-android-app .dm-message-row.me .dm-bubble{
+    background:linear-gradient(135deg,#7357dc,#a44ca1)!important;
+    color:#fff!important;
+  }
+  html.avenzo-android-app .dm-send-button,
+  html.avenzo-android-app .avenzo-native-attachment-actions .primary{
+    background:linear-gradient(135deg,#8b5cf6,#f0529c)!important;
+    color:#fff!important;
+    border:0!important;
   }
 }
