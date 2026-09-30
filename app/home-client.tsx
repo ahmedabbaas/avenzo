@@ -376,6 +376,8 @@ export default function HomeClient({
     // never keep the first useful screen behind a loading skeleton.
     void Promise.allSettled([
       loadProfile(),
+      loadStats(),
+      loadPeople(),
       loadUnreadMessages(),
       loadUnreadActivity(),
     ]);
