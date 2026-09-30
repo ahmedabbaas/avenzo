@@ -15820,3 +15820,53 @@ html.avenzo-android-app .verified-badge{display:none!important}
 }
 
 /* AVENZO audit 2026-09-30: lime mobile shell verified */
+
+
+/* 2026-09 APK performance stabilization */
+@media (max-width: 780px) {
+  .glass,
+  .glass-panel,
+  .topbar,
+  .mobile-bottom-nav,
+  .app-nav,
+  .modal-card {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  main,
+  .app-shell,
+  .app-main,
+  .feed-shell,
+  .explore-shell,
+  .profile-shell,
+  .messages-shell {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  h1, h2, h3, p, span, button, a {
+    overflow-wrap: anywhere;
+  }
+
+  img, video {
+    max-width: 100%;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  button, a, [role="button"] {
+    transition-property: transform, opacity, background-color, border-color, color;
+    transition-duration: 160ms;
+    transition-timing-function: cubic-bezier(.2,.8,.2,1);
+  }
+
+  button:active,
+  [role="button"]:active {
+    transform: scale(.985);
+  }
+}
