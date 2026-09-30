@@ -11,7 +11,7 @@ export default function BrandLogo({
 }) {
   return (
     <Image
-      src="/avenzo-logo.webp"
+      src="/avenzo-mark.svg"
       alt=""
       aria-hidden="true"
       width={size}
