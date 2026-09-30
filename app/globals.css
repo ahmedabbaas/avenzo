@@ -4875,7 +4875,7 @@ html[data-theme="light"]{
   margin-bottom:8px;
   padding:3px;
   border-radius:50%;
-  background:linear-gradient(135deg,#9185ff,#7c6cff,#ff3f87);
+  background:linear-gradient(135deg,#9185ff,#7c6cff,#3cc8ff);
   box-shadow:0 18px 65px rgba(0,0,0,.4);
 }
 
@@ -9677,7 +9677,7 @@ html[data-theme="light"] .top-messages:hover{
     border-radius:50%!important;
     background:
       linear-gradient(#f8fafc,#f8fafc) padding-box,
-      linear-gradient(135deg,#ffcc4d,#ff4667 42%,#7c6cff 70%,#7c6cff) border-box!important;
+      linear-gradient(135deg,#62d6ff,#4ba9ff 42%,#7c6cff 70%,#7c6cff) border-box!important;
   }
 
   .screen-home .story-you .story-ring{
@@ -9834,7 +9834,7 @@ html[data-theme="light"] .top-messages:hover{
     height:5.35rem!important;
     margin:0 auto!important;
     border:.2rem solid #fff!important;
-    outline:.14rem solid #ff3b8d!important;
+    outline:.14rem solid #5b7cff!important;
     border-radius:50%!important;
   }
 
@@ -10666,7 +10666,7 @@ html[data-theme="light"] .top-messages:hover{
     padding:0!important;
     border:3px solid var(--ref-surface)!important;
     border-radius:50%!important;
-    background:linear-gradient(135deg,#ff7848,#ff2b7e 55%,#7c6cff)!important;
+    background:linear-gradient(135deg,#8ea7ff,#3cc8ff 55%,#7c6cff)!important;
     color:#fff!important;
   }
 
