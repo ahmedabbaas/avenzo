@@ -384,10 +384,11 @@ export default function HomeClient({
       ]);
     };
 
-    if ("requestIdleCallback" in window) {
-      window.requestIdleCallback(loadSecondary, { timeout: 900 });
+    const idle = window.requestIdleCallback;
+    if (typeof idle === "function") {
+      idle(loadSecondary, { timeout: 900 });
     } else {
-      window.setTimeout(loadSecondary, 180);
+      globalThis.setTimeout(loadSecondary, 180);
     }
   }
 
