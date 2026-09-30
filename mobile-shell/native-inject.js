@@ -25,6 +25,18 @@
 
     var logo = "data:image/png;base64,__LOGO_PNG__";
 
+    function syncNativeTheme() {
+      var theme = ROOT.dataset.theme === "light" ? "light" : "dark";
+      try {
+        if (
+          window.AvenzoNative &&
+          typeof window.AvenzoNative.setSystemTheme === "function"
+        ) {
+          window.AvenzoNative.setSystemTheme(theme);
+        }
+      } catch {}
+    }
+
     function brandImage(size) {
       var img = document.createElement("img");
       img.src = logo;
@@ -826,6 +838,7 @@
 
     function syncMobileState() {
       applyBranding();
+      syncNativeTheme();
       ensureDrawer();
       ensureGlobalBottomNav();
       normalizeBottomNav();
@@ -991,6 +1004,29 @@
 
       window.addEventListener("popstate", scheduleSync);
       window.addEventListener("pageshow", scheduleSync);
+      window.addEventListener("avenzo:theme", function(){
+        syncNativeTheme();
+        scheduleSync();
+      });
+
+      if (!window.__avenzoNativeThemeObserver) {
+        window.__avenzoNativeThemeObserver = new MutationObserver(function(mutations){
+          var changed = mutations.some(function(mutation){
+            return mutation.type === "attributes" &&
+              (mutation.attributeName === "data-theme" ||
+               mutation.attributeName === "data-theme-preference");
+          });
+          if (changed) {
+            syncNativeTheme();
+            scheduleSync();
+          }
+        });
+
+        window.__avenzoNativeThemeObserver.observe(ROOT, {
+          attributes: true,
+          attributeFilter: ["data-theme", "data-theme-preference"]
+        });
+      }
     }
   } catch {}
 })();
