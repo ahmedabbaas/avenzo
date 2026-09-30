@@ -9,7 +9,7 @@ const config = {
     allowNavigation: ["avenzo-ivory.vercel.app"],
   },
   android: {
-    backgroundColor: "#090a0d",
+    backgroundColor: "#070a12",
   },
 };
 
