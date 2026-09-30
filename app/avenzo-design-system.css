@@ -1718,3 +1718,258 @@ html[data-theme="light"] .public-profile-top{
     color:#f0f2f4!important;
   }
 }
+
+
+/* AVENZO LOGIN — REFERENCE-LED WAVE UI
+   Preserves existing auth/MFA/Turnstile behavior. Visual treatment only. */
+.login-reference-shell{
+  display:grid!important;
+  grid-template-columns:minmax(0,430px)!important;
+  place-content:center!important;
+  min-height:100dvh!important;
+  padding:34px 18px!important;
+  overflow:hidden!important;
+  background:
+    radial-gradient(circle at 18% 10%,rgba(255,255,255,.08),transparent 24%),
+    radial-gradient(circle at 84% 88%,rgba(142,151,160,.08),transparent 26%),
+    linear-gradient(145deg,#171b1f 0%,#090b0d 42%,#111419 100%)!important;
+  color:#f5f6f7!important;
+}
+
+.login-reference-shell .auth-glow-a{
+  width:520px!important;height:520px!important;left:-240px!important;bottom:-210px!important;
+  opacity:.10!important;background:#d7dbe0!important;filter:blur(120px)!important;
+}
+
+.login-reference-shell .auth-glow-b{
+  width:520px!important;height:520px!important;right:-250px!important;top:-230px!important;
+  opacity:.08!important;background:#8d959e!important;filter:blur(120px)!important;
+}
+
+.login-reference-card{
+  position:relative!important;z-index:2!important;width:min(100%,430px)!important;
+  min-height:680px!important;padding:0!important;overflow:hidden!important;
+  border:1px solid rgba(255,255,255,.12)!important;border-radius:32px!important;
+  background:#050607!important;
+  box-shadow:0 42px 110px rgba(0,0,0,.52),0 1px 0 rgba(255,255,255,.12) inset!important;
+  transform:none!important;backdrop-filter:none!important;
+}
+
+.login-reference-card:before{display:none!important}
+
+.login-reference-hero{
+  position:relative;min-height:220px;padding:22px 22px 18px;overflow:visible;color:#090a0b;
+  background:radial-gradient(circle at 16% 4%,rgba(0,0,0,.045),transparent 24%),
+    linear-gradient(155deg,#fbfbfa 0%,#f0f1f0 62%,#e6e8e9 100%);
+}
+
+.login-reference-hero:after{
+  content:"";position:absolute;z-index:0;left:-13%;bottom:-58px;width:126%;height:108px;
+  border-radius:0 0 50% 50%;
+  background:linear-gradient(170deg,#f0f1f0 0%,#f8f8f7 70%);
+  box-shadow:0 15px 34px rgba(255,255,255,.04);pointer-events:none;
+}
+
+.login-reference-topbar,.login-reference-heading{position:relative;z-index:2}
+
+.login-reference-topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+}
+
+.login-reference-brand{
+  display:inline-flex;align-items:center;gap:9px;color:#08090a;text-decoration:none;
+}
+
+.login-reference-brand .avenzo-brand-logo{
+  width:34px!important;height:34px!important;border-radius:10px!important;
+  filter:none!important;box-shadow:0 5px 14px rgba(0,0,0,.18)!important;
+}
+
+.login-reference-brand>span{font-size:11px;font-weight:800;letter-spacing:.18em}
+
+.login-reference-signup{
+  display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 2px;
+  color:#17191b;text-decoration:none;font-size:10px;font-weight:700;
+}
+
+.login-reference-signup:hover{color:#000;transform:translateY(-1px)}
+
+.login-reference-heading{
+  display:grid;justify-items:center;margin-top:32px;text-align:center;
+}
+
+.login-reference-kicker{
+  display:block;margin-bottom:5px;color:#6e7479;font-size:8px;font-weight:750;letter-spacing:.20em;
+}
+
+.login-reference-card .login-reference-heading h1{
+  margin:0!important;color:#08090a!important;
+  font-family:var(--font-avenzo-ui),-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
+  font-size:38px!important;font-weight:720!important;line-height:1!important;letter-spacing:-.05em!important;
+}
+
+.login-reference-heading p{
+  max-width:270px;margin:9px 0 0;color:#6d747a;font-size:10px;line-height:1.45;
+}
+
+.login-reference-body{
+  position:relative;z-index:1;display:flex;flex-direction:column;min-height:458px;
+  padding:74px 26px 26px;
+  background:radial-gradient(circle at 50% 0%,rgba(255,255,255,.025),transparent 24%),#050607;
+}
+
+.login-reference-form{display:grid!important;gap:10px!important}
+.login-reference-field,.login-reference-card .password-wrap{display:grid;gap:6px}
+
+.login-reference-card .login-reference-field>span,
+.login-reference-card .password-wrap>.auth-label{
+  margin:0 0 0 13px!important;color:#8b9299!important;font-size:8px!important;
+  font-weight:600!important;letter-spacing:.01em!important;
+}
+
+.login-reference-card .login-reference-field>input,
+.login-reference-card .password-control{
+  width:100%!important;min-height:48px!important;border:1px solid #252a2f!important;
+  border-radius:999px!important;background:linear-gradient(180deg,#111418,#0d0f12)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025),0 8px 22px rgba(0,0,0,.12)!important;
+}
+
+.login-reference-card .login-reference-field>input{
+  padding:0 16px!important;color:#f4f5f6!important;font-size:11px!important;outline:0!important;
+}
+
+.login-reference-card .login-reference-field>input::placeholder,
+.login-reference-card .password-control input::placeholder{color:#626971!important}
+
+.login-reference-card .login-reference-field>input:focus,
+.login-reference-card .password-control:focus-within{
+  border-color:#737b83!important;
+  box-shadow:0 0 0 3px rgba(210,215,221,.07),inset 0 1px 0 rgba(255,255,255,.04)!important;
+  background:#111418!important;
+}
+
+.login-reference-card .password-control{
+  display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;overflow:hidden!important;
+}
+
+.login-reference-card .password-control input{
+  min-width:0!important;min-height:46px!important;padding:0 10px 0 16px!important;
+  border:0!important;border-radius:999px!important;background:transparent!important;
+  color:#f4f5f6!important;box-shadow:none!important;font-size:11px!important;
+}
+
+.login-reference-card .password-control button{
+  min-width:52px!important;height:34px!important;margin-right:7px!important;padding:0 10px!important;
+  border:0!important;border-radius:999px!important;background:#181c20!important;
+  color:#aeb5bc!important;font-size:8px!important;font-weight:700!important;
+}
+
+.login-reference-card .password-control button:hover{background:#20252a!important;color:#f1f3f4!important}
+
+.login-reference-options{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  gap:12px!important;margin:1px 4px 0!important;
+}
+
+.login-reference-options .auth-remember{gap:6px!important;color:#777f87!important;font-size:8px!important}
+
+.login-reference-options .auth-remember input{
+  width:12px!important;height:12px!important;min-height:12px!important;margin:0!important;accent-color:#d7dbe0!important;
+}
+
+.login-reference-options>a{
+  color:#a9b0b7!important;text-decoration:none!important;font-size:8px!important;font-weight:650!important;
+}
+
+.login-reference-options>a:hover{color:#f4f5f6!important}
+
+.login-reference-card .cf-turnstile{justify-self:center;max-width:100%}
+
+.login-reference-message{
+  margin-top:1px!important;padding:9px 12px!important;border:1px solid #2a3036!important;
+  border-radius:14px!important;background:#0d1013!important;color:#c7ccd1!important;font-size:9px!important;
+}
+
+.login-reference-submit{
+  display:flex!important;align-items:center!important;justify-content:center!important;gap:9px!important;
+  min-height:48px!important;margin-top:3px!important;padding:0 18px!important;
+  border:1px solid transparent!important;border-radius:999px!important;
+  background:linear-gradient(#080a0c,#080a0c) padding-box,
+    linear-gradient(105deg,#5e666e,#f1f3f4 48%,#7a838c) border-box!important;
+  color:#f7f8f9!important;
+  box-shadow:0 10px 26px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.03)!important;
+  font-size:11px!important;font-weight:760!important;letter-spacing:-.01em!important;
+}
+
+.login-reference-submit:not(:disabled):hover{
+  filter:none!important;transform:translateY(-1px)!important;
+  background:linear-gradient(#101317,#101317) padding-box,
+    linear-gradient(105deg,#7a838c,#ffffff 48%,#9ca4ac) border-box!important;
+}
+
+.login-reference-submit:disabled{opacity:.45!important}
+
+.login-reference-submit-icon{
+  display:grid;place-items:center;width:26px;height:26px;border:1px solid #3a4148;
+  border-radius:50%;color:#dce0e4;background:#111419;
+}
+
+.login-reference-divider{
+  display:flex;align-items:center;gap:11px;margin:17px 0 11px;color:#5f666e;font-size:8px;text-align:center;
+}
+
+.login-reference-divider:before,.login-reference-divider:after{
+  content:"";height:1px;flex:1;background:#1f2327;
+}
+
+.login-reference-register,.login-reference-back{
+  display:flex!important;align-items:center!important;justify-content:center!important;min-height:42px!important;
+  border:1px solid #252a2f!important;border-radius:999px!important;background:#0b0e11!important;
+  color:#b9c0c7!important;text-decoration:none!important;font-size:9px!important;font-weight:720!important;
+}
+
+.login-reference-register:hover,.login-reference-back:hover{
+  border-color:#454c54!important;background:#111419!important;color:#fff!important;
+}
+
+.login-reference-session-note{
+  margin:auto 8px 0;padding-top:16px;color:#4f565d;text-align:center;font-size:7.5px;line-height:1.45;
+}
+
+.login-reference-card .auth-field-error{
+  margin:-3px 10px 0!important;color:#dba7a7!important;font-size:8px!important;
+}
+
+.login-reference-shell>.site-footer{
+  position:absolute;bottom:10px;left:50%;width:auto!important;margin:0!important;
+  transform:translateX(-50%);color:#5d646a!important;opacity:.70;
+}
+
+.login-reference-shell>.site-footer a{color:#7b8288!important}
+
+@media(max-width:600px){
+  .login-reference-shell{
+    display:block!important;min-height:100dvh!important;padding:0!important;background:#050607!important;
+  }
+  .login-reference-shell .auth-glow{display:none!important}
+  .login-reference-card{
+    width:100%!important;min-height:100dvh!important;border:0!important;border-radius:0!important;box-shadow:none!important;
+  }
+  .login-reference-hero{
+    min-height:232px;padding:calc(16px + env(safe-area-inset-top)) 18px 18px;
+  }
+  .login-reference-heading{margin-top:30px}
+  .login-reference-card .login-reference-heading h1{font-size:36px!important}
+  .login-reference-body{
+    min-height:calc(100dvh - 232px);padding:76px 18px calc(18px + env(safe-area-inset-bottom));
+  }
+  .login-reference-shell>.site-footer{display:none!important}
+}
+
+@media(max-width:360px){
+  .login-reference-hero{min-height:218px}
+  .login-reference-body{min-height:calc(100dvh - 218px);padding-left:15px;padding-right:15px}
+  .login-reference-card .login-reference-heading h1{font-size:33px!important}
+}
+
