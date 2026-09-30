@@ -103,7 +103,7 @@ export default function HomeClient({
   const [profile, setProfile] = useState(initialProfile);
   const [screen, setScreen] = useState<Screen>(initialScreen || "home");
   const [homeFeedMode, setHomeFeedMode] =
-    useState<"following" | "for-you">("following");
+    useState<"following" | "for-you">("for-you");
   const [posts, setPosts] = useState<Post[]>([]);
   const [profilePosts, setProfilePosts] = useState<Post[]>([]);
   const [explorePosts, setExplorePosts] = useState<Post[]>([]);
@@ -150,6 +150,8 @@ export default function HomeClient({
   const [loading, setLoading] = useState(true);
   const [exploreLoading, setExploreLoading] = useState(false);
   const loadedScreensRef = useRef(new Set<string>());
+  const followingFeedLoadedRef = useRef(false);
+  const forYouFeedLoadedRef = useRef(false);
   const [exploreError, setExploreError] = useState("");
   const [unreadActivity, setUnreadActivity] = useState(0);
   const [stats, setStats] = useState<ProfileStats>({
@@ -275,7 +277,9 @@ export default function HomeClient({
   }
 
   async function loadPosts() {
-    setPosts(await fetchFeedPosts(supabase, initialProfile.id));
+    const nextPosts = await fetchFeedPosts(supabase, initialProfile.id);
+    setPosts(nextPosts);
+    followingFeedLoadedRef.current = true;
   }
 
   async function loadProfileContent() {
@@ -292,9 +296,9 @@ export default function HomeClient({
   }
 
   async function loadExplorePosts() {
-    setExplorePosts(
-      await fetchExplorePosts(supabase, initialProfile.id)
-    );
+    const nextPosts = await fetchExplorePosts(supabase, initialProfile.id);
+    setExplorePosts(nextPosts);
+    forYouFeedLoadedRef.current = true;
   }
 
   async function loadReels() {
@@ -351,7 +355,7 @@ export default function HomeClient({
 
       if (screen === "home") {
         loadedScreensRef.current.add("home");
-        criticalLoads.push(loadPosts(), loadStories());
+        criticalLoads.push(loadExplorePosts(), loadStories());
       } else if (screen === "profile") {
         loadedScreensRef.current.add("profile");
         criticalLoads.push(loadProfileContent(), loadStats());
@@ -379,6 +383,7 @@ export default function HomeClient({
         loadProfile(),
         loadStats(),
         loadPeople(),
+        followingFeedLoadedRef.current ? Promise.resolve() : loadPosts(),
         loadUnreadMessages(),
         loadUnreadActivity(),
       ]);
@@ -408,7 +413,7 @@ export default function HomeClient({
     if (screen === "home" && !loadedScreensRef.current.has("home")) {
       loadedScreensRef.current.add("home");
       setLoading(true);
-      void Promise.all([loadPosts(), loadStories()]).finally(() => {
+      void Promise.all([loadExplorePosts(), loadStories()]).finally(() => {
         setLoading(false);
       });
       return;
