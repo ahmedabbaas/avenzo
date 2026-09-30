@@ -23,7 +23,7 @@
     style.textContent = atob("__CSS__");
     ROOT.classList.add("avenzo-android-app");
 
-    var logo = "data:image/webp;base64,__LOGO__";
+    var logo = "data:image/svg+xml;base64,__LOGO_SVG__";
 
     function brandImage(size) {
       var img = document.createElement("img");
