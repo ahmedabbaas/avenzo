@@ -2,9 +2,13 @@ package com.avenzo.app;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Base64;
+import android.view.View;
 import android.webkit.WebView;
+import android.webkit.WebSettings;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.core.app.ActivityCompat;
@@ -27,6 +31,7 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
 
         mobileScript = buildMobileScript();
+        applySystemTheme("dark");
 
         // The web app uses getUserMedia for calls. Ensure Android grants the
         // native microphone permission before WebView/Capacitor handles the
@@ -51,6 +56,11 @@ public class MainActivity extends BridgeActivity {
 
             WebView webView = bridge.getWebView();
             if (webView != null) {
+                WebSettings settings = webView.getSettings();
+                settings.setMediaPlaybackRequiresUserGesture(false);
+                settings.setDomStorageEnabled(true);
+                settings.setDatabaseEnabled(true);
+                settings.setCacheMode(WebSettings.LOAD_DEFAULT);
                 webView.postDelayed(() -> injectMobileShell(webView), 350);
             }
         }
@@ -64,6 +74,33 @@ public class MainActivity extends BridgeActivity {
                 }
             }
         );
+    }
+
+    private void applySystemTheme(String theme) {
+        boolean light = "light".equalsIgnoreCase(theme);
+
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
+        getWindow().setNavigationBarColor(Color.TRANSPARENT);
+
+        int flags =
+            View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
+
+        if (light && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+        }
+
+        if (light && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+        }
+
+        getWindow().getDecorView().setSystemUiVisibility(flags);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            getWindow().setStatusBarContrastEnforced(false);
+            getWindow().setNavigationBarContrastEnforced(false);
+        }
     }
 
     private void injectMobileShell(WebView webView) {
@@ -109,7 +146,7 @@ public class MainActivity extends BridgeActivity {
         try {
             String script = readAssetText("public/native-inject.js");
             String css = readAssetText("public/app-mobile.css");
-            byte[] logoBytes = readAssetBytes("public/avenzo-logo.webp");
+            byte[] logoBytes = readAssetBytes("avenzo/avenzo-logo-premium.png");
 
             String css64 = Base64.encodeToString(
                 css.getBytes(StandardCharsets.UTF_8),
@@ -122,7 +159,7 @@ public class MainActivity extends BridgeActivity {
 
             return script
                 .replace("__CSS__", css64)
-                .replace("__LOGO__", logo64);
+                .replace("__LOGO_PNG__", logo64);
         } catch (Exception ignored) {
             return "";
         }
