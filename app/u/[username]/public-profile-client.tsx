@@ -315,56 +315,61 @@ export default function PublicProfileClient({
           style={{ display: "none" }}
           aria-label="Profile overview"
         >
-          <div className="public-profile-reference-avatar">
-            <AvatarImage src={avatar} alt={profile.display_name} size={220} />
+          <div className="public-profile-reference-top">
+            <div className="public-profile-reference-avatar">
+              <AvatarImage src={avatar} alt={profile.display_name} size={220} />
+            </div>
+
+            <div className="public-profile-reference-stats">
+              <span>
+                <b>{formatProfileStat(stats.posts)}</b>
+                <small>Posts</small>
+              </span>
+              <Link
+                href={
+                  "/connections/followers?user=" +
+                  encodeURIComponent(profile.username)
+                }
+              >
+                <b>{formatProfileStat(stats.followers)}</b>
+                <small>Followers</small>
+              </Link>
+              <Link
+                href={
+                  "/connections/following?user=" +
+                  encodeURIComponent(profile.username)
+                }
+              >
+                <b>{formatProfileStat(stats.following)}</b>
+                <small>Following</small>
+              </Link>
+            </div>
           </div>
 
-          <div className="public-profile-reference-identity">
-            <h1 className="verified-line">
-              {profile.display_name}
-              <VerifiedBadge verified={profile.verified} />
-            </h1>
-            <span>@{profile.username}</span>
-          </div>
+          <div className="public-profile-reference-copy">
+            <div className="public-profile-reference-identity">
+              <h1 className="verified-line">
+                {profile.display_name}
+                <VerifiedBadge verified={profile.verified} />
+              </h1>
+              <span>@{profile.username}</span>
+            </div>
 
-          <p className="public-profile-reference-bio">
-            {profile.bio || "New to AVENZO."}
-          </p>
+            <p className="public-profile-reference-bio">
+              {profile.bio || "New to AVENZO."}
+            </p>
 
-          {website && (
-            <a
-              className="public-profile-reference-website"
-              href={website.href}
-              target="_blank"
-              rel="noopener noreferrer nofollow"
-            >
-              {website.label}
-            </a>
-          )}
-
-          <div className="public-profile-reference-stats">
-            <span>
-              <b>{formatProfileStat(stats.posts)}</b>
-              <small>Posts</small>
-            </span>
-            <Link
-              href={
-                "/connections/followers?user=" +
-                encodeURIComponent(profile.username)
-              }
-            >
-              <b>{formatProfileStat(stats.followers)}</b>
-              <small>Followers</small>
-            </Link>
-            <Link
-              href={
-                "/connections/following?user=" +
-                encodeURIComponent(profile.username)
-              }
-            >
-              <b>{formatProfileStat(stats.following)}</b>
-              <small>Following</small>
-            </Link>
+            {website && (
+              <a
+                className="public-profile-reference-website"
+                href={website.href}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+              >
+                <Icon name="link" size={14} />
+                <span>{website.label}</span>
+              </a>
+            )}
           </div>
 
           <div className="public-profile-reference-actions">
