@@ -8,10 +8,11 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "verify": "npm run lint && npm run typecheck && npm run build",
+    "verify": "npm run contracts && npm run lint && npm run typecheck && npm run build",
     "android:sync": "npx cap sync android",
     "android:debug": "npm run android:sync && node scripts/android-debug.mjs",
-    "android:open": "npx cap open android"
+    "android:open": "npx cap open android",
+    "contracts": "node scripts/check-project-contracts.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",
