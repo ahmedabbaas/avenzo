@@ -53,6 +53,8 @@ const adImport = 'import "./avenzo-ad-theme.css";';
 
 requireText(layout, designImport, "Root layout");
 requireText(layout, adImport, "Root layout");
+requireText(layout, "Manrope", "Premium typography");
+requireText(layout, "/avenzo-mark.svg", "Premium brand mark");
 
 if (layout.indexOf(designImport) < layout.indexOf(adImport)) {
   fail("avenzo-design-system.css must load after avenzo-ad-theme.css");
@@ -63,8 +65,8 @@ requireText(
   "AVENZO DESIGN SYSTEM — PHASE 1 STABILIZATION",
   "Design system"
 );
-requireText(design, "--av-accent:#7c6cff", "Design system");
-requireText(design, "--av-coral:#ff5f8f", "Design system");
+requireText(design, "--av-accent:#5b7cff", "Design system");
+requireText(design, "--av-secondary:#3cc8ff", "Design system");
 
 if (globals.includes("/* AVENZO AURORA UI v1 */")) {
   fail("the final product theme must not be appended back into globals.css");
@@ -80,6 +82,13 @@ const forbiddenLegacyAccents = [
   "#d8ff3f",
   "#d9ff3f",
   "#b8f126",
+  "#f0529c",
+  "#ff5f8f",
+  "#fb7185",
+  "#ff4d9a",
+  "#ff3b8d",
+  "#ff2b7e",
+  "#ff3f87",
 ];
 
 for (const [label, content] of [
@@ -95,7 +104,11 @@ for (const [label, content] of [
 
 requireText(capacitor, 'url: "https://avenzo-ivory.vercel.app"', "Capacitor config");
 requireText(capacitor, "cleartext: false", "Capacitor config");
-requireText(capacitor, 'backgroundColor: "#090a0d"', "Capacitor config");
+requireText(capacitor, 'backgroundColor: "#070a12"', "Capacitor config");
+
+const androidWorkflow = await read(".github/workflows/android-apk.yml");
+requireText(androidWorkflow, "avenzo_launcher_icon", "Android launcher branding");
+requireText(androidWorkflow, "__LOGO_SVG__", "Android injected brand mark");
 
 for (const header of [
   "Content-Security-Policy",
