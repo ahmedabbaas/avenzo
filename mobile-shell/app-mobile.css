@@ -16194,3 +16194,78 @@ html.avenzo-android-app .avenzo-native-logo{
     transition-duration:.001ms!important;scroll-behavior:auto!important;
   }
 }
+
+
+/* AVENZO ANDROID LOGIN — REFERENCE WAVE UI */
+@media(max-width:820px){
+  html.avenzo-android-app .login-reference-shell{
+    display:block!important;min-height:100dvh!important;padding:0!important;
+    background:#050607!important;color:#f5f6f7!important;
+  }
+
+  html.avenzo-android-app .login-reference-shell .auth-glow,
+  html.avenzo-android-app .login-reference-shell>.site-footer{display:none!important}
+
+  html.avenzo-android-app .login-reference-card{
+    width:100%!important;max-width:none!important;min-height:100dvh!important;margin:0!important;
+    padding:0!important;overflow:hidden!important;border:0!important;border-radius:0!important;
+    background:#050607!important;box-shadow:none!important;transform:none!important;
+  }
+
+  html.avenzo-android-app .login-reference-hero{
+    min-height:232px!important;
+    padding:calc(16px + env(safe-area-inset-top)) 18px 18px!important;
+    color:#08090a!important;
+    background:linear-gradient(155deg,#fbfbfa 0%,#f1f2f1 64%,#e6e8e9 100%)!important;
+  }
+
+  html.avenzo-android-app .login-reference-hero:after{
+    bottom:-58px!important;height:108px!important;
+    background:linear-gradient(170deg,#f0f1f0,#f8f8f7)!important;
+  }
+
+  html.avenzo-android-app .login-reference-brand .avenzo-brand-logo{
+    width:34px!important;height:34px!important;border-radius:10px!important;filter:none!important;
+  }
+
+  html.avenzo-android-app .login-reference-brand,
+  html.avenzo-android-app .login-reference-signup,
+  html.avenzo-android-app .login-reference-heading h1{color:#08090a!important}
+
+  html.avenzo-android-app .login-reference-body{
+    min-height:calc(100dvh - 232px)!important;
+    padding:76px 18px calc(18px + env(safe-area-inset-bottom))!important;
+    background:#050607!important;
+  }
+
+  html.avenzo-android-app .login-reference-form input{font-family:inherit!important}
+
+  html.avenzo-android-app .login-reference-card .login-reference-field>input,
+  html.avenzo-android-app .login-reference-card .password-control{
+    min-height:50px!important;border:1px solid #252a2f!important;border-radius:999px!important;
+    background:linear-gradient(180deg,#111418,#0d0f12)!important;color:#f5f6f7!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
+  }
+
+  html.avenzo-android-app .login-reference-card .password-control input{
+    min-height:48px!important;background:transparent!important;
+  }
+
+  html.avenzo-android-app .login-reference-submit{
+    min-height:50px!important;border:1px solid transparent!important;border-radius:999px!important;
+    background:linear-gradient(#080a0c,#080a0c) padding-box,
+      linear-gradient(105deg,#5e666e,#f1f3f4 48%,#7a838c) border-box!important;
+    color:#f7f8f9!important;box-shadow:0 10px 26px rgba(0,0,0,.28)!important;
+  }
+
+  html.avenzo-android-app .login-reference-register{
+    min-height:44px!important;border-radius:999px!important;background:#0b0e11!important;color:#b9c0c7!important;
+  }
+
+  html.avenzo-android-app .login-reference-options .auth-remember input{
+    width:12px!important;height:12px!important;min-height:12px!important;
+  }
+
+  html.avenzo-android-app .login-reference-session-note{color:#50565d!important}
+}
+
