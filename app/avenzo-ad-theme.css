@@ -1457,8 +1457,8 @@
     --home-text:#101424;
     --home-muted:#737c95;
     --home-border:#e8eaf2;
-    --home-accent:#7138ff;
-    --home-accent-2:#9f45ff;
+    --home-accent:#5b7cff;
+    --home-accent-2:#3cc8ff;
     --home-accent-soft:#efe9ff;
     --home-accent-ink:#ffffff;
     min-height:100dvh!important;
@@ -1478,8 +1478,8 @@
     --home-text:#f8f8fb;
     --home-muted:#9399aa;
     --home-border:#262a34;
-    --home-accent:#8a55ff;
-    --home-accent-2:#b96cff;
+    --home-accent:#6f89ff;
+    --home-accent-2:#45bdf1;
     --home-accent-soft:#211932;
     --home-accent-ink:#ffffff;
   }
@@ -1665,7 +1665,7 @@
     padding:3px!important;
     border:0!important;
     border-radius:50%!important;
-    background:linear-gradient(145deg,#763cff 0%,#a746ff 48%,#ff4d9a 100%)!important;
+    background:linear-gradient(145deg,#5b7cff 0%,#7892ff 48%,#3cc8ff 100%)!important;
     box-shadow:none!important;
   }
 
@@ -1943,7 +1943,7 @@
     border-radius:18px!important;
     background:var(--home-accent)!important;
     color:#fff!important;
-    box-shadow:0 8px 22px rgba(113,56,255,.24)!important;
+    box-shadow:0 8px 22px rgba(91,124,255,.24)!important;
   }
 
   .screen-home .mobile-bottom-nav small{display:block!important;font-size:9px!important}
