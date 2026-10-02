@@ -6,7 +6,6 @@ import Icon from "./icon";
 import { avatarFor, formatRelativeTime, initialsAvatar } from "../lib/profile";
 import type { Reel } from "../types";
 import AvatarImage from "./avatar-image";
-import VerifiedBadge from "./verified-badge";
 
 export default function ReelCard({
   reel,
@@ -51,9 +50,8 @@ export default function ReelCard({
             <AvatarImage src={avatarFor(author)} alt={author.display_name} size={80} />
             <div>
               <b>{author.display_name}</b>
-              <small className="verified-line">
+              <small >
                 @{author.username}
-                <VerifiedBadge verified={author.verified} />
                 {" · "}{formatRelativeTime(reel.created_at)}
               </small>
             </div>
@@ -144,9 +142,8 @@ export default function ReelCard({
           <div className="comment-list">
             {reel.comments.slice(-3).map((item) => (
               <div key={item.id}>
-                <b className="verified-line">
+                <b >
                   @{item.profile?.username || "user"}
-                  <VerifiedBadge verified={item.profile?.verified} />
                 </b>
                 <span>{item.body}</span>
               </div>
