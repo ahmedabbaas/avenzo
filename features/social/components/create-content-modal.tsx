@@ -22,7 +22,6 @@ import {
 import type { Profile } from "../types";
 import {
   analyzeImageForAltText,
-  hasNativeMediaSense,
   nativeImpact,
 } from "../lib/native-social";
 
@@ -138,7 +137,6 @@ export default function CreateContentModal({
   const [filter, setFilter] = useState<PostImageFilter>("none");
   const [brightness, setBrightness] = useState(100);
   const [contrast, setContrast] = useState(100);
-  const [mediaSenseAvailable] = useState(() => hasNativeMediaSense());
   const [analyzingAlt, setAnalyzingAlt] = useState(false);
   const [smartAltNote, setSmartAltNote] = useState("");
 
@@ -195,7 +193,9 @@ export default function CreateContentModal({
     try {
       const suggestion = await analyzeImageForAltText(activeFile);
       if (!suggestion) {
-        setSmartAltNote("Media Sense could not describe this image.");
+        setSmartAltNote(
+          "Smart Alt runs on-device in the AVENZO Android app. You can still write alt text manually."
+        );
         return;
       }
       onPostAltTextChange(safeActiveIndex, suggestion.slice(0, 1000));
@@ -584,17 +584,16 @@ export default function CreateContentModal({
                 </div>
                 <div className="create-alt-head-actions">
                   <small>Image {safeActiveIndex + 1}/{postPreviews.length}</small>
-                  {mediaSenseAvailable && (
-                    <button
-                      type="button"
-                      className="create-smart-alt"
-                      disabled={!activeFile || analyzingAlt}
-                      onClick={() => void generateSmartAlt()}
-                    >
-                      <Icon name="eye" size={15} />
-                      {analyzingAlt ? "Scanning…" : "Smart Alt"}
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    className="create-smart-alt"
+                    disabled={!activeFile || analyzingAlt}
+                    onClick={() => void generateSmartAlt()}
+                    title="On-device in the AVENZO Android app"
+                  >
+                    <Icon name="eye" size={15} />
+                    {analyzingAlt ? "Scanning…" : "Smart Alt"}
+                  </button>
                 </div>
               </div>
 
