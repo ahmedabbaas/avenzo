@@ -16942,3 +16942,46 @@ html.avenzo-android-app .screen-home .story-ring{width:56px!important;height:66p
 html.avenzo-android-app .screen-home .story-ring img{width:48px!important;height:58px!important;border-radius:14px!important;object-fit:cover!important}
 html.avenzo-android-app .screen-home .post-media,
 html.avenzo-android-app .screen-home .post-media-carousel{border-radius:20px!important}
+
+
+/* AVENZO publish-ready phone rendering */
+html.avenzo-android-app{
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+html.avenzo-android-app img,
+html.avenzo-android-app video{
+  image-rendering:auto;
+}
+@media(max-width:900px){
+  html.avenzo-android-app body,
+  html.avenzo-android-app #main-content{
+    width:100%!important;
+    max-width:100vw!important;
+    overflow-x:hidden!important;
+  }
+  html.avenzo-android-app input,
+  html.avenzo-android-app textarea,
+  html.avenzo-android-app select{
+    font-size:16px!important;
+  }
+  html.avenzo-android-app .post-media,
+  html.avenzo-android-app .post-media-carousel img,
+  html.avenzo-android-app .post-media-carousel video{
+    width:100%!important;
+    max-width:100%!important;
+    object-fit:cover!important;
+  }
+  html.avenzo-android-app .avenzo-call-overlay{
+    padding:
+      max(18px,env(safe-area-inset-top))
+      max(14px,env(safe-area-inset-right))
+      max(18px,env(safe-area-inset-bottom))
+      max(14px,env(safe-area-inset-left))!important;
+  }
+  html.avenzo-android-app .avenzo-call-card{
+    width:100%!important;
+    max-width:430px!important;
+    max-height:100%!important;
+  }
+}
