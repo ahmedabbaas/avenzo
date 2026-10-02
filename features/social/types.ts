@@ -41,6 +41,24 @@ export type PostMediaItem = {
   url: string;
 };
 
+export type PostPollOption = {
+  id: string;
+  label: string;
+  position: number;
+  voteCount: number;
+};
+
+export type PostPoll = {
+  id: string;
+  post_id: string;
+  question: string;
+  multiple_choice: boolean;
+  closes_at: string | null;
+  totalVotes: number;
+  selectedOptionId: string | null;
+  options: PostPollOption[];
+};
+
 export type Post = {
   id: string;
   author_id: string;
@@ -62,6 +80,7 @@ export type Post = {
   reposted?: boolean;
   mediaItems?: PostMediaItem[];
   collaborators?: Profile[];
+  poll?: PostPoll;
 };
 
 export type Reel = {
