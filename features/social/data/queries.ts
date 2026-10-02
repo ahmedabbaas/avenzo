@@ -232,6 +232,7 @@ async function hydratePosts(
     repostsResult,
     mediaItemsResult,
     collaboratorsResult,
+    pollsResult,
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -261,6 +262,10 @@ async function hydratePosts(
       .select("post_id,user_id,status")
       .in("post_id", postIds)
       .eq("status", "accepted"),
+    supabase
+      .from("post_polls")
+      .select("id,post_id,question,multiple_choice,closes_at,created_at")
+      .in("post_id", postIds),
   ]);
 
   assertNoError(authorsResult.error);
@@ -269,6 +274,7 @@ async function hydratePosts(
   assertNoError(repostsResult.error);
   assertNoError(mediaItemsResult.error);
   assertNoError(collaboratorsResult.error);
+  assertNoError(pollsResult.error);
 
   const authors = (authorsResult.data || []) as Profile[];
   const authorMap = new Map(authors.map((author) => [author.id, author]));
@@ -352,6 +358,49 @@ async function hydratePosts(
     collaboratorProfiles.map((profile) => [profile.id, profile])
   );
 
+  const pollRows = (pollsResult.data || []) as Array<{
+    id: string;
+    post_id: string;
+    question: string;
+    multiple_choice: boolean;
+    closes_at: string | null;
+  }>;
+  const pollIds = pollRows.map((poll) => poll.id);
+
+  let pollOptions: Array<{
+    id: string;
+    poll_id: string;
+    label: string;
+    position: number;
+  }> = [];
+  let pollVotes: Array<{
+    poll_id: string;
+    option_id: string;
+    user_id: string;
+  }> = [];
+
+  if (pollIds.length) {
+    const [optionsResult, votesResult] = await Promise.all([
+      supabase
+        .from("post_poll_options")
+        .select("id,poll_id,label,position")
+        .in("poll_id", pollIds)
+        .order("position", { ascending: true }),
+      supabase
+        .from("post_poll_votes")
+        .select("poll_id,option_id,user_id")
+        .in("poll_id", pollIds),
+    ]);
+    assertNoError(optionsResult.error);
+    assertNoError(votesResult.error);
+    pollOptions = (optionsResult.data || []) as typeof pollOptions;
+    pollVotes = (votesResult.data || []) as typeof pollVotes;
+  }
+
+  const pollByPost = new Map(pollRows.map((poll) => [poll.post_id, poll]));
+  const pollOptionsByPoll = groupBy(pollOptions, (option) => option.poll_id);
+  const pollVotesByPoll = groupBy(pollVotes, (vote) => vote.poll_id);
+
   const likesByPost = groupBy(likes, (like) => like.post_id);
   const commentsByPost = groupBy(commentRows, (comment) => comment.post_id);
   const commentLikesByComment = groupBy(
@@ -399,6 +448,28 @@ async function hydratePosts(
       collaborators: (collaboratorsByPost.get(post.id) || [])
         .map((row) => collaboratorProfileMap.get(row.user_id))
         .filter((profile): profile is Profile => Boolean(profile)),
+      poll: (() => {
+        const poll = pollByPost.get(post.id);
+        if (!poll) return undefined;
+        const options = pollOptionsByPoll.get(poll.id) || [];
+        const votes = pollVotesByPoll.get(poll.id) || [];
+        const voteCounts = new Map<string, number>();
+        for (const vote of votes) {
+          voteCounts.set(vote.option_id, (voteCounts.get(vote.option_id) || 0) + 1);
+        }
+        return {
+          ...poll,
+          totalVotes: votes.length,
+          selectedOptionId:
+            votes.find((vote) => vote.user_id === userId)?.option_id || null,
+          options: options.map((option) => ({
+            id: option.id,
+            label: option.label,
+            position: option.position,
+            voteCount: voteCounts.get(option.id) || 0,
+          })),
+        };
+      })(),
     };
   });
 }
