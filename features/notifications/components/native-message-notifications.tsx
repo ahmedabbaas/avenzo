@@ -8,6 +8,7 @@ declare global {
     AvenzoNative?: {
       notifyMessage?: (title: string, body: string, route: string) => void;
       registerSession?: (accessToken: string, userId: string) => void;
+      setCallAudioMode?: (active: boolean, speaker: boolean) => void;
     };
   }
 }
