@@ -2,7 +2,6 @@ import Link from "next/link";
 import { avatarFor } from "../lib/profile";
 import type { Profile } from "../types";
 import AvatarImage from "./avatar-image";
-import VerifiedBadge from "./verified-badge";
 
 export default function PersonCard({
   person,
@@ -23,7 +22,7 @@ export default function PersonCard({
         <AvatarImage className="person-avatar" src={avatarFor(person)} alt={person.display_name} size={80} />
         <div className="person-copy">
           <b>{person.display_name}</b>
-          <span className="verified-line">@{person.username}<VerifiedBadge verified={person.verified} /></span>
+          <span >@{person.username}</span>
           <p>{person.bio || "New to AVENZO."}</p>
         </div>
       </Link>

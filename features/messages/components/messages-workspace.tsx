@@ -13,7 +13,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
 import AvatarImage from "../../social/components/avatar-image";
-import VerifiedBadge from "../../social/components/verified-badge";
 import { MessagesSkeleton } from "../../social/components/loading-skeletons";
 import UserMediaImage from "../../social/components/user-media-image";
 import Icon from "../../social/components/icon";
@@ -1863,7 +1862,6 @@ export default function MessagesWorkspace({
                 <span className="dm-mobile-conversation-copy">
                   <span className="dm-mobile-conversation-name">
                     <b>{item.username}</b>
-                    <VerifiedBadge verified={item.verified} />
                     {item.pinned && (
                       <span className="dm-mobile-pin" title="Pinned">
                         <Icon name="pin" size={15} />
@@ -1967,7 +1965,7 @@ export default function MessagesWorkspace({
                 <span className="dm-conversation-copy">
                   <span>
                     <b>{item.display_name}</b>
-                    <small className="verified-line">@{item.username}<VerifiedBadge verified={item.verified} /></small>
+                    <small >@{item.username}</small>
                   </span>
                   <em>{item.last_message || "New conversation"}</em>
                 </span>
@@ -2040,9 +2038,8 @@ export default function MessagesWorkspace({
                     )}
                   </span>
                   <span className="dm-mobile-chat-copy">
-                    <span className="verified-line">
+                    <span >
                       <b>{active.username}</b>
-                      <VerifiedBadge verified={active.verified} />
                     </span>
                     <small>
                       {typing
@@ -2100,7 +2097,7 @@ export default function MessagesWorkspace({
               >
                 <b>{active.display_name}</b>
                 <small>
-                  <span className="verified-line">@{active.username}<VerifiedBadge verified={active.verified} /></span>
+                  <span >@{active.username}</span>
                   {typing ? (
                     <span className="dm-head-typing"> · Typing…</span>
                   ) : (
@@ -2364,7 +2361,7 @@ export default function MessagesWorkspace({
                     size={96}
                   />
                   <b>{active.display_name}</b>
-                  <span className="verified-line">@{active.username}<VerifiedBadge verified={active.verified} /></span>
+                  <span >@{active.username}</span>
                   <p>
                     {active.request_incoming
                       ? "Review this message request."
@@ -2525,7 +2522,6 @@ export default function MessagesWorkspace({
                                       {message.shared_post?.creator_username
                                         ? "@" + message.shared_post.creator_username
                                         : "Account unavailable"}
-                                      <VerifiedBadge verified={message.shared_post?.creator_verified} />
                                     </b>
                                     <span>
                                       {message.shared_post?.caption ||
@@ -2583,7 +2579,6 @@ export default function MessagesWorkspace({
                                       {message.shared_reel?.creator_username
                                         ? "@" + message.shared_reel.creator_username
                                         : "Account unavailable"}
-                                      <VerifiedBadge verified={message.shared_reel?.creator_verified} />
                                     </b>
                                     <span>
                                       {message.shared_reel?.caption ||
@@ -2643,7 +2638,6 @@ export default function MessagesWorkspace({
                                       {message.shared_profile?.username
                                         ? "@" + message.shared_profile.username
                                         : "Profile unavailable"}
-                                      <VerifiedBadge verified={message.shared_profile?.verified} />
                                     </span>
                                   </div>
                                   {message.shared_profile && (
@@ -3233,7 +3227,7 @@ export default function MessagesWorkspace({
                   />
                   <span>
                     <b>{person.display_name}</b>
-                    <small className="verified-line">@{person.username}<VerifiedBadge verified={person.verified} /></small>
+                    <small >@{person.username}</small>
                   </span>
                 </button>
               ))}

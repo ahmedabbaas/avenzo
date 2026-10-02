@@ -20,7 +20,6 @@ import AvatarImage from "./avatar-image";
 import EmptyState from "./empty-state";
 import { ReelsSkeleton } from "./loading-skeletons";
 import Icon from "./icon";
-import VerifiedBadge from "./verified-badge";
 import { avatarFor, formatRelativeTime } from "../lib/profile";
 
 function playVideoSafely(video: HTMLVideoElement) {
@@ -677,9 +676,8 @@ export default function ReelsPanel({
                           />
                           <span>
                             <b>{author.display_name}</b>
-                            <small className="verified-line">
+                            <small >
                               @{author.username}
-                              <VerifiedBadge verified={author.verified} />
                               {" · "}{formatRelativeTime(reel.created_at)}
                             </small>
                           </span>
@@ -698,9 +696,8 @@ export default function ReelsPanel({
                               alt={author.display_name}
                               size={68}
                             />
-                            <b className="verified-line">
+                            <b >
                               {author.username}
-                              <VerifiedBadge verified={author.verified} />
                             </b>
                           </Link>
                           {author.id !== currentUser.id && (
@@ -867,11 +864,10 @@ export default function ReelsPanel({
                       ) : (
                         reel.comments.map((item) => (
                           <div key={item.id}>
-                            <b className="verified-line">
+                            <b >
                               {item.profile
                                 ? "@" + item.profile.username
                                 : "Account unavailable"}
-                              <VerifiedBadge verified={item.profile?.verified} />
                             </b>
                             <span>{item.body}</span>
                           </div>

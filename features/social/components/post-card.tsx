@@ -7,7 +7,6 @@ import { avatarFor, formatRelativeTime, initialsAvatar } from "../lib/profile";
 import type { Comment, Post, Profile } from "../types";
 import AvatarImage from "./avatar-image";
 import UserMediaImage from "./user-media-image";
-import VerifiedBadge from "./verified-badge";
 import { nativeImpact, shareExternal } from "../lib/native-social";
 
 function renderCommentBody(body: string) {
@@ -152,9 +151,6 @@ export default function PostCard({
             <div>
               <b className="post-author-collab">
                 <span>{authorName}</span>
-                <span className="post-name-verified" style={{ display: "none" }}>
-                  <VerifiedBadge verified={author.verified} />
-                </span>
                 {post.collaborators?.length ? (
                   <span className="post-collab-copy">
                     {" "}with{" "}
@@ -170,9 +166,8 @@ export default function PostCard({
                   </span>
                 ) : null}
               </b>
-              <small className="verified-line">
+              <small >
                 @{author.username}
-                <VerifiedBadge verified={author.verified} />
                 {" · "}{formatRelativeTime(post.created_at)}
               </small>
             </div>
@@ -624,9 +619,6 @@ export default function PostCard({
                               }
                             >
                               @{item.profile.username}
-                              <VerifiedBadge
-                                verified={item.profile.verified}
-                              />
                             </Link>
                           ) : (
                             <b>@user</b>
@@ -738,9 +730,6 @@ export default function PostCard({
                                     }
                                   >
                                     @{reply.profile.username}
-                                    <VerifiedBadge
-                                      verified={reply.profile.verified}
-                                    />
                                   </Link>
                                 ) : (
                                   <b>@user</b>

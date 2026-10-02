@@ -14,7 +14,6 @@ import type { NotificationRow, Profile } from "../types";
 import { respondPostCollaboration } from "../data/mutations";
 import AvatarImage from "./avatar-image";
 import UserMediaImage from "./user-media-image";
-import VerifiedBadge from "./verified-badge";
 import Icon from "./icon";
 import { NotificationSkeleton } from "./loading-skeletons";
 
@@ -304,9 +303,8 @@ export default function ActivityPanel({
                   size={72}
                 />
                 <div>
-                  <b className="verified-line">
+                  <b >
                     {inviterName}
-                    <VerifiedBadge verified={invite.inviter?.verified} />
                   </b>
                   <small>invited you to collaborate on a post</small>
                 </div>
@@ -387,9 +385,8 @@ export default function ActivityPanel({
 
                 <div className="notification-copy">
                   <p>
-                    <b className="verified-line">
+                    <b >
                       @{username}
-                      <VerifiedBadge verified={item.actor?.verified} />
                     </b>{" "}
                     {notificationCopy(item)}
                   </p>

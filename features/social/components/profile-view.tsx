@@ -8,7 +8,6 @@ import { avatarFor, formatProfileStat, formatRelativeTime, normalizeProfileWebsi
 import type { Post, Profile, ProfileStats, Reel } from "../types";
 import AvatarImage from "./avatar-image";
 import UserMediaImage from "./user-media-image";
-import VerifiedBadge from "./verified-badge";
 import Icon from "./icon";
 import TaggedPostsGrid from "./tagged-posts-grid";
 import ProfileHighlightsRow from "./profile-highlights-row";
@@ -134,9 +133,8 @@ export default function ProfileView({
 
           <div className="profile-reference-copy">
             <div className="profile-reference-identity">
-              <h1 className="verified-line">
+              <h1 >
                 {profile.display_name}
-                <VerifiedBadge verified={profile.verified} />
               </h1>
               <span>@{profile.username}</span>
             </div>
@@ -214,7 +212,6 @@ export default function ProfileView({
             <div className="profile-identity">
               <div className="eyebrow verified-line">
                 @{profile.username}
-                <VerifiedBadge verified={profile.verified} />
               </div>
               <h1>{profile.display_name}</h1>
             </div>
