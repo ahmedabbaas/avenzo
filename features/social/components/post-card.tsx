@@ -39,6 +39,7 @@ export default function PostCard({
   onSave,
   onShare,
   onRepost,
+  onPollVote,
   onComment,
   onCommentLike,
   onCommentDelete,
@@ -58,6 +59,7 @@ export default function PostCard({
   onSave: () => void;
   onShare: () => void;
   onRepost?: () => void;
+  onPollVote?: (optionId: string) => void;
   onComment: (value: string, parentId?: string | null) => void;
   onCommentLike: (comment: Comment) => void;
   onCommentDelete: (comment: Comment) => void;
@@ -341,6 +343,62 @@ export default function PostCard({
         <span className="post-heart-burst" aria-hidden="true">
           ♥
         </span>
+      )}
+
+      {post.poll && (
+        <section className="post-poll" aria-label="Post poll">
+          <div className="post-poll-head">
+            <div>
+              <span>AVENZO POLL</span>
+              <b>{post.poll.question}</b>
+            </div>
+            <small>
+              {post.poll.closes_at
+                ? new Date(post.poll.closes_at).getTime() <= Date.now()
+                  ? "Closed"
+                  : "Live"
+                : "Open"}
+            </small>
+          </div>
+
+          <div className="post-poll-options">
+            {post.poll.options.map((option) => {
+              const selected = post.poll?.selectedOptionId === option.id;
+              const percent =
+                post.poll && post.poll.totalVotes > 0
+                  ? Math.round((option.voteCount / post.poll.totalVotes) * 100)
+                  : 0;
+              const closed =
+                Boolean(post.poll?.closes_at) &&
+                new Date(post.poll?.closes_at || 0).getTime() <= Date.now();
+
+              return (
+                <button
+                  type="button"
+                  key={option.id}
+                  className={selected ? "selected" : ""}
+                  disabled={!onPollVote || closed}
+                  onClick={() => {
+                    nativeImpact("light");
+                    onPollVote?.(option.id);
+                  }}
+                >
+                  <i style={{ width: percent + "%" }} />
+                  <span>{option.label}</span>
+                  <strong>{percent}%</strong>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="post-poll-foot">
+            <span>
+              {post.poll.totalVotes.toLocaleString()} vote
+              {post.poll.totalVotes === 1 ? "" : "s"}
+            </span>
+            {post.poll.selectedOptionId && <small>Tap your choice again to remove vote.</small>}
+          </div>
+        </section>
       )}
 
       <div className="post-content">
