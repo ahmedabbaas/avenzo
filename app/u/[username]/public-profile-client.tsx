@@ -317,7 +317,7 @@ export default function PublicProfileClient({
         >
           <div className="public-profile-reference-top profile-reference-top">
             <div className="public-profile-reference-avatar profile-reference-avatar">
-              <AvatarImage className="profile-desktop-avatar" src={avatar} alt={profile.display_name} size={220} />
+              <AvatarImage src={avatar} alt={profile.display_name} size={220} />
             </div>
 
             <div className="public-profile-reference-stats profile-reference-stats">
