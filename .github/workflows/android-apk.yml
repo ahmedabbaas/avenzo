@@ -259,18 +259,25 @@ jobs:
               new Handler(Looper.getMainLooper());
             private final ExecutorService notificationExecutor =
               Executors.newSingleThreadExecutor();
+            private volatile boolean notificationPollInFlight = false;
 
             private final Runnable notificationPoller = new Runnable() {
               @Override
               public void run() {
                 if (
                   !activityVisible &&
+                  !notificationPollInFlight &&
                   !supabaseAccessToken.isEmpty() &&
                   !supabaseUserId.isEmpty()
                 ) {
-                  notificationExecutor.execute(
-                    () -> pollMessageNotifications()
-                  );
+                  notificationPollInFlight = true;
+                  notificationExecutor.execute(() -> {
+                    try {
+                      pollMessageNotifications();
+                    } finally {
+                      notificationPollInFlight = false;
+                    }
+                  });
                 }
                 notificationHandler.postDelayed(this, 5000L);
               }
@@ -651,6 +658,9 @@ jobs:
                 userId == null ||
                 userId.trim().isEmpty()
               ) {
+                supabaseAccessToken = "";
+                supabaseUserId = "";
+                lastNotificationAt = "";
                 return;
               }
 
