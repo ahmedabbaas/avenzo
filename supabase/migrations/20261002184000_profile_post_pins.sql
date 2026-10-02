@@ -13,7 +13,8 @@ as $$
 declare
   pinned_count integer;
 begin
-  if new.pinned_at is not null and old.pinned_at is null then
+  if new.pinned_at is not null
+     and (tg_op = 'INSERT' or old.pinned_at is distinct from new.pinned_at) then
     select count(*)
       into pinned_count
     from public.posts
@@ -32,6 +33,6 @@ $$;
 
 drop trigger if exists enforce_post_pin_limit_trigger on public.posts;
 create trigger enforce_post_pin_limit_trigger
-before update of pinned_at on public.posts
+before insert or update of pinned_at on public.posts
 for each row
 execute function public.enforce_post_pin_limit();
