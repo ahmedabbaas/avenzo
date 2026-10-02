@@ -12,9 +12,9 @@ export function initialsAvatar(name: string) {
   const svg =
     '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">' +
     '<rect width="160" height="160" rx="80" fill="#151a1e"/>' +
-    '<circle cx="80" cy="80" r="78" fill="none" stroke="#dfff63" stroke-opacity=".4" stroke-width="2"/>' +
+    '<circle cx="80" cy="80" r="78" fill="none" stroke="#a4aeb8" stroke-opacity=".4" stroke-width="2"/>' +
     '<text x="80" y="91" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" font-weight="700" fill="#f6f7f8">' +
-    initials +
+    initials.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[character] || character) +
     "</text></svg>";
 
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;

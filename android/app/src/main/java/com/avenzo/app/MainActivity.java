@@ -688,6 +688,7 @@ public class MainActivity extends BridgeActivity {
     webView.setVerticalScrollBarEnabled(false);
     webView.setHorizontalScrollBarEnabled(false);
     WebSettings settings = webView.getSettings();
+    settings.setTextZoom(100);
     settings.setBuiltInZoomControls(false);
     settings.setDisplayZoomControls(false);
     settings.setMediaPlaybackRequiresUserGesture(false);

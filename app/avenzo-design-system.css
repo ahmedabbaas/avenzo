@@ -238,7 +238,7 @@ html[data-theme="light"] .social-app{
   }
 
   .social-app .left-nav>button{
-    min-height:46px!important;
+    min-height:48px!important;
     padding:0 12px!important;
     gap:13px!important;
     border:0!important;
@@ -2542,6 +2542,15 @@ html[data-theme="light"] .social-app{
 }
 
 .avenzo-call-overlay{
+  --call-text:#f6f7f8;
+  --call-surface:rgba(15,17,20,.94);
+  --call-line:rgba(255,255,255,.10);
+  --call-muted:#aeb4bb;
+  --call-backdrop:radial-gradient(circle at 50% 20%,rgba(238,241,244,.12),transparent 34%),rgba(3,4,5,.96);
+  box-sizing:border-box;
+  height:100dvh;
+  width:100vw;
+  overflow:auto;
   position:fixed!important;
   inset:0!important;
   z-index:1000!important;
@@ -2561,7 +2570,9 @@ html[data-theme="light"] .social-app{
   padding:24px 18px!important;
   border:1px solid rgba(255,255,255,.10)!important;
   border-radius:28px!important;
-  background:rgba(15,17,20,.94)!important;
+  background:var(--call-surface)!important;
+  color:var(--call-text)!important;
+  box-sizing:border-box;
   box-shadow:0 30px 90px rgba(0,0,0,.46)!important;
   text-align:center!important;
 }
@@ -2611,11 +2622,11 @@ html[data-theme="light"] .social-app{
   background:#eef1f4!important;
   color:#090a0c!important;
 }
-.avenzo-call-decline{
+.avenzo-call-actions .avenzo-call-decline{
   background:#e44f55!important;
   border-color:#e44f55!important;
 }
-.avenzo-call-accept{
+.avenzo-call-actions .avenzo-call-accept{
   background:#eef1f4!important;
   color:#090a0c!important;
   border-color:#eef1f4!important;
@@ -2658,7 +2669,7 @@ html[data-theme="light"] .social-app{
 @media(max-width:900px){
   :root{
     --avenzo-phone-gutter:12px;
-    --avenzo-touch:44px;
+    --avenzo-touch:48px;
   }
   body{overflow-x:hidden}
   .social-app{
@@ -2731,6 +2742,11 @@ html[data-theme="light"] .social-app{
 }
 
 html[data-theme="light"] .avenzo-call-overlay{
+  --call-text:#111317;
+  --call-surface:rgba(255,255,255,.96);
+  --call-line:rgba(17,19,23,.10);
+  --call-muted:#505a65;
+  --call-backdrop:radial-gradient(circle at 50% 18%,rgba(17,19,23,.08),transparent 34%),rgba(243,245,247,.97);
   background:
     radial-gradient(circle at 50% 18%,rgba(17,19,23,.08),transparent 34%),
     rgba(243,245,247,.97)!important;
@@ -3127,3 +3143,39 @@ html[data-theme="light"] .theme-choice.active{
     animation:none;
   }
 }
+/* Call feedback is shared by the web and native runtime, outside social-app. */
+.avenzo-call-feedback{
+  position:fixed;z-index:1001;left:50%;transform:translateX(-50%);
+  bottom:calc(100px + env(safe-area-inset-bottom));
+  width:min(420px,calc(100% - 32px));box-sizing:border-box;
+  display:flex;align-items:center;gap:12px;padding:14px 16px;
+  border:1px solid var(--line,#353d47);border-radius:16px;
+  background:var(--panel,#14171b);color:var(--text,#f6f7f8);
+  box-shadow:0 12px 40px rgba(0,0,0,.2);font-size:14px;line-height:1.5;
+}
+.avenzo-call-feedback span{flex:1;min-width:0}
+.avenzo-call-feedback button,.avenzo-enable-audio{
+  min-height:48px;padding:8px 14px;border:1px solid currentColor;
+  border-radius:12px;background:transparent;color:inherit;cursor:pointer;
+}
+.avenzo-enable-audio{margin-top:14px;color:var(--call-text)}
+.avenzo-call-actions button:disabled{opacity:.55;cursor:wait}
+.avenzo-call-actions button:focus-visible,.avenzo-enable-audio:focus-visible{
+  outline:2px solid var(--call-text);outline-offset:3px;
+}
+html[data-theme="light"] .avenzo-call-actions button.active:not(.avenzo-call-decline):not(.avenzo-call-accept){
+  background:#252a31!important;color:#fff!important;
+}
+html[data-theme="light"] .avenzo-call-error{
+  color:#962a30!important;background:#fff0f0!important;border-color:#eebbc0!important;
+}
+@media(max-width:480px){
+  .avenzo-call-card h2{font-size:clamp(22px,6vw,28px)!important;overflow-wrap:anywhere}
+  .avenzo-call-card p{font-size:14px!important}
+  .avenzo-call-error{font-size:13px!important}
+  .avenzo-call-actions button{font-size:13px!important}
+  .avenzo-video-stage{max-height:52dvh!important}
+}
+
+html.avenzo-call-open{overflow:hidden!important}
+html.avenzo-call-open .mobile-bottom-nav{visibility:hidden!important;pointer-events:none!important}

@@ -203,6 +203,7 @@ export default function RepostsGrid({
             >
               {preview ? (
                 <UserMediaImage
+                  sizes="(max-width: 900px) 33vw, 240px"
                   src={mediaUrl(preview)}
                   alt={item.caption || "Reposted AVENZO content"}
                   loading="lazy"

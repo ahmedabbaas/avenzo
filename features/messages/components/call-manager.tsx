@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
+import { createCallTaskQueue } from "../lib/call-task-queue";
 import AvatarImage from "../../social/components/avatar-image";
 import { avatarFor } from "../../social/lib/profile";
 
@@ -95,6 +96,7 @@ async function fetchIceServers() {
     const response = await fetch("/api/calls/ice", {
       cache: "no-store",
       credentials: "same-origin",
+      signal: AbortSignal.timeout(5000),
     });
     if (!response.ok) return DEFAULT_ICE_SERVERS;
 
@@ -117,6 +119,14 @@ export default function CallManager() {
   const [cameraOff, setCameraOff] = useState(false);
   const [callSeconds, setCallSeconds] = useState(0);
   const [error, setError] = useState("");
+  const [starting, setStarting] = useState(false);
+  const [accepting, setAccepting] = useState(false);
+  const [audioBlocked, setAudioBlocked] = useState(false);
+  const startingRef = useRef(false);
+  const callTasksRef = useRef(createCallTaskQueue());
+  const peerPromiseRef = useRef<Promise<RTCPeerConnection> | null>(null);
+  const mediaGenerationRef = useRef(0);
+  const remoteStreamRef = useRef<MediaStream | null>(null);
   const userIdRef = useRef("");
   const profileRef = useRef<{
     username: string;
@@ -224,7 +234,15 @@ export default function CallManager() {
         }
       ).wakeLock;
       if (!wakeLockApi || wakeLockRef.current) return;
-      wakeLockRef.current = await wakeLockApi.request("screen");
+      const lock = await wakeLockApi.request("screen");
+      if (!callRef.current) {
+        await lock.release();
+        return;
+      }
+      wakeLockRef.current = lock;
+      (lock as typeof lock & EventTarget).addEventListener?.("release", () => {
+        if (wakeLockRef.current === lock) wakeLockRef.current = null;
+      }, { once: true });
     } catch {
       // Wake lock is enhancement-only.
     }
@@ -275,7 +293,17 @@ export default function CallManager() {
   }
 
   function destroyPeer() {
-    peerRef.current?.close();
+    mediaGenerationRef.current += 1;
+    peerPromiseRef.current = null;
+    remoteStreamRef.current = null;
+    const peer = peerRef.current;
+    if (peer) {
+      peer.ontrack = null;
+      peer.onicecandidate = null;
+      peer.onconnectionstatechange = null;
+      peer.oniceconnectionstatechange = null;
+    }
+    peer?.close();
     peerRef.current = null;
     stopMedia();
   }
@@ -284,16 +312,19 @@ export default function CallManager() {
     clearRingTimer();
     clearAcceptancePoll();
     clearSignalSync();
-    clearIncomingPoll();
+    // Incoming polling belongs to the mounted runtime, not a single call.
     clearDisconnectTimer();
     clearConnectionTimer();
     clearCallClock();
+    callTasksRef.current.reset();
     destroyPeer();
     offerStartedRef.current = false;
     iceRestartedRef.current = false;
     pendingIceRef.current = [];
     handledSignalIdsRef.current.clear();
     acceptingCallIdRef.current = null;
+    setAccepting(false);
+    setAudioBlocked(false);
     setMuted(false);
     setSpeakerOn(false);
     setCameraOff(false);
@@ -308,7 +339,7 @@ export default function CallManager() {
     payload: RTCSessionDescriptionInit | RTCIceCandidateInit
   ) {
     const userId = userIdRef.current;
-    if (!userId) return;
+    if (!userId || callRef.current?.id !== callId) return;
 
     const { error: signalError } = await supabase
       .from("call_signals")
@@ -337,6 +368,7 @@ export default function CallManager() {
     );
     void requestCallWakeLock();
 
+    const generation = mediaGenerationRef.current;
     let stream: MediaStream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({
@@ -359,6 +391,12 @@ export default function CallManager() {
       throw error;
     }
 
+    if (generation !== mediaGenerationRef.current || !callRef.current) {
+      stream.getTracks().forEach((track) => track.stop());
+      throw new Error("Call ended while requesting media.");
+    }
+    stream.getAudioTracks().forEach((track) => { track.enabled = !muted; });
+    stream.getVideoTracks().forEach((track) => { track.enabled = !cameraOff; });
     localStreamRef.current = stream;
 
     if (callType === "video" && localVideoRef.current) {
@@ -369,15 +407,19 @@ export default function CallManager() {
     return stream;
   }
 
-  async function ensurePeer(
+  async function createPeer(
     otherUserId: string,
     callId: string
   ) {
     if (peerRef.current) return peerRef.current;
 
     const current = callRef.current;
+    const generation = mediaGenerationRef.current;
     const stream = await getMedia(current?.callType || "audio");
     const iceServers = await refreshIceServers();
+    if (callRef.current?.id !== callId || generation !== mediaGenerationRef.current) {
+      throw new Error("Call ended.");
+    }
     const peer = new RTCPeerConnection({
       iceServers,
       iceCandidatePoolSize: 10,
@@ -400,41 +442,37 @@ export default function CallManager() {
     };
 
     peer.ontrack = (event) => {
-      const remoteStream = event.streams[0];
-      if (!remoteStream) return;
-
-      const currentCall = callRef.current;
-      if (currentCall?.callType === "video" && remoteVideoRef.current) {
+      if (callRef.current?.id !== callId || peerRef.current !== peer) return;
+      const remoteStream = remoteStreamRef.current || new MediaStream();
+      if (!remoteStream.getTracks().some((track) => track.id === event.track.id)) {
+        remoteStream.addTrack(event.track);
+      }
+      remoteStreamRef.current = remoteStream;
+      // Audio always uses the persistent audio element. Video is muted to
+      // avoid playing the same audio twice when the stream has both tracks.
+      if (remoteAudioRef.current) {
+        remoteAudioRef.current.srcObject = remoteStream;
+        void remoteAudioRef.current.play().catch(() => setAudioBlocked(true));
+      }
+      if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = remoteStream;
         void remoteVideoRef.current.play().catch(() => undefined);
-      } else if (remoteAudioRef.current) {
-        remoteAudioRef.current.srcObject = remoteStream;
-        void remoteAudioRef.current.play().catch(() => undefined);
       }
-
-      patchCall({ status: "connected" });
-      clearConnectionTimer();
-      startCallClock();
+      // ontrack occurs during SDP negotiation, before transport is connected.
     };
 
     peer.oniceconnectionstatechange = () => {
-      if (
-        peer.iceConnectionState === "failed" &&
-        !iceRestartedRef.current
-      ) {
+      if (peerRef.current !== peer || callRef.current?.id !== callId) return;
+      if (peer.iceConnectionState === "failed" && !iceRestartedRef.current) {
         iceRestartedRef.current = true;
-        try {
-          peer.restartIce();
-        } catch {
-          // Connection-state handler below will surface retry UI.
-        }
+        void restartConnectionRef.current();
       }
     };
 
     peer.onconnectionstatechange = () => {
+      if (peerRef.current !== peer || callRef.current?.id !== callId) return;
       if (peer.connectionState === "connected") {
         clearDisconnectTimer();
-        clearSignalSync();
         clearConnectionTimer();
         startCallClock();
         setError("");
@@ -443,6 +481,7 @@ export default function CallManager() {
       }
 
       if (peer.connectionState === "disconnected") {
+        patchCall({ status: "connecting" });
         clearDisconnectTimer();
         disconnectTimerRef.current = window.setTimeout(() => {
           if (
@@ -456,6 +495,7 @@ export default function CallManager() {
       }
 
       if (peer.connectionState === "failed") {
+        patchCall({ status: "connecting" });
         clearDisconnectTimer();
         setError("Call connection failed. Tap Retry to reconnect.");
       }
@@ -465,7 +505,23 @@ export default function CallManager() {
     return peer;
   }
 
+  async function ensurePeer(otherUserId: string, callId: string) {
+    if (peerRef.current) return peerRef.current;
+    if (peerPromiseRef.current) return peerPromiseRef.current;
+    const pending = createPeer(otherUserId, callId);
+    peerPromiseRef.current = pending;
+    try {
+      return await pending;
+    } finally {
+      if (peerPromiseRef.current === pending) peerPromiseRef.current = null;
+    }
+  }
+
   async function beginOffer(session: CallSession) {
+    await callTasksRef.current.run(() => processBeginOffer(session));
+  }
+
+  async function processBeginOffer(session: CallSession) {
     const current = callRef.current;
     if (
       !current ||
@@ -484,6 +540,7 @@ export default function CallManager() {
       setError("");
       patchCall({ status: "connecting" });
       const peer = await ensurePeer(current.otherUserId, current.id);
+      if (callRef.current?.id !== current.id) return;
       const offer = await peer.createOffer();
       await peer.setLocalDescription(offer);
       await sendSignal(
@@ -507,6 +564,7 @@ export default function CallManager() {
         }
       }, 18000);
     } catch {
+      if (callRef.current?.id !== current.id) return;
       offerStartedRef.current = false;
       setError("Could not connect the call. Tap Retry to reconnect.");
       patchCall({ status: "connecting" });
@@ -529,10 +587,17 @@ export default function CallManager() {
   }
 
   async function handleSignal(signal: CallSignal) {
+    await callTasksRef.current.run(() => processSignal(signal));
+  }
+
+  async function processSignal(signal: CallSignal) {
     const current = callRef.current;
     if (
       !current ||
       current.id !== signal.call_id ||
+      current.status === "incoming" ||
+      signal.sender_id !== current.otherUserId ||
+      signal.recipient_id !== userIdRef.current ||
       handledSignalIdsRef.current.has(signal.id)
     ) {
       return;
@@ -540,9 +605,17 @@ export default function CallManager() {
 
     try {
       const peer = await ensurePeer(current.otherUserId, current.id);
+      if (callRef.current?.id !== current.id) return;
 
       if (signal.signal_type === "offer") {
-        if (peer.signalingState !== "stable") return;
+        if (peer.signalingState !== "stable") {
+          // The callee is polite during simultaneous recovery offers.
+          if (current.direction === "outgoing") {
+            handledSignalIdsRef.current.add(signal.id);
+            return;
+          }
+          await peer.setLocalDescription({ type: "rollback" });
+        }
 
         await peer.setRemoteDescription(
           new RTCSessionDescription(
@@ -559,13 +632,16 @@ export default function CallManager() {
           answer
         );
         handledSignalIdsRef.current.add(signal.id);
-        patchCall({ status: "connecting" });
+        if (peer.connectionState !== "connected") patchCall({ status: "connecting" });
         startSignalSync(current.id);
         return;
       }
 
       if (signal.signal_type === "answer") {
-        if (peer.signalingState !== "have-local-offer") return;
+        if (peer.signalingState !== "have-local-offer") {
+          handledSignalIdsRef.current.add(signal.id);
+          return;
+        }
 
         await peer.setRemoteDescription(
           new RTCSessionDescription(
@@ -587,7 +663,9 @@ export default function CallManager() {
         handledSignalIdsRef.current.add(signal.id);
       }
     } catch {
-      setError("Call connection failed. Tap Retry to reconnect.");
+      if (callRef.current?.id === current.id) {
+        setError("Call connection failed. Tap Retry to reconnect.");
+      }
     }
   }
 
@@ -615,12 +693,12 @@ export default function CallManager() {
     void syncSignals(callId);
     signalSyncTimerRef.current = window.setInterval(() => {
       const current = callRef.current;
-      if (!current || current.id !== callId || current.status === "connected") {
+      if (!current || current.id !== callId) {
         clearSignalSync();
         return;
       }
       void syncSignals(callId);
-    }, 1200);
+    }, 2500);
   }
 
   async function profileFor(userId: string) {
@@ -647,6 +725,7 @@ export default function CallManager() {
     }
 
     const caller = await profileFor(session.caller_id);
+    if (callRef.current) return;
     const next: ActiveCall = {
       id: session.id,
       conversationId: session.conversation_id,
@@ -698,6 +777,7 @@ export default function CallManager() {
     if (acceptingCallIdRef.current === current.id) return;
 
     acceptingCallIdRef.current = current.id;
+    setAccepting(true);
     setError("");
 
     // Acquire media first. Android WebView can take time to resolve its native
@@ -706,7 +786,9 @@ export default function CallManager() {
     try {
       await getMedia(current.callType);
     } catch {
+      if (callRef.current?.id !== current.id) return;
       acceptingCallIdRef.current = null;
+      setAccepting(false);
       setError(
         current.callType === "video"
           ? "Camera and microphone permission are required for video calls."
@@ -718,24 +800,35 @@ export default function CallManager() {
 
     if (callRef.current?.id !== current.id) {
       acceptingCallIdRef.current = null;
+      setAccepting(false);
       stopMedia();
       return;
     }
 
     patchCall({ status: "connecting" });
 
-    const { error: updateError } = await supabase
+    const { data: acceptedSession, error: updateError } = await supabase
       .from("call_sessions")
       .update({
         status: "accepted",
         answered_at: new Date().toISOString(),
       })
       .eq("id", current.id)
-      .eq("status", "ringing");
+      .eq("status", "ringing")
+      .select("id")
+      .maybeSingle();
 
-    if (updateError) {
+    if (callRef.current?.id !== current.id) return;
+
+    if (updateError || !acceptedSession) {
       acceptingCallIdRef.current = null;
+      setAccepting(false);
       stopMedia();
+      if (!updateError) {
+        resetCallRef.current();
+        setError("This call has already ended.");
+        return;
+      }
       setError("Could not accept the call. Tap Accept to try again.");
       patchCall({ status: "incoming" });
       return;
@@ -743,6 +836,7 @@ export default function CallManager() {
 
     try {
       await ensurePeer(current.otherUserId, current.id);
+      if (callRef.current?.id !== current.id) return;
       startSignalSync(current.id);
       clearConnectionTimer();
       connectionTimerRef.current = window.setTimeout(() => {
@@ -758,8 +852,11 @@ export default function CallManager() {
         }
       }, 18000);
       acceptingCallIdRef.current = null;
+      setAccepting(false);
     } catch {
+      if (callRef.current?.id !== current.id) return;
       acceptingCallIdRef.current = null;
+      setAccepting(false);
       setError("Call connection failed. Tap Retry to reconnect.");
       patchCall({ status: "connecting" });
     }
@@ -768,61 +865,67 @@ export default function CallManager() {
   async function declineIncoming() {
     const current = callRef.current;
     if (!current) return;
-
-    await supabase
+    const { error: declineError } = await supabase
       .from("call_sessions")
-      .update({
-        status: "declined",
-        ended_at: new Date().toISOString(),
-      })
+      .update({ status: "declined", ended_at: new Date().toISOString() })
       .eq("id", current.id);
-
+    if (callRef.current?.id !== current.id) return;
+    if (declineError) {
+      setError("Could not decline the call. Check your connection and try again.");
+      return;
+    }
     resetCallRef.current();
   }
 
   async function endCall() {
     const current = callRef.current;
     if (!current) return;
-
-    await supabase
-      .from("call_sessions")
-      .update({
-        status: "ended",
-        ended_at: new Date().toISOString(),
-      })
-      .eq("id", current.id);
-
+    // Always release camera/microphone immediately, even when signalling is
+    // offline. The backend notification cannot keep local capture running.
     resetCallRef.current();
+    const { error: endError } = await supabase
+      .from("call_sessions")
+      .update({ status: "ended", ended_at: new Date().toISOString() })
+      .eq("id", current.id);
+    if (endError && !callRef.current) {
+      setError("Call ended on this device. Could not notify the other participant.");
+    }
   }
 
   async function retryConnection() {
     const current = callRef.current;
-    if (!current) return;
+    if (!current || current.status === "incoming" || current.status === "calling") return;
+    await callTasksRef.current.run(async () => {
+      if (callRef.current?.id !== current.id) return;
+      setError("");
+      clearDisconnectTimer();
+      patchCall({ status: "connecting" });
+      try {
+        const peer = await ensurePeer(current.otherUserId, current.id);
+        if (peer.signalingState !== "stable") {
+          setError("Connection is still negotiating. Please retry in a moment.");
+          return;
+        }
+        // Restart the existing transport and send the new SDP to the other
+        // participant. Recreating only one peer leaves the other end stranded.
+        const offer = await peer.createOffer({ iceRestart: true });
+        await peer.setLocalDescription(offer);
+        await sendSignal(current.otherUserId, current.id, "offer", offer);
+        offerStartedRef.current = true;
+        startSignalSync(current.id);
+      } catch {
+        if (callRef.current?.id !== current.id) return;
+        setError("Could not reconnect. Check your network and try again.");
+      }
+    });
+  }
 
-    setError("");
-    clearDisconnectTimer();
-    destroyPeer();
-    pendingIceRef.current = [];
-
-    if (current.direction === "outgoing") {
-      offerStartedRef.current = false;
-      await beginOffer({
-        id: current.id,
-        conversation_id: current.conversationId,
-        caller_id: userIdRef.current,
-        callee_id: current.otherUserId,
-        status: "accepted",
-        call_type: current.callType,
-        created_at: new Date().toISOString(),
-      });
-      return;
-    }
-
+  async function enableCallAudio() {
     try {
-      await ensurePeer(current.otherUserId, current.id);
-      startSignalSync(current.id);
+      await remoteAudioRef.current?.play();
+      setAudioBlocked(false);
     } catch {
-      setError("Microphone access is required to reconnect the call.");
+      setAudioBlocked(true);
     }
   }
 
@@ -864,6 +967,9 @@ export default function CallManager() {
     return minutes + ":" + String(rest).padStart(2, "0");
   }
 
+  const syncSignalsRef = useRef(syncSignals);
+  const stopMediaRef = useRef(stopMedia);
+  const restartConnectionRef = useRef(retryConnection);
   const resetCallRef = useRef(resetCall);
   const beginOfferRef = useRef(beginOffer);
   const handleSignalRef = useRef(handleSignal);
@@ -871,6 +977,9 @@ export default function CallManager() {
   const syncIncomingRef = useRef(syncIncomingRinging);
 
   useEffect(() => {
+    syncSignalsRef.current = syncSignals;
+    stopMediaRef.current = stopMedia;
+    restartConnectionRef.current = retryConnection;
     resetCallRef.current = resetCall;
     beginOfferRef.current = beginOffer;
     handleSignalRef.current = handleSignal;
@@ -894,6 +1003,8 @@ export default function CallManager() {
         .select("username,display_name,avatar_url")
         .eq("id", userId)
         .maybeSingle();
+
+      if (cancelled) return;
 
       profileRef.current = profile
         ? {
@@ -951,9 +1062,25 @@ export default function CallManager() {
 
       clearIncomingPoll();
       incomingPollRef.current = window.setInterval(() => {
-        if (!callRef.current && document.visibilityState === "visible") {
+        if (document.visibilityState !== "visible") return;
+        const active = callRef.current;
+        if (!active) {
           void syncIncomingRef.current();
+          return;
         }
+        // Poll terminal state too, so a missed realtime end event cannot leave
+        // the microphone running or an incoming overlay stuck indefinitely.
+        void supabase.from("call_sessions")
+          .select("id,conversation_id,caller_id,callee_id,status,call_type,created_at")
+          .eq("id", active.id).maybeSingle()
+          .then(({ data: latest, error: sessionError }) => {
+            if (sessionError || callRef.current?.id !== active.id) return;
+            if (!latest || ["ended", "declined", "missed"].includes(latest.status)) {
+              resetCallRef.current();
+            } else if (latest.status === "accepted" && active.direction === "outgoing") {
+              void beginOfferRef.current(latest as CallSession);
+            }
+          });
       }, 2500);
 
       signalsChannel = supabase
@@ -974,8 +1101,11 @@ export default function CallManager() {
     });
 
     const recoverVisibleCall = () => {
-      if (document.visibilityState === "visible" && !callRef.current) {
-        void syncIncomingRef.current();
+      if (document.visibilityState !== "visible") return;
+      if (!callRef.current) void syncIncomingRef.current();
+      else {
+        void syncSignalsRef.current(callRef.current.id);
+        void requestCallWakeLock();
       }
     };
     document.addEventListener("visibilitychange", recoverVisibleCall);
@@ -993,15 +1123,20 @@ export default function CallManager() {
   }, [supabase]);
 
   useEffect(() => {
+    let outgoingCancelled = false;
     async function startOutgoing(
       detail: WindowEventMap["avenzo:start-audio-call"]["detail"],
       callType: "audio" | "video"
     ) {
-      if (callRef.current) return;
+      if (callRef.current || startingRef.current) return;
 
       const userId = userIdRef.current;
-      if (!userId) return;
-
+      if (!userId) {
+        setError("Your call session is loading. Try again in a moment.");
+        return;
+      }
+      startingRef.current = true;
+      setStarting(true);
       setError("");
       void refreshIceServers();
 
@@ -1023,8 +1158,18 @@ export default function CallManager() {
         )
         .single();
 
+      startingRef.current = false;
+      if (outgoingCancelled) {
+        if (data?.id) {
+          void supabase.from("call_sessions")
+            .update({ status: "ended", ended_at: new Date().toISOString() })
+            .eq("id", data.id);
+        }
+        return;
+      }
+      setStarting(false);
       if (insertError || !data) {
-        stopMedia();
+        stopMediaRef.current();
         setError("Could not start the call.");
         return;
       }
@@ -1040,6 +1185,11 @@ export default function CallManager() {
         callType,
         status: "calling",
       };
+      if (callRef.current) {
+        void supabase.from("call_sessions").update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", data.id);
+        return;
+      }
+      setSpeakerOn(callType === "video");
       setCall(next);
 
       clearAcceptancePoll();
@@ -1089,7 +1239,12 @@ export default function CallManager() {
             ended_at: new Date().toISOString(),
           })
           .eq("id", data.id)
-          .then(() => resetCallRef.current());
+          .eq("status", "ringing")
+          .select("id")
+          .maybeSingle()
+          .then(({ data: missed }) => {
+            if (missed && callRef.current?.id === data.id) resetCallRef.current();
+          });
       }, 30000);
     }
 
@@ -1108,10 +1263,47 @@ export default function CallManager() {
     window.addEventListener("avenzo:start-video-call", videoHandler);
 
     return () => {
+      outgoingCancelled = true;
       window.removeEventListener("avenzo:start-audio-call", audioHandler);
       window.removeEventListener("avenzo:start-video-call", videoHandler);
     };
   }, [supabase]);
+
+  const activeCallId = call?.id;
+  useEffect(() => {
+    if (!activeCallId) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    const root = document.documentElement;
+    const hadCallClass = root.classList.contains("avenzo-call-open");
+    const main = document.getElementById("main-content");
+    const wasInert = main?.inert || false;
+    if (main) main.inert = true;
+    root.classList.add("avenzo-call-open");
+    document.body.style.overflow = "hidden";
+    const dialog = document.querySelector<HTMLElement>(".avenzo-call-overlay");
+    dialog?.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus();
+    const trapFocus = (event: KeyboardEvent) => {
+      if (event.key !== "Tab" || !dialog) return;
+      const buttons = Array.from(dialog.querySelectorAll<HTMLButtonElement>("button:not(:disabled)"));
+      const first = buttons[0];
+      const last = buttons[buttons.length - 1];
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault(); last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault(); first.focus();
+      }
+    };
+    document.addEventListener("keydown", trapFocus);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      if (!hadCallClass) root.classList.remove("avenzo-call-open");
+      if (main) main.inert = wasInert;
+      document.removeEventListener("keydown", trapFocus);
+      if (previousFocus?.isConnected) previousFocus.focus();
+    };
+  }, [activeCallId]);
 
   const profile = call
     ? {
@@ -1126,6 +1318,12 @@ export default function CallManager() {
   return (
     <>
       <audio ref={remoteAudioRef} autoPlay playsInline />
+      {!call && (error || starting) && (
+        <div className="avenzo-call-feedback" role={error ? "alert" : "status"}>
+          <span>{error || "Starting call…"}</span>
+          {error && <button type="button" onClick={() => setError("")} aria-label="Dismiss call error">Dismiss</button>}
+        </div>
+      )}
 
       {call && profile && (
         <div
@@ -1135,6 +1333,7 @@ export default function CallManager() {
           }
           role="dialog"
           aria-modal="true"
+          aria-labelledby="avenzo-call-name"
         >
           <div className="avenzo-call-card">
             {call.callType === "video" && (
@@ -1142,6 +1341,7 @@ export default function CallManager() {
                 <video
                   ref={remoteVideoRef}
                   className="avenzo-remote-video"
+                  muted
                   autoPlay
                   playsInline
                 />
@@ -1167,18 +1367,23 @@ export default function CallManager() {
                 ? "AVENZO VIDEO CALL"
                 : "AVENZO AUDIO CALL"}
             </small>
-            <h2>{call.displayName}</h2>
-            <p>
+            <h2 id="avenzo-call-name">{call.displayName}</h2>
+            <p role="status" aria-live="polite">
               {call.status === "incoming"
                 ? "Incoming call…"
                 : call.status === "calling"
                   ? "Calling…"
                   : call.status === "connecting"
                     ? "Connecting…"
-                    : "Connected"}
+                    : "Connected · " + formatCallDuration(callSeconds)}
             </p>
 
-            {error && <div className="avenzo-call-error">{error}</div>}
+            {error && <div className="avenzo-call-error" role="alert">{error}</div>}
+            {audioBlocked && (
+              <button className="avenzo-enable-audio" type="button" onClick={() => void enableCallAudio()}>
+                Tap to hear call audio
+              </button>
+            )}
 
             <div className="avenzo-call-actions">
               {call.status === "incoming" ? (
@@ -1193,9 +1398,10 @@ export default function CallManager() {
                   <button
                     type="button"
                     className="avenzo-call-accept"
+                    disabled={accepting}
                     onClick={() => void acceptIncoming()}
                   >
-                    Accept
+                    {accepting ? "Accepting…" : "Accept"}
                   </button>
                 </>
               ) : (
@@ -1206,21 +1412,26 @@ export default function CallManager() {
                       <button
                         type="button"
                         className={muted ? "active" : ""}
+                        aria-pressed={muted}
                         onClick={toggleMute}
                       >
                         {muted ? "Unmute" : "Mute"}
                       </button>
+                      {window.AvenzoNative?.setCallAudioMode && (
                       <button
                         type="button"
                         className={speakerOn ? "active" : ""}
+                        aria-pressed={speakerOn}
                         onClick={toggleSpeaker}
                       >
                         {speakerOn ? "Speaker on" : "Speaker"}
                       </button>
+                      )}
                       {call.callType === "video" && (
                         <button
                           type="button"
                           className={cameraOff ? "active" : ""}
+                          aria-pressed={cameraOff}
                           onClick={toggleCamera}
                         >
                           {cameraOff ? "Camera off" : "Camera"}
@@ -1228,7 +1439,7 @@ export default function CallManager() {
                       )}
                     </>
                   )}
-                  {error && call.status === "connecting" && (
+                  {error && (call.status === "connecting" || call.status === "connected") && (
                     <button
                       type="button"
                       onClick={() => void retryConnection()}

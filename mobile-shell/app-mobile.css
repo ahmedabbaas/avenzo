@@ -2903,16 +2903,14 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
   html.avenzo-android-app .avenzo-call-overlay{
     position:fixed!important;
     inset:0!important;
-    z-index:500!important;
+    z-index:1000!important;
     display:grid!important;
     place-items:center!important;
     padding:
       calc(20px + env(safe-area-inset-top))
       20px
       calc(20px + env(safe-area-inset-bottom))!important;
-    background:
-      radial-gradient(circle at 50% 22%,rgba(128,79,255,.18),transparent 34%),
-      rgba(3,4,5,.97)!important;
+    background:var(--call-backdrop,rgba(3,4,5,.97))!important;
   }
 }
 
@@ -16985,3 +16983,9 @@ html.avenzo-android-app video{
     max-height:100%!important;
   }
 }
+
+/* Native call viewport parity with the shared product dialog. */
+html.avenzo-android-app .avenzo-call-overlay{height:100dvh!important;box-sizing:border-box!important}
+html.avenzo-android-app .avenzo-call-actions button{min-height:48px!important;font-size:13px!important}
+html.avenzo-android-app .avenzo-video-stage{max-height:52dvh!important}
+html.avenzo-android-app .avenzo-call-card h2{overflow-wrap:anywhere!important}
