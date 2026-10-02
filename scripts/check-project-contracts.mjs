@@ -45,6 +45,7 @@ const globals = await read("app/globals.css");
 const design = await read("app/avenzo-design-system.css");
 const adTheme = await read("app/avenzo-ad-theme.css");
 const nativeMobile = await read("mobile-shell/app-mobile.css");
+const nativeInject = await read("mobile-shell/native-inject.js");
 const capacitor = await read("capacitor.config.ts");
 const nextConfig = await read("next.config.ts");
 
@@ -108,7 +109,9 @@ requireText(capacitor, 'backgroundColor: "#050607"', "Capacitor config");
 
 const androidWorkflow = await read(".github/workflows/android-apk.yml");
 requireText(androidWorkflow, "avenzo_logo_premium", "Android launcher branding");
-requireText(androidWorkflow, "__LOGO_PNG__", "Android injected brand mark");
+requireText(androidWorkflow, "native-inject.js", "Android native injection asset");
+requireText(nativeInject, "__LOGO_PNG__", "Android injected brand mark");
+requireText(nativeInject, "__CSS__", "Android injected mobile CSS");
 
 for (const header of [
   "Content-Security-Policy",
