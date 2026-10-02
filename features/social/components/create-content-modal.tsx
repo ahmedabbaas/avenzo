@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -139,13 +138,9 @@ export default function CreateContentModal({
   const [filter, setFilter] = useState<PostImageFilter>("none");
   const [brightness, setBrightness] = useState(100);
   const [contrast, setContrast] = useState(100);
-  const [mediaSenseAvailable, setMediaSenseAvailable] = useState(false);
+  const [mediaSenseAvailable] = useState(() => hasNativeMediaSense());
   const [analyzingAlt, setAnalyzingAlt] = useState(false);
   const [smartAltNote, setSmartAltNote] = useState("");
-
-  useEffect(() => {
-    setMediaSenseAvailable(hasNativeMediaSense());
-  }, []);
 
   const isVideo = Boolean(file?.type.startsWith("video/"));
   const tagged = useMemo(() => parseMentions(mentions), [mentions]);
