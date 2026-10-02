@@ -2358,3 +2358,59 @@ html[data-theme="light"] .social-app .avenzo-spaces-grid>button{background:linea
   .insights-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
   .profile-mobile-actions{grid-template-columns:repeat(3,minmax(0,1fr))!important}
 }
+
+
+/* =========================================================
+   AVENZO POST POLLS
+   ========================================================= */
+.create-poll-section{
+  margin-top:12px;padding:14px;border:1px solid var(--orbit-line);border-radius:16px;
+  background:linear-gradient(145deg,rgba(255,255,255,.035),rgba(255,255,255,.01))
+}
+.create-poll-options{display:grid;gap:8px;margin-top:9px}
+.create-poll-options>div{display:grid;grid-template-columns:minmax(0,1fr) 38px;gap:7px}
+.create-poll-options input,.create-poll-duration select{
+  width:100%;min-height:42px;padding:0 12px;border:1px solid var(--orbit-line-strong);border-radius:12px;
+  background:var(--panel-2);color:var(--text);font:inherit
+}
+.create-poll-options button,.create-poll-add{
+  border:1px solid var(--orbit-line);border-radius:11px;background:var(--panel-2);color:var(--text)
+}
+.create-poll-add{margin-top:8px;min-height:34px;padding:0 11px;display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:800}
+.create-poll-duration{margin-top:10px}
+.create-review-poll{
+  margin-top:11px;padding:12px;display:grid;gap:7px;border:1px solid var(--orbit-line);border-radius:14px
+}
+.create-review-poll b{font-size:12px}
+.create-review-poll span{padding:8px 10px;border:1px solid var(--orbit-line);border-radius:10px;color:var(--muted);font-size:10px}
+
+.post-poll{
+  margin:10px 0 14px;padding:13px;border:1px solid var(--orbit-line);border-radius:18px;
+  background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.012))
+}
+.post-poll-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.post-poll-head>div{display:grid;gap:3px}
+.post-poll-head span{color:var(--muted);font-size:8px;font-weight:900;letter-spacing:.14em}
+.post-poll-head b{font-size:13px;line-height:1.3}
+.post-poll-head>small{flex:none;color:var(--muted);font-size:9px}
+.post-poll-options{display:grid;gap:8px}
+.post-poll-options button{
+  min-height:42px;padding:0 12px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;
+  gap:10px;border:1px solid var(--orbit-line);border-radius:12px;background:rgba(255,255,255,.02);color:var(--text);text-align:left
+}
+.post-poll-options button i{
+  position:absolute;inset:0 auto 0 0;max-width:100%;background:rgba(223,227,232,.08);pointer-events:none;transition:width .25s ease
+}
+.post-poll-options button.selected{border-color:var(--orbit-line-strong)}
+.post-poll-options button.selected i{background:rgba(223,227,232,.15)}
+.post-poll-options button span,.post-poll-options button strong{position:relative;z-index:1}
+.post-poll-options button span{font-size:11px;font-weight:750}
+.post-poll-options button strong{font-size:10px}
+.post-poll-options button:disabled{cursor:default}
+.post-poll-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px;color:var(--muted);font-size:9px}
+.post-poll-foot small{color:var(--muted)}
+@media(max-width:900px){
+  .post-poll{margin:9px 0 12px;border-radius:15px}
+  .post-poll-options button{min-height:44px}
+  .create-poll-section{border-radius:14px}
+}
