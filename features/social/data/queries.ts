@@ -14,6 +14,16 @@ import type {
 const PROFILE_COLUMNS =
   "id,username,display_name,bio,avatar_url,website,verified,created_at";
 
+const ACTIVITY_NOTIFICATION_TYPES = [
+  "like",
+  "comment",
+  "reply",
+  "comment_like",
+  "follow",
+  "follow_request",
+  "follow_request_accepted",
+];
+
 type PostRow = {
   id: string;
   author_id: string;
@@ -90,6 +100,7 @@ export async function fetchUnreadActivityCount(
     .from("notifications")
     .select("id", { count: "exact", head: true })
     .eq("recipient_id", userId)
+    .in("type", ACTIVITY_NOTIFICATION_TYPES)
     .is("read_at", null);
 
   assertNoError(error);
