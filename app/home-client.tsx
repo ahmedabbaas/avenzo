@@ -250,10 +250,6 @@ export default function HomeClient({
     };
   }, []);
 
-  useEffect(() => {
-    void loadDrafts();
-  }, [loadDrafts]);
-
   const markActivityRead = useCallback(() => {
     setUnreadActivity(0);
   }, []);
@@ -295,6 +291,10 @@ export default function HomeClient({
       // Draft storage is device-local and should never block AVENZO.
     }
   }, [initialProfile.id]);
+
+  useEffect(() => {
+    void loadDrafts();
+  }, [loadDrafts]);
 
   async function loadPosts() {
     const nextPosts = await fetchFeedPosts(supabase, initialProfile.id);
