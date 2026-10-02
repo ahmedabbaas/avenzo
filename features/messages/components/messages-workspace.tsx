@@ -1118,6 +1118,7 @@ export default function MessagesWorkspace({
       };
 
       recorder.onerror = () => {
+        cancelRecordingRef.current = true;
         clearRecordingTimer();
         stopRecordingStream();
         mediaRecorderRef.current = null;

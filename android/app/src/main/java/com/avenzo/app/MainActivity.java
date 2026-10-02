@@ -1,205 +1,769 @@
 package com.avenzo.app;
 
 import android.Manifest;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Base64;
+import android.view.Display;
 import android.view.View;
+import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.PermissionRequest;
 import android.webkit.WebView;
 import android.webkit.WebSettings;
-
+import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
-
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebViewClient;
-
+import com.getcapacitor.BridgeWebChromeClient;
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URLEncoder;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class MainActivity extends BridgeActivity {
+  private static final String MESSAGE_CHANNEL_ID = "avenzo_messages";
+  private static final String SUPABASE_URL =
+    "https://ltlxynrssgpqgzbdpliv.supabase.co";
+  private static final String SUPABASE_KEY =
+    "sb_publishable_tAxyIZKlwXyeGI7627SFSQ_VJvaSR0d";
 
-    private static final int AVENZO_MEDIA_PERMISSION_REQUEST = 4201;
-    private String mobileScript = "";
+  private boolean avenzoClientInstalled = false;
+  private boolean activityVisible = false;
+  private PermissionRequest pendingMediaPermissionRequest = null;
+  private String[] pendingMediaResources = null;
+  private long lastRootBackPress = 0L;
+  private String supabaseAccessToken = "";
+  private String supabaseUserId = "";
+  private String lastNotificationAt = "";
+  private final Handler notificationHandler =
+    new Handler(Looper.getMainLooper());
+  private final ExecutorService notificationExecutor =
+    Executors.newSingleThreadExecutor();
+  private volatile boolean notificationPollInFlight = false;
 
+  private final Runnable notificationPoller = new Runnable() {
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void run() {
+      if (
+        !activityVisible &&
+        !notificationPollInFlight &&
+        !supabaseAccessToken.isEmpty() &&
+        !supabaseUserId.isEmpty()
+      ) {
+        notificationPollInFlight = true;
+        notificationExecutor.execute(() -> {
+          try {
+            pollMessageNotifications();
+          } finally {
+            notificationPollInFlight = false;
+          }
+        });
+      }
+      notificationHandler.postDelayed(this, 5000L);
+    }
+  };
 
-        mobileScript = buildMobileScript();
-        applySystemTheme("dark");
+  @Override
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
 
-        // The web app uses getUserMedia for calls. Ensure Android grants the
-        // native microphone permission before WebView/Capacitor handles the
-        // corresponding web permission request.
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(
-                this,
-                new String[] { Manifest.permission.RECORD_AUDIO },
-                AVENZO_MEDIA_PERMISSION_REQUEST
-            );
+    getWindow().setSoftInputMode(
+      WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+    );
+    applySystemTheme("dark");
+
+    preferHighRefreshRate();
+
+    createMessageNotificationChannel();
+    requestNotificationPermission();
+
+    getOnBackPressedDispatcher().addCallback(
+      this,
+      new OnBackPressedCallback(true) {
+        @Override
+        public void handleOnBackPressed() {
+          handleAvenzoBack();
         }
+      }
+    );
 
-        if (bridge != null) {
-            bridge.setWebViewClient(new BridgeWebViewClient(bridge) {
-                @Override
-                public void onPageFinished(WebView view, String url) {
-                    super.onPageFinished(view, url);
-                    injectMobileShell(view);
-                }
-            });
+    configureWebView();
+    handleIntentRoute(getIntent());
+    notificationHandler.postDelayed(notificationPoller, 3500L);
+  }
 
-            WebView webView = bridge.getWebView();
-            if (webView != null) {
-                WebSettings settings = webView.getSettings();
-                settings.setMediaPlaybackRequiresUserGesture(false);
-                settings.setDomStorageEnabled(true);
-                settings.setDatabaseEnabled(true);
-                settings.setCacheMode(WebSettings.LOAD_DEFAULT);
-                webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-                webView.addJavascriptInterface(new AvenzoNativeBridge(), "AvenzoNative");
-                webView.postDelayed(() -> injectMobileShell(webView), 80);
-            }
-        }
+  @Override
+  protected void onNewIntent(Intent intent) {
+    super.onNewIntent(intent);
+    setIntent(intent);
+    handleIntentRoute(intent);
+  }
 
-        getOnBackPressedDispatcher().addCallback(
-            this,
-            new OnBackPressedCallback(true) {
-                @Override
-                public void handleOnBackPressed() {
-                    handleAvenzoBack();
-                }
-            }
-        );
+  @Override
+  public void onResume() {
+    super.onResume();
+    activityVisible = true;
+    preferHighRefreshRate();
+    configureWebView();
+
+    if (getBridge() != null && getBridge().getWebView() != null) {
+      WebView webView = getBridge().getWebView();
+      webView.postDelayed(() -> injectAvenzoShell(webView), 120);
+      webView.postDelayed(() -> injectAvenzoShell(webView), 700);
+    }
+  }
+
+  @Override
+  public void onPause() {
+    activityVisible = false;
+    super.onPause();
+  }
+
+  @Override
+  public void onDestroy() {
+    notificationHandler.removeCallbacks(notificationPoller);
+    notificationExecutor.shutdownNow();
+    super.onDestroy();
+  }
+
+  private void createMessageNotificationChannel() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+
+    NotificationChannel channel = new NotificationChannel(
+      MESSAGE_CHANNEL_ID,
+      "Messages",
+      NotificationManager.IMPORTANCE_HIGH
+    );
+    channel.setDescription("New AVENZO direct messages");
+    channel.enableVibration(true);
+
+    NotificationManager manager =
+      (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+    manager.createNotificationChannel(channel);
+  }
+
+  private void requestNotificationPermission() {
+    if (
+      Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+      checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+        != PackageManager.PERMISSION_GRANTED
+    ) {
+      requestPermissions(
+        new String[]{Manifest.permission.POST_NOTIFICATIONS},
+        4201
+      );
+    }
+  }
+
+  private boolean mediaResourcesGranted(String[] resources) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true;
+
+    for (String resource : resources) {
+      if (
+        PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(resource) &&
+        checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+          != PackageManager.PERMISSION_GRANTED
+      ) {
+        return false;
+      }
+
+      if (
+        PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(resource) &&
+        checkSelfPermission(Manifest.permission.CAMERA)
+          != PackageManager.PERMISSION_GRANTED
+      ) {
+        return false;
+      }
     }
 
-    private void applySystemTheme(String theme) {
-        boolean light = "light".equalsIgnoreCase(theme);
-        View decor = getWindow().getDecorView();
+    return true;
+  }
 
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-        getWindow().setStatusBarColor(Color.TRANSPARENT);
-        getWindow().setNavigationBarColor(Color.TRANSPARENT);
+  private void requestRuntimeMediaPermissions(String[] resources) {
+    boolean needsAudio = false;
+    boolean needsCamera = false;
 
-        int flags =
-            View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
-            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
-            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
+    for (String resource : resources) {
+      if (
+        PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(resource) &&
+        checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+          != PackageManager.PERMISSION_GRANTED
+      ) {
+        needsAudio = true;
+      }
 
-        if (light && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
-        }
-
-        if (light && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
-        }
-
-        decor.setSystemUiVisibility(flags);
-        WindowInsetsControllerCompat controller =
-            WindowCompat.getInsetsController(getWindow(), decor);
-        controller.setAppearanceLightStatusBars(light);
-        controller.setAppearanceLightNavigationBars(light);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            getWindow().setStatusBarContrastEnforced(false);
-            getWindow().setNavigationBarContrastEnforced(false);
-        }
+      if (
+        PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(resource) &&
+        checkSelfPermission(Manifest.permission.CAMERA)
+          != PackageManager.PERMISSION_GRANTED
+      ) {
+        needsCamera = true;
+      }
     }
 
-    private class AvenzoNativeBridge {
-        @JavascriptInterface
-        public void setSystemTheme(String theme) {
-            runOnUiThread(() -> applySystemTheme(theme));
+    if (needsAudio && needsCamera) {
+      requestPermissions(
+        new String[]{
+          Manifest.permission.RECORD_AUDIO,
+          Manifest.permission.CAMERA
+        },
+        4202
+      );
+    } else if (needsAudio) {
+      requestPermissions(
+        new String[]{Manifest.permission.RECORD_AUDIO},
+        4202
+      );
+    } else if (needsCamera) {
+      requestPermissions(
+        new String[]{Manifest.permission.CAMERA},
+        4202
+      );
+    }
+  }
+
+  @Override
+  public void onRequestPermissionsResult(
+    int requestCode,
+    String[] permissions,
+    int[] grantResults
+  ) {
+    super.onRequestPermissionsResult(
+      requestCode,
+      permissions,
+      grantResults
+    );
+
+    if (requestCode != 4202) return;
+
+    PermissionRequest pending = pendingMediaPermissionRequest;
+    String[] resources = pendingMediaResources;
+    pendingMediaPermissionRequest = null;
+    pendingMediaResources = null;
+
+    if (pending == null || resources == null) return;
+
+    if (mediaResourcesGranted(resources)) {
+      pending.grant(resources);
+    } else {
+      pending.deny();
+    }
+  }
+
+  private void showMessageNotification(
+    String title,
+    String body,
+    String route
+  ) {
+    if (
+      Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+      checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+        != PackageManager.PERMISSION_GRANTED
+    ) {
+      return;
+    }
+
+    String safeRoute =
+      route != null && route.startsWith("/") ? route : "/messages";
+
+    Intent intent = new Intent(this, MainActivity.class);
+    intent.putExtra("avenzo_route", safeRoute);
+    intent.addFlags(
+      Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP
+    );
+
+    int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+      flags |= PendingIntent.FLAG_IMMUTABLE;
+    }
+
+    PendingIntent pendingIntent = PendingIntent.getActivity(
+      this,
+      Math.abs(safeRoute.hashCode()),
+      intent,
+      flags
+    );
+
+    Notification.Builder builder =
+      Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+        ? new Notification.Builder(this, MESSAGE_CHANNEL_ID)
+        : new Notification.Builder(this);
+
+    builder
+      .setSmallIcon(R.drawable.avenzo_notification_icon)
+      .setLargeIcon(
+        BitmapFactory.decodeResource(
+          getResources(),
+          R.drawable.avenzo_logo_premium
+        )
+      )
+      .setContentTitle(
+        title == null || title.trim().isEmpty() ? "AVENZO" : title
+      )
+      .setContentText(
+        body == null || body.trim().isEmpty()
+          ? "New message"
+          : body
+      )
+      .setStyle(
+        new Notification.BigTextStyle().bigText(
+          body == null || body.trim().isEmpty()
+            ? "New message"
+            : body
+        )
+      )
+      .setAutoCancel(true)
+      .setContentIntent(pendingIntent)
+      .setCategory(Notification.CATEGORY_MESSAGE);
+
+    NotificationManager manager =
+      (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+    manager.notify(
+      (int) (System.currentTimeMillis() & 0x0fffffff),
+      builder.build()
+    );
+  }
+
+  private boolean isMessagesScreenVisible() {
+    if (!activityVisible) return false;
+    if (getBridge() == null || getBridge().getWebView() == null) {
+      return false;
+    }
+    String url = getBridge().getWebView().getUrl();
+    return url != null && url.contains("/messages");
+  }
+
+  private String notificationBody(String type) {
+    if ("message_request".equals(type)) {
+      return "You have a new message request";
+    }
+    if ("message_reply".equals(type)) {
+      return "Someone replied to your message";
+    }
+    return "You have a new message";
+  }
+
+  private void pollMessageNotifications() {
+    String token = supabaseAccessToken;
+    String userId = supabaseUserId;
+    String cursor = lastNotificationAt;
+
+    if (
+      token.isEmpty() ||
+      userId.isEmpty() ||
+      cursor.isEmpty()
+    ) {
+      return;
+    }
+
+    HttpURLConnection connection = null;
+    try {
+      String encodedCursor = URLEncoder.encode(
+        cursor,
+        StandardCharsets.UTF_8.name()
+      );
+
+      String endpoint =
+        SUPABASE_URL +
+        "/rest/v1/notifications" +
+        "?recipient_id=eq." + userId +
+        "&type=in.(message,message_request,message_reply)" +
+        "&created_at=gt." + encodedCursor +
+        "&select=id,type,created_at" +
+        "&order=created_at.asc" +
+        "&limit=20";
+
+      connection = (HttpURLConnection) new URL(endpoint).openConnection();
+      connection.setRequestMethod("GET");
+      connection.setConnectTimeout(8000);
+      connection.setReadTimeout(8000);
+      connection.setRequestProperty("apikey", SUPABASE_KEY);
+      connection.setRequestProperty(
+        "Authorization",
+        "Bearer " + token
+      );
+      connection.setRequestProperty("Accept", "application/json");
+
+      int code = connection.getResponseCode();
+      if (code != 200) return;
+
+      StringBuilder body = new StringBuilder();
+      try (
+        BufferedReader reader = new BufferedReader(
+          new InputStreamReader(
+            connection.getInputStream(),
+            StandardCharsets.UTF_8
+          )
+        )
+      ) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+          body.append(line);
         }
+      }
+
+      JSONArray rows = new JSONArray(body.toString());
+      for (int i = 0; i < rows.length(); i++) {
+        JSONObject row = rows.getJSONObject(i);
+        String type = row.optString("type", "message");
+        String createdAt = row.optString("created_at", cursor);
+
+        if (!isMessagesScreenVisible()) {
+          runOnUiThread(
+            () -> showMessageNotification(
+              "AVENZO",
+              notificationBody(type),
+              "/messages"
+            )
+          );
+        }
+
+        if (!createdAt.isEmpty()) {
+          lastNotificationAt = createdAt;
+        }
+      }
+    } catch (Exception ignored) {
+    } finally {
+      if (connection != null) connection.disconnect();
+    }
+  }
+
+  private void registerNotificationSession(
+    String accessToken,
+    String userId
+  ) {
+    if (
+      accessToken == null ||
+      accessToken.trim().isEmpty() ||
+      userId == null ||
+      userId.trim().isEmpty()
+    ) {
+      supabaseAccessToken = "";
+      supabaseUserId = "";
+      lastNotificationAt = "";
+      return;
     }
 
-    private void injectMobileShell(WebView webView) {
-        if (webView == null || mobileScript.isEmpty()) return;
-        webView.evaluateJavascript(mobileScript, null);
+    boolean userChanged = !userId.equals(supabaseUserId);
+    supabaseAccessToken = accessToken;
+    supabaseUserId = userId;
+
+    if (userChanged || lastNotificationAt.isEmpty()) {
+      lastNotificationAt = Instant.now().toString();
+    }
+  }
+
+  private void handleIntentRoute(Intent intent) {
+    if (intent == null) return;
+    String route = intent.getStringExtra("avenzo_route");
+    if (route == null || !route.startsWith("/")) return;
+
+    if (getBridge() != null && getBridge().getWebView() != null) {
+      WebView webView = getBridge().getWebView();
+      String target = "https://avenzo-ivory.vercel.app" + route;
+      webView.post(() -> webView.loadUrl(target));
+    }
+  }
+
+  private void applySystemTheme(String theme) {
+    final boolean light = "light".equalsIgnoreCase(theme);
+    final View decor = getWindow().getDecorView();
+
+    WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+    getWindow().setStatusBarColor(Color.TRANSPARENT);
+    getWindow().setNavigationBarColor(Color.TRANSPARENT);
+
+    int flags =
+      View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+      View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+      View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
+
+    if (light && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+      flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
     }
 
-    private void handleAvenzoBack() {
-        if (bridge == null || bridge.getWebView() == null) {
-            finish();
+    if (light && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+    }
+
+    decor.setSystemUiVisibility(flags);
+
+    WindowInsetsControllerCompat controller =
+      WindowCompat.getInsetsController(getWindow(), decor);
+    controller.setAppearanceLightStatusBars(light);
+    controller.setAppearanceLightNavigationBars(light);
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      getWindow().setStatusBarContrastEnforced(false);
+      getWindow().setNavigationBarContrastEnforced(false);
+    }
+  }
+
+  private void preferHighRefreshRate() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return;
+
+    Display display = getDisplay();
+    if (display == null) return;
+
+    Display.Mode current = display.getMode();
+    Display.Mode best = current;
+
+    for (Display.Mode mode : display.getSupportedModes()) {
+      boolean sameResolution =
+        mode.getPhysicalWidth() == current.getPhysicalWidth() &&
+        mode.getPhysicalHeight() == current.getPhysicalHeight();
+
+      if (sameResolution && mode.getRefreshRate() > best.getRefreshRate()) {
+        best = mode;
+      }
+    }
+
+    WindowManager.LayoutParams params = getWindow().getAttributes();
+    params.preferredDisplayModeId = best.getModeId();
+    params.preferredRefreshRate = best.getRefreshRate();
+    getWindow().setAttributes(params);
+  }
+
+  private void configureWebView() {
+    if (
+      avenzoClientInstalled ||
+      getBridge() == null ||
+      getBridge().getWebView() == null
+    ) {
+      return;
+    }
+
+    final WebView webView = getBridge().getWebView();
+    webView.setOverScrollMode(WebView.OVER_SCROLL_IF_CONTENT_SCROLLS);
+    webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      webView.setRendererPriorityPolicy(
+        WebView.RENDERER_PRIORITY_IMPORTANT,
+        false
+      );
+    }
+    webView.setVerticalScrollBarEnabled(false);
+    webView.setHorizontalScrollBarEnabled(false);
+    WebSettings settings = webView.getSettings();
+    settings.setBuiltInZoomControls(false);
+    settings.setDisplayZoomControls(false);
+    settings.setMediaPlaybackRequiresUserGesture(false);
+    settings.setDomStorageEnabled(true);
+    settings.setDatabaseEnabled(true);
+    settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+    webView.addJavascriptInterface(
+      new AvenzoNativeBridge(),
+      "AvenzoNative"
+    );
+
+    webView.setWebChromeClient(new BridgeWebChromeClient(getBridge()) {
+      @Override
+      public void onPermissionRequest(PermissionRequest request) {
+        runOnUiThread(() -> {
+          String host =
+            request.getOrigin() == null
+              ? ""
+              : request.getOrigin().getHost();
+
+          if (!"avenzo-ivory.vercel.app".equalsIgnoreCase(host)) {
+            request.deny();
             return;
+          }
+
+          String[] resources = request.getResources();
+          if (mediaResourcesGranted(resources)) {
+            request.grant(resources);
+            return;
+          }
+
+          if (pendingMediaPermissionRequest != null) {
+            pendingMediaPermissionRequest.deny();
+          }
+
+          pendingMediaPermissionRequest = request;
+          pendingMediaResources = resources;
+          requestRuntimeMediaPermissions(resources);
+        });
+      }
+
+      @Override
+      public void onPermissionRequestCanceled(
+        PermissionRequest request
+      ) {
+        if (pendingMediaPermissionRequest == request) {
+          pendingMediaPermissionRequest = null;
+          pendingMediaResources = null;
+        }
+        super.onPermissionRequestCanceled(request);
+      }
+    });
+
+    webView.setWebViewClient(new BridgeWebViewClient(getBridge()) {
+      @Override
+      public void onPageFinished(WebView view, String url) {
+        super.onPageFinished(view, url);
+        injectAvenzoShell(view);
+        view.postDelayed(() -> injectAvenzoShell(view), 180);
+        view.postDelayed(() -> injectAvenzoShell(view), 800);
+      }
+
+      @Override
+      public void doUpdateVisitedHistory(
+        WebView view,
+        String url,
+        boolean isReload
+      ) {
+        super.doUpdateVisitedHistory(view, url, isReload);
+        view.postDelayed(() -> injectAvenzoShell(view), 80);
+        view.postDelayed(() -> injectAvenzoShell(view), 350);
+      }
+    });
+
+    avenzoClientInstalled = true;
+    webView.postDelayed(() -> injectAvenzoShell(webView), 100);
+    webView.postDelayed(() -> injectAvenzoShell(webView), 500);
+    webView.postDelayed(() -> injectAvenzoShell(webView), 1500);
+  }
+
+  private class AvenzoNativeBridge {
+    @JavascriptInterface
+    public void notifyMessage(
+      String title,
+      String body,
+      String route
+    ) {
+      runOnUiThread(
+        () -> showMessageNotification(title, body, route)
+      );
+    }
+
+    @JavascriptInterface
+    public void registerSession(
+      String accessToken,
+      String userId
+    ) {
+      registerNotificationSession(accessToken, userId);
+    }
+
+    @JavascriptInterface
+    public void setSystemTheme(String theme) {
+      runOnUiThread(() -> applySystemTheme(theme));
+    }
+  }
+
+  private void handleAvenzoBack() {
+    if (getBridge() == null || getBridge().getWebView() == null) {
+      handleRootExit();
+      return;
+    }
+
+    final WebView webView = getBridge().getWebView();
+    webView.evaluateJavascript(
+      "(function(){try{return window.__avenzoHandleBack?window.__avenzoHandleBack():'history';}catch(e){return 'history';}})();",
+      result -> {
+        if ("\"handled\"".equals(result)) {
+          lastRootBackPress = 0L;
+          return;
         }
 
-        WebView webView = bridge.getWebView();
-        String script =
-            "(function(){" +
-            "try{" +
-            "return window.__avenzoHandleBack" +
-            "?window.__avenzoHandleBack()" +
-            ":(window.history.length>1?'history':'root');" +
-            "}catch(e){return 'root';}" +
-            "})();";
-
-        webView.evaluateJavascript(script, result -> runOnUiThread(() -> {
-            String normalized = result == null
-                ? ""
-                : result.replace("\"", "").trim();
-
-            if ("handled".equals(normalized)) {
-                return;
-            }
-
-            if ("history".equals(normalized)) {
-                webView.evaluateJavascript("window.history.back();", null);
-                return;
-            }
-
-            finish();
-        }));
-    }
-
-    private String buildMobileScript() {
-        try {
-            String script = readAssetText("public/native-inject.js");
-            String css = readAssetText("public/app-mobile.css");
-            byte[] logoBytes = readAssetBytes("avenzo/avenzo-logo-premium.png");
-
-            String css64 = Base64.encodeToString(
-                css.getBytes(StandardCharsets.UTF_8),
-                Base64.NO_WRAP
-            );
-            String logo64 = Base64.encodeToString(
-                logoBytes,
-                Base64.NO_WRAP
-            );
-
-            return script
-                .replace("__CSS__", css64)
-                .replace("__LOGO_PNG__", logo64);
-        } catch (Exception ignored) {
-            return "";
+        if ("\"history\"".equals(result)) {
+          lastRootBackPress = 0L;
+          if (webView.canGoBack()) {
+            webView.goBack();
+          } else {
+            webView.loadUrl("https://avenzo-ivory.vercel.app/home");
+          }
+          return;
         }
+
+        handleRootExit();
+      }
+    );
+  }
+
+  private void handleRootExit() {
+    long now = System.currentTimeMillis();
+    if (now - lastRootBackPress <= 2000L) {
+      lastRootBackPress = 0L;
+      moveTaskToBack(true);
+      return;
     }
 
-    private String readAssetText(String path) throws Exception {
-        return new String(readAssetBytes(path), StandardCharsets.UTF_8);
+    lastRootBackPress = now;
+    Toast.makeText(
+      this,
+      "Press back again to exit",
+      Toast.LENGTH_SHORT
+    ).show();
+  }
+
+  private String readAssetText(String path) throws Exception {
+    try (
+      InputStream input = getAssets().open(path);
+      ByteArrayOutputStream output = new ByteArrayOutputStream()
+    ) {
+      byte[] buffer = new byte[8192];
+      int read;
+      while ((read = input.read(buffer)) != -1) {
+        output.write(buffer, 0, read);
+      }
+      return output.toString(StandardCharsets.UTF_8.name());
     }
+  }
 
-    private byte[] readAssetBytes(String path) throws Exception {
-        try (
-            InputStream input = getAssets().open(path);
-            ByteArrayOutputStream output = new ByteArrayOutputStream()
-        ) {
-            byte[] buffer = new byte[8192];
-            int read;
-
-            while ((read = input.read(buffer)) != -1) {
-                output.write(buffer, 0, read);
-            }
-
-            return output.toByteArray();
-        }
+  private String readAssetBase64(String path) throws Exception {
+    try (
+      InputStream input = getAssets().open(path);
+      ByteArrayOutputStream output = new ByteArrayOutputStream()
+    ) {
+      byte[] buffer = new byte[8192];
+      int read;
+      while ((read = input.read(buffer)) != -1) {
+        output.write(buffer, 0, read);
+      }
+      return Base64.encodeToString(
+        output.toByteArray(),
+        Base64.NO_WRAP
+      );
     }
+  }
+
+  private void injectAvenzoShell(WebView view) {
+    try {
+      String script = readAssetText("avenzo/native-inject.js");
+      script = script.replace(
+        "__CSS__",
+        readAssetBase64("avenzo/app-mobile.css")
+      );
+      script = script.replace(
+        "__LOGO_PNG__",
+        readAssetBase64("avenzo/avenzo-logo-premium.png")
+      );
+      view.evaluateJavascript(script, null);
+    } catch (Exception ignored) {
+    }
+  }
 }
