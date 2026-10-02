@@ -2414,3 +2414,66 @@ html[data-theme="light"] .social-app .avenzo-spaces-grid>button{background:linea
   .post-poll-options button{min-height:44px}
   .create-poll-section{border-radius:14px}
 }
+
+
+/* =========================================================
+   AVENZO NAV / PROFILE UNIFICATION
+   ========================================================= */
+@media(max-width:900px){
+  .profile-page-external{
+    padding-bottom:104px;
+  }
+
+  .profile-page-external .public-profile-top{
+    position:sticky;
+    top:0;
+    z-index:40;
+    min-height:54px;
+    background:var(--av-bg);
+    border-bottom:1px solid var(--orbit-line);
+  }
+
+  .profile-page-external .public-profile-reference-mobile.profile-reference-mobile{
+    display:block!important;
+  }
+
+  .profile-page-external .public-profile-hero{
+    display:none!important;
+  }
+
+  .profile-page-external .public-profile-reference-stats.profile-reference-stats{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    flex:1;
+  }
+
+  .profile-page-external .public-profile-reference-actions.profile-reference-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+
+  .profile-page-external .public-profile-reference-actions.profile-reference-actions>a,
+  .profile-page-external .public-profile-reference-actions.profile-reference-actions>button{
+    min-height:38px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    border:1px solid var(--orbit-line-strong);
+    border-radius:10px;
+    background:var(--panel-2);
+    color:var(--text);
+    text-decoration:none;
+    font-size:11px;
+    font-weight:800;
+  }
+
+  .profile-page-external .public-profile-tabs.profile-content-tabs{
+    margin-top:14px;
+  }
+
+  .profile-page-external .public-profile-grid.profile-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+}
