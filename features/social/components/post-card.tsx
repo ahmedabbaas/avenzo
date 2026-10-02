@@ -353,11 +353,7 @@ export default function PostCard({
               <b>{post.poll.question}</b>
             </div>
             <small>
-              {post.poll.closes_at
-                ? new Date(post.poll.closes_at).getTime() <= Date.now()
-                  ? "Closed"
-                  : "Live"
-                : "Open"}
+              {post.poll.closes_at ? "Timed" : "Open"}
             </small>
           </div>
 
@@ -368,16 +364,12 @@ export default function PostCard({
                 post.poll && post.poll.totalVotes > 0
                   ? Math.round((option.voteCount / post.poll.totalVotes) * 100)
                   : 0;
-              const closed =
-                Boolean(post.poll?.closes_at) &&
-                new Date(post.poll?.closes_at || 0).getTime() <= Date.now();
-
               return (
                 <button
                   type="button"
                   key={option.id}
                   className={selected ? "selected" : ""}
-                  disabled={!onPollVote || closed}
+                  disabled={!onPollVote}
                   onClick={() => {
                     nativeImpact("light");
                     onPollVote?.(option.id);
