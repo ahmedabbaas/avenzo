@@ -30,6 +30,16 @@ type ActivityItem = NotificationRow & {
   entity?: ActivityEntity;
 };
 
+const ACTIVITY_NOTIFICATION_TYPES = [
+  "like",
+  "comment",
+  "reply",
+  "comment_like",
+  "follow",
+  "follow_request",
+  "follow_request_accepted",
+];
+
 function notificationCopy(item: ActivityItem) {
   const contentLabel = item.entity?.kind === "reel" ? "reel" : "post";
 
@@ -48,18 +58,8 @@ function notificationCopy(item: ActivityItem) {
       return "replied to your comment";
     case "comment_like":
       return "liked your comment";
-    case "message_request":
-      return "sent you a message request";
-    case "message_reply":
-      return "replied to your message";
-    case "message_reaction":
-      return "reacted to your message";
-    case "collab_invite":
-      return "invited you to collaborate on a post";
-    case "collab_accepted":
-      return "accepted your post collaboration invite";
     default:
-      return "sent you a message";
+      return "interacted with you";
   }
 }
 
@@ -72,17 +72,6 @@ function notificationHref(item: ActivityItem) {
 
   if (item.type === "follow_request") {
     return "/settings/follow-requests";
-  }
-
-  if (
-    item.type === "message" ||
-    item.type === "message_request" ||
-    item.type === "message_reply" ||
-    item.type === "message_reaction"
-  ) {
-    return item.actor?.username
-      ? "/messages?user=" + encodeURIComponent(item.actor.username)
-      : "/messages";
   }
 
   return item.actor?.username
@@ -122,6 +111,7 @@ export default function ActivityPanel({
           .from("notifications")
           .select("id,type,created_at,actor_id,entity_id,read_at")
           .eq("recipient_id", userId)
+          .in("type", ACTIVITY_NOTIFICATION_TYPES)
           .order("created_at", { ascending: false })
           .limit(60);
 
@@ -247,6 +237,7 @@ export default function ActivityPanel({
           .from("notifications")
           .update({ read_at: new Date().toISOString() })
           .eq("recipient_id", userId)
+          .in("type", ACTIVITY_NOTIFICATION_TYPES)
           .is("read_at", null);
 
         if (markRead.error) throw markRead.error;
@@ -284,7 +275,7 @@ export default function ActivityPanel({
       <PageTitle
         eyebrow="ACTIVITY"
         title="Notifications"
-        text="Likes, comments, replies, follows, requests and messages."
+        text="Likes, comments, replies and follows."
       />
 
       {collabInvites.length > 0 && (
