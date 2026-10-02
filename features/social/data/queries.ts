@@ -37,6 +37,7 @@ type PostRow = {
   mentions?: string[];
   location?: string;
   created_at: string;
+  pinned_at?: string | null;
 };
 
 type ReelRow = {
