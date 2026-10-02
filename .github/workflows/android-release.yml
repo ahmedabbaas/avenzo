@@ -18,7 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
-      AVENZO_RELEASE_STORE_FILE: ${{ runner.temp }}/avenzo-release.jks
       AVENZO_RELEASE_STORE_PASSWORD: ${{ secrets.AVENZO_ANDROID_KEYSTORE_PASSWORD }}
       AVENZO_RELEASE_KEY_ALIAS: ${{ secrets.AVENZO_ANDROID_KEY_ALIAS }}
       AVENZO_RELEASE_KEY_PASSWORD: ${{ secrets.AVENZO_ANDROID_KEY_PASSWORD }}
@@ -44,6 +43,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          export AVENZO_RELEASE_STORE_FILE="$RUNNER_TEMP/avenzo-release.jks"
+          echo "AVENZO_RELEASE_STORE_FILE=$AVENZO_RELEASE_STORE_FILE" >> "$GITHUB_ENV"
           test -n "$AVENZO_ANDROID_KEYSTORE_BASE64"
           test -n "$AVENZO_RELEASE_STORE_PASSWORD"
           test -n "$AVENZO_RELEASE_KEY_ALIAS"
