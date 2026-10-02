@@ -3077,3 +3077,53 @@ html[data-theme="light"] .theme-choice.active{
     color:var(--text);
   }
 }
+
+
+.calls-error-actions{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin-top:12px;
+}
+.call-history-skeleton{
+  pointer-events:none;
+}
+.call-history-skeleton>i{
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  background:linear-gradient(90deg,var(--panel-2),var(--panel-3),var(--panel-2));
+  background-size:200% 100%;
+  animation:avenzo-call-shimmer 1.25s linear infinite;
+}
+.call-history-skeleton>span{
+  flex:1;
+  display:grid;
+  gap:6px;
+}
+.call-history-skeleton>span>b,
+.call-history-skeleton>span>small,
+.call-history-skeleton>span>em{
+  display:block;
+  height:9px;
+  border-radius:999px;
+  background:linear-gradient(90deg,var(--panel-2),var(--panel-3),var(--panel-2));
+  background-size:200% 100%;
+  animation:avenzo-call-shimmer 1.25s linear infinite;
+}
+.call-history-skeleton>span>b{width:42%;height:12px}
+.call-history-skeleton>span>small{width:64%}
+.call-history-skeleton>span>em{width:34%}
+@keyframes avenzo-call-shimmer{
+  from{background-position:200% 0}
+  to{background-position:-200% 0}
+}
+@media(prefers-reduced-motion:reduce){
+  .call-history-skeleton>i,
+  .call-history-skeleton>span>b,
+  .call-history-skeleton>span>small,
+  .call-history-skeleton>span>em{
+    animation:none;
+  }
+}
