@@ -293,7 +293,10 @@ export default function HomeClient({
   }, [initialProfile.id]);
 
   useEffect(() => {
-    void loadDrafts();
+    const timer = window.setTimeout(() => {
+      void loadDrafts();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [loadDrafts]);
 
   async function loadPosts() {
