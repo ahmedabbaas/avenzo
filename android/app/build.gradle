@@ -10,6 +10,10 @@ android {
         versionCode 8
         versionName "1.7"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            // Phone APK only: AVENZO does not ship emulator-only x86 binaries.
+            abiFilters 'arm64-v8a', 'armeabi-v7a'
+        }
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
@@ -39,7 +43,6 @@ dependencies {
     // AVENZO Media Sense: bundled on-device models work offline and power Smart Alt.
     implementation 'com.google.mlkit:image-labeling:17.0.9'
     implementation 'com.google.mlkit:face-detection:16.1.7'
-    implementation 'com.google.mlkit:text-recognition:16.0.1'
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
