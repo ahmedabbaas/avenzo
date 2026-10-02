@@ -275,7 +275,7 @@ export default function PublicProfileClient({
   const website = normalizeProfileWebsite(profile.website);
 
   return (
-    <main className="public-profile-shell">
+    <main className="public-profile-shell profile-page profile-page-external">
       <header className="public-profile-top public-profile-route-top">
         <button
           type="button"
@@ -311,16 +311,16 @@ export default function PublicProfileClient({
 
       <section className="public-profile-wrap">
         <div
-          className="public-profile-reference-mobile"
+          className="public-profile-reference-mobile profile-reference-mobile"
           style={{ display: "none" }}
           aria-label="Profile overview"
         >
-          <div className="public-profile-reference-top">
-            <div className="public-profile-reference-avatar">
-              <AvatarImage src={avatar} alt={profile.display_name} size={220} />
+          <div className="public-profile-reference-top profile-reference-top">
+            <div className="public-profile-reference-avatar profile-reference-avatar">
+              <AvatarImage className="profile-desktop-avatar" src={avatar} alt={profile.display_name} size={220} />
             </div>
 
-            <div className="public-profile-reference-stats">
+            <div className="public-profile-reference-stats profile-reference-stats">
               <span>
                 <b>{formatProfileStat(stats.posts)}</b>
                 <small>Posts</small>
@@ -346,8 +346,8 @@ export default function PublicProfileClient({
             </div>
           </div>
 
-          <div className="public-profile-reference-copy">
-            <div className="public-profile-reference-identity">
+          <div className="public-profile-reference-copy profile-reference-copy">
+            <div className="public-profile-reference-identity profile-reference-identity">
               <h1 className="verified-line">
                 {profile.display_name}
                 <VerifiedBadge verified={profile.verified} />
@@ -355,13 +355,13 @@ export default function PublicProfileClient({
               <span>@{profile.username}</span>
             </div>
 
-            <p className="public-profile-reference-bio">
+            <p className="public-profile-reference-bio profile-reference-bio">
               {profile.bio || "New to AVENZO."}
             </p>
 
             {website && (
               <a
-                className="public-profile-reference-website"
+                className="public-profile-reference-website profile-reference-website"
                 href={website.href}
                 target="_blank"
                 rel="noopener noreferrer nofollow"
@@ -372,7 +372,7 @@ export default function PublicProfileClient({
             )}
           </div>
 
-          <div className="public-profile-reference-actions">
+          <div className="public-profile-reference-actions profile-reference-actions">
             <button
               type="button"
               disabled={busy}
@@ -399,10 +399,10 @@ export default function PublicProfileClient({
           )}
         </div>
 
-        <div className="public-profile-hero">
-          <AvatarImage src={avatar} alt={profile.display_name} size={220} />
+        <div className="public-profile-hero profile-hero">
+          <AvatarImage className="profile-desktop-avatar" src={avatar} alt={profile.display_name} size={220} />
 
-          <div className="public-profile-copy">
+          <div className="public-profile-copy profile-hero-copy">
             <div className="eyebrow verified-line">@{profile.username}<VerifiedBadge verified={profile.verified} /></div>
             <h1>{profile.display_name}</h1>
             <p>{profile.bio || "New to AVENZO."}</p>
@@ -418,7 +418,7 @@ export default function PublicProfileClient({
               </a>
             )}
 
-            <div className="public-profile-stats">
+            <div className="public-profile-stats profile-stats">
               <span>
                 <b>{formatProfileStat(stats.posts)}</b>
                 posts
@@ -487,7 +487,7 @@ export default function PublicProfileClient({
           </section>
         ) : (
           <>
-        <div className="public-profile-tabs" role="tablist" aria-label="Profile content">
+        <div className="public-profile-tabs profile-content-tabs" role="tablist" aria-label="Profile content">
           <button
             className={contentTab === "posts" ? "active" : ""}
             onClick={() => setContentTab("posts")}
@@ -523,7 +523,7 @@ export default function PublicProfileClient({
             </div>
 
             {posts.length > 0 ? (
-              <div className="public-profile-grid">
+              <div className="public-profile-grid profile-grid">
                 {posts.map((post) =>
                   !post.media_path ? (
                     <Link
@@ -583,7 +583,7 @@ export default function PublicProfileClient({
             </div>
 
             {reelItems.length > 0 ? (
-              <div className="public-profile-grid public-reels-grid">
+              <div className="public-profile-grid profile-grid public-reels-grid">
                 {reelItems.map((reel) => (
                   <Link
                     key={reel.id}
