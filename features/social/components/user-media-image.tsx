@@ -56,7 +56,8 @@ export default function UserMediaImage({
       loading={loading}
       onClick={onClick}
       data-avenzo-post-id={dataAvenzoPostId}
-      sizes="(max-width: 780px) 100vw, 720px"
+      sizes="(max-width: 480px) 100vw, (max-width: 900px) 92vw, 720px"
+      quality={90}
     />
   );
 }

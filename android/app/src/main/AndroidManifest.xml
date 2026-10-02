@@ -2,8 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:hardwareAccelerated="true"
+        android:usesCleartextTraffic="false"
         android:icon="@drawable/avenzo_logo_premium"
         android:label="@string/app_name"
         android:roundIcon="@drawable/avenzo_logo_premium"
@@ -37,6 +38,9 @@
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
     </application>
+
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
 
     <!-- Permissions -->
 
