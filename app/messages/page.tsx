@@ -42,9 +42,14 @@ export default async function MessagesPage({
           <BrandLogo size={32} />
           <b>AVENZO</b>
         </a>
-        <a className="btn secondary small" href="/home">
-          Back to Home
-        </a>
+        <div className="messages-page-actions">
+          <a className="btn secondary small" href="/calls">
+            Calls
+          </a>
+          <a className="btn secondary small" href="/home">
+            Home
+          </a>
+        </div>
       </header>
 
       <MessagesWorkspace

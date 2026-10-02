@@ -329,11 +329,17 @@ export default function ProfileView({
                 if (!post.media_path) {
                   return (
                     <article
-                      className="profile-text-post avenzo-mobile-profile-post"
+                      className={
+                        "profile-text-post avenzo-mobile-profile-post" +
+                        (post.pinned_at ? " profile-post-pinned" : "")
+                      }
                       key={post.id}
                       data-avenzo-post-id={post.id}
                       onClick={() => openMobileProfilePost(post.id)}
                     >
+                      {post.pinned_at && (
+                        <i className="profile-pin-badge"><Icon name="pin" size={12} /></i>
+                      )}
                       <span>TEXT POST</span>
                       <p>{post.caption}</p>
                       <small>{formatRelativeTime(post.created_at)}</small>
@@ -342,8 +348,11 @@ export default function ProfileView({
                 }
 
                 return post.media_type === "video" ? (
-                  <video
-                    key={post.id}
+                  <span className={"profile-media-pin-wrap" + (post.pinned_at ? " pinned" : "")} key={post.id}>
+                    {post.pinned_at && (
+                      <i className="profile-pin-badge"><Icon name="pin" size={12} /></i>
+                    )}
+                    <video
                     className="avenzo-mobile-profile-post"
                     data-avenzo-post-id={post.id}
                     onClick={() => openMobileProfilePost(post.id)}
@@ -353,9 +362,13 @@ export default function ProfileView({
                     muted
                     playsInline
                   />
+                  </span>
                 ) : (
-                  <UserMediaImage
-                    key={post.id}
+                  <span className={"profile-media-pin-wrap" + (post.pinned_at ? " pinned" : "")} key={post.id}>
+                    {post.pinned_at && (
+                      <i className="profile-pin-badge"><Icon name="pin" size={12} /></i>
+                    )}
+                    <UserMediaImage
                     className="avenzo-mobile-profile-post"
                     dataAvenzoPostId={post.id}
                     onClick={() => openMobileProfilePost(post.id)}
@@ -364,6 +377,7 @@ export default function ProfileView({
                     width={post.media_width}
                     height={post.media_height}
                   />
+                  </span>
                 );
               })}
             </div>

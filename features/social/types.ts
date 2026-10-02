@@ -72,6 +72,7 @@ export type Post = {
   mentions?: string[];
   location?: string;
   created_at: string;
+  pinned_at?: string | null;
   profile?: Profile;
   likeCount: number;
   liked: boolean;
