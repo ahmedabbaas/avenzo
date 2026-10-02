@@ -20,6 +20,7 @@ import {
   type PostImageFilter,
 } from "../lib/media";
 import type { Profile } from "../types";
+import type { ContentDraft } from "../lib/content-drafts";
 import {
   analyzeImageForAltText,
   nativeImpact,
@@ -72,6 +73,11 @@ export default function CreateContentModal({
   uploadProgress,
   people,
   collaboratorIds,
+  drafts,
+  activeDraftId,
+  onSaveDraft,
+  onRestoreDraft,
+  onDeleteDraft,
   onToggleCollaborator,
   onModeChange,
   onTitleChange,
@@ -107,6 +113,11 @@ export default function CreateContentModal({
   uploadProgress: number;
   people: Profile[];
   collaboratorIds: string[];
+  drafts: ContentDraft[];
+  activeDraftId: string | null;
+  onSaveDraft: () => Promise<void> | void;
+  onRestoreDraft: (draft: ContentDraft) => Promise<void> | void;
+  onDeleteDraft: (draftId: string) => Promise<void> | void;
   onToggleCollaborator: (userId: string) => void;
   onModeChange: (mode: CreateContentMode) => void;
   onTitleChange: (value: string) => void;
@@ -128,6 +139,7 @@ export default function CreateContentModal({
   const coverInput = useRef<HTMLInputElement>(null);
 
   const [dragging, setDragging] = useState(false);
+  const [showDrafts, setShowDrafts] = useState(false);
   const [postStep, setPostStep] = useState(1);
   const [activeIndex, setActiveIndex] = useState(0);
   const [editing, setEditing] = useState(false);
@@ -918,6 +930,63 @@ export default function CreateContentModal({
         </div>
 
         <div className="create-scroll-area">
+        <div className="create-draft-toolbar">
+          <button
+            type="button"
+            className="create-save-draft"
+            disabled={posting}
+            onClick={() => void onSaveDraft()}
+          >
+            <Icon name="saved" size={16} />
+            {activeDraftId ? "Update draft" : "Save draft"}
+          </button>
+          <button
+            type="button"
+            className={showDrafts ? "active" : ""}
+            onClick={() => setShowDrafts((current) => !current)}
+          >
+            Drafts
+            {drafts.length > 0 && <b>{drafts.length}</b>}
+          </button>
+        </div>
+
+        {showDrafts && (
+          <div className="create-drafts-panel">
+            {drafts.length === 0 ? (
+              <p>No saved drafts on this device yet.</p>
+            ) : (
+              drafts.map((draft) => (
+                <article
+                  key={draft.id}
+                  className={draft.id === activeDraftId ? "active" : ""}
+                >
+                  <button
+                    type="button"
+                    className="create-draft-open"
+                    onClick={() => {
+                      void onRestoreDraft(draft);
+                      setShowDrafts(false);
+                      setPostStep(1);
+                    }}
+                  >
+                    <span>{draft.mode === "story" ? "Moment" : draft.mode === "reel" ? "Clip" : "Post"}</span>
+                    <b>{draft.title || draft.caption || "Untitled draft"}</b>
+                    <small>{new Date(draft.updatedAt).toLocaleString()}</small>
+                  </button>
+                  <button
+                    type="button"
+                    className="create-draft-delete"
+                    aria-label="Delete draft"
+                    onClick={() => void onDeleteDraft(draft.id)}
+                  >
+                    <Icon name="close" size={15} />
+                  </button>
+                </article>
+              ))
+            )}
+          </div>
+        )}
+
         <div className="create-type-tabs" role="tablist" aria-label="Content type">
           {(["post", "reel", "story"] as const).map((nextMode) => (
             <button

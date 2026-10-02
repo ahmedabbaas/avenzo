@@ -229,6 +229,13 @@ export default function ProfileView({
             >
               {shareLabel}
             </button>
+            <button
+              className="btn secondary small profile-edit"
+              type="button"
+              onClick={() => router.push("/insights")}
+            >
+              Insights
+            </button>
           </div>
 
           <p className="profile-bio">{profile.bio || "Welcome to AVENZO."}</p>
@@ -247,6 +254,7 @@ export default function ProfileView({
           <div className="profile-mobile-actions" aria-label="Profile actions">
             <button type="button" onClick={onEdit}>Edit Profile</button>
             <button type="button" onClick={() => void shareProfile()}>{shareLabel}</button>
+            <button type="button" onClick={() => router.push("/insights")}>Insights</button>
           </div>
 
           <div className="profile-stats" aria-label="Profile statistics">

@@ -40,6 +40,7 @@ import {
   fetchUnreadActivityCount,
 } from "../features/social/data/queries";
 import ActivityPanel from "../features/social/components/activity-panel";
+import EchoesStrip from "../features/social/components/echoes-strip";
 import AvatarImage from "../features/social/components/avatar-image";
 import EmptyState from "../features/social/components/empty-state";
 import ExploreMediaGrid from "../features/social/components/explore-media-grid";
@@ -55,6 +56,12 @@ import SavedCollectionsPanel from "../features/social/components/saved-collectio
 import VerifiedBadge from "../features/social/components/verified-badge";
 import { avatarFor } from "../features/social/lib/profile";
 import { readMediaDimensions, type MediaDimensions } from "../features/social/lib/media";
+import {
+  deleteContentDraft,
+  listContentDrafts,
+  saveContentDraft,
+  type ContentDraft,
+} from "../features/social/lib/content-drafts";
 import {
   validateContentFile,
   validateCoverFile,
@@ -124,6 +131,8 @@ export default function HomeClient({
   const [requested, setRequested] = useState<string[]>([]);
   const [saved, setSaved] = useState<string[]>([]);
   const [showCreate, setShowCreate] = useState(Boolean(initialCreateMode));
+  const [drafts, setDrafts] = useState<ContentDraft[]>([]);
+  const [activeDraftId, setActiveDraftId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [caption, setCaption] = useState("");
   const [hashtags, setHashtags] = useState("");
@@ -274,6 +283,21 @@ export default function HomeClient({
   async function loadSavedPosts() {
     setSaved(await fetchSavedPostIds(supabase, initialProfile.id));
   }
+
+  const loadDrafts = useCallback(async () => {
+    try {
+      setDrafts(await listContentDrafts(initialProfile.id));
+    } catch {
+      // Draft storage is device-local and should never block AVENZO.
+    }
+  }, [initialProfile.id]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadDrafts();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [loadDrafts]);
 
   async function loadPosts() {
     const nextPosts = await fetchFeedPosts(supabase, initialProfile.id);
@@ -509,7 +533,95 @@ export default function HomeClient({
 
   function openComposer(nextMode: "post" | "reel" | "story") {
     resetComposer(nextMode);
+    setActiveDraftId(null);
     setShowCreate(true);
+  }
+
+  async function saveCurrentDraft() {
+    const hasContent =
+      Boolean(title.trim() || caption.trim() || hashtags.trim() || mentions.trim() || location.trim()) ||
+      postMedia.length > 0 ||
+      Boolean(file);
+
+    if (!hasContent) {
+      showToast("Add text or media before saving a draft.");
+      return;
+    }
+
+    try {
+      const savedDraft = await saveContentDraft({
+        id: activeDraftId,
+        userId: initialProfile.id,
+        mode: createMode,
+        title,
+        caption,
+        hashtags,
+        mentions,
+        location,
+        collaboratorIds,
+        postMedia: postMedia.map((item) => ({
+          file: item.file,
+          dimensions: item.dimensions,
+          altText: item.altText,
+        })),
+        file,
+        coverFile,
+        dimensions: mediaDimensions,
+      });
+
+      setActiveDraftId(savedDraft.id);
+      await loadDrafts();
+      showToast("Draft saved on this device.");
+    } catch {
+      showToast("Draft could not be saved on this device.");
+    }
+  }
+
+  async function restoreContentDraft(draft: ContentDraft) {
+    resetComposer(draft.mode);
+    setCreateMode(draft.mode);
+    setTitle(draft.title);
+    setCaption(draft.caption);
+    setHashtags(draft.hashtags);
+    setMentions(draft.mentions);
+    setLocation(draft.location);
+    setCollaboratorIds(draft.collaboratorIds || []);
+
+    if (draft.mode === "post") {
+      const restoredMedia = (draft.postMedia || []).map((item) => ({
+        file: item.file,
+        preview: URL.createObjectURL(item.file),
+        dimensions: item.dimensions,
+        altText: item.altText || "",
+      }));
+      setPostMedia(restoredMedia);
+      setFile(restoredMedia[0]?.file || null);
+      setPreview(restoredMedia[0]?.preview || "");
+      setMediaDimensions(restoredMedia[0]?.dimensions || null);
+    } else if (draft.file) {
+      setFile(draft.file);
+      setPreview(URL.createObjectURL(draft.file));
+      setMediaDimensions(draft.dimensions || null);
+    }
+
+    if (draft.coverFile) {
+      setCoverFile(draft.coverFile);
+      setCoverPreview(URL.createObjectURL(draft.coverFile));
+    }
+
+    setActiveDraftId(draft.id);
+    setShowCreate(true);
+  }
+
+  async function removeContentDraft(draftId: string) {
+    try {
+      await deleteContentDraft(draftId);
+      if (activeDraftId === draftId) setActiveDraftId(null);
+      await loadDrafts();
+      showToast("Draft deleted.");
+    } catch {
+      showToast("Draft could not be deleted.");
+    }
   }
 
   async function pickPostFiles(files: File[]) {
@@ -703,6 +815,16 @@ export default function HomeClient({
             ? "Reel published."
             : "Post published."
       );
+
+      if (activeDraftId) {
+        try {
+          await deleteContentDraft(activeDraftId);
+          setActiveDraftId(null);
+          await loadDrafts();
+        } catch {
+          // Publishing succeeded; a stale local draft is harmless.
+        }
+      }
 
       resetComposer(createMode);
       setShowCreate(false);
@@ -1341,6 +1463,8 @@ export default function HomeClient({
                 </button>
               </section>
 
+              <EchoesStrip currentUser={profile} />
+
               <div className="stories-row" aria-label="Active moments">
                 <button
                   className="story story-you"
@@ -1858,6 +1982,11 @@ export default function HomeClient({
           uploadProgress={uploadProgress}
           people={people}
           collaboratorIds={collaboratorIds}
+          drafts={drafts}
+          activeDraftId={activeDraftId}
+          onSaveDraft={() => void saveCurrentDraft()}
+          onRestoreDraft={(draft) => void restoreContentDraft(draft)}
+          onDeleteDraft={(draftId) => void removeContentDraft(draftId)}
           onToggleCollaborator={(userId) =>
             setCollaboratorIds((current) =>
               current.includes(userId)
@@ -1867,7 +1996,10 @@ export default function HomeClient({
                   : current
             )
           }
-          onModeChange={(mode) => resetComposer(mode)}
+          onModeChange={(mode) => {
+            resetComposer(mode);
+            setActiveDraftId(null);
+          }}
           onTitleChange={setTitle}
           onCaptionChange={setCaption}
           onHashtagsChange={setHashtags}
@@ -1888,6 +2020,7 @@ export default function HomeClient({
           onCoverSelect={pickCover}
           onClose={() => {
             resetComposer(createMode);
+            setActiveDraftId(null);
             setShowCreate(false);
           }}
           onSubmit={(event) => void createContent(event)}
