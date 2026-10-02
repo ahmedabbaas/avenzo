@@ -2749,3 +2749,66 @@ html[data-theme="light"] .avenzo-call-actions button:not(.avenzo-call-decline):n
   color:#15181c!important;
   border-color:rgba(17,19,23,.10)!important;
 }
+
+
+/* AVENZO publish palette: silver/graphite, no legacy violet/rose cast. */
+.social-app{
+  --av-bg:#060708!important;
+  --av-surface:#0d0f12!important;
+  --av-surface-2:#14171b!important;
+  --av-surface-3:#1b1f24!important;
+  --av-line:#242930!important;
+  --av-line-strong:#353d47!important;
+  --av-text:#f6f7f8!important;
+  --av-soft:#d1d5da!important;
+  --av-muted:#929aa4!important;
+  --av-muted-2:#69727c!important;
+  --av-violet:#e4e8ec!important;
+  --av-violet-2:#ffffff!important;
+  --av-secondary:#8f99a4!important;
+  --av-secondary-hover:#c0c6cc!important;
+  --av-glow:rgba(228,232,236,.10)!important;
+  --accent:#e4e8ec!important;
+  --accent-strong:#ffffff!important;
+  --accent-soft:rgba(228,232,236,.10)!important;
+  background:
+    radial-gradient(circle at 18% -10%,rgba(235,239,243,.055),transparent 29%),
+    radial-gradient(circle at 95% 8%,rgba(136,146,157,.045),transparent 23%),
+    #060708!important;
+}
+html[data-theme="light"] .social-app{
+  --av-bg:#f5f6f7!important;
+  --av-surface:#ffffff!important;
+  --av-surface-2:#f0f2f4!important;
+  --av-surface-3:#e8ebee!important;
+  --av-line:#e0e4e8!important;
+  --av-line-strong:#cbd1d7!important;
+  --av-text:#111317!important;
+  --av-soft:#484f58!important;
+  --av-muted:#6f7882!important;
+  --av-muted-2:#9aa2ab!important;
+  --accent:#20242a!important;
+  --accent-strong:#080a0d!important;
+  --accent-soft:rgba(17,19,23,.07)!important;
+  background:
+    radial-gradient(circle at 16% -12%,rgba(30,35,42,.045),transparent 27%),
+    radial-gradient(circle at 96% 9%,rgba(98,108,119,.04),transparent 22%),
+    #f5f6f7!important;
+}
+.social-app .avenzo-brand-logo{
+  filter:none!important;
+  box-shadow:0 0 22px rgba(228,232,236,.08)!important;
+}
+.social-app .btn,
+.social-app .create-nav,
+.social-app .top-create{
+  background:linear-gradient(135deg,#f4f6f8,#9da6af)!important;
+  color:#080a0c!important;
+  box-shadow:0 10px 26px rgba(0,0,0,.18)!important;
+}
+html[data-theme="light"] .social-app .btn,
+html[data-theme="light"] .social-app .create-nav,
+html[data-theme="light"] .social-app .top-create{
+  background:linear-gradient(135deg,#171a1f,#4e5761)!important;
+  color:#fff!important;
+}
