@@ -899,3 +899,20 @@ export async function setPostPollVote(
 
   assertNoError(result.error);
 }
+
+
+export async function setPostPinned(
+  supabase: SupabaseClient,
+  postId: string,
+  pinned: boolean
+) {
+  const result = await supabase
+    .from("posts")
+    .update({
+      pinned_at: pinned ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", postId);
+
+  assertNoError(result.error);
+}
