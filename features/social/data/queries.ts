@@ -599,11 +599,15 @@ export async function fetchProfilePosts(
   }
 
   const rows = [...map.values()]
-    .sort(
-      (a, b) =>
+    .sort((a, b) => {
+      const aPinned = a.pinned_at ? new Date(a.pinned_at).getTime() : 0;
+      const bPinned = b.pinned_at ? new Date(b.pinned_at).getTime() : 0;
+      if (aPinned !== bPinned) return bPinned - aPinned;
+      return (
         new Date(b.created_at).getTime() -
         new Date(a.created_at).getTime()
-    )
+      );
+    })
     .slice(0, 72);
 
   return hydratePosts(supabase, userId, rows);
@@ -655,11 +659,15 @@ export async function fetchProfilePostsForViewer(
   }
 
   const rows = [...map.values()]
-    .sort(
-      (a, b) =>
+    .sort((a, b) => {
+      const aPinned = a.pinned_at ? new Date(a.pinned_at).getTime() : 0;
+      const bPinned = b.pinned_at ? new Date(b.pinned_at).getTime() : 0;
+      if (aPinned !== bPinned) return bPinned - aPinned;
+      return (
         new Date(b.created_at).getTime() -
         new Date(a.created_at).getTime()
-    )
+      );
+    })
     .slice(0, limit);
 
   return hydratePosts(supabase, viewerId, rows);
