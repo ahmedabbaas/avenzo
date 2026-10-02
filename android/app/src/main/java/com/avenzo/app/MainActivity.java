@@ -8,6 +8,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.AudioManager;
@@ -15,6 +16,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.util.Base64;
 import android.view.Display;
 import android.view.View;
@@ -30,6 +33,21 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebViewClient;
 import com.getcapacitor.BridgeWebChromeClient;
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
+import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.face.Face;
+import com.google.mlkit.vision.face.FaceDetection;
+import com.google.mlkit.vision.face.FaceDetector;
+import com.google.mlkit.vision.face.FaceDetectorOptions;
+import com.google.mlkit.vision.label.ImageLabel;
+import com.google.mlkit.vision.label.ImageLabeler;
+import com.google.mlkit.vision.label.ImageLabeling;
+import com.google.mlkit.vision.label.defaults.ImageLabelerOptions;
+import com.google.mlkit.vision.text.Text;
+import com.google.mlkit.vision.text.TextRecognition;
+import com.google.mlkit.vision.text.TextRecognizer;
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -39,6 +57,8 @@ import java.net.URLEncoder;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.json.JSONArray;
@@ -778,9 +798,189 @@ public class MainActivity extends BridgeActivity {
     }
 
     @JavascriptInterface
+    public void haptic(String level) {
+      runOnUiThread(() -> {
+        Vibrator vibrator =
+          (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        if (vibrator == null || !vibrator.hasVibrator()) return;
+
+        long duration =
+          "heavy".equalsIgnoreCase(level)
+            ? 42L
+            : "medium".equalsIgnoreCase(level)
+              ? 28L
+              : 16L;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+          vibrator.vibrate(
+            VibrationEffect.createOneShot(
+              duration,
+              VibrationEffect.DEFAULT_AMPLITUDE
+            )
+          );
+        } else {
+          vibrator.vibrate(duration);
+        }
+      });
+    }
+
+    @JavascriptInterface
+    public void shareContent(String title, String text, String url) {
+      runOnUiThread(() -> {
+        Intent share = new Intent(Intent.ACTION_SEND);
+        share.setType("text/plain");
+        share.putExtra(
+          Intent.EXTRA_SUBJECT,
+          title == null || title.trim().isEmpty() ? "AVENZO" : title
+        );
+        String message =
+          (text == null ? "" : text.trim()) +
+          (url == null || url.trim().isEmpty() ? "" : "\n" + url.trim());
+        share.putExtra(Intent.EXTRA_TEXT, message.trim());
+        startActivity(Intent.createChooser(share, "Share from AVENZO"));
+      });
+    }
+
+    @JavascriptInterface
+    public void analyzeImage(String dataUrl, String callbackName) {
+      if (
+        dataUrl == null ||
+        callbackName == null ||
+        !callbackName.matches("[A-Za-z0-9_$]+")
+      ) {
+        return;
+      }
+
+      notificationExecutor.execute(() -> analyzeImageInternal(dataUrl, callbackName));
+    }
+
+    @JavascriptInterface
     public void setCallAudioMode(boolean active, boolean speaker) {
       runOnUiThread(() -> MainActivity.this.setCallAudioMode(active, speaker));
     }
+  }
+
+  private void analyzeImageInternal(
+    String dataUrl,
+    String callbackName
+  ) {
+    ImageLabeler labeler = null;
+    FaceDetector faceDetector = null;
+    TextRecognizer textRecognizer = null;
+
+    try {
+      int comma = dataUrl.indexOf(',');
+      String encoded = comma >= 0 ? dataUrl.substring(comma + 1) : dataUrl;
+      byte[] bytes = Base64.decode(encoded, Base64.DEFAULT);
+      Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+      if (bitmap == null) {
+        deliverMediaSense(callbackName, "");
+        return;
+      }
+
+      InputImage image = InputImage.fromBitmap(bitmap, 0);
+      labeler = ImageLabeling.getClient(ImageLabelerOptions.DEFAULT_OPTIONS);
+      faceDetector = FaceDetection.getClient(
+        new FaceDetectorOptions.Builder()
+          .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+          .build()
+      );
+      textRecognizer = TextRecognition.getClient(
+        TextRecognizerOptions.DEFAULT_OPTIONS
+      );
+
+      final ImageLabeler activeLabeler = labeler;
+      final FaceDetector activeFaceDetector = faceDetector;
+      final TextRecognizer activeTextRecognizer = textRecognizer;
+
+      Task<List<ImageLabel>> labelsTask = activeLabeler.process(image);
+      Task<List<Face>> facesTask = activeFaceDetector.process(image);
+      Task<Text> textTask = activeTextRecognizer.process(image);
+
+      Tasks.whenAllComplete(labelsTask, facesTask, textTask)
+        .addOnCompleteListener(ignored -> {
+          try {
+            ArrayList<String> parts = new ArrayList<>();
+
+            if (facesTask.isSuccessful()) {
+              List<Face> faces = facesTask.getResult();
+              int faceCount = faces == null ? 0 : faces.size();
+              if (faceCount == 1) {
+                parts.add("1 person");
+              } else if (faceCount > 1) {
+                parts.add(faceCount + " people");
+              }
+            }
+
+            if (labelsTask.isSuccessful()) {
+              List<ImageLabel> labels = labelsTask.getResult();
+              ArrayList<String> strongLabels = new ArrayList<>();
+              if (labels != null) {
+                for (ImageLabel label : labels) {
+                  if (label.getConfidence() < 0.56f) continue;
+                  String value = label.getText();
+                  if (value == null || value.trim().isEmpty()) continue;
+                  strongLabels.add(value.trim().toLowerCase());
+                  if (strongLabels.size() >= 5) break;
+                }
+              }
+              if (!strongLabels.isEmpty()) {
+                parts.add(String.join(", ", strongLabels));
+              }
+            }
+
+            if (textTask.isSuccessful()) {
+              Text recognized = textTask.getResult();
+              String visibleText =
+                recognized == null
+                  ? ""
+                  : recognized.getText().replaceAll("\\s+", " ").trim();
+              if (!visibleText.isEmpty()) {
+                if (visibleText.length() > 90) {
+                  visibleText = visibleText.substring(0, 90).trim() + "…";
+                }
+                parts.add("Text visible: " + visibleText);
+              }
+            }
+
+            String result = String.join("; ", parts);
+            deliverMediaSense(callbackName, result);
+          } catch (Exception ignoredResult) {
+            deliverMediaSense(callbackName, "");
+          } finally {
+            activeLabeler.close();
+            activeFaceDetector.close();
+            activeTextRecognizer.close();
+            bitmap.recycle();
+          }
+        });
+    } catch (Exception ignored) {
+      if (labeler != null) labeler.close();
+      if (faceDetector != null) faceDetector.close();
+      if (textRecognizer != null) textRecognizer.close();
+      deliverMediaSense(callbackName, "");
+    }
+  }
+
+  private void deliverMediaSense(String callbackName, String value) {
+    if (
+      callbackName == null ||
+      !callbackName.matches("[A-Za-z0-9_$]+") ||
+      getBridge() == null ||
+      getBridge().getWebView() == null
+    ) {
+      return;
+    }
+
+    WebView webView = getBridge().getWebView();
+    String callbackJson = JSONObject.quote(callbackName);
+    String valueJson = JSONObject.quote(value == null ? "" : value);
+    String script =
+      "(function(){var n=" + callbackJson +
+      ";var cb=window[n];if(typeof cb==='function'){cb(" + valueJson +
+      ");delete window[n];}})();";
+
+    runOnUiThread(() -> webView.evaluateJavascript(script, null));
   }
 
   private void handleAvenzoBack() {
