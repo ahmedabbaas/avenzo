@@ -18,6 +18,11 @@ type MessageNotificationRow = {
   type: string;
 };
 
+type NativeSession = {
+  access_token: string;
+  user: { id: string };
+} | null;
+
 const MESSAGE_TYPES = new Set([
   "message",
   "message_request",
@@ -30,14 +35,35 @@ export default function NativeMessageNotifications() {
   useEffect(() => {
     let disposed = false;
     let channel: ReturnType<typeof supabase.channel> | null = null;
+    let channelUserId = "";
 
-    void supabase.auth.getSession().then(({ data }) => {
-      const session = data.session;
-      if (disposed || !session?.user) return;
+    const clearChannel = () => {
+      if (!channel) return;
+      const previous = channel;
+      channel = null;
+      channelUserId = "";
+      void supabase.removeChannel(previous);
+    };
 
-      window.AvenzoNative?.registerSession?.(session.access_token, session.user.id);
+    const bindSession = (session: NativeSession) => {
+      if (disposed) return;
+
+      if (!session?.user) {
+        window.AvenzoNative?.registerSession?.("", "");
+        clearChannel();
+        return;
+      }
+
+      window.AvenzoNative?.registerSession?.(
+        session.access_token,
+        session.user.id
+      );
+
       const user = session.user;
+      if (channel && channelUserId === user.id) return;
 
+      clearChannel();
+      channelUserId = user.id;
       channel = supabase
         .channel("avenzo-native-message-notifications-" + user.id)
         .on(
@@ -78,13 +104,22 @@ export default function NativeMessageNotifications() {
           }
         )
         .subscribe();
+    };
+
+    void supabase.auth.getSession().then(({ data }) => {
+      bindSession(data.session);
     });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        bindSession(session);
+      }
+    );
 
     return () => {
       disposed = true;
-      if (channel) {
-        void supabase.removeChannel(channel);
-      }
+      authListener.subscription.unsubscribe();
+      clearChannel();
     };
   }, [supabase]);
 
