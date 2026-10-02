@@ -36,6 +36,10 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+    // AVENZO Media Sense: bundled on-device models work offline and power Smart Alt.
+    implementation 'com.google.mlkit:image-labeling:17.0.9'
+    implementation 'com.google.mlkit:face-detection:16.1.7'
+    implementation 'com.google.mlkit:text-recognition:16.0.1'
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"

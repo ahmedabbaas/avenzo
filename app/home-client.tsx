@@ -77,13 +77,13 @@ const NAV_ITEMS: Array<{
   label: string;
   icon: IconName;
 }> = [
-  { id: "home", label: "Home", icon: "home" },
-  { id: "explore", label: "Explore", icon: "explore" },
-  { id: "reels", label: "Reels", icon: "reels" },
+  { id: "home", label: "Pulse", icon: "home" },
+  { id: "explore", label: "Discover", icon: "explore" },
+  { id: "reels", label: "Clips", icon: "reels" },
   { id: "messages", label: "Messages", icon: "messages" },
   { id: "activity", label: "Activity", icon: "activity" },
   { id: "saved", label: "Saved", icon: "saved" },
-  { id: "profile", label: "Profile", icon: "profile" },
+  { id: "profile", label: "You", icon: "profile" },
 ];
 
 export default function HomeClient({
@@ -1328,8 +1328,8 @@ export default function HomeClient({
             <>
               <section className="home-dashboard-head">
                 <div>
-                  <div className="eyebrow">REAL PEOPLE · REAL STORIES</div>
-                  <h1>Stories</h1>
+                  <div className="eyebrow">AVENZO MOMENTS</div>
+                  <h1>Moments</h1>
                   <p>Updates shared by real AVENZO accounts you can actually open and follow.</p>
                 </div>
                 <button
@@ -1341,7 +1341,7 @@ export default function HomeClient({
                 </button>
               </section>
 
-              <div className="stories-row" aria-label="Active stories">
+              <div className="stories-row" aria-label="Active moments">
                 <button
                   className="story story-you"
                   onClick={() => {
@@ -1352,7 +1352,7 @@ export default function HomeClient({
                     <AvatarImage src={avatarFor(profile)} alt={profile.display_name} size={96} />
                     <i>+</i>
                   </span>
-                  <small>Add story</small>
+                  <small>Add moment</small>
                 </button>
 
                 {stories.length === 0 && (
@@ -1407,7 +1407,7 @@ export default function HomeClient({
                   className={homeFeedMode === "following" ? "active" : ""}
                   onClick={() => setHomeFeedMode("following")}
                 >
-                  Following
+                  Inner Circle
                 </button>
                 <button
                   type="button"
@@ -1416,14 +1416,14 @@ export default function HomeClient({
                   className={homeFeedMode === "for-you" ? "active" : ""}
                   onClick={() => setHomeFeedMode("for-you")}
                 >
-                  For You
+                  Pulse
                 </button>
               </div>
 
               <div className="feed-toolbar home-feed-toolbar">
                 <div>
-                  <div className="eyebrow">YOUR AVENZO</div>
-                  <h2>Feed</h2>
+                  <div className="eyebrow">AVENZO PULSE</div>
+                  <h2>Pulse</h2>
                   <span>
                     {homeFeedMode === "following"
                       ? "Posts from you and people you follow."
@@ -1544,9 +1544,9 @@ export default function HomeClient({
               </div>
 
               <PageTitle
-                eyebrow="DISCOVER"
-                title="Search & Explore"
-                text="Find real AVENZO users, posts and reels."
+                eyebrow="AVENZO DISCOVER"
+                title="Discover"
+                text="People, moments, clips and communities across AVENZO."
               />
 
               <label className="explore-search-box">
@@ -1755,6 +1755,34 @@ export default function HomeClient({
                 <b>{stats.following}</b>
                 following
               </span>
+            </div>
+          </div>
+
+          <div className="side-card avenzo-spaces-card">
+            <div className="side-card-head">
+              <div>
+                <small>AVENZO SPACES</small>
+                <b>Your social hub</b>
+              </div>
+            </div>
+            <div className="avenzo-spaces-grid">
+              <button type="button" onClick={() => router.push("/messages")}>
+                <Icon name="chatRound" size={18} />
+                <span><b>Direct</b><small>Private chats</small></span>
+                {unreadMessages > 0 && <i>{Math.min(unreadMessages, 99)}</i>}
+              </button>
+              <button type="button" onClick={() => router.push("/messages/groups")}>
+                <Icon name="messages" size={18} />
+                <span><b>Groups</b><small>Shared rooms</small></span>
+              </button>
+              <button type="button" onClick={() => router.push("/channels")}>
+                <Icon name="globe" size={18} />
+                <span><b>Channels</b><small>Broadcast spaces</small></span>
+              </button>
+              <button type="button" onClick={() => router.push("/settings/close-friends")}>
+                <Icon name="heartModern" size={18} />
+                <span><b>Circle</b><small>Close friends</small></span>
+              </button>
             </div>
           </div>
 

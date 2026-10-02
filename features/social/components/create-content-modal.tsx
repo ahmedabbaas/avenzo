@@ -20,6 +20,10 @@ import {
   type PostImageFilter,
 } from "../lib/media";
 import type { Profile } from "../types";
+import {
+  analyzeImageForAltText,
+  nativeImpact,
+} from "../lib/native-social";
 
 export type CreateContentMode = "post" | "reel" | "story";
 
@@ -133,6 +137,8 @@ export default function CreateContentModal({
   const [filter, setFilter] = useState<PostImageFilter>("none");
   const [brightness, setBrightness] = useState(100);
   const [contrast, setContrast] = useState(100);
+  const [analyzingAlt, setAnalyzingAlt] = useState(false);
+  const [smartAltNote, setSmartAltNote] = useState("");
 
   const isVideo = Boolean(file?.type.startsWith("video/"));
   const tagged = useMemo(() => parseMentions(mentions), [mentions]);
@@ -175,6 +181,30 @@ export default function CreateContentModal({
     if (next.has(username)) next.delete(username);
     else next.add(username);
     onMentionsChange([...next].map((item) => "@" + item).join(" "));
+  }
+
+  async function generateSmartAlt() {
+    if (!activeFile || !onPostAltTextChange || analyzingAlt) return;
+
+    setAnalyzingAlt(true);
+    setSmartAltNote("");
+    nativeImpact("medium");
+
+    try {
+      const suggestion = await analyzeImageForAltText(activeFile);
+      if (!suggestion) {
+        setSmartAltNote(
+          "Smart Alt runs on-device in the AVENZO Android app. You can still write alt text manually."
+        );
+        return;
+      }
+      onPostAltTextChange(safeActiveIndex, suggestion.slice(0, 1000));
+      setSmartAltNote("Suggested on-device. Review before publishing.");
+    } catch {
+      setSmartAltNote("Media Sense could not analyze this image.");
+    } finally {
+      setAnalyzingAlt(false);
+    }
   }
 
   async function applyImageEdits() {
@@ -552,7 +582,19 @@ export default function CreateContentModal({
                   <b>Alt text</b>
                   <span>Optional description for people using screen readers.</span>
                 </div>
-                <small>Image {safeActiveIndex + 1}/{postPreviews.length}</small>
+                <div className="create-alt-head-actions">
+                  <small>Image {safeActiveIndex + 1}/{postPreviews.length}</small>
+                  <button
+                    type="button"
+                    className="create-smart-alt"
+                    disabled={!activeFile || analyzingAlt}
+                    onClick={() => void generateSmartAlt()}
+                    title="On-device in the AVENZO Android app"
+                  >
+                    <Icon name="eye" size={15} />
+                    {analyzingAlt ? "Scanning…" : "Smart Alt"}
+                  </button>
+                </div>
               </div>
 
               <div className="create-alt-layout">
@@ -587,6 +629,7 @@ export default function CreateContentModal({
                     maxLength={1000}
                   />
                   <small>{(postAltTexts[safeActiveIndex] || "").length}/1000</small>
+                  {smartAltNote && <em className="create-smart-alt-note">{smartAltNote}</em>}
                 </label>
               </div>
             </div>

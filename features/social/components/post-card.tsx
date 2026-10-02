@@ -8,6 +8,7 @@ import type { Comment, Post, Profile } from "../types";
 import AvatarImage from "./avatar-image";
 import UserMediaImage from "./user-media-image";
 import VerifiedBadge from "./verified-badge";
+import { nativeImpact, shareExternal } from "../lib/native-social";
 
 function renderCommentBody(body: string) {
   const parts = body.split(/(@[a-zA-Z0-9._-]{1,30})/g);
@@ -122,6 +123,7 @@ export default function PostCard({
           return;
         }
 
+        nativeImpact("medium");
         if (!post.liked) onLike();
         setHeartBurst(false);
         window.requestAnimationFrame(() => {
@@ -210,6 +212,20 @@ export default function PostCard({
                 }}
               >
                 Copy link
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setMenuOpen(false);
+                  void shareExternal({
+                    title: authorName + " on AVENZO",
+                    text: "Open this post on AVENZO",
+                    url: window.location.origin + "/p/" + post.id,
+                  });
+                }}
+              >
+                Share outside AVENZO
               </button>
               {!own && (
                 <button

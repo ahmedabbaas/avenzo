@@ -16920,3 +16920,25 @@ html.avenzo-android-app .avenzo-native-logo{
     caret-color:var(--native-text)!important;
   }
 }
+
+
+/* AVENZO Orbit native shell parity */
+html.avenzo-android-app .mobile-bottom-nav{
+  left:12px!important;right:12px!important;bottom:max(10px,env(safe-area-inset-bottom))!important;width:auto!important;
+  height:70px!important;padding:6px 8px!important;border:1px solid rgba(223,227,232,.20)!important;
+  border-radius:25px!important;background:rgba(8,10,12,.90)!important;box-shadow:0 18px 55px rgba(0,0,0,.42)!important;
+  backdrop-filter:blur(24px) saturate(145%)!important
+}
+html.avenzo-android-app[data-theme="light"] .mobile-bottom-nav{background:rgba(255,255,255,.92)!important}
+html.avenzo-android-app .mobile-nav-item small{display:block!important;font-size:8px!important;font-weight:750!important}
+html.avenzo-android-app .mobile-nav-item.mobile-create{transform:translateY(-15px)!important}
+html.avenzo-android-app .mobile-nav-item.mobile-create .mobile-icon-wrap{
+  width:48px!important;height:48px!important;display:grid!important;place-items:center!important;border-radius:17px!important;
+  background:linear-gradient(145deg,#fff,#9da6af)!important;color:#08090b!important;
+  box-shadow:0 12px 30px rgba(0,0,0,.36)!important;transform:rotate(8deg)!important
+}
+html.avenzo-android-app .mobile-nav-item.mobile-create .mobile-icon-wrap svg{transform:rotate(-8deg)!important}
+html.avenzo-android-app .screen-home .story-ring{width:56px!important;height:66px!important;border-radius:18px!important}
+html.avenzo-android-app .screen-home .story-ring img{width:48px!important;height:58px!important;border-radius:14px!important;object-fit:cover!important}
+html.avenzo-android-app .screen-home .post-media,
+html.avenzo-android-app .screen-home .post-media-carousel{border-radius:20px!important}
