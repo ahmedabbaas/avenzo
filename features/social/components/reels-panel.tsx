@@ -170,6 +170,34 @@ export default function ReelsPanel({
   }, [activeIndex, displayedReels, load, manualPaused, muted]);
 
   useEffect(() => {
+    const syncPlaybackWithVisibility = () => {
+      if (document.hidden) {
+        for (const video of videoRefs.current.values()) {
+          video.pause();
+        }
+        return;
+      }
+
+      const activeReel = displayedReels[activeIndex];
+      const video = activeReel ? videoRefs.current.get(activeReel.id) : null;
+      if (video && !manualPaused) {
+        video.muted = muted;
+        playVideoSafely(video);
+      }
+    };
+
+    document.addEventListener("visibilitychange", syncPlaybackWithVisibility);
+    window.addEventListener("pageshow", syncPlaybackWithVisibility);
+    return () => {
+      document.removeEventListener(
+        "visibilitychange",
+        syncPlaybackWithVisibility
+      );
+      window.removeEventListener("pageshow", syncPlaybackWithVisibility);
+    };
+  }, [activeIndex, displayedReels, manualPaused, muted]);
+
+  useEffect(() => {
     const channel = supabase
       .channel("reels-live-metrics")
       .on(
