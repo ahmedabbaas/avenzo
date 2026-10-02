@@ -44,10 +44,6 @@ import com.google.mlkit.vision.label.ImageLabel;
 import com.google.mlkit.vision.label.ImageLabeler;
 import com.google.mlkit.vision.label.ImageLabeling;
 import com.google.mlkit.vision.label.defaults.ImageLabelerOptions;
-import com.google.mlkit.vision.text.Text;
-import com.google.mlkit.vision.text.TextRecognition;
-import com.google.mlkit.vision.text.TextRecognizer;
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -866,7 +862,6 @@ public class MainActivity extends BridgeActivity {
   ) {
     ImageLabeler labeler = null;
     FaceDetector faceDetector = null;
-    TextRecognizer textRecognizer = null;
 
     try {
       int comma = dataUrl.indexOf(',');
@@ -885,19 +880,12 @@ public class MainActivity extends BridgeActivity {
           .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
           .build()
       );
-      textRecognizer = TextRecognition.getClient(
-        TextRecognizerOptions.DEFAULT_OPTIONS
-      );
-
       final ImageLabeler activeLabeler = labeler;
       final FaceDetector activeFaceDetector = faceDetector;
-      final TextRecognizer activeTextRecognizer = textRecognizer;
 
       Task<List<ImageLabel>> labelsTask = activeLabeler.process(image);
       Task<List<Face>> facesTask = activeFaceDetector.process(image);
-      Task<Text> textTask = activeTextRecognizer.process(image);
-
-      Tasks.whenAllComplete(labelsTask, facesTask, textTask)
+      Tasks.whenAllComplete(labelsTask, facesTask)
         .addOnCompleteListener(ignored -> {
           try {
             ArrayList<String> parts = new ArrayList<>();
@@ -929,20 +917,6 @@ public class MainActivity extends BridgeActivity {
               }
             }
 
-            if (textTask.isSuccessful()) {
-              Text recognized = textTask.getResult();
-              String visibleText =
-                recognized == null
-                  ? ""
-                  : recognized.getText().replaceAll("\\s+", " ").trim();
-              if (!visibleText.isEmpty()) {
-                if (visibleText.length() > 90) {
-                  visibleText = visibleText.substring(0, 90).trim() + "…";
-                }
-                parts.add("Text visible: " + visibleText);
-              }
-            }
-
             String result = String.join("; ", parts);
             deliverMediaSense(callbackName, result);
           } catch (Exception ignoredResult) {
@@ -950,14 +924,12 @@ public class MainActivity extends BridgeActivity {
           } finally {
             activeLabeler.close();
             activeFaceDetector.close();
-            activeTextRecognizer.close();
             bitmap.recycle();
           }
         });
     } catch (Exception ignored) {
       if (labeler != null) labeler.close();
       if (faceDetector != null) faceDetector.close();
-      if (textRecognizer != null) textRecognizer.close();
       deliverMediaSense(callbackName, "");
     }
   }
