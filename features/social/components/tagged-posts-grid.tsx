@@ -108,6 +108,7 @@ export default function TaggedPostsGrid({
           <Link href={"/p/" + encodeURIComponent(post.id)}>
             {post.media_path ? (
               <UserMediaImage
+                sizes="(max-width: 900px) 33vw, 240px"
                 src={mediaUrl(post.media_path)}
                 alt={post.caption || "Tagged AVENZO post"}
                 width={post.media_width}

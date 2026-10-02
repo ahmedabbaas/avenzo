@@ -3,10 +3,43 @@
 This is the source-of-truth checklist for turning AVENZO into a production social app with an original product identity. The goal is Instagram-class completeness without copying Instagram's visual design.
 
 Legend:
-- ✅ implemented and retained
+- ✅ present in the existing code; this does **not** certify end-to-end or device verification
 - 🛠 hardening/polish in the current publish-readiness program
 - ⏭ planned before broad public launch
 - 🚫 intentionally not copied; AVENZO uses its own interaction/design language
+
+## Current engineering audit — 2026-10-02
+
+Architecture: Next.js 16.3 / React 19 product UI, Supabase Auth/Postgres/RLS/Realtime,
+Capacitor Android shell, and a Java WebView bridge. The central product CSS is
+`app/avenzo-design-system.css`; native overrides are `mobile-shell/app-mobile.css`.
+The Android CI workflow generates MainActivity, so native changes must be mirrored there.
+
+### Release acceptance matrix
+
+| Area | Required checks | Evidence / remaining gate |
+| --- | --- | --- |
+| Phone layout | 320, 360, 390, 430, 480 CSS px; portrait/landscape; no clipping | Responsive code present; full authenticated device matrix required |
+| Media | Correct aspect ratio, high-DPI candidates, grid-sized requests, lazy decoding | Feed uses quality 90; grids now use 33vw candidates; original source limits sharpness |
+| Themes | Light/dark/system across feed, profiles, chat, settings, composer, calls | Shared tokens and native parity; authenticated visual checks still required |
+| Audio/video calls | Call, accept, decline, cancel, end; second incoming call; denied permission; network change | This phase fixes signalling concurrency, SDP restart, polling lifetime, zero-row accept and truthful connection status |
+| Call audio | Bidirectional audio, muted remote video, user gesture recovery, native routing | Playback recovery implemented; two physical devices over Wi-Fi/mobile data required |
+| Notifications | New/unread only; foreground, background, killed process | In-app/native polling exists; FCM killed-process delivery remains a launch gate |
+| Auth/security | Login/reset/MFA, private/block rules, RLS, uploads, deletion | Preserve existing controls; security review and real-account regression required |
+| Android release | Stable signing, version, APK/AAB install/update, back/keyboard/system bars | CI debug APK is installable but is not a Play Store production-signed AAB |
+| Public launch | Privacy/data safety, moderation/support, store assets, closed beta | Must be completed before public release |
+
+### Work order
+
+1. Call reliability and lifecycle regressions.
+2. Shared phone sizing, media delivery and light/dark readability.
+3. Verify every existing feature below against real accounts; repair failures before expanding.
+4. Add outstanding features with persistence, authorization and loading/error/empty states.
+5. Physical-device beta, production TURN/FCM and store release gates.
+
+No checkbox alone proves a feature works. A feature becomes release-verified only after its
+happy path, denied/empty/offline path, mobile/light/dark layout, permission boundary and
+regression checks pass. Do not add unused frameworks or inflate the APK to simulate quality.
 
 ## 1. Product shell and navigation
 
@@ -197,7 +230,7 @@ Legend:
 - ✅ Profile sharing
 - ✅ Creator Insights
 - 🛠 Same profile appearance from every entry point
-- ⏭ Profile pinning
+- ✅ Profile pinning (up to three own posts; merged before this phase)
 - ⏭ Profile category labels
 - ⏭ QR/share card
 
@@ -255,7 +288,7 @@ Legend:
 - 🛠 Android call UI sizing
 - ⏭ Bluetooth/headset route selector
 - ⏭ Dedicated incoming-call foreground service / full-screen call notification
-- ⏭ Call history surface
+- ✅ Call history surface (merged before this phase)
 - ⏭ Group calls
 
 ## 12. Notifications
@@ -286,6 +319,7 @@ Legend:
 - ✅ HTTPS-only Android remote origin
 - ✅ No service-role key in client
 - 🛠 Call signalling hardening
+- ⏭ Database call participant-ID immutability and permitted status transitions (current participant UPDATE policy needs stronger constraints)
 - 🛠 Release permissions audit
 - 🛠 Runtime error audit
 - ⏭ Abuse-rate limits
@@ -331,3 +365,19 @@ Legend:
 ## Engineering rule
 
 Do not add fake users, fake activity, dummy buttons, dead screens, artificial APK padding, or unnecessary frameworks. Existing working behavior should be improved instead of blindly rebuilt. Every release-facing feature must have a loading/error/empty/success path and mobile-safe layout.
+
+## Validation for mobile call hardening — 2026-10-02
+
+- Repository contracts, ESLint, TypeScript and production build passed locally.
+- 14 Deno unit tests passed, including ordered signal tasks, ended-call cancellation
+  and recovery after a rejected task. Supabase Edge Functions type checks passed.
+- Isolated Chromium harness rendered the actual CallManager with mocked signalling
+  and transport. Passed: duplicate call taps, duplicate/concurrent signals, one peer,
+  truthful connection status, mute track, ICE restart SDP, microphone cleanup, a
+  second incoming call delivered by polling, expired-call acceptance and visible
+  start failure, denied microphone access, and immediate microphone cleanup when
+  the end-call network request fails. No uncaught browser errors.
+- Call dialog checked at 320/360/390/430/480 CSS pixels in light and dark themes
+  with native CSS loaded; no horizontal overflow and at least 48px touch targets.
+- This is not a two-device WebRTC/audio test and does not verify production TURN,
+  Bluetooth routing, killed-process notifications or Play Store readiness.

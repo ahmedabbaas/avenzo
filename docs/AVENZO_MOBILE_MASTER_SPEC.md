@@ -4,7 +4,7 @@
 
 Turn AVENZO into a production-grade, Android-first social platform with the interaction quality expected from modern social apps. The product may use a hybrid/native architecture, and APK size is not a constraint. Prefer reliability, native behavior, media quality, smoothness, privacy, and maintainability over minimizing binary size.
 
-AVENZO must keep its own identity, logo, lime accent system, typography, product naming, and interaction details. Use Instagram-class product patterns only as UX references. Do not clone copyrighted branding, layouts pixel-for-pixel, proprietary icons, copy, or fake content.
+AVENZO must keep its own identity, logo, silver/graphite accent system, typography, product naming, and interaction details. Use Instagram-class product patterns only as UX references. Do not clone copyrighted branding, layouts pixel-for-pixel, proprietary icons, copy, or fake content.
 
 ## Non-negotiable product rules
 
@@ -56,12 +56,12 @@ Use FCM for production push notifications so messages/calls can notify users eve
 
 Primary bottom navigation:
 - Home
-- Reels
-- Messages
-- Search
+- Discover
+- Create
+- Clips
 - Profile
 
-Create is available prominently from the top bar and contextual entry points.
+Messages is available from the header and profile actions.
 
 Secondary destinations:
 - Activity
@@ -94,7 +94,7 @@ Mobile Home should include:
 - edge-to-edge media
 - like/comment/share/save actions
 - captions below actions
-- verified badge support
+- no verified badge feature
 - follow state
 - location, tags, mentions
 - carousel support

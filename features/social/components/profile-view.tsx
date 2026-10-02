@@ -366,6 +366,7 @@ export default function ProfileView({
                       <i className="profile-pin-badge"><Icon name="pin" size={12} /></i>
                     )}
                     <UserMediaImage
+                      sizes="(max-width: 900px) 33vw, 240px"
                     className="avenzo-mobile-profile-post"
                     dataAvenzoPostId={post.id}
                     onClick={() => openMobileProfilePost(post.id)}
@@ -407,6 +408,7 @@ export default function ProfileView({
                 >
                   {reel.cover_path ? (
                     <UserMediaImage
+                      sizes="(max-width: 900px) 33vw, 240px"
                       src={media(reel.cover_path)}
                       alt={reel.title || reel.caption || "AVENZO reel"}
                     />

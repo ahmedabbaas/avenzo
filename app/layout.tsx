@@ -1,4 +1,4 @@
-﻿import type { Metadata, Viewport } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import "./avenzo-ad-theme.css";
@@ -16,8 +16,8 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   applicationName: "AVENZO",
   title: {
-    default: "AVENZO â€” Connect. Share. Belong.",
-    template: "%s Â· AVENZO",
+    default: "AVENZO — Connect. Share. Belong.",
+    template: "%s · AVENZO",
   },
   description:
     "AVENZO is a private-first social platform for real people, posts and conversations.",

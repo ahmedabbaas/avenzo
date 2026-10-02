@@ -96,6 +96,7 @@ export default function ExploreMediaGrid({
                   />
                 ) : (
                   <UserMediaImage
+                    sizes="(max-width: 900px) 33vw, 240px"
                     src={mediaUrl(mediaPath)}
                     alt={
                       item.kind === "post"

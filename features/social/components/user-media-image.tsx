@@ -8,6 +8,7 @@ export default function UserMediaImage({
   height,
   className,
   loading = "lazy",
+  sizes = "(max-width: 480px) 100vw, (max-width: 900px) 92vw, 720px",
   onClick,
   dataAvenzoPostId,
 }: {
@@ -17,6 +18,7 @@ export default function UserMediaImage({
   height?: number | null;
   className?: string;
   loading?: "eager" | "lazy";
+  sizes?: string;
   onClick?: MouseEventHandler<HTMLImageElement>;
   dataAvenzoPostId?: string;
 }) {
@@ -40,6 +42,7 @@ export default function UserMediaImage({
         alt={alt}
         className={className}
         loading={loading}
+        decoding="async"
         onClick={onClick}
         data-avenzo-post-id={dataAvenzoPostId}
       />
@@ -56,7 +59,7 @@ export default function UserMediaImage({
       loading={loading}
       onClick={onClick}
       data-avenzo-post-id={dataAvenzoPostId}
-      sizes="(max-width: 480px) 100vw, (max-width: 900px) 92vw, 720px"
+      sizes={sizes}
       quality={90}
     />
   );

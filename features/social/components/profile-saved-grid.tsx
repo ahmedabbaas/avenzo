@@ -185,6 +185,7 @@ export default function ProfileSavedGrid({
                 />
               ) : (
                 <UserMediaImage
+                  sizes="(max-width: 900px) 33vw, 240px"
                   src={mediaUrl(previewPath)}
                   alt={entry.caption || "Saved AVENZO content"}
                   loading="lazy"
