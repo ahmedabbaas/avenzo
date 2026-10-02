@@ -19,3 +19,15 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+
+# AVENZO's Android shell exposes a controlled JavaScript bridge to the WebView.
+# R8 must preserve the annotated method names because JavaScript calls them by name.
+-keepattributes RuntimeVisibleAnnotations,RuntimeInvisibleAnnotations,AnnotationDefault
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+
+# Preserve useful source/line metadata for release crash diagnostics.
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
