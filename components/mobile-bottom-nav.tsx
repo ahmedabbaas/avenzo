@@ -21,7 +21,7 @@ const ITEMS: Array<{
   label: string;
   icon: "home" | "search" | "plus" | "reels" | "profile";
 }> = [
-  { id: "home", label: "Pulse", icon: "home" },
+  { id: "home", label: "Home", icon: "home" },
   { id: "search", label: "Discover", icon: "search" },
   { id: "create", label: "Create", icon: "plus" },
   { id: "reels", label: "Clips", icon: "reels" },
