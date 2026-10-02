@@ -85,7 +85,9 @@ export default function EchoesStrip({
   }, [currentUser.id, supabase]);
 
   useEffect(() => {
-    void load();
+    const initialLoad = window.setTimeout(() => {
+      void load();
+    }, 0);
 
     const channel = supabase
       .channel("avenzo-echoes-" + currentUser.id)
@@ -97,6 +99,7 @@ export default function EchoesStrip({
       .subscribe();
 
     return () => {
+      window.clearTimeout(initialLoad);
       void supabase.removeChannel(channel);
     };
   }, [currentUser.id, load, supabase]);
