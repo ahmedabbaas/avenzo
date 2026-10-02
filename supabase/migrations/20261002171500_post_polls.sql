@@ -32,6 +32,8 @@ create index if not exists post_poll_options_poll_id_idx
   on public.post_poll_options(poll_id, position);
 create index if not exists post_poll_votes_option_id_idx
   on public.post_poll_votes(option_id);
+create index if not exists post_poll_votes_option_poll_idx
+  on public.post_poll_votes(option_id, poll_id);
 create index if not exists post_poll_votes_user_id_idx
   on public.post_poll_votes(user_id);
 
