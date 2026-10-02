@@ -24,6 +24,9 @@ export type ContentDraft = {
   file: File | null;
   coverFile: File | null;
   dimensions: MediaDimensions | null;
+  pollQuestion: string;
+  pollOptions: string[];
+  pollDurationHours: number | null;
   createdAt: string;
   updatedAt: string;
 };

@@ -73,11 +73,17 @@ export default function CreateContentModal({
   uploadProgress,
   people,
   collaboratorIds,
+  pollQuestion,
+  pollOptions,
+  pollDurationHours,
   drafts,
   activeDraftId,
   onSaveDraft,
   onRestoreDraft,
   onDeleteDraft,
+  onPollQuestionChange,
+  onPollOptionsChange,
+  onPollDurationHoursChange,
   onToggleCollaborator,
   onModeChange,
   onTitleChange,
@@ -113,11 +119,17 @@ export default function CreateContentModal({
   uploadProgress: number;
   people: Profile[];
   collaboratorIds: string[];
+  pollQuestion: string;
+  pollOptions: string[];
+  pollDurationHours: number | null;
   drafts: ContentDraft[];
   activeDraftId: string | null;
   onSaveDraft: () => Promise<void> | void;
   onRestoreDraft: (draft: ContentDraft) => Promise<void> | void;
   onDeleteDraft: (draftId: string) => Promise<void> | void;
+  onPollQuestionChange: (value: string) => void;
+  onPollOptionsChange: (value: string[]) => void;
+  onPollDurationHoursChange: (value: number | null) => void;
   onToggleCollaborator: (userId: string) => void;
   onModeChange: (mode: CreateContentMode) => void;
   onTitleChange: (value: string) => void;
@@ -549,6 +561,96 @@ export default function CreateContentModal({
             </label>
           </div>
 
+          <div className="create-poll-section">
+            <div className="create-collab-head">
+              <div>
+                <b>Poll</b>
+                <span>Optional. Ask your AVENZO audience a question.</span>
+              </div>
+              {pollQuestion.trim() ? <small>Live poll</small> : <small>Optional</small>}
+            </div>
+
+            <label className="create-field">
+              <span>Question</span>
+              <input
+                value={pollQuestion}
+                onChange={(event) =>
+                  onPollQuestionChange(event.target.value.slice(0, 180))
+                }
+                placeholder="Ask something…"
+                maxLength={180}
+              />
+              <small>{pollQuestion.length}/180</small>
+            </label>
+
+            {pollQuestion.trim() && (
+              <>
+                <div className="create-poll-options">
+                  {pollOptions.map((option, index) => (
+                    <div key={"poll-option-" + index}>
+                      <input
+                        value={option}
+                        maxLength={80}
+                        placeholder={"Option " + (index + 1)}
+                        onChange={(event) =>
+                          onPollOptionsChange(
+                            pollOptions.map((item, itemIndex) =>
+                              itemIndex === index
+                                ? event.target.value.slice(0, 80)
+                                : item
+                            )
+                          )
+                        }
+                      />
+                      {pollOptions.length > 2 && (
+                        <button
+                          type="button"
+                          aria-label={"Remove option " + (index + 1)}
+                          onClick={() =>
+                            onPollOptionsChange(
+                              pollOptions.filter((_, itemIndex) => itemIndex !== index)
+                            )
+                          }
+                        >
+                          <Icon name="close" size={14} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {pollOptions.length < 4 && (
+                  <button
+                    type="button"
+                    className="create-poll-add"
+                    onClick={() => onPollOptionsChange([...pollOptions, ""])}
+                  >
+                    <Icon name="plus" size={14} />
+                    Add option
+                  </button>
+                )}
+
+                <label className="create-field create-poll-duration">
+                  <span>Poll duration</span>
+                  <select
+                    value={pollDurationHours === null ? "0" : String(pollDurationHours)}
+                    onChange={(event) => {
+                      const value = Number(event.target.value);
+                      onPollDurationHoursChange(value > 0 ? value : null);
+                    }}
+                  >
+                    <option value="1">1 hour</option>
+                    <option value="6">6 hours</option>
+                    <option value="24">24 hours</option>
+                    <option value="72">3 days</option>
+                    <option value="168">7 days</option>
+                    <option value="0">No expiry</option>
+                  </select>
+                </label>
+              </>
+            )}
+          </div>
+
           <div className="create-tag-section">
             <div className="create-collab-head">
               <div>
@@ -721,6 +823,15 @@ export default function CreateContentModal({
           </div>
 
           {caption && <p className="create-review-caption">{caption}</p>}
+
+          {pollQuestion.trim() && (
+            <div className="create-review-poll">
+              <b>{pollQuestion}</b>
+              {pollOptions.filter((option) => option.trim()).map((option) => (
+                <span key={option}>{option}</span>
+              ))}
+            </div>
+          )}
 
           <div className="create-review-meta">
             {tagged.length > 0 && <span>{tagged.length} tagged</span>}

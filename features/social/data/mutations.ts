@@ -185,6 +185,7 @@ export async function publishContent({
   coverFile = null,
   highQualityUploads = true,
   collaboratorIds = [],
+  poll = null,
   onProgress,
 }: {
   supabase: SupabaseClient;
@@ -205,6 +206,11 @@ export async function publishContent({
   coverFile?: File | null;
   highQualityUploads?: boolean;
   collaboratorIds?: string[];
+  poll?: {
+    question: string;
+    options: string[];
+    durationHours?: number | null;
+  } | null;
   onProgress?: UploadProgress;
 }) {
   const normalizedPostMedia =
@@ -245,6 +251,16 @@ export async function publishContent({
   const cleanLocation = location.trim().slice(0, 160);
   const cleanCaption = caption.trim().slice(0, 2200);
   const cleanTitle = title.trim().slice(0, 120);
+  const cleanPollQuestion = poll?.question.trim().slice(0, 180) || "";
+  const cleanPollOptions = [...new Set(
+    (poll?.options || [])
+      .map((option) => option.trim().slice(0, 80))
+      .filter(Boolean)
+  )].slice(0, 4);
+
+  if (mode === "post" && cleanPollQuestion && cleanPollOptions.length < 2) {
+    throw new Error("A poll needs at least 2 options.");
+  }
 
   let uploadedPath: string | null = null;
   let uploadedCoverPath: string | null = null;
@@ -354,6 +370,40 @@ export async function publishContent({
           }
         );
         assertNoError(collaborationResult.error);
+      }
+
+      if (cleanPollQuestion && cleanPollOptions.length >= 2) {
+        const durationHours =
+          poll?.durationHours && poll.durationHours > 0
+            ? Math.min(168, Math.max(1, poll.durationHours))
+            : null;
+        const pollResult = await supabase
+          .from("post_polls")
+          .insert({
+            post_id: insertedPostId,
+            question: cleanPollQuestion,
+            multiple_choice: false,
+            closes_at: durationHours
+              ? new Date(Date.now() + durationHours * 60 * 60 * 1000).toISOString()
+              : null,
+          })
+          .select("id")
+          .single();
+
+        assertNoError(pollResult.error);
+        if (!pollResult.data?.id) throw new Error("Poll could not be created.");
+
+        const optionResult = await supabase
+          .from("post_poll_options")
+          .insert(
+            cleanPollOptions.map((label, position) => ({
+              poll_id: pollResult.data.id,
+              label,
+              position,
+            }))
+          );
+
+        assertNoError(optionResult.error);
       }
 
       onProgress?.(100);
@@ -816,4 +866,36 @@ export async function cancelPostCollaboration(
     }
   );
   assertNoError(error);
+}
+
+
+export async function setPostPollVote(
+  supabase: SupabaseClient,
+  userId: string,
+  pollId: string,
+  optionId: string,
+  currentOptionId: string | null
+) {
+  if (currentOptionId === optionId) {
+    const result = await supabase
+      .from("post_poll_votes")
+      .delete()
+      .eq("poll_id", pollId)
+      .eq("user_id", userId);
+    assertNoError(result.error);
+    return;
+  }
+
+  const result = await supabase
+    .from("post_poll_votes")
+    .upsert(
+      {
+        poll_id: pollId,
+        option_id: optionId,
+        user_id: userId,
+      },
+      { onConflict: "poll_id,user_id" }
+    );
+
+  assertNoError(result.error);
 }

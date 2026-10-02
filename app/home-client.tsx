@@ -25,6 +25,7 @@ import {
   setPostLike,
   setPostSaved,
   setPostReposted,
+  setPostPollVote,
   updatePostCaption,
 } from "../features/social/data/mutations";
 import {
@@ -139,6 +140,9 @@ export default function HomeClient({
   const [mentions, setMentions] = useState("");
   const [location, setLocation] = useState("");
   const [collaboratorIds, setCollaboratorIds] = useState<string[]>([]);
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState(["", ""]);
+  const [pollDurationHours, setPollDurationHours] = useState<number | null>(24);
   const [postMedia, setPostMedia] = useState<Array<{
     file: File;
     preview: string;
@@ -528,6 +532,9 @@ export default function HomeClient({
     setMentions("");
     setLocation("");
     setCollaboratorIds([]);
+    setPollQuestion("");
+    setPollOptions(["", ""]);
+    setPollDurationHours(24);
     setUploadProgress(0);
   }
 
@@ -559,6 +566,9 @@ export default function HomeClient({
         mentions,
         location,
         collaboratorIds,
+        pollQuestion,
+        pollOptions,
+        pollDurationHours,
         postMedia: postMedia.map((item) => ({
           file: item.file,
           dimensions: item.dimensions,
@@ -586,6 +596,11 @@ export default function HomeClient({
     setMentions(draft.mentions);
     setLocation(draft.location);
     setCollaboratorIds(draft.collaboratorIds || []);
+    setPollQuestion(draft.pollQuestion || "");
+    setPollOptions(
+      draft.pollOptions?.length >= 2 ? draft.pollOptions.slice(0, 4) : ["", ""]
+    );
+    setPollDurationHours(draft.pollDurationHours ?? 24);
 
     if (draft.mode === "post") {
       const restoredMedia = (draft.postMedia || []).map((item) => ({
@@ -805,6 +820,14 @@ export default function HomeClient({
             : [],
         highQualityUploads: runtimePreferences.high_quality_uploads,
         collaboratorIds: createMode === "post" ? collaboratorIds : [],
+        poll:
+          createMode === "post" && pollQuestion.trim()
+            ? {
+                question: pollQuestion,
+                options: pollOptions,
+                durationHours: pollDurationHours,
+              }
+            : null,
         onProgress: setUploadProgress,
       });
 
@@ -1029,6 +1052,23 @@ export default function HomeClient({
     router.push(
       "/messages?sharePost=" + encodeURIComponent(post.id)
     );
+  }
+
+  async function voteOnPostPoll(post: Post, optionId: string) {
+    if (!post.poll) return;
+
+    try {
+      await setPostPollVote(
+        supabase,
+        initialProfile.id,
+        post.poll.id,
+        optionId,
+        post.poll.selectedOptionId
+      );
+      await Promise.all([loadPosts(), loadExplorePosts(), loadProfileContent()]);
+    } catch {
+      showToast("Could not update your poll vote.");
+    }
   }
 
   async function toggleFollow(other: Profile) {
@@ -1603,6 +1643,7 @@ export default function HomeClient({
                       onSave={() => void toggleSave(post)}
                       onShare={() => void sharePost(post)}
                       onRepost={() => void togglePostRepost(post)}
+                      onPollVote={(optionId) => void voteOnPostPoll(post, optionId)}
                       onComment={(body, parentId) =>
                         void addComment(post, body, parentId || null)
                       }
@@ -1982,11 +2023,17 @@ export default function HomeClient({
           uploadProgress={uploadProgress}
           people={people}
           collaboratorIds={collaboratorIds}
+          pollQuestion={pollQuestion}
+          pollOptions={pollOptions}
+          pollDurationHours={pollDurationHours}
           drafts={drafts}
           activeDraftId={activeDraftId}
           onSaveDraft={() => void saveCurrentDraft()}
           onRestoreDraft={(draft) => void restoreContentDraft(draft)}
           onDeleteDraft={(draftId) => void removeContentDraft(draftId)}
+          onPollQuestionChange={setPollQuestion}
+          onPollOptionsChange={setPollOptions}
+          onPollDurationHoursChange={setPollDurationHours}
           onToggleCollaborator={(userId) =>
             setCollaboratorIds((current) =>
               current.includes(userId)
