@@ -26,6 +26,7 @@ import {
   setPostSaved,
   setPostReposted,
   setPostPollVote,
+  setPostPinned,
   updatePostCaption,
 } from "../features/social/data/mutations";
 import {
@@ -1070,6 +1071,24 @@ export default function HomeClient({
     }
   }
 
+  async function togglePostPinned(post: Post) {
+    try {
+      await setPostPinned(supabase, post.id, !post.pinned_at);
+      await loadProfileContent();
+      if (screen === "home") {
+        await Promise.allSettled([loadPosts(), loadExplorePosts()]);
+      }
+      showToast(post.pinned_at ? "Post unpinned." : "Post pinned to profile.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      showToast(
+        message.includes("POST_PIN_LIMIT_REACHED")
+          ? "You can pin up to 3 posts."
+          : "Could not update pinned posts."
+      );
+    }
+  }
+
   async function toggleFollow(other: Profile) {
     const isFollowing = followed.includes(other.id);
     const isRequested = requested.includes(other.id);
@@ -1654,6 +1673,11 @@ export default function HomeClient({
                         void editPostCaption(post, nextCaption)
                       }
                       onReport={() => void submitPostReport(post)}
+                      onPin={
+                        post.author_id === initialProfile.id
+                          ? () => void togglePostPinned(post)
+                          : undefined
+                      }
                       currentUserId={initialProfile.id}
                       own={post.author_id === initialProfile.id}
                       onDelete={() => void deletePost(post)}
