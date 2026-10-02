@@ -11,6 +11,10 @@ const CallManager = dynamic(
   () => import("../features/messages/components/call-manager"),
   { ssr: false }
 );
+const AppRouteMobileNav = dynamic(
+  () => import("./app-route-mobile-nav"),
+  { ssr: false }
+);
 
 const PUBLIC_ROUTES = [
   "/login",
@@ -36,6 +40,7 @@ export default function AuthenticatedRuntime() {
     <>
       <NativeMessageNotifications />
       <CallManager />
+      <AppRouteMobileNav />
     </>
   );
 }
