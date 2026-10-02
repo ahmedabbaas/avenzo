@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.media.AudioManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -58,6 +59,10 @@ public class MainActivity extends BridgeActivity {
   private String supabaseAccessToken = "";
   private String supabaseUserId = "";
   private String lastNotificationAt = "";
+  private String lastIncomingCallId = "";
+  private boolean callAudioModeActive = false;
+  private int previousAudioMode = AudioManager.MODE_NORMAL;
+  private boolean previousSpeakerphone = false;
   private final Handler notificationHandler =
     new Handler(Looper.getMainLooper());
   private final ExecutorService notificationExecutor =
@@ -77,6 +82,7 @@ public class MainActivity extends BridgeActivity {
         notificationExecutor.execute(() -> {
           try {
             pollMessageNotifications();
+            pollIncomingCalls();
           } finally {
             notificationPollInFlight = false;
           }
@@ -146,6 +152,7 @@ public class MainActivity extends BridgeActivity {
   public void onDestroy() {
     notificationHandler.removeCallbacks(notificationPoller);
     notificationExecutor.shutdownNow();
+    setCallAudioMode(false, false);
     super.onDestroy();
   }
 
@@ -157,7 +164,7 @@ public class MainActivity extends BridgeActivity {
       "Messages",
       NotificationManager.IMPORTANCE_HIGH
     );
-    channel.setDescription("New AVENZO direct messages");
+    channel.setDescription("AVENZO messages and incoming calls");
     channel.enableVibration(true);
 
     NotificationManager manager =
@@ -451,6 +458,77 @@ public class MainActivity extends BridgeActivity {
     }
   }
 
+  private void pollIncomingCalls() {
+    String token = supabaseAccessToken;
+    String userId = supabaseUserId;
+    if (token.isEmpty() || userId.isEmpty()) return;
+
+    HttpURLConnection connection = null;
+    try {
+      String endpoint =
+        SUPABASE_URL +
+        "/rest/v1/call_sessions" +
+        "?callee_id=eq." + userId +
+        "&status=eq.ringing" +
+        "&select=id,call_type,created_at" +
+        "&order=created_at.desc" +
+        "&limit=1";
+
+      connection = (HttpURLConnection) new URL(endpoint).openConnection();
+      connection.setRequestMethod("GET");
+      connection.setConnectTimeout(8000);
+      connection.setReadTimeout(8000);
+      connection.setRequestProperty("apikey", SUPABASE_KEY);
+      connection.setRequestProperty(
+        "Authorization",
+        "Bearer " + token
+      );
+      connection.setRequestProperty("Accept", "application/json");
+
+      if (connection.getResponseCode() != 200) return;
+
+      StringBuilder body = new StringBuilder();
+      try (
+        BufferedReader reader = new BufferedReader(
+          new InputStreamReader(
+            connection.getInputStream(),
+            StandardCharsets.UTF_8
+          )
+        )
+      ) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+          body.append(line);
+        }
+      }
+
+      JSONArray rows = new JSONArray(body.toString());
+      if (rows.length() == 0) return;
+
+      JSONObject row = rows.getJSONObject(0);
+      String callId = row.optString("id", "");
+      if (callId.isEmpty() || callId.equals(lastIncomingCallId)) return;
+
+      lastIncomingCallId = callId;
+      String callType = row.optString("call_type", "audio");
+      String message =
+        "video".equals(callType)
+          ? "Incoming video call · Open AVENZO to answer"
+          : "Incoming voice call · Open AVENZO to answer";
+
+      runOnUiThread(
+        () -> showMessageNotification(
+          "Incoming AVENZO call",
+          message,
+          "/messages"
+        )
+      );
+    } catch (Exception ignored) {
+    } finally {
+      if (connection != null) connection.disconnect();
+    }
+  }
+
   private void registerNotificationSession(
     String accessToken,
     String userId
@@ -464,6 +542,7 @@ public class MainActivity extends BridgeActivity {
       supabaseAccessToken = "";
       supabaseUserId = "";
       lastNotificationAt = "";
+      lastIncomingCallId = "";
       return;
     }
 
@@ -474,6 +553,31 @@ public class MainActivity extends BridgeActivity {
     if (userChanged || lastNotificationAt.isEmpty()) {
       lastNotificationAt = Instant.now().toString();
     }
+    if (userChanged) {
+      lastIncomingCallId = "";
+    }
+  }
+
+  private void setCallAudioMode(boolean active, boolean speaker) {
+    AudioManager audioManager =
+      (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+    if (audioManager == null) return;
+
+    if (active) {
+      if (!callAudioModeActive) {
+        previousAudioMode = audioManager.getMode();
+        previousSpeakerphone = audioManager.isSpeakerphoneOn();
+        callAudioModeActive = true;
+      }
+      audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+      audioManager.setSpeakerphoneOn(speaker);
+      return;
+    }
+
+    if (!callAudioModeActive) return;
+    audioManager.setSpeakerphoneOn(previousSpeakerphone);
+    audioManager.setMode(previousAudioMode);
+    callAudioModeActive = false;
   }
 
   private void handleIntentRoute(Intent intent) {
@@ -671,6 +775,11 @@ public class MainActivity extends BridgeActivity {
     @JavascriptInterface
     public void setSystemTheme(String theme) {
       runOnUiThread(() -> applySystemTheme(theme));
+    }
+
+    @JavascriptInterface
+    public void setCallAudioMode(boolean active, boolean speaker) {
+      runOnUiThread(() -> MainActivity.this.setCallAudioMode(active, speaker));
     }
   }
 

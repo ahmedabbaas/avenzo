@@ -10,6 +10,7 @@ declare global {
     AvenzoNative?: {
       notifyMessage?: (title: string, body: string, route: string) => void;
       registerSession?: (accessToken: string, userId: string) => void;
+      setCallAudioMode?: (active: boolean, speaker: boolean) => void;
     };
   }
 
@@ -93,6 +94,8 @@ export default function CallManager() {
   const ringTimerRef = useRef<number | null>(null);
   const acceptancePollRef = useRef<number | null>(null);
   const signalSyncTimerRef = useRef<number | null>(null);
+  const incomingPollRef = useRef<number | null>(null);
+  const disconnectTimerRef = useRef<number | null>(null);
   const offerStartedRef = useRef(false);
   const pendingIceRef = useRef<RTCIceCandidateInit[]>([]);
   const handledSignalIdsRef = useRef<Set<number>>(new Set());
@@ -130,6 +133,31 @@ export default function CallManager() {
     }
   }
 
+  function clearIncomingPoll() {
+    if (incomingPollRef.current !== null) {
+      window.clearInterval(incomingPollRef.current);
+      incomingPollRef.current = null;
+    }
+  }
+
+  function clearDisconnectTimer() {
+    if (disconnectTimerRef.current !== null) {
+      window.clearTimeout(disconnectTimerRef.current);
+      disconnectTimerRef.current = null;
+    }
+  }
+
+  function setNativeCallAudio(active: boolean, callType: "audio" | "video" = "audio") {
+    try {
+      window.AvenzoNative?.setCallAudioMode?.(
+        active,
+        active && callType === "video"
+      );
+    } catch {
+      // Native audio routing is an Android enhancement; WebRTC still works on web.
+    }
+  }
+
   function stopMedia() {
     localStreamRef.current?.getTracks().forEach((track) => track.stop());
     localStreamRef.current = null;
@@ -142,6 +170,7 @@ export default function CallManager() {
     if (remoteVideoRef.current) {
       remoteVideoRef.current.srcObject = null;
     }
+    setNativeCallAudio(false);
   }
 
   function destroyPeer() {
@@ -154,6 +183,8 @@ export default function CallManager() {
     clearRingTimer();
     clearAcceptancePoll();
     clearSignalSync();
+    clearIncomingPoll();
+    clearDisconnectTimer();
     destroyPeer();
     offerStartedRef.current = false;
     pendingIceRef.current = [];
@@ -193,21 +224,29 @@ export default function CallManager() {
       throw new Error("Media access is not available on this device.");
     }
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-      },
-      video:
-        callType === "video"
-          ? {
-              facingMode: "user",
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-            }
-          : false,
-    });
+    setNativeCallAudio(true, callType);
+
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+        video:
+          callType === "video"
+            ? {
+                facingMode: "user",
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+              }
+            : false,
+      });
+    } catch (error) {
+      setNativeCallAudio(false);
+      throw error;
+    }
 
     localStreamRef.current = stream;
 
@@ -261,12 +300,28 @@ export default function CallManager() {
 
     peer.onconnectionstatechange = () => {
       if (peer.connectionState === "connected") {
+        clearDisconnectTimer();
         clearSignalSync();
         setError("");
         patchCall({ status: "connected" });
+        return;
+      }
+
+      if (peer.connectionState === "disconnected") {
+        clearDisconnectTimer();
+        disconnectTimerRef.current = window.setTimeout(() => {
+          if (
+            peerRef.current === peer &&
+            peer.connectionState === "disconnected"
+          ) {
+            setError("Connection interrupted. Tap Retry to reconnect.");
+          }
+        }, 4000);
+        return;
       }
 
       if (peer.connectionState === "failed") {
+        clearDisconnectTimer();
         setError("Call connection failed. Tap Retry to reconnect.");
       }
     };
@@ -467,6 +522,28 @@ export default function CallManager() {
     }
   }
 
+  async function syncIncomingRinging() {
+    const userId = userIdRef.current;
+    if (!userId || callRef.current) return;
+
+    const recentThreshold = new Date(Date.now() - 45_000).toISOString();
+    const { data } = await supabase
+      .from("call_sessions")
+      .select(
+        "id,conversation_id,caller_id,callee_id,status,call_type,created_at"
+      )
+      .eq("callee_id", userId)
+      .eq("status", "ringing")
+      .gte("created_at", recentThreshold)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    const session = data?.[0] as CallSession | undefined;
+    if (session) {
+      await receiveIncomingRef.current(session);
+    }
+  }
+
   async function acceptIncoming() {
     const current = callRef.current;
     if (!current || current.direction !== "incoming") return;
@@ -562,6 +639,9 @@ export default function CallManager() {
     if (!current) return;
 
     setError("");
+    clearDisconnectTimer();
+    destroyPeer();
+    pendingIceRef.current = [];
 
     if (current.direction === "outgoing") {
       offerStartedRef.current = false;
@@ -600,12 +680,14 @@ export default function CallManager() {
   const beginOfferRef = useRef(beginOffer);
   const handleSignalRef = useRef(handleSignal);
   const receiveIncomingRef = useRef(receiveIncoming);
+  const syncIncomingRef = useRef(syncIncomingRinging);
 
   useEffect(() => {
     resetCallRef.current = resetCall;
     beginOfferRef.current = beginOffer;
     handleSignalRef.current = handleSignal;
     receiveIncomingRef.current = receiveIncoming;
+    syncIncomingRef.current = syncIncomingRinging;
   });
 
   useEffect(() => {
@@ -677,6 +759,15 @@ export default function CallManager() {
         )
         .subscribe();
 
+      void syncIncomingRef.current();
+
+      clearIncomingPoll();
+      incomingPollRef.current = window.setInterval(() => {
+        if (!callRef.current && document.visibilityState === "visible") {
+          void syncIncomingRef.current();
+        }
+      }, 2500);
+
       signalsChannel = supabase
         .channel("avenzo-call-signals-" + userId)
         .on(
@@ -694,10 +785,21 @@ export default function CallManager() {
         .subscribe();
     });
 
+    const recoverVisibleCall = () => {
+      if (document.visibilityState === "visible" && !callRef.current) {
+        void syncIncomingRef.current();
+      }
+    };
+    document.addEventListener("visibilitychange", recoverVisibleCall);
+    window.addEventListener("pageshow", recoverVisibleCall);
+
     return () => {
       cancelled = true;
+      document.removeEventListener("visibilitychange", recoverVisibleCall);
+      window.removeEventListener("pageshow", recoverVisibleCall);
       if (sessionsChannel) void supabase.removeChannel(sessionsChannel);
       if (signalsChannel) void supabase.removeChannel(signalsChannel);
+      clearIncomingPoll();
       resetCallRef.current();
     };
   }, [supabase]);
