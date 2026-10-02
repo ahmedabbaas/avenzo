@@ -1,0 +1,89 @@
+name: AVENZO Android Release Check
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "android/**"
+      - "capacitor.config.ts"
+      - "app/**"
+      - "components/**"
+      - "features/**"
+      - "lib/**"
+      - "mobile-shell/**"
+      - "public/avenzo-logo-premium.png"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/android-release.yml"
+      - ".github/workflows/android-release-check.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: avenzo-android-release-check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync Capacitor Android project
+        run: npm run android:sync
+
+      - name: Prepare native assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s android/app/src/main/java/com/avenzo/app/MainActivity.java
+          test -s android/app/src/main/AndroidManifest.xml
+
+          mkdir -p android/app/src/main/assets/avenzo
+          mkdir -p android/app/src/main/res/drawable-nodpi
+          cp mobile-shell/app-mobile.css android/app/src/main/assets/avenzo/app-mobile.css
+          cp mobile-shell/native-inject.js android/app/src/main/assets/avenzo/native-inject.js
+          cp public/avenzo-logo-premium.png android/app/src/main/assets/avenzo/avenzo-logo-premium.png
+          cp public/avenzo-logo-premium.png android/app/src/main/res/drawable-nodpi/avenzo_logo_premium.png
+
+      - name: Build minified unsigned release APK and AAB
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew clean assembleRelease bundleRelease --no-daemon --stacktrace
+
+      - name: Validate release outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          AAB="android/app/build/outputs/bundle/release/app-release.aab"
+
+          if [ ! -s "$APK" ]; then
+            APK="android/app/build/outputs/apk/release/app-release.apk"
+          fi
+
+          test -s "$APK"
+          test -s "$AAB"
+
+          echo "Unsigned release validation passed."
+          ls -lh "$APK" "$AAB"
