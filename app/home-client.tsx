@@ -41,7 +41,6 @@ import {
   fetchUnreadActivityCount,
 } from "../features/social/data/queries";
 import ActivityPanel from "../features/social/components/activity-panel";
-import EchoesStrip from "../features/social/components/echoes-strip";
 import AvatarImage from "../features/social/components/avatar-image";
 import EmptyState from "../features/social/components/empty-state";
 import ExploreMediaGrid from "../features/social/components/explore-media-grid";
@@ -85,7 +84,7 @@ const NAV_ITEMS: Array<{
   label: string;
   icon: IconName;
 }> = [
-  { id: "home", label: "Pulse", icon: "home" },
+  { id: "home", label: "Home", icon: "home" },
   { id: "explore", label: "Discover", icon: "explore" },
   { id: "reels", label: "Clips", icon: "reels" },
   { id: "messages", label: "Messages", icon: "messages" },
@@ -1503,8 +1502,6 @@ export default function HomeClient({
                 </button>
               </section>
 
-              <EchoesStrip currentUser={profile} />
-
               <div className="stories-row" aria-label="Active moments">
                 <button
                   className="story story-you"
@@ -1991,15 +1988,17 @@ export default function HomeClient({
         </aside>
       </div>
 
-      <MobileBottomNav
-        active={showCreate ? "create" : screen === "home" ? "home" : screen === "explore" ? "search" : screen === "profile" ? "profile" : null}
-        onHome={() => selectPrimaryScreen("home")}
-        onSearch={() => selectPrimaryScreen("explore")}
-        onCreate={() => openComposer("post")}
-        onReels={() => router.push("/reels")}
-        onProfile={() => selectPrimaryScreen("profile")}
-        profileAvatarUrl={avatarFor(profile)}
-      />
+      {!showCreate && !storyViewer && (
+        <MobileBottomNav
+          active={screen === "home" ? "home" : screen === "explore" ? "search" : screen === "profile" ? "profile" : null}
+          onHome={() => selectPrimaryScreen("home")}
+          onSearch={() => selectPrimaryScreen("explore")}
+          onCreate={() => openComposer("post")}
+          onReels={() => router.push("/reels")}
+          onProfile={() => selectPrimaryScreen("profile")}
+          profileAvatarUrl={avatarFor(profile)}
+        />
+      )}
 
       {showCreate && (
         <CreateContentModal
