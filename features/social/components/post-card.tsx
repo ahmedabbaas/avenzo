@@ -45,6 +45,7 @@ export default function PostCard({
   onCommentDelete,
   onEditCaption,
   onReport,
+  onPin,
   currentUserId,
   own,
   onDelete,
@@ -65,6 +66,7 @@ export default function PostCard({
   onCommentDelete: (comment: Comment) => void;
   onEditCaption: (caption: string) => void;
   onReport: () => void;
+  onPin?: () => void;
   currentUserId: string;
   own: boolean;
   onDelete: () => void;
@@ -113,7 +115,7 @@ export default function PostCard({
 
   return (
     <article
-      className="post-card"
+      className={"post-card" + (post.pinned_at ? " post-card-pinned" : "")}
       onDoubleClick={(event) => {
         const target = event.target as HTMLElement;
         if (
@@ -134,6 +136,12 @@ export default function PostCard({
         });
       }}
     >
+      {post.pinned_at && own && (
+        <div className="post-pinned-label">
+          <Icon name="pin" size={13} />
+          Pinned to your profile
+        </div>
+      )}
       <div className="post-head">
         {author ? (
           <Link
@@ -201,6 +209,18 @@ export default function PostCard({
                   }}
                 >
                   Edit caption
+                </button>
+              )}
+              {own && onPin && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onPin();
+                  }}
+                >
+                  {post.pinned_at ? "Unpin from profile" : "Pin to profile"}
                 </button>
               )}
               <button
