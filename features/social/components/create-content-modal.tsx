@@ -979,7 +979,7 @@ export default function CreateContentModal({
                     aria-label="Delete draft"
                     onClick={() => void onDeleteDraft(draft.id)}
                   >
-                    <Icon name="trash" size={15} />
+                    <Icon name="close" size={15} />
                   </button>
                 </article>
               ))
