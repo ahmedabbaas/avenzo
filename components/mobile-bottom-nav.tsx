@@ -21,11 +21,11 @@ const ITEMS: Array<{
   label: string;
   icon: "home" | "search" | "plus" | "reels" | "profile";
 }> = [
-  { id: "home", label: "Home", icon: "home" },
-  { id: "search", label: "Search", icon: "search" },
+  { id: "home", label: "Pulse", icon: "home" },
+  { id: "search", label: "Discover", icon: "search" },
   { id: "create", label: "Create", icon: "plus" },
-  { id: "reels", label: "Reels", icon: "reels" },
-  { id: "profile", label: "Profile", icon: "profile" },
+  { id: "reels", label: "Clips", icon: "reels" },
+  { id: "profile", label: "You", icon: "profile" },
 ];
 
 function isTypingTarget(target: EventTarget | null) {
