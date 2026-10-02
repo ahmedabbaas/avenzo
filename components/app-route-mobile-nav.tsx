@@ -14,6 +14,7 @@ const NAV_ROUTES = [
   "/p/",
   "/connections/",
   "/channels",
+  "/calls",
   "/mobile/profile-posts/",
 ];
 
