@@ -3026,3 +3026,28 @@ html[data-theme="light"] .theme-choice.active{
     border-color:#d9dde1!important;
   }
 }
+
+
+/* =========================================================
+   AVENZO PROFILE PINS
+   ========================================================= */
+.post-pinned-label{
+  min-height:28px;padding:6px 14px 0;display:flex;align-items:center;gap:6px;
+  color:var(--muted);font-size:9px;font-weight:850;letter-spacing:.08em;text-transform:uppercase
+}
+.post-card-pinned{border-color:var(--line-strong)!important}
+.profile-media-pin-wrap{
+  position:relative;display:block;min-width:0;overflow:hidden;background:var(--panel)
+}
+.profile-media-pin-wrap>img,.profile-media-pin-wrap>video{display:block;width:100%;height:100%}
+.profile-pin-badge{
+  position:absolute;z-index:5;top:7px;right:7px;width:24px;height:24px;display:grid;place-items:center;
+  border-radius:9px;background:rgba(6,7,8,.82);color:#fff;backdrop-filter:blur(10px);font-style:normal
+}
+.profile-text-post{position:relative}
+.profile-post-pinned{border-color:var(--line-strong)!important}
+@media(max-width:900px){
+  .profile-media-pin-wrap{aspect-ratio:1/1}
+  .profile-pin-badge{top:5px;right:5px;width:22px;height:22px;border-radius:8px}
+  .post-pinned-label{padding-left:4px;padding-right:4px}
+}
