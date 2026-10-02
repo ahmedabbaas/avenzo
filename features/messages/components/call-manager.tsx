@@ -69,15 +69,53 @@ type CallSignal = {
   payload: RTCSessionDescriptionInit | RTCIceCandidateInit;
 };
 
-const ICE_SERVERS: RTCIceServer[] = [
+const DEFAULT_ICE_SERVERS: RTCIceServer[] = [
   { urls: "stun:stun.l.google.com:19302" },
   { urls: "stun:stun1.l.google.com:19302" },
+  { urls: "stun:openrelay.metered.ca:80" },
+  {
+    urls: "turn:openrelay.metered.ca:80",
+    username: "openrelayproject",
+    credential: "openrelayproject",
+  },
+  {
+    urls: "turn:openrelay.metered.ca:443",
+    username: "openrelayproject",
+    credential: "openrelayproject",
+  },
+  {
+    urls: "turn:openrelay.metered.ca:443?transport=tcp",
+    username: "openrelayproject",
+    credential: "openrelayproject",
+  },
 ];
+
+async function fetchIceServers() {
+  try {
+    const response = await fetch("/api/calls/ice", {
+      cache: "no-store",
+      credentials: "same-origin",
+    });
+    if (!response.ok) return DEFAULT_ICE_SERVERS;
+
+    const payload = (await response.json()) as {
+      iceServers?: RTCIceServer[];
+    };
+    return payload.iceServers?.length
+      ? payload.iceServers
+      : DEFAULT_ICE_SERVERS;
+  } catch {
+    return DEFAULT_ICE_SERVERS;
+  }
+}
 
 export default function CallManager() {
   const supabase = useMemo(() => createClient(), []);
   const [call, setCallState] = useState<ActiveCall | null>(null);
   const [muted, setMuted] = useState(false);
+  const [speakerOn, setSpeakerOn] = useState(false);
+  const [cameraOff, setCameraOff] = useState(false);
+  const [callSeconds, setCallSeconds] = useState(0);
   const [error, setError] = useState("");
   const userIdRef = useRef("");
   const profileRef = useRef<{
@@ -96,6 +134,12 @@ export default function CallManager() {
   const signalSyncTimerRef = useRef<number | null>(null);
   const incomingPollRef = useRef<number | null>(null);
   const disconnectTimerRef = useRef<number | null>(null);
+  const connectionTimerRef = useRef<number | null>(null);
+  const callClockRef = useRef<number | null>(null);
+  const iceServersRef = useRef<RTCIceServer[]>(DEFAULT_ICE_SERVERS);
+  const iceLoadedRef = useRef(false);
+  const iceRestartedRef = useRef(false);
+  const wakeLockRef = useRef<{ release: () => Promise<void> } | null>(null);
   const offerStartedRef = useRef(false);
   const pendingIceRef = useRef<RTCIceCandidateInit[]>([]);
   const handledSignalIdsRef = useRef<Set<number>>(new Set());
@@ -147,11 +191,67 @@ export default function CallManager() {
     }
   }
 
-  function setNativeCallAudio(active: boolean, callType: "audio" | "video" = "audio") {
+  function clearConnectionTimer() {
+    if (connectionTimerRef.current !== null) {
+      window.clearTimeout(connectionTimerRef.current);
+      connectionTimerRef.current = null;
+    }
+  }
+
+  function clearCallClock() {
+    if (callClockRef.current !== null) {
+      window.clearInterval(callClockRef.current);
+      callClockRef.current = null;
+    }
+    setCallSeconds(0);
+  }
+
+  function startCallClock() {
+    if (callClockRef.current !== null) return;
+    setCallSeconds(0);
+    callClockRef.current = window.setInterval(() => {
+      setCallSeconds((seconds) => seconds + 1);
+    }, 1000);
+  }
+
+  async function requestCallWakeLock() {
+    try {
+      const wakeLockApi = (
+        navigator as Navigator & {
+          wakeLock?: {
+            request: (type: "screen") => Promise<{ release: () => Promise<void> }>;
+          };
+        }
+      ).wakeLock;
+      if (!wakeLockApi || wakeLockRef.current) return;
+      wakeLockRef.current = await wakeLockApi.request("screen");
+    } catch {
+      // Wake lock is enhancement-only.
+    }
+  }
+
+  function releaseCallWakeLock() {
+    const lock = wakeLockRef.current;
+    wakeLockRef.current = null;
+    if (lock) void lock.release().catch(() => undefined);
+  }
+
+  async function refreshIceServers() {
+    if (iceLoadedRef.current) return iceServersRef.current;
+    iceServersRef.current = await fetchIceServers();
+    iceLoadedRef.current = true;
+    return iceServersRef.current;
+  }
+
+  function setNativeCallAudio(
+    active: boolean,
+    callType: "audio" | "video" = "audio",
+    speaker = callType === "video"
+  ) {
     try {
       window.AvenzoNative?.setCallAudioMode?.(
         active,
-        active && callType === "video"
+        active && speaker
       );
     } catch {
       // Native audio routing is an Android enhancement; WebRTC still works on web.
@@ -171,6 +271,7 @@ export default function CallManager() {
       remoteVideoRef.current.srcObject = null;
     }
     setNativeCallAudio(false);
+    releaseCallWakeLock();
   }
 
   function destroyPeer() {
@@ -185,12 +286,17 @@ export default function CallManager() {
     clearSignalSync();
     clearIncomingPoll();
     clearDisconnectTimer();
+    clearConnectionTimer();
+    clearCallClock();
     destroyPeer();
     offerStartedRef.current = false;
+    iceRestartedRef.current = false;
     pendingIceRef.current = [];
     handledSignalIdsRef.current.clear();
     acceptingCallIdRef.current = null;
     setMuted(false);
+    setSpeakerOn(false);
+    setCameraOff(false);
     setError("");
     setCall(null);
   }
@@ -224,7 +330,12 @@ export default function CallManager() {
       throw new Error("Media access is not available on this device.");
     }
 
-    setNativeCallAudio(true, callType);
+    setNativeCallAudio(
+      true,
+      callType,
+      callType === "video" ? true : speakerOn
+    );
+    void requestCallWakeLock();
 
     let stream: MediaStream;
     try {
@@ -266,7 +377,13 @@ export default function CallManager() {
 
     const current = callRef.current;
     const stream = await getMedia(current?.callType || "audio");
-    const peer = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    const iceServers = await refreshIceServers();
+    const peer = new RTCPeerConnection({
+      iceServers,
+      iceCandidatePoolSize: 10,
+      bundlePolicy: "max-bundle",
+      rtcpMuxPolicy: "require",
+    });
 
     for (const track of stream.getTracks()) {
       peer.addTrack(track, stream);
@@ -296,12 +413,30 @@ export default function CallManager() {
       }
 
       patchCall({ status: "connected" });
+      clearConnectionTimer();
+      startCallClock();
+    };
+
+    peer.oniceconnectionstatechange = () => {
+      if (
+        peer.iceConnectionState === "failed" &&
+        !iceRestartedRef.current
+      ) {
+        iceRestartedRef.current = true;
+        try {
+          peer.restartIce();
+        } catch {
+          // Connection-state handler below will surface retry UI.
+        }
+      }
     };
 
     peer.onconnectionstatechange = () => {
       if (peer.connectionState === "connected") {
         clearDisconnectTimer();
         clearSignalSync();
+        clearConnectionTimer();
+        startCallClock();
         setError("");
         patchCall({ status: "connected" });
         return;
@@ -358,6 +493,19 @@ export default function CallManager() {
         offer
       );
       startSignalSync(current.id);
+      clearConnectionTimer();
+      connectionTimerRef.current = window.setTimeout(() => {
+        const activePeer = peerRef.current;
+        if (
+          callRef.current?.id === current.id &&
+          activePeer &&
+          activePeer.connectionState !== "connected"
+        ) {
+          setError(
+            "Call is taking too long to connect. Retry or check your network."
+          );
+        }
+      }, 18000);
     } catch {
       offerStartedRef.current = false;
       setError("Could not connect the call. Tap Retry to reconnect.");
@@ -596,6 +744,19 @@ export default function CallManager() {
     try {
       await ensurePeer(current.otherUserId, current.id);
       startSignalSync(current.id);
+      clearConnectionTimer();
+      connectionTimerRef.current = window.setTimeout(() => {
+        const activePeer = peerRef.current;
+        if (
+          callRef.current?.id === current.id &&
+          activePeer &&
+          activePeer.connectionState !== "connected"
+        ) {
+          setError(
+            "Call is taking too long to connect. Retry or check your network."
+          );
+        }
+      }, 18000);
       acceptingCallIdRef.current = null;
     } catch {
       acceptingCallIdRef.current = null;
@@ -674,6 +835,33 @@ export default function CallManager() {
       track.enabled = !next;
     });
     setMuted(next);
+  }
+
+  function toggleSpeaker() {
+    const current = callRef.current;
+    if (!current) return;
+    const next = !speakerOn;
+    setSpeakerOn(next);
+    setNativeCallAudio(true, current.callType, next);
+  }
+
+  function toggleCamera() {
+    const stream = localStreamRef.current;
+    if (!stream) return;
+    const tracks = stream.getVideoTracks();
+    if (!tracks.length) return;
+
+    const next = !cameraOff;
+    tracks.forEach((track) => {
+      track.enabled = !next;
+    });
+    setCameraOff(next);
+  }
+
+  function formatCallDuration(seconds: number) {
+    const minutes = Math.floor(seconds / 60);
+    const rest = seconds % 60;
+    return minutes + ":" + String(rest).padStart(2, "0");
   }
 
   const resetCallRef = useRef(resetCall);
@@ -815,6 +1003,7 @@ export default function CallManager() {
       if (!userId) return;
 
       setError("");
+      void refreshIceServers();
 
       // Do not block the call button on getUserMedia. Some Android WebViews
       // wait on the native permission bridge here, which made the button look
@@ -1013,13 +1202,31 @@ export default function CallManager() {
                 <>
                   {(call.status === "connecting" ||
                     call.status === "connected") && (
-                    <button
-                      type="button"
-                      className={muted ? "active" : ""}
-                      onClick={toggleMute}
-                    >
-                      {muted ? "Unmute" : "Mute"}
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        className={muted ? "active" : ""}
+                        onClick={toggleMute}
+                      >
+                        {muted ? "Unmute" : "Mute"}
+                      </button>
+                      <button
+                        type="button"
+                        className={speakerOn ? "active" : ""}
+                        onClick={toggleSpeaker}
+                      >
+                        {speakerOn ? "Speaker on" : "Speaker"}
+                      </button>
+                      {call.callType === "video" && (
+                        <button
+                          type="button"
+                          className={cameraOff ? "active" : ""}
+                          onClick={toggleCamera}
+                        >
+                          {cameraOff ? "Camera off" : "Camera"}
+                        </button>
+                      )}
+                    </>
                   )}
                   {error && call.status === "connecting" && (
                     <button
