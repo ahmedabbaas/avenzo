@@ -81,3 +81,11 @@ modern profile controls under React ownership, and correcting shared media/bubbl
 geometry. No auth, data, model or upload changes. Risk: custom legacy overlay controls
 must retain their styles; authenticated visual verification requires a signed-in
 session and physical-device confirmation remains necessary.
+
+Profile review found two competing mobile header variants in the same component.
+The shared mobile rules now explicitly hide the legacy variants when the current
+header exists; Settings remains React-owned. The visible header keeps Edit and adds
+the existing working Share action, plus Discover. Actual authenticated desktop
+checks confirmed four square thumbnails (265 by 265 CSS pixels), no horizontal
+overflow, and a fully contained upload dialog. These are desktop-browser checks,
+not evidence of physical Android layout verification.

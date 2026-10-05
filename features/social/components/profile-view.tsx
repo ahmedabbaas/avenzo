@@ -160,6 +160,9 @@ export default function ProfileView({
             <button type="button" onClick={onEdit}>
               Edit profile
             </button>
+            <button type="button" onClick={() => void shareProfile()}>
+              {shareLabel}
+            </button>
             <button
               className="profile-reference-discover"
               type="button"
