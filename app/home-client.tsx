@@ -44,6 +44,7 @@ import {
 import ActivityPanel from "../features/social/components/activity-panel";
 import AvatarImage from "../features/social/components/avatar-image";
 import EmptyState from "../features/social/components/empty-state";
+import DiscoverSearch from "../features/social/components/discover-search";
 import ExploreMediaGrid from "../features/social/components/explore-media-grid";
 import ProfileView from "../features/social/components/profile-view";
 import FeedSkeleton from "../features/social/components/feed-skeleton";
@@ -1735,27 +1736,13 @@ export default function HomeClient({
                 text="People, moments, clips and communities across AVENZO."
               />
 
-              <label className="explore-search-box">
-                <Icon name="search" size={19} />
-                <input
-                  ref={exploreSearchRef}
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value.slice(0, 120))}
-                  placeholder="Search users, posts, reels or tags..."
-                  aria-label="Search users, posts, reels or tags"
-                  autoComplete="off"
-                  inputMode="search"
-                />
-                {query && (
-                  <button
-                    type="button"
-                    onClick={() => setQuery("")}
-                    aria-label="Clear search"
-                  >
-                    <Icon name="close" size={16} />
-                  </button>
-                )}
-              </label>
+              <DiscoverSearch
+                key={initialProfile.id}
+                userId={initialProfile.id}
+                query={query}
+                onChange={setQuery}
+                inputRef={exploreSearchRef}
+              />
 
               <div
                 className="avenzo-mobile-explore-filters"

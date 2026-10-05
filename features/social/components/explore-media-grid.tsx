@@ -5,6 +5,7 @@ import type { Post, Reel } from "../types";
 import UserMediaImage from "./user-media-image";
 import VerifiedBadge from "./verified-badge";
 import Icon from "./icon";
+import ExploreVideoPreview from "./explore-video-preview";
 
 type ExploreMediaGridProps = {
   posts: Post[];
@@ -88,12 +89,7 @@ export default function ExploreMediaGrid({
             >
               {mediaPath ? (
                 isVideo ? (
-                  <video
-                    src={mediaUrl(mediaPath)}
-                    muted
-                    playsInline
-                    preload="metadata"
-                  />
+                  <ExploreVideoPreview src={mediaUrl(mediaPath)} />
                 ) : (
                   <UserMediaImage
                     sizes="(max-width: 900px) 33vw, 240px"

@@ -3179,3 +3179,16 @@ html[data-theme="light"] .avenzo-call-error{
 
 html.avenzo-call-open{overflow:hidden!important}
 html.avenzo-call-open .mobile-bottom-nav{visibility:hidden!important;pointer-events:none!important}
+
+/* Discover search history shares the existing web/native visual tokens. */
+.social-app .discover-recent{margin:0 0 20px;color:var(--text);}
+.social-app .discover-recent-head{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.social-app .discover-recent ul{list-style:none;padding:0;margin:8px 0 0;}
+.social-app .discover-recent li{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line);}
+.social-app .discover-recent button{min-height:48px;background:transparent;color:inherit;border:0;padding:10px 12px;cursor:pointer;font-size:14px;}
+.social-app .discover-recent-query{display:flex;align-items:center;gap:12px;flex:1;min-width:0;text-align:left;}
+.social-app .discover-recent-query span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.social-app .discover-search .explore-search-box input{min-width:0;}
+.social-app .discover-search .explore-search-box button{flex-shrink:0;min-width:44px;min-height:44px;}
+.social-app .discover-search button:focus-visible{outline:2px solid var(--text);outline-offset:2px;}
+.reels-notice{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}

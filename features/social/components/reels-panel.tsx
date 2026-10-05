@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { playVideoSafely, pauseVideo } from "../lib/video-playback";
+import { useRuntimePreferences } from "../../settings/lib/runtime-preferences";
 import BrandLogo from "../../../components/brand-logo";
 import MobileBottomNav from "../../../components/mobile-bottom-nav";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -22,19 +24,6 @@ import { ReelsSkeleton } from "./loading-skeletons";
 import Icon from "./icon";
 import { avatarFor, formatRelativeTime } from "../lib/profile";
 
-function playVideoSafely(video: HTMLVideoElement) {
-  const start = () => {
-    void video.play().catch(() => undefined);
-  };
-
-  if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-    start();
-    return;
-  }
-
-  video.addEventListener("canplay", start, { once: true });
-}
-
 function formatReelMetric(value: number) {
   if (value >= 1_000_000) {
     return (value / 1_000_000).toFixed(value >= 10_000_000 ? 0 : 1).replace(".0", "") + "M";
@@ -54,6 +43,8 @@ export default function ReelsPanel({
 }) {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
+  const preferences = useRuntimePreferences();
+  const saveData = preferences.data_saving_mode || preferences.use_less_mobile_data;
   const viewportRef = useRef<HTMLDivElement>(null);
   const viewedRef = useRef(new Set<string>());
   const videoRefs = useRef(new Map<string, HTMLVideoElement>());
@@ -72,7 +63,7 @@ export default function ReelsPanel({
   const [notice, setNotice] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const [muted, setMuted] = useState(true);
-  const [manualPaused, setManualPaused] = useState(false);
+  const [manualPaused, setManualPaused] = useState(!preferences.media_autoplay_videos);
   const [loadedIds, setLoadedIds] = useState<Set<string>>(new Set());
   const [failedIds, setFailedIds] = useState<Set<string>>(new Set());
 
@@ -125,6 +116,8 @@ export default function ReelsPanel({
     return reels;
   }, [followed, reelTab, reels]);
 
+  const reelOrder = displayedReels.map(reel => reel.id).join(",");
+
   const load = useCallback(async () => {
     try {
       const [result, relationships] = await Promise.all([
@@ -160,7 +153,7 @@ export default function ReelsPanel({
       const video = activeReel ? videoRefs.current.get(activeReel.id) : null;
       if (video && !manualPaused) {
         video.muted = muted;
-        playVideoSafely(video);
+        playVideoSafely(video, () => setManualPaused(true));
       }
     };
 
@@ -172,7 +165,7 @@ export default function ReelsPanel({
     const syncPlaybackWithVisibility = () => {
       if (document.hidden) {
         for (const video of videoRefs.current.values()) {
-          video.pause();
+          pauseVideo(video);
         }
         return;
       }
@@ -181,7 +174,7 @@ export default function ReelsPanel({
       const video = activeReel ? videoRefs.current.get(activeReel.id) : null;
       if (video && !manualPaused) {
         video.muted = muted;
-        playVideoSafely(video);
+        playVideoSafely(video, () => setManualPaused(true));
       }
     };
 
@@ -256,7 +249,7 @@ export default function ReelsPanel({
           const index = Number(slide.dataset.reelIndex || 0);
           const reelId = slide.dataset.reelId;
           setActiveIndex(index);
-          setManualPaused(false);
+          setManualPaused(!preferences.media_autoplay_videos);
 
           if (reelId && !viewedRef.current.has(reelId)) {
             viewedRef.current.add(reelId);
@@ -280,17 +273,23 @@ export default function ReelsPanel({
     });
 
     return () => observer.disconnect();
-  }, [displayedReels.length, supabase]);
+  }, [reelOrder, displayedReels.length, preferences.media_autoplay_videos, supabase]);
+
+  useEffect(() => {
+    // Capture mounted nodes: inline refs may be cleared before unmount cleanup.
+    const mountedVideos = [...videoRefs.current.values()];
+    return () => mountedVideos.forEach(pauseVideo);
+  }, [activeIndex, reelOrder, saveData]);
 
   useEffect(() => {
     for (const [reelId, video] of videoRefs.current.entries()) {
       const index = displayedReels.findIndex((reel) => reel.id === reelId);
       const active = index === activeIndex;
       video.muted = muted;
-      if (!active || manualPaused) {
-        video.pause();
+      if (!active || manualPaused || document.hidden) {
+        pauseVideo(video);
       } else {
-        playVideoSafely(video);
+        playVideoSafely(video, () => setManualPaused(true));
       }
     }
   }, [activeIndex, displayedReels, loadedIds, manualPaused, muted]);
@@ -299,7 +298,7 @@ export default function ReelsPanel({
     const videos = videoRefs.current;
     return () => {
       for (const video of videos.values()) {
-        video.pause();
+        pauseVideo(video);
         video.removeAttribute("src");
         video.load();
       }
@@ -312,7 +311,7 @@ export default function ReelsPanel({
   ) {
     setReelTab(next);
     setActiveIndex(0);
-    setManualPaused(false);
+    setManualPaused(!preferences.media_autoplay_videos);
     window.requestAnimationFrame(() => {
       viewportRef.current?.scrollTo({ top: 0, behavior: "auto" });
     });
@@ -433,9 +432,9 @@ export default function ReelsPanel({
 
     if (video.paused) {
       setManualPaused(false);
-      playVideoSafely(video);
+      playVideoSafely(video, () => setManualPaused(true));
     } else {
-      video.pause();
+      pauseVideo(video);
       setManualPaused(true);
     }
   }
@@ -446,15 +445,6 @@ export default function ReelsPanel({
       node.muted = muted;
       node.playsInline = true;
 
-      const index = displayedReels.findIndex((reel) => reel.id === reelId);
-      if (index === activeIndex && !manualPaused) {
-        window.requestAnimationFrame(() => {
-          if (videoRefs.current.get(reelId) !== node) return;
-          node.muted = muted;
-          if (node.readyState === HTMLMediaElement.HAVE_NOTHING) node.load();
-          playVideoSafely(node);
-        });
-      }
       return;
     }
 
@@ -531,7 +521,10 @@ export default function ReelsPanel({
         </Link>
       </header>
 
-      {notice && <div className="reels-notice">{notice}</div>}
+      {notice && <div className="reels-notice" role="alert">
+        <span>{notice}</span>
+        <button type="button" className="btn small" onClick={() => void load()}>Retry</button>
+      </div>}
 
       {displayedReels.length === 0 ? (
         <div className="reels-empty-wrap">
@@ -551,7 +544,7 @@ export default function ReelsPanel({
             const author = reel.profile;
             const isSaved = saved.includes(reel.id);
             const commentsOpen = commentFor === reel.id;
-            const nearby = Math.abs(index - activeIndex) <= 1;
+            const nearby = Math.abs(index - activeIndex) <= (saveData ? 0 : 1);
             const active = index === activeIndex;
             const loaded = loadedIds.has(reel.id);
             const failed = failedIds.has(reel.id);
@@ -574,12 +567,12 @@ export default function ReelsPanel({
                     playsInline
                     loop
                     autoPlay={active && !manualPaused}
-                    preload={nearby ? "auto" : "metadata"}
+                    preload={active ? "auto" : "metadata"}
                     onClick={() => togglePlayback(reel, index)}
                     onLoadedMetadata={(event) => {
                       if (index === activeIndex && !manualPaused) {
                         event.currentTarget.muted = muted;
-                        playVideoSafely(event.currentTarget);
+                        playVideoSafely(event.currentTarget, () => setManualPaused(true));
                       }
                     }}
                     onLoadedData={() => {
@@ -594,7 +587,7 @@ export default function ReelsPanel({
                       setLoadedIds((current) => new Set(current).add(reel.id));
                       if (index === activeIndex && !manualPaused) {
                         event.currentTarget.muted = muted;
-                        playVideoSafely(event.currentTarget);
+                        playVideoSafely(event.currentTarget, () => setManualPaused(true));
                       }
                     }}
                     onPlaying={() =>

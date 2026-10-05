@@ -381,3 +381,33 @@ Do not add fake users, fake activity, dummy buttons, dead screens, artificial AP
   with native CSS loaded; no horizontal overflow and at least 48px touch targets.
 - This is not a two-device WebRTC/audio test and does not verify production TURN,
   Bluetooth routing, killed-process notifications or Play Store readiness.
+
+## Original social product phase — 2026-10-05
+
+Architecture review: retained Next.js/React, Supabase data/auth and Capacitor Java
+shell. No database, RLS, native permission, package or branding changes in this
+phase. Shared components/styles apply to web and the Android hosted UI.
+
+Master target specification: `docs/AVENZO_ORIGINAL_SOCIAL_MASTER_PROMPT.md`.
+It defines phased product behavior and acceptance criteria, not completed status.
+
+Implemented in this phase:
+- Per-account device-local recent Discover searches after explicit submission,
+  with eight-entry limit, removal, Clear all and storage-failure tolerance.
+- Explore video previews defer their source until near the viewport; data-saving
+  settings show an Open video fallback without downloading previews.
+- Clips honor autoplay preferences and reduce neighbouring video loading when
+  data-saving is enabled; only the active Clip preloads the full resource.
+- Delayed play listeners are canceled on pause, background and viewport changes.
+  Playback rejection restores the explicit Play control. Category ordering updates
+  refresh the observer without resetting pause for ordinary metric updates.
+- Clip-load errors expose a functional Retry action.
+
+Validation: repository contracts, ESLint, TypeScript and production build passed;
+14 existing auth/upload/collections/call-queue tests plus four new playback race,
+listener deduplication and autoplay rejection tests passed under Node 24.
+Review retained account isolation, bounded storage, shared theme/native styling,
+existing server authorization and explicit media controls. Browser installation
+was unavailable in this environment, so authenticated visual/device checks remain
+unverified. Global server-backed search, story replies/reactions, FCM, production
+TURN and physical-device call audio remain separate roadmap/release gates.
