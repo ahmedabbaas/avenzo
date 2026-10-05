@@ -291,9 +291,9 @@
         path.indexOf("/auth") === 0;
 
       var fallback = document.querySelector(".avenzo-native-global-nav");
-      var appNav = document.querySelector(".mobile-nav:not(.avenzo-native-global-nav)");
+      var appNav = document.querySelector(".mobile-bottom-nav:not(.avenzo-native-global-nav),.mobile-nav:not(.avenzo-native-global-nav)");
 
-      if (authRoute) {
+      if (authRoute || path === "/settings" || path.indexOf("/settings/") === 0) {
         if (fallback) fallback.remove();
         return;
       }
@@ -308,11 +308,11 @@
         fallback.className = "mobile-nav mobile-bottom-nav avenzo-native-global-nav";
         fallback.setAttribute("aria-label", "Primary mobile navigation");
         fallback.innerHTML =
-          '<button type="button" data-avenzo-tab="home" aria-label="Home"><span class="mobile-icon-wrap">' + nativeNavIcon("home") + '</span><small>Home</small></button>' +
-          '<button type="button" data-avenzo-tab="search" aria-label="Search"><span class="mobile-icon-wrap">' + nativeNavIcon("search") + '</span><small>Search</small></button>' +
-          '<button type="button" data-avenzo-tab="create" class="mobile-create" aria-label="Create"><span class="mobile-icon-wrap">' + nativeNavIcon("create") + '</span><small>Create</small></button>' +
-          '<button type="button" data-avenzo-tab="reels" aria-label="Reels"><span class="mobile-icon-wrap">' + nativeNavIcon("reels") + '</span><small>Reels</small></button>' +
-          '<button type="button" data-avenzo-tab="profile" aria-label="Profile"><span class="mobile-icon-wrap">' + nativeNavIcon("profile") + '</span><small>Profile</small></button>';
+          '<button type="button" data-avenzo-tab="home" class="mobile-nav-item" aria-label="Home"><span class="mobile-icon-wrap">' + nativeNavIcon("home") + '</span><small>Home</small></button>' +
+          '<button type="button" data-avenzo-tab="search" class="mobile-nav-item" aria-label="Search"><span class="mobile-icon-wrap">' + nativeNavIcon("search") + '</span><small>Search</small></button>' +
+          '<button type="button" data-avenzo-tab="create" class="mobile-nav-item mobile-create" aria-label="Create"><span class="mobile-icon-wrap">' + nativeNavIcon("create") + '</span><small>Create</small></button>' +
+          '<button type="button" data-avenzo-tab="reels" class="mobile-nav-item" aria-label="Reels"><span class="mobile-icon-wrap">' + nativeNavIcon("reels") + '</span><small>Reels</small></button>' +
+          '<button type="button" data-avenzo-tab="profile" class="mobile-nav-item" aria-label="Profile"><span class="mobile-icon-wrap">' + nativeNavIcon("profile") + '</span><small>Profile</small></button>';
 
         var destinations = {
           home: "/home",
@@ -842,11 +842,11 @@
       ensureDrawer();
       ensureGlobalBottomNav();
       normalizeBottomNav();
-      enhanceLegacyDmChrome();
+      if (!document.body.classList.contains("avenzo-next")) enhanceLegacyDmChrome();
       enhanceLegacyDmActions();
       installNativeEmojiPicker();
       installNativeAttachmentPreview();
-      enhanceReferenceProfileHeader();
+      if (!document.body.classList.contains("avenzo-next")) enhanceReferenceProfileHeader();
       installNativeNotificationSessionCapture();
       syncHomeState();
 

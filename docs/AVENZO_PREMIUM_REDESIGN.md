@@ -68,3 +68,16 @@ Native lifecycle review: activity destruction stops accepting new jobs but lets
 active inference finish before closing its model and recycling its bitmap. The web
 request retains a 45-second timeout and removes its callback; late results cannot
 apply an edit. This avoids recycling native input while a slow model is reading it.
+
+## Android layout recovery
+
+The APK still injects 17,000 lines of legacy unlayered CSS after the web stylesheet.
+Removing `!important` did not establish shared ownership: high-specificity native
+selectors still override unprotected geometry, including square-cropped feed media.
+Native profile enhancement also intercepts the current Settings control as Back;
+fallback navigation lacks the current item classes. Recover by placing compatibility
+CSS in a lower-priority cascade layer, preserving standalone native helpers, keeping
+modern profile controls under React ownership, and correcting shared media/bubble
+geometry. No auth, data, model or upload changes. Risk: custom legacy overlay controls
+must retain their styles; authenticated visual verification requires a signed-in
+session and physical-device confirmation remains necessary.

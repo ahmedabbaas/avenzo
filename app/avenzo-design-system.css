@@ -3321,7 +3321,7 @@ html[data-finish="copper"]{--premium-finish:#bd8b61;--premium-finish-soft:rgba(1
 .avenzo-next .dm-conversation-row .avatar{width:50px!important;height:50px!important;border-radius:50%!important}
 .avenzo-next .dm-sidebar-search,.avenzo-next .dm-message-input{background:var(--premium-secondary)!important;border:1px solid var(--premium-line)!important;border-radius:24px!important;color:var(--premium-text)!important}
 .avenzo-next .dm-message-area{padding:18px 16px!important}
-body.avenzo-next .dm-chat .dm-message-row .dm-bubble{background:var(--premium-secondary)!important;color:var(--premium-text)!important;border:0!important;border-radius:21px 21px 21px 7px!important;padding:12px 16px!important;font-size:15px!important;line-height:1.55!important;box-shadow:none!important;max-width:min(80%,520px)!important}
+body.avenzo-next .dm-chat .dm-message-row .dm-bubble{background:var(--premium-secondary)!important;color:var(--premium-text)!important;border:0!important;border-radius:21px 21px 21px 7px!important;padding:12px 16px!important;font-size:15px!important;line-height:1.55!important;box-shadow:none!important;max-width:100%!important}
 .avenzo-next .dm-chat .dm-message-row.me .dm-bubble{background:var(--premium-primary)!important;color:var(--premium-on-primary)!important;border-radius:21px 21px 7px 21px!important}
 .avenzo-next .dm-chat .dm-message-row.me .dm-bubble a,.avenzo-next .dm-chat .dm-message-row.me .dm-bubble button{color:inherit!important}
 .avenzo-next .dm-send-button{width:44px!important;height:44px!important;border-radius:50%!important;background:var(--premium-primary)!important;color:var(--premium-on-primary)!important;box-shadow:none!important}
@@ -3483,3 +3483,21 @@ html[data-high-contrast="true"] .avenzo-next{--premium-muted:var(--premium-text)
 .avenzo-next .studio-preview img { display: block; width: 100%; max-height: 420px; object-fit: contain; }
 .avenzo-next .studio-code { min-width: 0; }
 .avenzo-next .studio-code pre { white-space: pre-wrap; overflow-wrap: anywhere; user-select: text; font-size: 14px; max-height: 180px; overflow: auto; }
+
+/* Shared media geometry: Android compatibility must not square-crop the feed. */
+.avenzo-next .social-app .post-media-open { display:block!important; width:100%!important; margin:0!important; padding:0!important; border:0!important; overflow:hidden!important; }
+.avenzo-next .social-app .post-card .post-media { display:block!important; width:100%!important; height:auto!important; aspect-ratio:auto!important; max-height:min(680px,125vw)!important; object-fit:contain!important; margin:0!important; border:0!important; }
+.avenzo-next .social-app .post-carousel-shell { width:100%!important; margin:0!important; overflow:hidden!important; }
+.avenzo-next .social-app .post-carousel-slide { aspect-ratio:4/5!important; min-width:0!important; }
+.avenzo-next .social-app .post-carousel-slide .post-media { width:100%!important; height:100%!important; max-height:none!important; aspect-ratio:auto!important; object-fit:contain!important; }
+.avenzo-next .social-app .profile-grid { grid-template-columns:repeat(3,minmax(0,1fr))!important; }
+.avenzo-next .social-app .profile-grid > * { display:block!important; aspect-ratio:1!important; min-width:0!important; overflow:hidden!important; }
+.avenzo-next .social-app .profile-grid img,.avenzo-next .social-app .profile-grid video { display:block!important; width:100%!important; height:100%!important; object-fit:cover!important; }
+.avenzo-next .dm-chat .dm-message-stack { min-width:0!important; max-width:min(82%,520px)!important; }
+@media(max-width:900px) {
+  .avenzo-next .social-app .social-layout { width:100%!important; max-width:100%!important; margin-inline:0!important; padding-inline:0!important; box-sizing:border-box!important; }
+  .avenzo-next .social-app .explore-media-grid { grid-template-columns:repeat(3,minmax(0,1fr))!important; }
+  .avenzo-next .social-app .explore-media-tile { aspect-ratio:1!important; grid-row:auto!important; min-width:0!important; overflow:hidden!important; }
+  .avenzo-next .social-app .explore-media-open { display:block!important; width:100%!important; height:100%!important; }
+  .avenzo-next .social-app .explore-media-open img,.avenzo-next .social-app .explore-media-open video { display:block!important; width:100%!important; height:100%!important; object-fit:cover!important; }
+}
