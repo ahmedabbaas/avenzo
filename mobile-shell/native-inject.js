@@ -868,8 +868,9 @@
         'button[aria-label="Close"], button[aria-label="Close story"], ' +
         'button[aria-label*="close" i], .modal-header .icon-button'
       );
-      if (close && !close.disabled) {
-        close.click();
+      if (close) {
+        // Consume Android Back during a pending upload instead of navigating behind the dialog.
+        if (!close.disabled) close.click();
         return true;
       }
 
