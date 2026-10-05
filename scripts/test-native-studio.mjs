@@ -1,4 +1,7 @@
-const fs=require('node:fs'),assert=require('node:assert/strict'),vm=require('node:vm'),ts=require('typescript');
+import fs from "node:fs";
+import assert from "node:assert/strict";
+import vm from "node:vm";
+import ts from "typescript";
 const timers=new Map();let id=0,data='data:image/jpeg;base64,QQ==';
 const win={setTimeout:fn=>{timers.set(++id,fn);return id;},clearTimeout:id=>timers.delete(id)};
 class FileReader{readAsDataURL(){this.result=data;queueMicrotask(()=>this.onload());}}
