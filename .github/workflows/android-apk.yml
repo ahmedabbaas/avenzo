@@ -111,6 +111,7 @@ jobs:
         working-directory: android
         run: |
           chmod +x gradlew
+          export AVENZO_DEBUG_STORE_FILE="$HOME/.android/debug.keystore"
           ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Verify APK and package artifact
@@ -121,7 +122,10 @@ jobs:
           test -s "$APK"
 
           BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
-          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs "$APK"
+          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs "$APK" | tee AVENZO-signing.txt
+          expected="5fc551b7a20912a542ee7bb62773c551ceca732d2d53b6196d6e5d5baa3ad9d2"
+          actual="$(sed -n 's/.*certificate SHA-256 digest: //p' AVENZO-signing.txt | head -n 1)"
+          test "$actual" = "$expected"
 
           cp "$APK" AVENZO.apk
           sha256sum AVENZO.apk > AVENZO-sha256.txt
