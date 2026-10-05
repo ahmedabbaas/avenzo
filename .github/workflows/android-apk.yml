@@ -136,6 +136,8 @@ jobs:
           import hashlib, json, os
           from pathlib import Path
           apk = Path("AVENZO.apk")
+          assert apk.stat().st_size >= 100 * 1024 * 1024, "Premium APK must contain at least 100 MiB of real functionality"
+          assert apk.stat().st_size <= 6 * 24 * 1024 * 1024, "Add transfer slots before publishing this larger APK"
           Path("AVENZO-build-info.json").write_text(json.dumps({
               "commit": os.environ["GITHUB_SHA"],
               "version_code": int(os.environ["GITHUB_RUN_NUMBER"]),
@@ -213,6 +215,18 @@ jobs:
           name: AVENZO-Android-Transfer-05
           path: |
             AVENZO.apk.part-04
+            AVENZO-sha256.txt
+            AVENZO-build-info.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload APK transfer part 06
+        if: hashFiles('AVENZO.apk.part-05') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: AVENZO-Android-Transfer-06
+          path: |
+            AVENZO.apk.part-05
             AVENZO-sha256.txt
             AVENZO-build-info.json
           if-no-files-found: error
