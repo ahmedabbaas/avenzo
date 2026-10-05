@@ -11,6 +11,8 @@ const prepaintThemeScript = `
 (function () {
   try {
     var root = document.documentElement;
+    var finish = localStorage.getItem("avenzo-appearance-finish");
+    if (["chrome", "citron", "ocean", "copper"].indexOf(finish) >= 0) root.dataset.finish = finish;
     var raw = localStorage.getItem("avenzo-visual-preferences");
     var saved = raw ? JSON.parse(raw) : null;
     var preference = saved && saved.theme ? saved.theme : "system";

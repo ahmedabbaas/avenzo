@@ -2,11 +2,14 @@
 
 import {
   useMemo,
+  useEffect,
   useRef,
   useState,
   type DragEvent,
   type FormEvent,
 } from "react";
+import { useComposerLifecycle } from "../lib/use-composer-lifecycle";
+import ImageTextScan from "./image-text-scan";
 import AvatarImage from "./avatar-image";
 import UserMediaImage from "./user-media-image";
 import Icon from "./icon";
@@ -23,6 +26,7 @@ import type { Profile } from "../types";
 import type { ContentDraft } from "../lib/content-drafts";
 import {
   analyzeImageForAltText,
+  hasNativeMediaSense,
   nativeImpact,
 } from "../lib/native-social";
 
@@ -145,6 +149,7 @@ export default function CreateContentModal({
   onClose: () => void;
   onSubmit: (event: FormEvent) => void;
 }) {
+  const dialogRef = useComposerLifecycle(onClose, posting);
   const galleryInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
   const genericInput = useRef<HTMLInputElement>(null);
@@ -172,6 +177,17 @@ export default function CreateContentModal({
   );
   const activePreview = postPreviews[safeActiveIndex] || "";
   const activeFile = postFiles[safeActiveIndex] || null;
+  const [nativeMediaSense, setNativeMediaSense] = useState(false);
+  const altGeneration = useRef(0);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setNativeMediaSense(hasNativeMediaSense()), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+  useEffect(() => {
+    altGeneration.current += 1;
+    const timer = window.setTimeout(() => { setSmartAltNote(""); setAnalyzingAlt(false); }, 0);
+    return () => { altGeneration.current += 1; window.clearTimeout(timer); };
+  }, [activeFile]);
 
   function resetEditControls() {
     setCrop("original");
@@ -210,12 +226,14 @@ export default function CreateContentModal({
   async function generateSmartAlt() {
     if (!activeFile || !onPostAltTextChange || analyzingAlt) return;
 
+    const request = ++altGeneration.current;
     setAnalyzingAlt(true);
     setSmartAltNote("");
     nativeImpact("medium");
 
     try {
       const suggestion = await analyzeImageForAltText(activeFile);
+      if (request !== altGeneration.current) return;
       if (!suggestion) {
         setSmartAltNote(
           "Smart Alt runs on-device in the AVENZO Android app. You can still write alt text manually."
@@ -225,9 +243,9 @@ export default function CreateContentModal({
       onPostAltTextChange(safeActiveIndex, suggestion.slice(0, 1000));
       setSmartAltNote("Suggested on-device. Review before publishing.");
     } catch {
-      setSmartAltNote("Media Sense could not analyze this image.");
+      if (request === altGeneration.current) setSmartAltNote("Media Sense could not analyze this image.");
     } finally {
-      setAnalyzingAlt(false);
+      if (request === altGeneration.current) setAnalyzingAlt(false);
     }
   }
 
@@ -689,6 +707,8 @@ export default function CreateContentModal({
             </div>
           </div>
 
+          <ImageTextScan file={activeFile} busy={posting} caption={caption} onCaptionChange={onCaptionChange} />
+
           {postPreviews.length > 0 && (
             <div className="create-alt-section">
               <div className="create-collab-head">
@@ -698,7 +718,7 @@ export default function CreateContentModal({
                 </div>
                 <div className="create-alt-head-actions">
                   <small>Image {safeActiveIndex + 1}/{postPreviews.length}</small>
-                  <button
+                  {nativeMediaSense && <button
                     type="button"
                     className="create-smart-alt"
                     disabled={!activeFile || analyzingAlt}
@@ -707,7 +727,7 @@ export default function CreateContentModal({
                   >
                     <Icon name="eye" size={15} />
                     {analyzingAlt ? "Scanning…" : "Smart Alt"}
-                  </button>
+                  </button>}
                 </div>
               </div>
 
@@ -1013,20 +1033,20 @@ export default function CreateContentModal({
   }
 
   return (
-    <div className="modal" role="dialog" aria-modal="true" aria-label={"Create " + mode}>
+    <div ref={dialogRef} tabIndex={-1} className="modal" role="dialog" aria-modal="true" aria-label={"Create " + mode}>
       <form
         className="modal-box create-modal create-upload-panel"
         onSubmit={handleFormSubmit}
       >
         <div className="modal-header">
           <div>
-            <div className="eyebrow">CREATE / UPLOAD</div>
+            <div className="eyebrow">CREATE SOMETHING</div>
             <h2>
               {mode === "post"
                 ? "Create post"
                 : mode === "reel"
-                  ? "New reel"
-                  : "New story"}
+                  ? "New Clip"
+                  : "New Moment"}
             </h2>
           </div>
           <button

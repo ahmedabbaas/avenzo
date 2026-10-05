@@ -8,18 +8,18 @@ export default function manifest(): MetadataRoute.Manifest {
       "A private-first social platform for real people, posts and conversations.",
     start_url: "/",
     display: "standalone",
-    background_color: "#06080a",
-    theme_color: "#06080a",
+    background_color: "#101113",
+    theme_color: "#101113",
     icons: [
       {
         src: "/avenzo-logo-premium.png",
-        sizes: "500x500",
+        sizes: "1024x1024",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/avenzo-logo-premium.png",
-        sizes: "500x500",
+        src: "/avenzo-logo-maskable.png",
+        sizes: "1024x1024",
         type: "image/png",
         purpose: "maskable",
       },

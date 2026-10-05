@@ -3,6 +3,7 @@
 type AvenzoNativeSocialBridge = {
   haptic?: (level: "light" | "medium" | "heavy") => void;
   shareContent?: (title: string, text: string, url: string) => void;
+  extractImageText?: (dataUrl: string, script: string, callbackName: string) => void;
   analyzeImage?: (dataUrl: string, callbackName: string) => void;
 };
 
@@ -129,5 +130,30 @@ export async function analyzeImageForAltText(file: File) {
     } catch {
       finish(null);
     }
+  });
+}
+
+export type TextScanScript = "latin" | "chinese" | "devanagari" | "japanese" | "korean";
+
+export function hasNativeTextScan() { return Boolean(bridge()?.extractImageText); }
+
+export async function extractImageText(file: File, script: TextScanScript) {
+  const native = bridge();
+  if (!native?.extractImageText) return null;
+  const dataUrl = await compactImageDataUrl(file);
+  if (dataUrl.length > 12000000) throw new Error("Image is too large to scan");
+  const callbackName = "__avenzoTextScan_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2);
+  return await new Promise<string | null>((resolve) => {
+    let settled = false;
+    const finish = (value: string | null) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeout);
+      delete (window as unknown as Record<string, unknown>)[callbackName];
+      resolve(value?.trim() || null);
+    };
+    (window as unknown as Record<string, unknown>)[callbackName] = (value: string) => finish(value);
+    const timeout = window.setTimeout(() => finish(null), 30000);
+    try { native.extractImageText?.(dataUrl, script, callbackName); } catch { finish(null); }
   });
 }

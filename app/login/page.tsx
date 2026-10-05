@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import ThemeSwitch from "../../components/theme-switch";
 import PasswordField from "../_components/password-field";
 import BrandLogo from "../../components/brand-logo";
 import Icon from "../../features/social/components/icon";
@@ -168,14 +169,13 @@ export default function LoginPage() {
 
   return (
     <main className="auth-shell login-shell login-reference-shell">
-      <div className="auth-glow auth-glow-a" />
-      <div className="auth-glow auth-glow-b" />
+      <div className="premium-login-tools"><ThemeSwitch /></div>
 
       <section className="auth-card login-card login-reference-card">
         <header className="login-reference-hero">
           <div className="login-reference-topbar">
             <Link className="login-reference-brand" href="/" aria-label="AVENZO home">
-              <BrandLogo size={34} priority />
+              <BrandLogo size={100} priority />
               <span>AVENZO</span>
             </Link>
             {!mfaRequired && (
@@ -188,13 +188,13 @@ export default function LoginPage() {
 
           <div className="login-reference-heading">
             <span className="login-reference-kicker">
-              {mfaRequired ? "SECURE ACCESS" : "WELCOME BACK"}
+              {mfaRequired ? "SECURE ACCESS" : "YOUR SPACE. YOUR PEOPLE."}
             </span>
-            <h1>{mfaRequired ? "Verify" : "Sign In"}</h1>
+            <h1>{mfaRequired ? "Verify your identity." : "Welcome back."}</h1>
             <p>
               {mfaRequired
                 ? "Confirm your identity to continue."
-                : "Your people, posts and conversations are waiting."}
+                : "Sign in and pick up where you left off."}
             </p>
           </div>
         </header>

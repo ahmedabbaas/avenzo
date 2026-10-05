@@ -26,7 +26,7 @@ export default function NetworkStatus() {
 
   return (
     <div className="network-status-banner" role="status" aria-live="polite">
-      You&apos;re offline. Some AVENZO actions will resume when your connection returns.
+      You&apos;re offline. Reconnect before sending or publishing. Your local drafts stay on this device.
     </div>
   );
 }

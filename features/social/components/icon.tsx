@@ -54,7 +54,10 @@ export type IconName =
   | "shield"
   | "globe"
   | "sliders"
-  | "info";
+  | "info"
+  | "sun"
+  | "moon"
+  | "scan";
 
 
 export default function Icon({ name, size = 19 }: { name: IconName; size?: number }) {
@@ -67,6 +70,9 @@ export default function Icon({ name, size = 19 }: { name: IconName; size?: numbe
   };
 
   const paths: Record<IconName, ReactNode> = {
+    sun: <><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.4 1.4m11.2 11.2L19 19M5 19l1.4-1.4M17.6 6.4L19 5"/></>,
+    moon: <path d="M20 15.5A8.5 8.5 0 0 1 8.5 4a8.5 8.5 0 1 0 11.5 11.5Z"/>,
+    scan: <><path d="M3 8V3h5m8 0h5v5M3 16v5h5m8 0h5v-5M7 8h10M7 12h10M7 16h6"/></>,
     home: (
       <>
         <path d="M3.5 10.5 12 3l8.5 7.5" />

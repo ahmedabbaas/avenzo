@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import BrandLogo from "../../components/brand-logo";
+import ThemeSwitch from "../../components/theme-switch";
 import AuthBrandPanel from "../_components/auth-brand-panel";
 import PasswordField from "../_components/password-field";
 import { createClient } from "../../lib/supabase/client";
@@ -62,12 +64,12 @@ export default function ResetPasswordPage() {
 
   return (
     <main className="auth-shell">
-      <div className="auth-glow auth-glow-a" />
-      <div className="auth-glow auth-glow-b" />
+      <div className="premium-login-tools"><ThemeSwitch /></div>
 
       <AuthBrandPanel context="SECURE RESET" />
 
       <section className="auth-card">
+        <a href="/login" aria-label="AVENZO sign in" className="premium-auth-logo"><BrandLogo size={72} /></a>
         <div className="eyebrow">NEW PASSWORD</div>
         <h1>Choose a new password.</h1>
         <p className="auth-sub">

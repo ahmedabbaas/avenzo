@@ -3192,3 +3192,255 @@ html.avenzo-call-open .mobile-bottom-nav{visibility:hidden!important;pointer-eve
 .social-app .discover-search .explore-search-box button{flex-shrink:0;min-width:44px;min-height:44px;}
 .social-app .discover-search button:focus-visible{outline:2px solid var(--text);outline-offset:2px;}
 .reels-notice{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
+
+/* AVENZO PREMIUM MOBILE — 2026-10-05
+   Shared visual authority. Native compatibility styles no longer override it. */
+:root{
+  --premium-bg:#101113;--premium-surface:#17191d;--premium-secondary:#202329;
+  --premium-text:#f4f5f7;--premium-soft:#c1c5cd;--premium-muted:#969da8;
+  --premium-line:#2b2f35;--premium-primary:#f0f2f5;--premium-on-primary:#111317;
+  --premium-brand:#c5f74f;--premium-finish:#c5ccd5;--premium-finish-soft:rgba(197,204,213,.12);
+  --premium-dock:rgba(23,25,29,.94);--premium-shadow:0 8px 32px rgba(0,0,0,.18);
+  --premium-radius:20px;--premium-gutter:20px;
+}
+html[data-theme="light"]{
+  --premium-bg:#f8f9fb;--premium-surface:#fff;--premium-secondary:#eef0f3;
+  --premium-text:#16191e;--premium-soft:#48505c;--premium-muted:#747d8a;
+  --premium-line:#e3e6eb;--premium-primary:#171a20;--premium-on-primary:#fff;
+  --premium-dock:rgba(255,255,255,.95);--premium-shadow:0 8px 32px rgba(24,31,43,.08);
+  --premium-finish:#28313d;--premium-finish-soft:rgba(40,49,61,.07);
+}
+html[data-finish="citron"]{--premium-finish:#a3ce34;--premium-finish-soft:rgba(163,206,52,.13)}
+html[data-finish="ocean"]{--premium-finish:#589ccc;--premium-finish-soft:rgba(88,156,204,.13)}
+html[data-finish="copper"]{--premium-finish:#bd8b61;--premium-finish-soft:rgba(189,139,97,.13)}
+.avenzo-next,
+.avenzo-next .social-app,
+.avenzo-next .messages-page,
+.avenzo-next .settings-page-shell,
+.avenzo-next .reels-page,
+.avenzo-next .public-profile-shell{
+  --bg:var(--premium-bg);--panel:var(--premium-surface);--panel-2:var(--premium-secondary);
+  --panel-3:var(--premium-secondary);--line:var(--premium-line);--line-strong:var(--premium-line);
+  --text:var(--premium-text);--text-soft:var(--premium-soft);--muted:var(--premium-muted);
+  --accent:var(--premium-finish);--accent-strong:var(--premium-primary);--accent-soft:var(--premium-finish-soft);
+  --av-bg:var(--premium-bg);--av-surface:var(--premium-surface);--av-surface-2:var(--premium-secondary);
+  --av-surface-3:var(--premium-secondary);--av-text:var(--premium-text);--av-soft:var(--premium-soft);
+  --av-muted:var(--premium-muted);--av-line:var(--premium-line);--av-line-strong:var(--premium-line);
+  --av-accent:var(--premium-finish);--av-accent-soft:var(--premium-finish-soft);
+  --home-bg:var(--premium-bg);--home-card:var(--premium-surface);--home-line:var(--premium-line);
+  --home-text:var(--premium-text);--home-muted:var(--premium-muted);--home-accent:var(--premium-finish);
+  --home-accent-soft:var(--premium-finish-soft);
+  --avenzo-ad-bg:var(--premium-bg);--avenzo-ad-surface:var(--premium-surface);
+  --avenzo-ad-surface-2:var(--premium-secondary);--avenzo-ad-text:var(--premium-text);
+  --avenzo-ad-line:var(--premium-line);--avenzo-ad-muted:var(--premium-muted);
+  color:var(--premium-text)!important;background:var(--premium-bg)!important;
+  font-family:-apple-system,BlinkMacSystemFont,var(--font-avenzo-ui),"Segoe UI",sans-serif!important;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+.avenzo-next button,.avenzo-next input,.avenzo-next textarea,.avenzo-next select{font:inherit}
+.avenzo-next input,.avenzo-next textarea,.avenzo-next select{font-size:16px!important}
+.avenzo-next button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.avenzo-next :focus-visible{outline:2px solid var(--premium-finish)!important;outline-offset:3px}
+.avenzo-next .avenzo-brand-logo,.avenzo-next .avenzo-native-logo{
+  object-fit:contain!important;border:0!important;border-radius:0!important;
+  filter:none!important;background:transparent!important;box-shadow:none!important;padding:0!important;
+}
+.avenzo-next .btn,.avenzo-next .auth-submit,.avenzo-next .top-create{
+  min-height:46px;border:0!important;border-radius:14px!important;padding:11px 18px!important;
+  background:var(--premium-primary)!important;color:var(--premium-on-primary)!important;
+  box-shadow:none!important;font-size:14px!important;font-weight:650!important;letter-spacing:-.015em;
+}
+.avenzo-next .btn.secondary{background:var(--premium-secondary)!important;color:var(--premium-text)!important;border:1px solid var(--premium-line)!important}
+.avenzo-next button:disabled{cursor:default;opacity:.48}
+.avenzo-next .icon-button{border:0!important;background:transparent!important;color:var(--premium-text)!important;min-width:44px;min-height:44px;border-radius:50%!important}
+.avenzo-next .page-title h1,.avenzo-next .settings-page-header h1{font-size:30px!important;letter-spacing:-.055em!important;font-weight:750!important}
+.avenzo-next .social-app .top{background:var(--premium-dock)!important;border-color:var(--premium-line)!important;box-shadow:none!important;backdrop-filter:blur(20px)}
+.avenzo-next .social-app .brand{font-weight:800!important;letter-spacing:-.045em!important;color:var(--premium-text)!important}
+.avenzo-next .social-app .left-nav,.avenzo-next .social-app .right-rail{background:transparent!important;border-color:var(--premium-line)!important}
+.avenzo-next .social-app .left-nav>button.active{background:var(--premium-finish-soft)!important;color:var(--premium-text)!important;border-radius:14px!important}
+.avenzo-next .social-app .home-feed-modes{display:flex!important;background:transparent!important;padding:0!important;border:0!important;gap:28px!important;border-bottom:1px solid var(--premium-line)!important;border-radius:0!important}
+.avenzo-next .social-app .home-feed-modes button{border:0!important;border-radius:0!important;background:transparent!important;color:var(--premium-muted)!important;padding:14px 2px!important;font-size:15px!important;font-weight:600!important;box-shadow:none!important}
+.avenzo-next .social-app .home-feed-modes button.active{color:var(--premium-text)!important;border-bottom:2px solid var(--premium-finish)!important}
+.avenzo-next .social-app .stories-row{padding:14px 0!important;gap:16px!important;background:transparent!important;border-bottom:1px solid var(--premium-line)!important;scrollbar-width:none}
+.avenzo-next .social-app .story-ring{width:64px!important;height:64px!important;padding:3px!important;border:1.5px solid var(--premium-line)!important;border-radius:50%!important;background:transparent!important;box-shadow:none!important}
+.avenzo-next .social-app .story.unseen .story-ring{border-color:var(--premium-finish)!important}
+.avenzo-next .social-app .story-ring img,.avenzo-next .social-app .story-ring .avatar{width:56px!important;height:56px!important;border-radius:50%!important;object-fit:cover!important}
+.avenzo-next .social-app .story-you .story-ring{background:var(--premium-secondary)!important;border:0!important}
+.avenzo-next .social-app .story small,.avenzo-next .social-app .story-label-mobile{font-size:12px!important;font-weight:500!important;color:var(--premium-soft)!important}
+.avenzo-next .social-app .post-card{background:var(--premium-surface)!important;border:0!important;border-radius:0!important;box-shadow:none!important;margin-bottom:24px!important;overflow:visible!important}
+.avenzo-next .social-app .post-head{min-height:66px!important;padding:12px 16px!important;border:0!important}
+.avenzo-next .social-app .post-head .avatar{width:38px!important;height:38px!important;border-radius:50%!important}
+.avenzo-next .social-app .post-head b{font-size:14px!important;font-weight:700!important}
+.avenzo-next .social-app .post-head small{font-size:12px!important;color:var(--premium-muted)!important}
+.avenzo-next .social-app .post-media,.avenzo-next .social-app .post-media-carousel,.avenzo-next .social-app .post-carousel-track{border-radius:0!important;background:var(--premium-secondary)!important}
+.avenzo-next .social-app .post-content{padding:10px 16px 16px!important}
+.avenzo-next .social-app .post-actions{gap:15px!important;align-items:center!important;margin-bottom:8px!important}
+.avenzo-next .social-app .post-actions button,.avenzo-next .social-app .post-stat{background:transparent!important;border:0!important;box-shadow:none!important;color:var(--premium-text)!important;min-height:42px!important;font-size:13px!important}
+.avenzo-next .social-app .post-actions svg{width:24px!important;height:24px!important;stroke-width:1.65!important}
+.avenzo-next .social-app .post-actions button.liked{color:#d95662!important}
+.avenzo-next .social-app .post-caption{font-size:14px!important;line-height:1.6!important;color:var(--premium-text)!important}
+.avenzo-next .social-app .explore-search-box,.avenzo-next .social-app .search-wrap{border:1px solid var(--premium-line)!important;background:var(--premium-secondary)!important;border-radius:16px!important;box-shadow:none!important;min-height:50px!important}
+.avenzo-next .social-app .explore-media-grid{gap:3px!important}
+.avenzo-next .social-app .explore-media-tile{border-radius:4px!important;box-shadow:none!important;border:0!important}
+.avenzo-next .social-app .profile-hero{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:24px 20px!important}
+.avenzo-next .social-app .profile-reference-avatar{background:transparent!important;border:0!important;box-shadow:none!important;width:86px!important;height:86px!important;border-radius:50%!important}
+.avenzo-next .social-app .profile-reference-avatar img{width:86px!important;height:86px!important;border-radius:50%!important}
+.avenzo-next .social-app .profile-reference-stats{gap:12px!important;flex:1!important;justify-content:space-evenly!important}
+.avenzo-next .social-app .profile-reference-stats>*{flex:1;text-align:center}
+.avenzo-next .social-app .profile-reference-stats b{font-size:21px!important;letter-spacing:-.035em!important}
+.avenzo-next .social-app .profile-reference-stats span{font-size:12px!important;color:var(--premium-muted)!important}
+.avenzo-next .social-app .profile-reference-copy{margin-top:18px!important}
+.avenzo-next .social-app .profile-reference-identity{font-size:18px!important;line-height:1.35!important;font-weight:700!important}
+.avenzo-next .social-app .profile-reference-bio{font-size:14px!important;line-height:1.6!important;color:var(--premium-soft)!important;max-width:38ch}
+.avenzo-next .social-app .profile-reference-actions{display:flex!important;gap:10px!important;margin-top:18px!important}
+.avenzo-next .social-app .profile-reference-actions .btn{flex:1!important;min-width:0!important}
+.avenzo-next .social-app .profile-content-tabs{border-bottom:1px solid var(--premium-line)!important;border-radius:0!important;background:transparent!important;padding:0!important;gap:0!important}
+.avenzo-next .social-app .profile-content-tabs button{flex:1;border-radius:0!important;min-height:52px!important;border:0!important;background:transparent!important;color:var(--premium-muted)!important}
+.avenzo-next .social-app .profile-content-tabs button.active{color:var(--premium-text)!important;border-bottom:2px solid var(--premium-finish)!important}
+.avenzo-next .social-app .profile-grid{gap:3px!important}
+.avenzo-next .social-app .profile-grid img{aspect-ratio:1!important;object-fit:cover!important;border-radius:0!important}
+.avenzo-next .settings-form-section,.avenzo-next .settings-hub-card,.avenzo-next .settings-mobile-profile-card{background:var(--premium-surface)!important;border:1px solid var(--premium-line)!important;border-radius:20px!important;box-shadow:none!important}
+.avenzo-next .settings-mobile-row{background:var(--premium-surface)!important;border-color:var(--premium-line)!important;min-height:65px!important}
+.avenzo-next .settings-mobile-row-icon,.avenzo-next .settings-hub-icon{background:var(--premium-secondary)!important;color:var(--premium-text)!important;border-radius:13px!important;width:38px!important;height:38px!important}
+.avenzo-next .settings-mobile-list{border:1px solid var(--premium-line)!important;border-radius:20px!important;overflow:hidden}
+.avenzo-next .settings-toggle-row{padding:16px 0!important;min-height:60px!important}
+.avenzo-next .settings-toggle-row b{font-size:15px!important;font-weight:600!important}
+.avenzo-next .settings-toggle-row small{font-size:13px!important;color:var(--premium-muted)!important;line-height:1.5!important}
+.avenzo-next .settings-switch{width:46px!important;height:28px!important;border-radius:20px!important;background:var(--premium-line)!important}
+.avenzo-next .settings-toggle-row input:checked+.settings-switch{background:var(--premium-finish)!important}
+.avenzo-next .theme-choice{border-radius:16px!important;background:var(--premium-secondary)!important;border:1px solid var(--premium-line)!important}
+.avenzo-next .theme-choice.active{border-color:var(--premium-finish)!important;box-shadow:0 0 0 1px var(--premium-finish)!important;background:var(--premium-finish-soft)!important}
+.avenzo-next .appearance-finish{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.avenzo-next .appearance-finish button{min-height:76px;display:flex;flex-direction:column;gap:9px;align-items:center;justify-content:center;background:var(--premium-secondary);color:var(--premium-text);border:1px solid var(--premium-line);border-radius:16px;font-size:12px}
+.avenzo-next .appearance-finish button.selected{border-color:var(--premium-finish);box-shadow:0 0 0 1px var(--premium-finish)}
+.avenzo-next .appearance-finish i{width:24px;height:24px;border-radius:50%}
+.avenzo-next .dm-workspace,.avenzo-next .dm-sidebar,.avenzo-next .dm-chat,.avenzo-next .dm-message-area{background:var(--premium-bg)!important;color:var(--premium-text)!important;border-color:var(--premium-line)!important}
+.avenzo-next .dm-chat-head,.avenzo-next .messages-page-topbar,.avenzo-next .dm-composer{background:var(--premium-dock)!important;color:var(--premium-text)!important;border-color:var(--premium-line)!important;box-shadow:none!important;backdrop-filter:blur(20px)}
+.avenzo-next .dm-conversation-row{padding:15px 20px!important;border:0!important;border-bottom:1px solid var(--premium-line)!important;border-radius:0!important;background:transparent!important;min-height:80px!important}
+.avenzo-next .dm-conversation-row.active{background:var(--premium-finish-soft)!important}
+.avenzo-next .dm-conversation-row .avatar{width:50px!important;height:50px!important;border-radius:50%!important}
+.avenzo-next .dm-sidebar-search,.avenzo-next .dm-message-input{background:var(--premium-secondary)!important;border:1px solid var(--premium-line)!important;border-radius:24px!important;color:var(--premium-text)!important}
+.avenzo-next .dm-message-area{padding:18px 16px!important}
+.avenzo-next .dm-bubble{background:var(--premium-secondary)!important;color:var(--premium-text)!important;border:0!important;border-radius:21px 21px 21px 7px!important;padding:12px 16px!important;font-size:15px!important;line-height:1.55!important;box-shadow:none!important;max-width:min(80%,520px)!important}
+.avenzo-next .dm-bubble.own{background:var(--premium-primary)!important;color:var(--premium-on-primary)!important;border-radius:21px 21px 7px 21px!important}
+.avenzo-next .dm-bubble.own a,.avenzo-next .dm-bubble.own button{color:inherit!important}
+.avenzo-next .dm-send-button{width:44px!important;height:44px!important;border-radius:50%!important;background:var(--premium-primary)!important;color:var(--premium-on-primary)!important;box-shadow:none!important}
+.avenzo-next .reels-page{color:#fff!important;background:#101113!important}
+.avenzo-next .reel-slide{border-radius:22px!important;overflow:hidden;background:#101113!important}
+.avenzo-next .reel-actions-rail button{background:transparent!important;border:0!important;color:white!important;min-height:48px!important;text-shadow:0 1px 12px #000}
+.avenzo-next .reel-actions-rail svg{stroke-width:1.7!important;width:26px!important;height:26px!important}
+.avenzo-next .reel-playback-controls button{border:1px solid rgba(255,255,255,.15)!important;background:rgba(16,17,19,.35)!important;color:#fff!important;border-radius:50%!important;backdrop-filter:blur(12px)}
+.avenzo-next .premium-theme-switch{display:inline-flex;gap:8px;align-items:center;justify-content:center;min-height:44px;padding:10px 14px;background:var(--premium-secondary);color:var(--premium-text);border:1px solid var(--premium-line);border-radius:24px;font-size:13px}
+.avenzo-next .login-reference-shell{min-height:100dvh!important;background:var(--premium-bg)!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:36px 24px!important;position:relative;color:var(--premium-text)!important}
+.avenzo-next .premium-login-tools{position:absolute;top:max(20px,env(safe-area-inset-top));right:max(24px,env(safe-area-inset-right));z-index:1}
+.avenzo-next .login-reference-card{width:min(100%,420px)!important;max-width:420px!important;display:block!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;padding:0!important;overflow:visible!important}
+.avenzo-next .login-reference-hero{background:transparent!important;border:0!important;padding:0!important;margin-bottom:28px!important;border-radius:0!important;min-height:0!important;clip-path:none!important}
+.avenzo-next .login-reference-hero::before,.avenzo-next .login-reference-hero::after,.avenzo-next .login-reference-card::before,.avenzo-next .login-reference-card::after{display:none!important}
+.avenzo-next .login-reference-topbar{display:flex!important;justify-content:center!important;align-items:center!important;margin-bottom:36px!important}
+.avenzo-next .login-reference-brand{flex-direction:column!important;gap:14px!important;color:var(--premium-text)!important}
+.avenzo-next .login-reference-brand span{font-size:17px!important;letter-spacing:.32em!important;font-weight:650!important;margin-left:.32em}
+.avenzo-next .login-reference-signup{display:none!important}
+.avenzo-next .login-reference-heading{text-align:left!important;padding:0!important;max-width:none!important}
+.avenzo-next .login-reference-kicker{display:none!important}
+.avenzo-next .login-reference-heading h1{font-size:34px!important;line-height:1.18!important;font-weight:750!important;letter-spacing:-.065em!important;color:var(--premium-text)!important;margin:0 0 10px!important}
+.avenzo-next .login-reference-heading p{font-size:15px!important;line-height:1.6!important;color:var(--premium-muted)!important;max-width:32ch!important;margin:0!important}
+.avenzo-next .login-reference-body{padding:0!important;background:transparent!important}
+.avenzo-next .auth-label>span{font-size:14px!important;font-weight:600!important;color:var(--premium-text)!important}
+.avenzo-next .auth-label input,.avenzo-next .auth-password-input{min-height:56px!important;border:1px solid var(--premium-line)!important;background:var(--premium-surface)!important;color:var(--premium-text)!important;border-radius:16px!important;box-shadow:none!important;padding:15px 16px!important}
+.avenzo-next .auth-password-input input{background:transparent!important;border:0!important;min-height:0!important;padding:0!important}
+.avenzo-next .auth-form{gap:18px!important}
+.avenzo-next .auth-remember,.avenzo-next .auth-login-options a{font-size:12px!important;color:var(--premium-soft)!important}
+.avenzo-next .auth-remember input{accent-color:var(--premium-primary);width:18px;height:18px}
+.avenzo-next .login-reference-submit{min-height:56px!important;font-size:16px!important;border-radius:16px!important;background:var(--premium-primary)!important;color:var(--premium-on-primary)!important;box-shadow:none!important;margin-top:8px!important}
+.avenzo-next .login-reference-submit-icon{display:none!important}
+.avenzo-next .login-reference-divider{border:0!important;margin:25px 0 6px!important;color:var(--premium-muted)!important;font-size:13px!important}
+.avenzo-next .login-reference-divider::before,.avenzo-next .login-reference-divider::after{display:none!important}
+.avenzo-next .login-reference-register{display:block!important;border:0!important;background:transparent!important;padding:6px!important;min-height:40px!important;color:var(--premium-text)!important;text-align:center!important;font-weight:650!important;font-size:14px!important;text-decoration:underline!important}
+.avenzo-next .login-reference-session-note{font-size:12px!important;color:var(--premium-muted)!important;line-height:1.5!important}
+.avenzo-next .site-footer{color:var(--premium-muted)!important;font-size:12px!important}
+.avenzo-next .modal:has(.create-upload-panel){background:rgba(0,0,0,.5)!important;backdrop-filter:blur(5px);z-index:1200!important;overflow:hidden!important;padding:20px!important}
+.avenzo-next .create-upload-panel{display:flex!important;flex-direction:column!important;width:min(760px,100%)!important;height:min(850px,90dvh)!important;max-height:90dvh!important;border:1px solid var(--premium-line)!important;border-radius:24px!important;background:var(--premium-bg)!important;color:var(--premium-text)!important;padding:0!important;box-shadow:var(--premium-shadow)!important;overflow:hidden!important}
+.avenzo-next .create-upload-panel .modal-header{flex:none!important;padding:20px 24px!important;background:var(--premium-bg)!important;border-bottom:1px solid var(--premium-line)!important}
+.avenzo-next .create-upload-panel .modal-header h2{font-size:24px!important;letter-spacing:-.045em!important}
+.avenzo-next .create-scroll-area{flex:1!important;min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain;padding:20px 24px!important;scroll-padding-bottom:24px}
+.avenzo-next .create-wizard-actions{flex:none!important;background:var(--premium-surface)!important;border-top:1px solid var(--premium-line)!important;padding:14px 24px max(14px,env(safe-area-inset-bottom))!important;position:relative!important;bottom:auto!important;display:flex!important;justify-content:space-between!important;gap:12px!important}
+.avenzo-next .create-wizard-actions>.btn:last-child{min-width:140px!important}
+.avenzo-next .create-step-copy h3{font-size:24px!important;letter-spacing:-.045em!important}
+.avenzo-next .create-step-copy p,.avenzo-next .create-collab-head span{color:var(--premium-muted)!important;font-size:14px!important}
+.avenzo-next .upload-dropzone{background:var(--premium-surface)!important;border:1px dashed var(--premium-line)!important;border-radius:22px!important;min-height:220px!important}
+.avenzo-next .create-upload-panel input,.avenzo-next .create-upload-panel textarea,.avenzo-next .create-upload-panel select{background:var(--premium-surface)!important;border:1px solid var(--premium-line)!important;color:var(--premium-text)!important;border-radius:14px!important;padding:12px!important}
+html.avenzo-composer-open .mobile-bottom-nav{display:none!important;pointer-events:none!important}
+html.avenzo-composer-open{overscroll-behavior:none}
+.avenzo-next .create-text-scan{border:1px solid var(--premium-line);border-radius:18px;padding:16px;margin-top:18px;background:var(--premium-surface)}
+.avenzo-next .create-text-scan p{font-size:13px;color:var(--premium-muted);line-height:1.5}
+.avenzo-next .create-text-scan textarea{width:100%;min-height:110px;margin:12px 0;box-sizing:border-box}
+.avenzo-next .create-text-scan-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+@media(max-width:900px){
+  .avenzo-next .social-app .top{min-height:calc(62px + env(safe-area-inset-top))!important;height:calc(62px + env(safe-area-inset-top))!important;padding:env(safe-area-inset-top) 20px 0!important}
+  .avenzo-next .social-app .avenzo-mobile-home-bar{display:flex!important;align-items:center!important;justify-content:space-between!important;width:100%!important}
+  .avenzo-next .social-app .avenzo-mobile-home-actions{gap:14px!important}
+  .avenzo-next .social-app .avenzo-mobile-home-bar .avenzo-brand-logo{width:34px!important;height:34px!important}
+  .avenzo-next .social-app .social-main{padding:0!important;max-width:100%!important}
+  .avenzo-next .social-app .home-dashboard-head,.avenzo-next .social-app .home-feed-toolbar{display:none!important}
+  .avenzo-next .social-app .home-feed-modes{padding-inline:20px!important;margin:0!important}
+  .avenzo-next .social-app .stories-row{padding-inline:20px!important;margin:0!important}
+  .avenzo-next .social-app .home-feed-grid{gap:0!important;display:block!important}
+  .avenzo-next .social-app .profile-page{padding-top:0!important}
+  .avenzo-next .social-app .explore-page{padding:16px 16px 100px!important}
+  .avenzo-next .social-app .avenzo-mobile-explore-head{padding:8px 4px 24px!important}
+  .avenzo-next .social-app .avenzo-mobile-explore-head h1{font-size:29px!important;letter-spacing:-.055em!important}
+  .avenzo-next .social-app .profile-reference-mobile{display:block!important}
+  .avenzo-next .social-app .profile-reference-top{display:flex!important;gap:24px!important;align-items:center!important}
+  .avenzo-next .mobile-bottom-nav{position:fixed!important;left:12px!important;right:12px!important;bottom:max(10px,env(safe-area-inset-bottom))!important;width:auto!important;height:70px!important;min-height:70px!important;display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:0!important;align-items:center!important;padding:5px 8px!important;border:1px solid var(--premium-line)!important;border-radius:28px!important;background:var(--premium-dock)!important;box-shadow:var(--premium-shadow)!important;backdrop-filter:blur(20px)!important;z-index:70!important;box-sizing:border-box!important}
+  .avenzo-next .mobile-bottom-nav .mobile-nav-item{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:4px!important;padding:4px!important;min-height:56px!important;background:transparent!important;border:0!important;color:var(--premium-muted)!important;transform:none!important;font-weight:500!important}
+  .avenzo-next .mobile-bottom-nav .mobile-nav-item.active{color:var(--premium-text)!important}
+  .avenzo-next .mobile-bottom-nav .mobile-icon-wrap{display:grid!important;place-items:center!important;width:30px!important;height:28px!important;border-radius:0!important;background:transparent!important;transform:none!important;box-shadow:none!important}
+  .avenzo-next .mobile-bottom-nav .mobile-icon-wrap svg{width:24px!important;height:24px!important;transform:none!important;stroke-width:1.8!important}
+  .avenzo-next .mobile-bottom-nav small{font-size:11px!important;font-weight:550!important;line-height:1.2!important;display:block!important;color:inherit!important}
+  .avenzo-next .mobile-bottom-nav .mobile-create .mobile-icon-wrap{width:48px!important;height:48px!important;border-radius:50%!important;background:var(--premium-primary)!important;color:var(--premium-on-primary)!important;box-shadow:none!important;transform:none!important}
+  .avenzo-next .mobile-bottom-nav .mobile-create svg{width:26px!important;height:26px!important;transform:none!important}
+  .avenzo-next .mobile-bottom-nav .mobile-nav-profile-avatar{width:25px!important;height:25px!important;border-radius:50%!important;object-fit:cover!important}
+  .avenzo-next .mobile-nav--keyboard-hidden{display:none!important}
+  .avenzo-next .social-app .social-layout{padding-bottom:100px!important}
+  .avenzo-next .reels-page .reels-viewport{height:calc(100dvh - 155px - env(safe-area-inset-top))!important;min-height:0!important;border-radius:0!important}
+  .avenzo-next .reels-page .reel-slide{height:100%!important;min-height:100%!important;border-radius:0!important}
+  .avenzo-next .reel-slide-video{object-fit:cover!important;width:100%!important;height:100%!important}
+  .avenzo-next .reel-overlay-copy{max-width:calc(100% - 72px)!important}
+  .avenzo-next .dm-chat-head{min-height:65px!important;padding-inline:16px!important}
+  .avenzo-next .dm-composer{padding:10px 12px max(10px,env(safe-area-inset-bottom))!important}
+  .avenzo-next .dm-message-input{min-height:46px!important;font-size:16px!important;padding:12px 16px!important}
+  .avenzo-next .settings-content{padding:18px 18px 32px!important}
+  .avenzo-next .modal:has(.create-upload-panel){padding:0!important;top:var(--composer-top,0px)!important;bottom:auto!important;height:var(--composer-height,100dvh)!important;box-sizing:border-box!important}
+  .avenzo-next .create-upload-panel{height:100%!important;max-height:100%!important;width:100%!important;border:0!important;border-radius:0!important;margin:0!important}
+  .avenzo-next .create-upload-panel .modal-header{padding:max(16px,env(safe-area-inset-top)) 20px 16px!important}
+  .avenzo-next .create-scroll-area{padding:18px 20px!important}
+  .avenzo-next .create-wizard-actions{padding-inline:20px!important}
+  .avenzo-next .login-reference-shell{align-items:flex-start!important;padding:90px 24px 28px!important}
+  .avenzo-next .login-reference-topbar{margin-bottom:30px!important}
+  .avenzo-next .login-reference-brand .avenzo-brand-logo{width:94px!important;height:94px!important}
+  .avenzo-next .login-reference-heading h1{font-size:32px!important}
+}
+@media(max-width:350px){.avenzo-next .mobile-bottom-nav{left:6px!important;right:6px!important}.avenzo-next .auth-login-options{gap:8px!important}.avenzo-next .profile-reference-top{gap:16px!important}.avenzo-next .login-reference-shell{padding-inline:18px!important}}
+@media(prefers-reduced-motion:reduce){.avenzo-next *{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+html[data-reduce-motion="true"] .avenzo-next *{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}
+html[data-large-text="true"] .avenzo-next{font-size:18px!important}
+html[data-high-contrast="true"]{--premium-line:var(--premium-muted)}
+
+.avenzo-next .create-text-scan { padding:20px 0; border-top:1px solid var(--premium-line); display:grid; gap:14px; }
+.avenzo-next .create-text-scan p { margin:6px 0 0; color:var(--premium-muted); font-size:13px; line-height:1.6; }
+.avenzo-next .create-text-scan .secondary-button { display:flex; gap:8px; align-items:center; justify-content:center; }
+
+/* Account entry screens follow the same quiet form system. */
+.avenzo-next .auth-shell:not(.login-reference-shell){background:var(--premium-bg)!important;min-height:100dvh;display:flex!important;align-items:center!important;justify-content:center!important;gap:0!important;padding:84px 24px 40px!important}
+.avenzo-next .auth-shell:not(.login-reference-shell) .auth-brand-panel{display:none!important}
+.avenzo-next .auth-card{background:transparent!important;border:0!important;box-shadow:none!important;width:min(100%,440px)!important;padding:0!important;border-radius:0!important}
+.avenzo-next .auth-card h1{color:var(--premium-text)!important;font-size:32px!important;letter-spacing:-.055em!important;line-height:1.12!important}
+.avenzo-next .auth-sub{color:var(--premium-muted)!important;line-height:1.6!important}
+.avenzo-next .auth-card input:not([type="checkbox"]){min-height:54px!important;background:var(--premium-surface)!important;color:var(--premium-text)!important;border:1px solid var(--premium-line)!important;border-radius:16px!important}
+.avenzo-next .auth-card .auth-submit{width:100%!important;min-height:52px!important}
+.avenzo-next .auth-label,.avenzo-next .auth-card .eyebrow{color:var(--premium-soft)!important}
+html[data-large-text="true"] .avenzo-next :is(.post-caption,.profile-bio,.settings-row,.dm-bubble,.login-reference-heading p,.auth-sub){font-size:18px!important;line-height:1.65!important}
+html[data-large-text="true"] .avenzo-next :is(.mobile-bottom-nav small,.story-name){font-size:12px!important}
+html[data-high-contrast="true"] .avenzo-next{--premium-muted:var(--premium-text);--premium-soft:var(--premium-text);--premium-line:var(--premium-text)}
+
+.avenzo-next .premium-auth-logo{display:inline-flex;margin-bottom:24px}

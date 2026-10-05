@@ -54,7 +54,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={jakarta.variable}>
+      <body className={jakarta.variable + " avenzo-next"}>
         <PreferencesBootstrap />
         <AuthenticatedRuntime />
         <NetworkStatus />

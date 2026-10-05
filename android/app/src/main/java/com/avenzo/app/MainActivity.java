@@ -44,6 +44,13 @@ import com.google.mlkit.vision.label.ImageLabel;
 import com.google.mlkit.vision.label.ImageLabeler;
 import com.google.mlkit.vision.label.ImageLabeling;
 import com.google.mlkit.vision.label.defaults.ImageLabelerOptions;
+import com.google.mlkit.vision.text.TextRecognition;
+import com.google.mlkit.vision.text.TextRecognizer;
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
+import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions;
+import com.google.mlkit.vision.text.devanagari.DevanagariTextRecognizerOptions;
+import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions;
+import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -852,8 +859,54 @@ public class MainActivity extends BridgeActivity {
     }
 
     @JavascriptInterface
+    public void extractImageText(String dataUrl, String script, String callbackName) {
+      if (callbackName == null || !callbackName.matches("[A-Za-z0-9_$]{1,100}")) return;
+      if (dataUrl == null || dataUrl.length() > 12000000 || script == null ||
+          !script.matches("latin|chinese|devanagari|japanese|korean")) {
+        deliverMediaSense(callbackName, "");
+        return;
+      }
+      notificationExecutor.execute(() -> extractImageTextInternal(dataUrl, script, callbackName));
+    }
+
+    @JavascriptInterface
     public void setCallAudioMode(boolean active, boolean speaker) {
       runOnUiThread(() -> MainActivity.this.setCallAudioMode(active, speaker));
+    }
+  }
+
+  private void extractImageTextInternal(String dataUrl, String script, String callbackName) {
+    Bitmap bitmap = null;
+    TextRecognizer recognizer = null;
+    try {
+      int comma = dataUrl.indexOf(',');
+      byte[] bytes = Base64.decode(comma >= 0 ? dataUrl.substring(comma + 1) : dataUrl, Base64.DEFAULT);
+      BitmapFactory.Options bounds = new BitmapFactory.Options();
+      bounds.inJustDecodeBounds = true;
+      BitmapFactory.decodeByteArray(bytes, 0, bytes.length, bounds);
+      if (bounds.outWidth <= 0 || bounds.outHeight <= 0) throw new IllegalArgumentException("Invalid image");
+      BitmapFactory.Options options = new BitmapFactory.Options();
+      options.inSampleSize = 1;
+      while (Math.max(bounds.outWidth, bounds.outHeight) / options.inSampleSize > 2048) options.inSampleSize *= 2;
+      bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
+      if (bitmap == null) throw new IllegalArgumentException("Invalid image");
+      switch (script) {
+        case "chinese": recognizer = TextRecognition.getClient(new ChineseTextRecognizerOptions.Builder().build()); break;
+        case "devanagari": recognizer = TextRecognition.getClient(new DevanagariTextRecognizerOptions.Builder().build()); break;
+        case "japanese": recognizer = TextRecognition.getClient(new JapaneseTextRecognizerOptions.Builder().build()); break;
+        case "korean": recognizer = TextRecognition.getClient(new KoreanTextRecognizerOptions.Builder().build()); break;
+        default: recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+      }
+      final Bitmap image = bitmap;
+      final TextRecognizer scanner = recognizer;
+      scanner.process(InputImage.fromBitmap(image, 0))
+        .addOnSuccessListener(result -> deliverMediaSense(callbackName, result.getText()))
+        .addOnFailureListener(error -> deliverMediaSense(callbackName, ""))
+        .addOnCompleteListener(task -> { scanner.close(); image.recycle(); });
+    } catch (Exception ignored) {
+      if (recognizer != null) recognizer.close();
+      if (bitmap != null) bitmap.recycle();
+      deliverMediaSense(callbackName, "");
     }
   }
 

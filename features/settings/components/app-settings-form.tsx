@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
+import AppearanceFinish from "./appearance-finish";
 import { applyAppPreferences } from "../lib/apply-preferences";
 import type { AppSettings } from "../types";
 import { useUiTranslation } from "../lib/i18n";
@@ -165,6 +166,10 @@ export default function AppSettingsForm({
             </button>
           ))}
         </div>
+      </Section>
+
+      <Section id="appearance-finish" title="Accent finish" text="Make AVENZO yours. This finish is saved on this device.">
+        <AppearanceFinish />
       </Section>
 
       <Section

@@ -1,6 +1,8 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
+import BrandLogo from "../../components/brand-logo";
+import ThemeSwitch from "../../components/theme-switch";
 import AuthBrandPanel from "../_components/auth-brand-panel";
 import PasswordField from "../_components/password-field";
 import TurnstileWidget, {
@@ -275,12 +277,12 @@ export default function SignupPage() {
 
   return (
     <main className="auth-shell">
-      <div className="auth-glow auth-glow-a" />
-      <div className="auth-glow auth-glow-b" />
+      <div className="premium-login-tools"><ThemeSwitch /></div>
 
       <AuthBrandPanel context="CREATE YOUR IDENTITY" />
 
       <section className="auth-card">
+        <a href="/login" aria-label="AVENZO sign in" className="premium-auth-logo"><BrandLogo size={72} /></a>
         <div className="eyebrow">JOIN AVENZO</div>
         <h1>Create your account.</h1>
         <p className="auth-sub">

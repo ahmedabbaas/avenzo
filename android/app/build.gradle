@@ -68,6 +68,12 @@ dependencies {
     // AVENZO Media Sense: bundled on-device models work offline and power Smart Alt.
     implementation 'com.google.mlkit:image-labeling:17.0.9'
     implementation 'com.google.mlkit:face-detection:16.1.7'
+    // Bundled OCR: all five supported scripts are available without a download.
+    implementation 'com.google.mlkit:text-recognition:16.0.1'
+    implementation 'com.google.mlkit:text-recognition-chinese:16.0.1'
+    implementation 'com.google.mlkit:text-recognition-devanagari:16.0.1'
+    implementation 'com.google.mlkit:text-recognition-japanese:16.0.1'
+    implementation 'com.google.mlkit:text-recognition-korean:16.0.1'
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
