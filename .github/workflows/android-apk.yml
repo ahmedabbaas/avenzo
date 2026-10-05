@@ -126,6 +126,22 @@ jobs:
           cp "$APK" AVENZO.apk
           sha256sum AVENZO.apk > AVENZO-sha256.txt
           ls -lh AVENZO.apk AVENZO-sha256.txt
+          # Small transfer artifacts are reassembled byte-for-byte into the same signed APK.
+          split -b 24M -d -a 2 AVENZO.apk AVENZO.apk.part-
+          python3 - <<'PYINFO'
+          import hashlib, json, os
+          from pathlib import Path
+          apk = Path("AVENZO.apk")
+          Path("AVENZO-build-info.json").write_text(json.dumps({
+              "commit": os.environ["GITHUB_SHA"],
+              "version_code": int(os.environ["GITHUB_RUN_NUMBER"]),
+              "size_bytes": apk.stat().st_size,
+              "sha256": hashlib.sha256(apk.read_bytes()).hexdigest(),
+              "abis": ["arm64-v8a", "armeabi-v7a"],
+              "offline_tools": ["Smart Alt", "Latin OCR", "Chinese OCR", "Devanagari OCR", "Japanese OCR", "Korean OCR"],
+              "signing": "stable-debug"
+          }, indent=2))
+          PYINFO
 
       - name: Upload AVENZO APK
         uses: actions/upload-artifact@v4
@@ -134,5 +150,66 @@ jobs:
           path: |
             AVENZO.apk
             AVENZO-sha256.txt
+            AVENZO-build-info.json
           if-no-files-found: error
           retention-days: 30
+
+      - name: Upload APK transfer part 01
+        if: hashFiles('AVENZO.apk.part-00') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: AVENZO-Android-Transfer-01
+          path: |
+            AVENZO.apk.part-00
+            AVENZO-sha256.txt
+            AVENZO-build-info.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload APK transfer part 02
+        if: hashFiles('AVENZO.apk.part-01') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: AVENZO-Android-Transfer-02
+          path: |
+            AVENZO.apk.part-01
+            AVENZO-sha256.txt
+            AVENZO-build-info.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload APK transfer part 03
+        if: hashFiles('AVENZO.apk.part-02') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: AVENZO-Android-Transfer-03
+          path: |
+            AVENZO.apk.part-02
+            AVENZO-sha256.txt
+            AVENZO-build-info.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload APK transfer part 04
+        if: hashFiles('AVENZO.apk.part-03') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: AVENZO-Android-Transfer-04
+          path: |
+            AVENZO.apk.part-03
+            AVENZO-sha256.txt
+            AVENZO-build-info.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload APK transfer part 05
+        if: hashFiles('AVENZO.apk.part-04') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: AVENZO-Android-Transfer-05
+          path: |
+            AVENZO.apk.part-04
+            AVENZO-sha256.txt
+            AVENZO-build-info.json
+          if-no-files-found: error
+          retention-days: 7
