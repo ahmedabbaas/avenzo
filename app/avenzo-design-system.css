@@ -3459,3 +3459,6 @@ html[data-high-contrast="true"] .avenzo-next{--premium-muted:var(--premium-text)
 .avenzo-next .login-reference-heading{margin-top:0!important;justify-items:start!important}
 .avenzo-next .login-reference-heading p{text-align:start!important}
 @media(max-width:900px){.avenzo-next .login-reference-brand .avenzo-brand-logo{width:94px!important;height:94px!important}}
+.avenzo-next .auth-shell .auth-form input:not([type="checkbox"]){font-size:16px!important;background:var(--premium-surface)!important;color:var(--premium-text)!important;border:1px solid var(--premium-line)!important}
+.avenzo-next .auth-shell .auth-form .password-control input:not([type="checkbox"]){background:transparent!important;border:0!important;border-radius:0!important}
+.avenzo-next .auth-shell .auth-form input::placeholder{color:var(--premium-muted)!important;opacity:1!important}
