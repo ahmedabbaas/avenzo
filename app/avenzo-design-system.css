@@ -3321,9 +3321,9 @@ html[data-finish="copper"]{--premium-finish:#bd8b61;--premium-finish-soft:rgba(1
 .avenzo-next .dm-conversation-row .avatar{width:50px!important;height:50px!important;border-radius:50%!important}
 .avenzo-next .dm-sidebar-search,.avenzo-next .dm-message-input{background:var(--premium-secondary)!important;border:1px solid var(--premium-line)!important;border-radius:24px!important;color:var(--premium-text)!important}
 .avenzo-next .dm-message-area{padding:18px 16px!important}
-.avenzo-next .dm-bubble{background:var(--premium-secondary)!important;color:var(--premium-text)!important;border:0!important;border-radius:21px 21px 21px 7px!important;padding:12px 16px!important;font-size:15px!important;line-height:1.55!important;box-shadow:none!important;max-width:min(80%,520px)!important}
-.avenzo-next .dm-bubble.own{background:var(--premium-primary)!important;color:var(--premium-on-primary)!important;border-radius:21px 21px 7px 21px!important}
-.avenzo-next .dm-bubble.own a,.avenzo-next .dm-bubble.own button{color:inherit!important}
+body.avenzo-next .dm-chat .dm-message-row .dm-bubble{background:var(--premium-secondary)!important;color:var(--premium-text)!important;border:0!important;border-radius:21px 21px 21px 7px!important;padding:12px 16px!important;font-size:15px!important;line-height:1.55!important;box-shadow:none!important;max-width:min(80%,520px)!important}
+.avenzo-next .dm-chat .dm-message-row.me .dm-bubble{background:var(--premium-primary)!important;color:var(--premium-on-primary)!important;border-radius:21px 21px 7px 21px!important}
+.avenzo-next .dm-chat .dm-message-row.me .dm-bubble a,.avenzo-next .dm-chat .dm-message-row.me .dm-bubble button{color:inherit!important}
 .avenzo-next .dm-send-button{width:44px!important;height:44px!important;border-radius:50%!important;background:var(--premium-primary)!important;color:var(--premium-on-primary)!important;box-shadow:none!important}
 .avenzo-next .reels-page{color:#fff!important;background:#101113!important}
 .avenzo-next .reel-slide{border-radius:22px!important;overflow:hidden;background:#101113!important}
