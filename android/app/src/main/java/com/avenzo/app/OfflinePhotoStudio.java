@@ -21,7 +21,6 @@ import java.io.ByteArrayOutputStream;
 import java.nio.FloatBuffer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -34,7 +33,9 @@ final class OfflinePhotoStudio {
   private volatile boolean closed;
   private final Sink sink;
   OfflinePhotoStudio(Sink sink) { this.sink = sink; }
-  void close() { closed = true; worker.shutdownNow(); }
+  // Let an active inference finish before recycling its input bitmap. The web
+  // request times out independently; shutdown must never interrupt model reads.
+  void close() { closed = true; worker.shutdown(); }
   private void reply(String callback, JSONObject value) {
     if (!closed) sink.deliver(callback, value.toString());
   }
@@ -74,7 +75,7 @@ final class OfflinePhotoStudio {
             BarcodeScanner scanner = BarcodeScanning.getClient();
             try {
               JSONArray values = new JSONArray();
-              for (Barcode code : Tasks.await(scanner.process(input), 30, TimeUnit.SECONDS)) {
+              for (Barcode code : Tasks.await(scanner.process(input))) {
                 String value = code.getRawValue();
                 if (value != null && value.length() <= 4096 && values.length() < 10)
                   values.put(new JSONObject().put("value", value).put("format", code.getFormat()));
@@ -85,7 +86,7 @@ final class OfflinePhotoStudio {
             PoseDetector detector = PoseDetection.getClient(new AccuratePoseDetectorOptions.Builder()
               .setDetectorMode(AccuratePoseDetectorOptions.SINGLE_IMAGE_MODE).build());
             try {
-              Pose pose = Tasks.await(detector.process(input), 30, TimeUnit.SECONDS);
+              Pose pose = Tasks.await(detector.process(input));
               float left = bitmap.getWidth(), top = bitmap.getHeight(), right = 0, bottom = 0;
               int count = 0;
               for (PoseLandmark point : pose.getAllPoseLandmarks()) {
@@ -103,7 +104,7 @@ final class OfflinePhotoStudio {
             Segmenter segmenter = Segmentation.getClient(new SelfieSegmenterOptions.Builder()
               .setDetectorMode(SelfieSegmenterOptions.SINGLE_IMAGE_MODE).build());
             try {
-              SegmentationMask mask = Tasks.await(segmenter.process(input), 30, TimeUnit.SECONDS);
+              SegmentationMask mask = Tasks.await(segmenter.process(input));
               FloatBuffer probabilities = mask.getBuffer().asFloatBuffer();
               int w = bitmap.getWidth(), h = bitmap.getHeight();
               if (mask.getWidth() != w || mask.getHeight() != h || probabilities.remaining() != w * h)

@@ -63,3 +63,8 @@ text with explicit copy, never navigation. Inputs, output size, callbacks and wo
 concurrency are bounded; no permissions/database/network additions. Geometry/alpha
 unit tests and bridge failure/timeout checks cover boundary behavior. Actual portrait
 quality and low-memory device behavior still need physical-device verification.
+
+Native lifecycle review: activity destruction stops accepting new jobs but lets
+active inference finish before closing its model and recycling its bitmap. The web
+request retains a 45-second timeout and removes its callback; late results cannot
+apply an edit. This avoids recycling native input while a slow model is reading it.
