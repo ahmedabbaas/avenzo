@@ -4,6 +4,7 @@ type AvenzoNativeSocialBridge = {
   haptic?: (level: "light" | "medium" | "heavy") => void;
   shareContent?: (title: string, text: string, url: string) => void;
   extractImageText?: (dataUrl: string, script: string, callbackName: string) => void;
+  processStudioImage?: (dataUrl: string, action: string, callbackName: string) => void;
   analyzeImage?: (dataUrl: string, callbackName: string) => void;
 };
 
@@ -73,23 +74,23 @@ function blobToDataUrl(blob: Blob) {
   });
 }
 
-async function compactImageDataUrl(file: File) {
+async function compactImageDataUrl(file: File, maxSide = 1280, mime = "image/jpeg") {
   try {
     const bitmap = await createImageBitmap(file);
-    const maxSide = 1280;
+
     const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
     const canvas = document.createElement("canvas");
     canvas.width = Math.max(1, Math.round(bitmap.width * scale));
     canvas.height = Math.max(1, Math.round(bitmap.height * scale));
     const context = canvas.getContext("2d");
-    if (!context) throw new Error("CANVAS_UNAVAILABLE");
+    if (!context) { bitmap.close(); throw new Error("CANVAS_UNAVAILABLE"); }
     context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
     bitmap.close();
     const blob = await new Promise<Blob>((resolve, reject) =>
       canvas.toBlob(
         (value) => (value ? resolve(value) : reject(new Error("IMAGE_ENCODE_FAILED"))),
-        "image/jpeg",
-        0.84
+        mime,
+        maxSide > 1280 ? 0.94 : 0.84
       )
     );
     return await blobToDataUrl(blob);
@@ -155,5 +156,37 @@ export async function extractImageText(file: File, script: TextScanScript) {
     (window as unknown as Record<string, unknown>)[callbackName] = (value: string) => finish(value);
     const timeout = window.setTimeout(() => finish(null), 30000);
     try { native.extractImageText?.(dataUrl, script, callbackName); } catch { finish(null); }
+  });
+}
+
+export type StudioAction = "cutout" | "frame" | "codes";
+export type StudioResult = { ok: boolean; error?: string; image?: string; codes?: { value: string; format: number }[] };
+export function hasNativePhotoStudio() { return Boolean(bridge()?.processStudioImage); }
+
+export async function processStudioImage(file: File, action: StudioAction): Promise<StudioResult> {
+  const native = bridge();
+  if (!native?.processStudioImage) throw new Error("Use the latest AVENZO Android app for offline Studio.");
+  const dataUrl = await compactImageDataUrl(file, 2048, file.type === "image/png" ? "image/png" : "image/jpeg");
+  if (dataUrl.length > 12000000) throw new Error("Choose a smaller image for Studio.");
+  const callbackName = "__avenzoStudio_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2);
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const finish = (value?: string, error?: Error) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeout);
+      delete (window as unknown as Record<string, unknown>)[callbackName];
+      if (error) { reject(error); return; }
+      try {
+        const result = JSON.parse(value || "{}") as StudioResult;
+        if (typeof result.ok !== "boolean") throw new Error("Invalid Studio response");
+        if (result.image && (!result.image.startsWith("data:image/png;base64,") || result.image.length > 12000000)) throw new Error("Invalid preview");
+        resolve(result);
+      } catch { reject(new Error("Studio could not read the result. Try again.")); }
+    };
+    (window as unknown as Record<string, unknown>)[callbackName] = (value: string) => finish(value);
+    const timeout = window.setTimeout(() => finish(undefined, new Error("Studio timed out. Try a smaller photo.")), 45000);
+    try { native.processStudioImage?.(dataUrl, action, callbackName); }
+    catch { finish(undefined, new Error("Studio is unavailable. Try again.")); }
   });
 }

@@ -3470,3 +3470,16 @@ html[data-high-contrast="true"] .avenzo-next{--premium-muted:var(--premium-text)
 .avenzo-next .auth-shell .auth-file{border:1px dashed var(--premium-line)!important;background:var(--premium-surface)!important;color:var(--premium-text)!important;padding:16px!important;border-radius:16px!important;font-size:14px!important}
 .avenzo-next .auth-shell .auth-form .auth-file input[type="file"]{padding:8px 0!important;border:0!important;background:transparent!important;min-height:44px!important}
 .avenzo-next .auth-shell input[type="file"]::file-selector-button{background:var(--premium-secondary);color:var(--premium-text);border:1px solid var(--premium-line);border-radius:10px;padding:10px 12px;margin-inline-end:12px;cursor:pointer}
+
+/* Offline Studio uses the canonical premium surface tokens. */
+.avenzo-next .create-photo-studio { padding: 18px; border: 1px solid var(--premium-line); border-radius: 20px; background: var(--premium-surface); display: grid; gap: 12px; }
+.avenzo-next .studio-heading { display: flex; align-items: center; gap: 8px; }
+.avenzo-next .studio-heading span { margin-left: auto; font-size: 12px; opacity: .65; }
+.avenzo-next .create-photo-studio p { margin: 0; font-size: 14px; line-height: 1.5; }
+.avenzo-next .studio-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.avenzo-next .studio-actions button, .avenzo-next .studio-code button { min-height: 44px; padding: 10px 14px; border: 1px solid var(--premium-line); border-radius: 14px; background: var(--premium-surface); color: inherit; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font: inherit; cursor: pointer; }
+.avenzo-next .create-photo-studio button:disabled { opacity: .45; cursor: wait; }
+.avenzo-next .studio-preview { min-width: 0; border-radius: 16px; overflow: hidden; background: repeating-conic-gradient(#d8d8d8 0% 25%, #f5f5f5 0% 50%) 50% / 20px 20px; }
+.avenzo-next .studio-preview img { display: block; width: 100%; max-height: 420px; object-fit: contain; }
+.avenzo-next .studio-code { min-width: 0; }
+.avenzo-next .studio-code pre { white-space: pre-wrap; overflow-wrap: anywhere; user-select: text; font-size: 14px; max-height: 180px; overflow: auto; }

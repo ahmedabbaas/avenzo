@@ -173,6 +173,7 @@ public class MainActivity extends BridgeActivity {
 
   @Override
   public void onDestroy() {
+    photoStudio.close();
     notificationHandler.removeCallbacks(notificationPoller);
     notificationExecutor.shutdownNow();
     setCallAudioMode(false, false);
@@ -776,7 +777,14 @@ public class MainActivity extends BridgeActivity {
     webView.postDelayed(() -> injectAvenzoShell(webView), 1500);
   }
 
+  private final OfflinePhotoStudio photoStudio = new OfflinePhotoStudio(this::deliverMediaSense);
+
   private class AvenzoNativeBridge {
+    @JavascriptInterface
+    public void processStudioImage(String dataUrl, String action, String callback) {
+      photoStudio.process(dataUrl, action, callback);
+    }
+
     @JavascriptInterface
     public void notifyMessage(
       String title,

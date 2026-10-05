@@ -43,3 +43,23 @@
 - Android launcher, splash, web manifest/icons and injected branding use one asset.
 - Repository quality gate, focused regressions, live health, CI APK build,
   certificate/icon/manifest/size inspection and explicit unverified device gates.
+
+## Offline Portrait Studio phase
+
+Extend the existing composer replacement callback and native bridge; preserve uploads,
+auth, RLS and original media until the user applies a preview. Bundle accurate pose,
+selfie segmentation and barcode models, each reachable through the editor. Android
+runs one image job on a separate worker, bounded to 2048 pixels and 12 MB transport;
+models and bitmaps close after every job. UI ignores stale responses, exposes errors,
+retains one undo while the editor is open, and never opens scanned links automatically.
+Web retains its manual editor. Risks: portrait models are beta, hair/multiple people
+can yield imperfect results; previews and undo are required. No physical-device
+inference claim without a device test. APK size is measured after signing, not padded.
+
+Phase review: preserved existing replacement/upload flow; 44px controls and named
+preview/status fit the editor grid in both themes. Generation guards discard stale
+callbacks; Studio processing blocks wizard navigation and closing. QR output is plain
+text with explicit copy, never navigation. Inputs, output size, callbacks and worker
+concurrency are bounded; no permissions/database/network additions. Geometry/alpha
+unit tests and bridge failure/timeout checks cover boundary behavior. Actual portrait
+quality and low-memory device behavior still need physical-device verification.

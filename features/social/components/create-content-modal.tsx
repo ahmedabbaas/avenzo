@@ -9,6 +9,7 @@ import {
   type FormEvent,
 } from "react";
 import { useComposerLifecycle } from "../lib/use-composer-lifecycle";
+import NativePhotoStudio from "./native-photo-studio";
 import ImageTextScan from "./image-text-scan";
 import AvatarImage from "./avatar-image";
 import UserMediaImage from "./user-media-image";
@@ -149,7 +150,7 @@ export default function CreateContentModal({
   onClose: () => void;
   onSubmit: (event: FormEvent) => void;
 }) {
-  const dialogRef = useComposerLifecycle(onClose, posting);
+
   const galleryInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
   const genericInput = useRef<HTMLInputElement>(null);
@@ -160,6 +161,7 @@ export default function CreateContentModal({
   const [postStep, setPostStep] = useState(1);
   const [activeIndex, setActiveIndex] = useState(0);
   const [editing, setEditing] = useState(false);
+  const dialogRef = useComposerLifecycle(onClose, posting || editing);
   const [crop, setCrop] = useState<PostImageCrop>("original");
   const [rotation, setRotation] =
     useState<PostImageEditOptions["rotation"]>(0);
@@ -289,6 +291,7 @@ export default function CreateContentModal({
           : "crop-original";
 
   function handleFormSubmit(event: FormEvent) {
+    if (posting || editing) { event.preventDefault(); return; }
     if (mode === "post" && postStep < 4) {
       event.preventDefault();
       if (postStep === 1 && postPreviews.length === 0) return;
@@ -428,6 +431,7 @@ export default function CreateContentModal({
                     type="button"
                     key={itemPreview}
                     className={index === safeActiveIndex ? "active" : ""}
+                    disabled={editing || posting}
                     onClick={() => {
                       setActiveIndex(index);
                       resetEditControls();
@@ -445,6 +449,11 @@ export default function CreateContentModal({
             )}
 
             <div className="create-edit-tools">
+              {onReplacePostFile && <NativePhotoStudio key={safeActiveIndex} file={activeFile} busy={editing || posting}
+                onBusyChange={setEditing} onReplace={async (file) => {
+                  await onReplacePostFile(safeActiveIndex, file); resetEditControls();
+                }} />}
+
               <div className="create-edit-group">
                 <b>Crop</b>
                 <div className="create-edit-options">
@@ -1054,7 +1063,7 @@ export default function CreateContentModal({
             className="icon-button"
             onClick={onClose}
             aria-label="Close"
-            disabled={posting}
+            disabled={posting || editing}
           >
             <Icon name="close" />
           </button>
@@ -1130,7 +1139,7 @@ export default function CreateContentModal({
                 resetEditControls();
                 onModeChange(nextMode);
               }}
-              disabled={posting}
+              disabled={posting || editing}
             >
               {nextMode === "post" ? "Post" : nextMode === "reel" ? "Reel" : "Story"}
             </button>
@@ -1152,7 +1161,7 @@ export default function CreateContentModal({
                         ? "complete"
                         : ""
                   }
-                  disabled={posting || number > postStep + 1}
+                  disabled={posting || editing || number > postStep + 1}
                   onClick={() => {
                     if (number <= postStep || (number === postStep + 1 && postPreviews.length)) {
                       setPostStep(number);
@@ -1191,7 +1200,7 @@ export default function CreateContentModal({
                 <button
                   type="button"
                   className="btn secondary"
-                  disabled={posting}
+                  disabled={posting || editing}
                   onClick={() => setPostStep((current) => Math.max(1, current - 1))}
                 >
                   Back

@@ -112,7 +112,7 @@ jobs:
         run: |
           chmod +x gradlew
           export AVENZO_DEBUG_STORE_FILE="$HOME/.android/debug.keystore"
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          ./gradlew testDebugUnitTest assembleDebug --no-daemon --stacktrace
 
       - name: Verify APK and package artifact
         shell: bash
@@ -142,7 +142,7 @@ jobs:
               "size_bytes": apk.stat().st_size,
               "sha256": hashlib.sha256(apk.read_bytes()).hexdigest(),
               "abis": ["arm64-v8a", "armeabi-v7a"],
-              "offline_tools": ["Smart Alt", "Latin OCR", "Chinese OCR", "Devanagari OCR", "Japanese OCR", "Korean OCR"],
+              "offline_tools": ["Smart Alt", "Latin OCR", "Chinese OCR", "Devanagari OCR", "Japanese OCR", "Korean OCR", "Portrait background removal", "Accurate 4:5 framing", "QR and barcode scanning"],
               "signing": "stable-debug"
           }, indent=2))
           PYINFO

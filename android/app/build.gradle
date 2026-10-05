@@ -84,6 +84,10 @@ dependencies {
     implementation 'com.google.mlkit:text-recognition-devanagari:16.0.1'
     implementation 'com.google.mlkit:text-recognition-japanese:16.0.1'
     implementation 'com.google.mlkit:text-recognition-korean:16.0.1'
+    // Reachable offline portrait studio tools, not download-size padding.
+    implementation 'com.google.mlkit:pose-detection-accurate:18.0.0-beta5'
+    implementation 'com.google.mlkit:segmentation-selfie:16.0.0-beta6'
+    implementation 'com.google.mlkit:barcode-scanning:17.3.0'
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
