@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Icon from "../../features/social/components/icon";
 
 export default function PasswordField({
   id,
@@ -48,7 +49,8 @@ export default function PasswordField({
           onClick={() => setVisible((current) => !current)}
           aria-label={visible ? "Hide password" : "Show password"}
         >
-          {visible ? "Hide" : "Show"}
+          <Icon name="eye" size={20} />
+          {visible && <svg className="password-eye-slash" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>}
         </button>
       </div>
       {error && (
