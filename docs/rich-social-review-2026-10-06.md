@@ -29,3 +29,9 @@ Review: accessibility labels/focus styles, desktop/narrow layout, light/dark tok
 ## Validation
 
 Repository quality gate includes project contracts, native bridge cases, draft lifecycle tests, discovery query tests, visual CSS/contrast checks, lint, TypeScript and optimized production build. Live browser checks follow deployment; evidence and remaining device-specific limitations are reported separately. An Android device and two-account send/receive tests are required to claim complete native or messaging end-to-end validation.
+
+## Follow-up live review
+
+The signed-in production browser returned real profile results for `A` and opened an actual `/p/[id]` post. Live inspection exposed inherited column layouts in compact search rows and a four-column chat header wrapping the search/options controls. Follow-up styles keep result rows horizontal, round chat avatars, align header actions and hide conversation search until requested. Audio and video actions share the same canonical header on web/native. Comment icons now focus the actual comment field. Search rendering trusts the authenticated server matches instead of discarding normalized matches locally; IME composition no longer triggers premature message sending. Post detail honors existing data-saving and delete-confirmation preferences.
+
+Validation: contracts, native bridge tests, draft lifecycle, search ranking/pagination, visual CSS/contrast, lint, TypeScript and production build. Browser checks cover authenticated search, inbox, existing empty conversation and an actual post; no real messages, calls or uploads are created for testing. Two-device calling, send/receive and physical Android checks remain unverified.
