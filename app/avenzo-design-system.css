@@ -3189,6 +3189,13 @@ html.avenzo-call-open .mobile-bottom-nav{visibility:hidden!important;pointer-eve
 .social-app .discover-recent-query{display:flex;align-items:center;gap:12px;flex:1;min-width:0;text-align:left;}
 .social-app .discover-recent-query span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .social-app .discover-search .explore-search-box input{min-width:0;}
+.avenzo-next .social-app .discover-search .explore-search-box{display:flex!important;align-items:center!important;gap:12px!important;padding:4px 8px 4px 16px!important;min-height:52px!important;border:1px solid var(--premium-line)!important;border-radius:16px!important;background:var(--premium-secondary)!important;color:var(--premium-muted)!important;margin-bottom:24px!important;box-sizing:border-box!important;}
+.avenzo-next .social-app .discover-search .explore-search-box input{flex:1!important;width:100%!important;min-width:0!important;border:0!important;outline:0!important;background:transparent!important;color:var(--premium-text)!important;font:inherit!important;font-size:15px!important;line-height:1.5!important;padding:8px 0!important;box-shadow:none!important;}
+.avenzo-next .social-app .discover-search .explore-search-box input::placeholder{color:var(--premium-muted)!important;opacity:1!important;}
+.avenzo-next .social-app .discover-search .explore-search-box:focus-within{outline:2px solid var(--premium-finish);outline-offset:2px;}
+.avenzo-next .social-app .discover-search .explore-search-box button{display:grid!important;place-items:center!important;width:44px!important;height:44px!important;padding:0!important;border:0!important;border-radius:12px!important;background:transparent!important;color:var(--premium-text)!important;cursor:pointer;}
+.avenzo-next .social-app .discover-search .explore-search-box button:hover{background:var(--premium-surface)!important;}
+.avenzo-next .social-app .discover-search .explore-search-box button:disabled{opacity:.4!important;cursor:default;}
 .social-app .discover-search .explore-search-box button{flex-shrink:0;min-width:44px;min-height:44px;}
 .social-app .discover-search button:focus-visible{outline:2px solid var(--text);outline-offset:2px;}
 .reels-notice{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}

@@ -558,7 +558,7 @@ export default function CreateContentModal({
       return (
         <section className="create-step-panel">
           <div className="create-step-copy">
-            <span>STEP 3</span>
+            <span>STEP {postPreviews.length ? 3 : 2}</span>
             <h3>Add details</h3>
             <p>Caption, people, location and accessibility details.</p>
           </div>
@@ -826,7 +826,7 @@ export default function CreateContentModal({
     return (
       <section className="create-step-panel">
         <div className="create-step-copy">
-          <span>STEP 4</span>
+          <span>STEP {postPreviews.length ? 4 : 3}</span>
           <h3>Review & publish</h3>
           <p>Check your post before it goes live.</p>
         </div>
@@ -1156,7 +1156,7 @@ export default function CreateContentModal({
           <div className="create-stepper" aria-label="Post creation progress">
             {(postPreviews.length === 0 && postStep >= 3
               ? [{ label:"Format", number:1 }, { label:"Details", number:3 }, { label:"Publish", number:4 }]
-              : [{ label:"Media", number:1 }, { label:"Edit", number:2 }, { label:"Details", number:3 }, { label:"Publish", number:4 }]).map(({ label, number }) => {
+              : [{ label:"Media", number:1 }, { label:"Edit", number:2 }, { label:"Details", number:3 }, { label:"Publish", number:4 }]).map(({ label, number }, index) => {
               return (
                 <button
                   type="button"
@@ -1175,7 +1175,7 @@ export default function CreateContentModal({
                     }
                   }}
                 >
-                  <i>{number < postStep ? "✓" : number}</i>
+                  <i>{number < postStep ? "✓" : index + 1}</i>
                   <span>{label}</span>
                 </button>
               );
