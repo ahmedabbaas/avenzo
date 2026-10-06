@@ -1069,7 +1069,7 @@ export async function markConversationRead(
 }
 
 export async function searchDiscovery(
-  supabase: SupabaseClient, userId: string, term: string, page: number
+  supabase: SupabaseClient, userId: string, term: string, page: number, peopleOnly = false
 ): Promise<DiscoverySearchPage> {
   const start = page * DISCOVERY_PAGE_SIZE;
   const profileFilter = discoveryTextFilter(["username", "display_name"], term);
@@ -1081,7 +1081,7 @@ export async function searchDiscovery(
       .or(discoveryTextFilter(["username", "display_name"], term, true))
       .order("username", { ascending:true }).order("id", { ascending:true })
       .range(start, start + DISCOVERY_PAGE_SIZE),
-    supabase.from("profiles").select("id").or(profileFilter).limit(80),
+    peopleOnly ? Promise.resolve({ data: [], error: null }) : supabase.from("profiles").select("id").or(profileFilter).limit(80),
   ]);
   assertNoError(peopleResult.error); assertNoError(authorsResult.error);
   const rawPeople = [...(peopleResult.data || [])];
@@ -1095,6 +1095,7 @@ export async function searchDiscovery(
     assertNoError(broader.error);
     rawPeople.push(...(broader.data || []));
   }
+  if (peopleOnly) return { people: rawPeople.slice(0, DISCOVERY_PAGE_SIZE) as Profile[], posts: [], reels: [], page, hasMore: page < 99 && rawPeople.length > DISCOVERY_PAGE_SIZE };
   const authorIds = (authorsResult.data || []).map(row => String(row.id))
     .filter(id => /^[0-9a-f-]{36}$/i.test(id));
   const tag = term.toLowerCase().replace(/\s/g, "");
