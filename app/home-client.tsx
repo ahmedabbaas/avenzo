@@ -49,6 +49,7 @@ import DiscoverSearch from "../features/social/components/discover-search";
 import { useDiscoverySearch } from "../features/social/lib/use-discovery-search";
 import ExploreMediaGrid from "../features/social/components/explore-media-grid";
 import ProfileView from "../features/social/components/profile-view";
+import { ProfileSkeleton } from "../features/social/components/loading-skeletons";
 import FeedSkeleton from "../features/social/components/feed-skeleton";
 import Icon, { type IconName } from "../features/social/components/icon";
 import PersonCard from "../features/social/components/person-card";
@@ -119,6 +120,9 @@ export default function HomeClient({
     useState<"following" | "for-you">("for-you");
   const [posts, setPosts] = useState<Post[]>([]);
   const [profilePosts, setProfilePosts] = useState<Post[]>([]);
+  const [profileContentLoading, setProfileContentLoading] = useState(true);
+  const [profileContentError, setProfileContentError] = useState("");
+  const [homeError, setHomeError] = useState("");
   const [explorePosts, setExplorePosts] = useState<Post[]>([]);
   const [reels, setReels] = useState<Reel[]>([]);
   const [profileReels, setProfileReels] = useState<Reel[]>([]);
@@ -320,16 +324,21 @@ export default function HomeClient({
   }
 
   async function loadProfileContent() {
-    const [ownPosts, ownReels] = await Promise.all([
-      fetchProfilePosts(supabase, initialProfile.id),
-      fetchReels(supabase, initialProfile.id, {
-        authorId: initialProfile.id,
-        limit: 60,
-      }),
-    ]);
-
-    setProfilePosts(ownPosts);
-    setProfileReels(ownReels.reels);
+    setProfileContentLoading(true);
+    setProfileContentError("");
+    try {
+      const [ownPosts, ownReels] = await Promise.all([
+        fetchProfilePosts(supabase, initialProfile.id),
+        fetchReels(supabase, initialProfile.id, { authorId: initialProfile.id, limit: 60 }),
+      ]);
+      setProfilePosts(ownPosts);
+      setProfileReels(ownReels.reels);
+    } catch (error) {
+      setProfileContentError("Your profile content could not load. Try again.");
+      throw error;
+    } finally {
+      setProfileContentLoading(false);
+    }
   }
 
   async function loadExplorePosts() {
@@ -386,6 +395,8 @@ export default function HomeClient({
   }, [supabase]);
 
   async function refreshEverything() {
+    setLoading(true);
+    setHomeError("");
     try {
       const criticalLoads: Promise<unknown>[] = [];
 
@@ -405,6 +416,7 @@ export default function HomeClient({
 
       await Promise.all(criticalLoads);
     } catch {
+      if (screen === "home") setHomeError("Your feed could not load. Try again.");
       showToast(
         "Some AVENZO data could not be loaded. Refresh to try again."
       );
@@ -434,6 +446,23 @@ export default function HomeClient({
   }
 
   useEffect(() => {
+    // Next can restore cached props after a detail route. The browser URL is
+    // the current section, even when those props still describe Home.
+    const restoreSection = () => {
+      const requested = new URLSearchParams(window.location.search).get("screen");
+      if (requested === "home" || requested === "explore" || requested === "activity" || requested === "saved" || requested === "profile") {
+        setScreen(requested);
+      }
+    };
+    const timer = window.setTimeout(restoreSection, 0);
+    window.addEventListener("popstate", restoreSection);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("popstate", restoreSection);
+    };
+  }, []);
+
+  useEffect(() => {
     const timer = window.setTimeout(() => {
       void refreshEverything();
     }, 0);
@@ -449,7 +478,9 @@ export default function HomeClient({
     if (screen === "home" && !loadedScreensRef.current.has("home")) {
       loadedScreensRef.current.add("home");
       setLoading(true);
-      void Promise.all([loadExplorePosts(), loadStories()]).finally(() => {
+      void Promise.all([loadExplorePosts(), loadStories()]).catch(() => {
+        setHomeError("Your feed could not load. Try again.");
+      }).finally(() => {
         setLoading(false);
       });
       return;
@@ -463,7 +494,9 @@ export default function HomeClient({
 
     if (screen === "profile" && !loadedScreensRef.current.has("profile")) {
       loadedScreensRef.current.add("profile");
-      void Promise.all([loadProfileContent(), loadStats()]);
+      void Promise.all([loadProfileContent(), loadStats()]).catch(() => {
+        showToast("Your profile could not fully load. Try again.");
+      });
       return;
     }
 
@@ -1636,6 +1669,8 @@ export default function HomeClient({
 
               {loading ? (
                 <FeedSkeleton />
+              ) : homeError && homeFeedPosts.length === 0 ? (
+                <div className="section-load-error" role="alert"><p>{homeError}</p><button type="button" className="btn secondary" onClick={() => void refreshEverything()}>Retry feed</button></div>
               ) : homeFeedPosts.length === 0 ? (
                 <EmptyState
                   title={
@@ -1904,7 +1939,8 @@ export default function HomeClient({
             />
           )}
 
-          {screen === "profile" && (
+          {screen === "profile" && profileContentError && <div className="section-load-error" role="alert"><p>{profileContentError}</p><button type="button" className="btn secondary" disabled={profileContentLoading} onClick={() => void loadProfileContent().catch(() => undefined)}>Retry profile</button></div>}
+          {screen === "profile" && profileContentLoading ? <ProfileSkeleton /> : screen === "profile" && !profileContentError && (
             <ProfileView
               profile={profile}
               posts={profilePosts}
