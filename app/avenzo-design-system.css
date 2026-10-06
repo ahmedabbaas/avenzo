@@ -3822,3 +3822,9 @@ html[data-large-text="true"] .avenzo-next :is(.profile-header-identity p,.dm-con
 .avenzo-next .dm-sidebar-actions :is(button,a){flex:1 1 auto!important;min-height:44px!important;padding:10px 12px!important;font-size:13px!important;text-decoration:none!important}
 .avenzo-next .dm-sidebar-actions>button{flex-basis:100%!important}
 .avenzo-next .empty-mark{display:grid!important;place-items:center!important;background:transparent!important;border:0!important}
+
+.avenzo-next .notification-copy p{font-size:15px!important;line-height:1.6!important;color:var(--premium-soft)!important}
+.avenzo-next .saved-collections-head h2{font-size:28px!important;letter-spacing:-.035em!important;color:var(--premium-text)!important}
+.avenzo-next :is(.saved-collections-head,.saved-collections-empty,.group-empty,.group-chat-placeholder,.channel-empty) p{font-size:14px!important;line-height:1.6!important;color:var(--premium-soft)!important}
+.avenzo-next :is(.saved-collections-empty,.group-empty) h3{font-size:20px!important;line-height:1.4!important;color:var(--premium-text)!important}
+.avenzo-next :is(.group-switch-row,.channel-switch-row) :is(a,span){font-size:14px!important;line-height:1.5!important}
