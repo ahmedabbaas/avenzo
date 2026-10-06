@@ -22,8 +22,17 @@ export function useComposerLifecycle(onClose: () => void, busy: boolean) {
     resize();
     viewport?.addEventListener("resize", resize);
     viewport?.addEventListener("scroll", resize);
-    const main = document.querySelector<HTMLElement>(".social-app");
-    const siblings = main ? [...main.children].filter((child): child is HTMLElement => child instanceof HTMLElement && !child.contains(dialogRef.current)) : [];
+    // Isolate the active modal on every route, including body-mounted portals.
+    const siblings: HTMLElement[] = [];
+    let branch: HTMLElement | null = dialogRef.current;
+    while (branch?.parentElement) {
+      const parent: HTMLElement = branch.parentElement;
+      for (const child of parent.children) {
+        if (child instanceof HTMLElement && child !== branch && !["SCRIPT", "STYLE", "LINK"].includes(child.tagName)) siblings.push(child);
+      }
+      if (parent === document.body) break;
+      branch = parent;
+    }
     const priorInert = siblings.map(node => node.inert);
     siblings.forEach(node => { node.inert = true; });
     function keydown(event: KeyboardEvent) {

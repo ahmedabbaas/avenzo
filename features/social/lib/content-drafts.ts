@@ -68,7 +68,11 @@ async function withStore<T>(
     return await new Promise<T>((resolve, reject) => {
       const transaction = db.transaction(STORE, mode);
       const request = run(transaction.objectStore(STORE));
-      request.onsuccess = () => resolve(request.result);
+      // A request can succeed before the transaction is committed to storage.
+      // Resolve only after commit so quota/abort errors never show 'Draft saved'.
+      transaction.oncomplete = () => resolve(request.result);
+      transaction.onabort = () =>
+        reject(transaction.error || new Error("DRAFT_TRANSACTION_ABORTED"));
       request.onerror = () =>
         reject(request.error || new Error("DRAFT_OPERATION_FAILED"));
       transaction.onerror = () =>
@@ -83,7 +87,7 @@ export async function listContentDrafts(userId: string) {
   if (typeof indexedDB === "undefined") return [] as ContentDraft[];
 
   const rows = await withStore<ContentDraft[]>("readonly", (store) =>
-    store.getAll()
+    store.index("userId").getAll(userId)
   );
 
   return (rows || [])
@@ -106,6 +110,10 @@ export async function saveContentDraft(input: DraftInput) {
           store.get(input.id || "")
         )
       : undefined;
+
+  if (existing && existing.userId !== input.userId) {
+    throw new Error("This draft belongs to another account on this device.");
+  }
 
   const draft: ContentDraft = {
     ...input,

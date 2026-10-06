@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Icon from "../features/social/components/icon";
 import AvatarImage from "../features/social/components/avatar-image";
+import CreateLauncher, { type CreateDestination } from "./create-launcher";
 
 export type MobilePrimaryTab = "home" | "search" | "create" | "reels" | "profile";
 
@@ -10,7 +11,7 @@ type MobileBottomNavProps = {
   active: MobilePrimaryTab | null;
   onHome: () => void;
   onSearch: () => void;
-  onCreate: () => void;
+  onCreate: (destination: CreateDestination) => void;
   onReels: () => void;
   onProfile: () => void;
   profileAvatarUrl?: string;
@@ -48,6 +49,7 @@ export default function MobileBottomNav({
   profileAvatarUrl = "",
 }: MobileBottomNavProps) {
   const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
 
   useEffect(() => {
     let focusedTyping = isTypingTarget(document.activeElement);
@@ -66,8 +68,10 @@ export default function MobileBottomNav({
       syncKeyboardState();
     };
 
+    let focusOutTimer: number | undefined;
     const handleFocusOut = () => {
-      window.setTimeout(() => {
+      window.clearTimeout(focusOutTimer);
+      focusOutTimer = window.setTimeout(() => {
         focusedTyping = isTypingTarget(document.activeElement);
         syncKeyboardState();
       }, 80);
@@ -80,6 +84,7 @@ export default function MobileBottomNav({
     syncKeyboardState();
 
     return () => {
+      window.clearTimeout(focusOutTimer);
       window.removeEventListener("focusin", handleFocusIn);
       window.removeEventListener("focusout", handleFocusOut);
       window.visualViewport?.removeEventListener("resize", syncKeyboardState);
@@ -90,12 +95,13 @@ export default function MobileBottomNav({
   const actions: Record<MobilePrimaryTab, () => void> = {
     home: onHome,
     search: onSearch,
-    create: onCreate,
+    create: () => setCreateOpen(true),
     reels: onReels,
     profile: onProfile,
   };
 
   return (
+    <>
     <nav
       className={
         "mobile-nav mobile-bottom-nav" +
@@ -137,5 +143,8 @@ export default function MobileBottomNav({
         );
       })}
     </nav>
+    {createOpen && <CreateLauncher onClose={() => setCreateOpen(false)}
+      onSelect={destination => { setCreateOpen(false); onCreate(destination); }} />}
+    </>
   );
 }

@@ -8,7 +8,6 @@ import AvatarImage from "../../social/components/avatar-image";
 import VerifiedBadge from "../../social/components/verified-badge";
 import { avatarFor } from "../../social/lib/profile";
 import type { Profile } from "../../social/types";
-import MobileBottomNav from "../../../components/mobile-bottom-nav";
 import { createClient } from "../../../lib/supabase/client";
 import { useUiTranslation } from "../lib/i18n";
 import { applyAppPreferences } from "../lib/apply-preferences";
@@ -363,17 +362,7 @@ export default function SettingsHub({
         </div>
       </div>
 
-      {profile && (
-        <MobileBottomNav
-          active={null}
-          onHome={() => router.push("/home?screen=home")}
-          onSearch={() => router.push("/home?screen=explore")}
-          onCreate={() => router.push("/home?screen=home&create=post")}
-          onReels={() => router.push("/reels")}
-          onProfile={() => router.push("/home?screen=profile")}
-          profileAvatarUrl={avatarFor(profile)}
-        />
-      )}
+
     </>
   );
 }

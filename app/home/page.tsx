@@ -74,6 +74,7 @@ export default async function HomePage({
       profile={profile}
       initialScreen={initialScreen}
       initialCreateMode={initialCreateMode}
+      initialShowDrafts={params.create === "drafts"}
     />
   );
 }

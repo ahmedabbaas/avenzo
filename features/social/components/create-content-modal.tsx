@@ -83,6 +83,7 @@ export default function CreateContentModal({
   pollDurationHours,
   drafts,
   activeDraftId,
+  initialShowDrafts = false,
   onSaveDraft,
   onRestoreDraft,
   onDeleteDraft,
@@ -129,6 +130,7 @@ export default function CreateContentModal({
   pollDurationHours: number | null;
   drafts: ContentDraft[];
   activeDraftId: string | null;
+  initialShowDrafts?: boolean;
   onSaveDraft: () => Promise<void> | void;
   onRestoreDraft: (draft: ContentDraft) => Promise<void> | void;
   onDeleteDraft: (draftId: string) => Promise<void> | void;
@@ -157,7 +159,7 @@ export default function CreateContentModal({
   const coverInput = useRef<HTMLInputElement>(null);
 
   const [dragging, setDragging] = useState(false);
-  const [showDrafts, setShowDrafts] = useState(false);
+  const [showDrafts, setShowDrafts] = useState(initialShowDrafts);
   const [postStep, setPostStep] = useState(1);
   const [activeIndex, setActiveIndex] = useState(0);
   const [editing, setEditing] = useState(false);

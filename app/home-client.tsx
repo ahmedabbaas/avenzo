@@ -11,6 +11,7 @@ import {
 import Link from "next/link";
 import BrandLogo from "../components/brand-logo";
 import MobileBottomNav from "../components/mobile-bottom-nav";
+import CreateLauncher, { type CreateDestination } from "../components/create-launcher";
 import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase/client";
 import { fetchInbox } from "../features/messages/data";
@@ -99,10 +100,12 @@ export default function HomeClient({
   profile: initialProfile,
   initialScreen,
   initialCreateMode,
+  initialShowDrafts = false,
 }: {
   profile: Profile;
   initialScreen?: Screen;
   initialCreateMode?: "post" | "reel" | "story";
+  initialShowDrafts?: boolean;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -132,7 +135,9 @@ export default function HomeClient({
   const [followed, setFollowed] = useState<string[]>([]);
   const [requested, setRequested] = useState<string[]>([]);
   const [saved, setSaved] = useState<string[]>([]);
-  const [showCreate, setShowCreate] = useState(Boolean(initialCreateMode));
+  const [showCreate, setShowCreate] = useState(Boolean(initialCreateMode) || initialShowDrafts);
+  const [showCreatePicker, setShowCreatePicker] = useState(false);
+  const [draftsInitiallyOpen, setDraftsInitiallyOpen] = useState(initialShowDrafts);
   const [drafts, setDrafts] = useState<ContentDraft[]>([]);
   const [activeDraftId, setActiveDraftId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
@@ -541,8 +546,15 @@ export default function HomeClient({
 
   function openComposer(nextMode: "post" | "reel" | "story") {
     resetComposer(nextMode);
+    setDraftsInitiallyOpen(false);
     setActiveDraftId(null);
     setShowCreate(true);
+  }
+
+  function selectCreateDestination(destination: CreateDestination) {
+    setShowCreatePicker(false);
+    openComposer(destination === "drafts" ? "post" : destination);
+    setDraftsInitiallyOpen(destination === "drafts");
   }
 
   async function saveCurrentDraft() {
@@ -1400,7 +1412,7 @@ export default function HomeClient({
 
         <button
           className="top-create"
-          onClick={() => openComposer("post")}
+          onClick={() => setShowCreatePicker(true)}
         >
           <Icon name="plus" size={17} />
           <span>Create a post</span>
@@ -1490,8 +1502,7 @@ export default function HomeClient({
           <button
             className="create-nav"
             onClick={() => {
-              setCreateMode("post");
-              setShowCreate(true);
+              setShowCreatePicker(true);
             }}
           >
             <Icon name="plus" />
@@ -1515,7 +1526,7 @@ export default function HomeClient({
                 </div>
                 <button
                   className="btn home-create-button"
-                  onClick={() => openComposer("post")}
+                  onClick={() => setShowCreatePicker(true)}
                 >
                   <Icon name="plus" size={17} />
                   Create a post
@@ -2004,12 +2015,14 @@ export default function HomeClient({
           active={screen === "home" ? "home" : screen === "explore" ? "search" : screen === "profile" ? "profile" : null}
           onHome={() => selectPrimaryScreen("home")}
           onSearch={() => selectPrimaryScreen("explore")}
-          onCreate={() => openComposer("post")}
+          onCreate={selectCreateDestination}
           onReels={() => router.push("/reels")}
           onProfile={() => selectPrimaryScreen("profile")}
           profileAvatarUrl={avatarFor(profile)}
         />
       )}
+
+      {showCreatePicker && <CreateLauncher onClose={() => setShowCreatePicker(false)} onSelect={selectCreateDestination} />}
 
       {showCreate && (
         <CreateContentModal
@@ -2038,6 +2051,7 @@ export default function HomeClient({
           pollDurationHours={pollDurationHours}
           drafts={drafts}
           activeDraftId={activeDraftId}
+          initialShowDrafts={draftsInitiallyOpen}
           onSaveDraft={() => void saveCurrentDraft()}
           onRestoreDraft={(draft) => void restoreContentDraft(draft)}
           onDeleteDraft={(draftId) => void removeContentDraft(draftId)}

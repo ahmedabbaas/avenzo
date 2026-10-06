@@ -15,7 +15,7 @@ const prepaintThemeScript = `
     if (["chrome", "citron", "ocean", "copper"].indexOf(finish) >= 0) root.dataset.finish = finish;
     var raw = localStorage.getItem("avenzo-visual-preferences");
     var saved = raw ? JSON.parse(raw) : null;
-    var preference = saved && saved.theme ? saved.theme : "system";
+    var preference = saved && ["light", "dark", "system"].indexOf(saved.theme) >= 0 ? saved.theme : "system";
     var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     var effective = preference === "system"
       ? (prefersDark ? "dark" : "light")
@@ -45,6 +45,7 @@ const prepaintThemeScript = `
     var fallbackDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     document.documentElement.dataset.theme = fallbackDark ? "dark" : "light";
     document.documentElement.dataset.themePreference = "system";
+    document.documentElement.style.colorScheme = fallbackDark ? "dark" : "light";
   }
 })();
 `;
@@ -79,6 +80,9 @@ export default function PreferencesBootstrap() {
       const next = media.matches ? "dark" : "light";
       root.dataset.theme = next;
       root.style.colorScheme = next;
+      window.dispatchEvent(new CustomEvent("avenzo:theme", {
+        detail: { preference: "system", effectiveTheme: next },
+      }));
     };
 
     const persistCurrentVisualState = () => {

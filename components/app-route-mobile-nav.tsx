@@ -67,7 +67,7 @@ export default function AppRouteMobileNav() {
       }
       onHome={() => router.push("/home")}
       onSearch={() => router.push("/home?screen=explore")}
-      onCreate={() => router.push("/home?create=post")}
+      onCreate={destination => router.push("/home?create=" + destination)}
       onReels={() => router.push("/reels")}
       onProfile={() => router.push("/home?screen=profile")}
       profileAvatarUrl={avatarUrl}

@@ -894,7 +894,7 @@ export default function ReelsPanel({
         active="reels"
         onHome={() => router.push("/home?screen=home")}
         onSearch={() => router.push("/home?screen=explore")}
-        onCreate={() => router.push("/home?screen=home&create=post")}
+        onCreate={destination => router.push("/home?screen=home&create=" + destination)}
         onReels={() => viewportRef.current?.scrollTo({ top: 0, behavior: "smooth" })}
         onProfile={() => router.push("/home?screen=profile")}
         profileAvatarUrl={avatarFor(currentUser)}

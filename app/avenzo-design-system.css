@@ -3199,13 +3199,13 @@ html.avenzo-call-open .mobile-bottom-nav{visibility:hidden!important;pointer-eve
   --premium-bg:#101113;--premium-surface:#17191d;--premium-secondary:#202329;
   --premium-text:#f4f5f7;--premium-soft:#c1c5cd;--premium-muted:#969da8;
   --premium-line:#2b2f35;--premium-primary:#f0f2f5;--premium-on-primary:#111317;
-  --premium-brand:#c5f74f;--premium-finish:#c5ccd5;--premium-finish-soft:rgba(197,204,213,.12);
+  --premium-brand:#c5ccd5;--premium-finish:#c5ccd5;--premium-finish-soft:rgba(197,204,213,.12);
   --premium-dock:rgba(23,25,29,.94);--premium-shadow:0 8px 32px rgba(0,0,0,.18);
   --premium-radius:20px;--premium-gutter:20px;
 }
 html[data-theme="light"]{
   --premium-bg:#f8f9fb;--premium-surface:#fff;--premium-secondary:#eef0f3;
-  --premium-text:#16191e;--premium-soft:#48505c;--premium-muted:#747d8a;
+  --premium-text:#16191e;--premium-soft:#48505c;--premium-muted:#626b77;
   --premium-line:#e3e6eb;--premium-primary:#171a20;--premium-on-primary:#fff;
   --premium-dock:rgba(255,255,255,.95);--premium-shadow:0 8px 32px rgba(24,31,43,.08);
   --premium-finish:#28313d;--premium-finish-soft:rgba(40,49,61,.07);
@@ -3527,3 +3527,59 @@ html[data-high-contrast="true"] .avenzo-next{--premium-muted:var(--premium-text)
   .avenzo-next .social-app .profile-reference-bio,
   .avenzo-next .social-app .profile-reference-website { min-width:0!important; overflow-wrap:anywhere!important; }
 }
+
+/* Shared Create entry point: one component for desktop, mobile web and Android. */
+.avenzo-next .create-launcher-overlay {
+  position:fixed; inset:0; z-index:180; display:flex; align-items:center;
+  justify-content:center; padding:24px; background:rgba(8,12,18,.46);
+  height:auto; width:auto; margin:0; box-sizing:border-box;
+}
+.avenzo-next .create-launcher-sheet {
+  width:min(100%,440px); max-height:calc(100dvh - 48px); overflow-y:auto;
+  overscroll-behavior:contain; padding:24px; box-sizing:border-box;
+  border:1px solid var(--premium-line); border-radius:24px;
+  background:var(--premium-surface); color:var(--premium-text);
+  box-shadow:var(--premium-shadow); animation:create-sheet-enter 180ms ease-out;
+}
+.avenzo-next .create-launcher-sheet header {display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:22px}
+.avenzo-next .create-launcher-sheet h2 {margin:0;font-size:24px;line-height:1.2;letter-spacing:-.04em}
+.avenzo-next .create-launcher-sheet p {margin:8px 0 0;font-size:14px;line-height:1.5;color:var(--premium-muted)}
+.avenzo-next .create-launcher-sheet header .icon-button {flex-shrink:0;background:var(--premium-secondary)!important}
+.avenzo-next .create-launcher-options {display:grid;gap:8px}
+.avenzo-next .create-launcher-options > button {
+  display:flex; align-items:center; gap:14px; min-height:72px; width:100%;
+  padding:8px 0; border:0; border-radius:12px; text-align:start;
+  background:transparent; color:var(--premium-text); cursor:pointer;
+}
+.avenzo-next .create-launcher-options > button:hover {background:var(--premium-secondary)}
+.avenzo-next .create-launcher-icon {display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;border-radius:14px;background:var(--premium-secondary)}
+.avenzo-next .create-launcher-copy {display:grid;gap:4px;flex:1;min-width:0}
+.avenzo-next .create-launcher-copy strong {font-size:16px;font-weight:650;line-height:1.3}
+.avenzo-next .create-launcher-copy small {font-size:13px;line-height:1.5;color:var(--premium-muted);overflow-wrap:anywhere}
+.avenzo-next .create-launcher-chevron {display:flex;transform:rotate(180deg);color:var(--premium-muted)}
+html[dir="rtl"] .avenzo-next .create-launcher-chevron {transform:none}
+.avenzo-next .create-launcher-sheet footer {margin-top:20px;padding-top:16px;border-top:1px solid var(--premium-line);font-size:12px;line-height:1.5;color:var(--premium-muted);text-align:center}
+@keyframes create-sheet-enter {from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:900px) {
+  .avenzo-next .create-launcher-overlay {
+    align-items:flex-end; padding:0; top:var(--composer-top,0px);
+    bottom:auto; height:var(--composer-height,100dvh);
+  }
+  .avenzo-next .create-launcher-sheet {
+    width:100%; max-width:560px; max-height:100%; margin:0 auto;
+    padding:24px 20px max(20px,env(safe-area-inset-bottom));
+    border-bottom:0; border-radius:24px 24px 0 0;
+  }
+}
+html[data-large-text="true"] .avenzo-next .create-launcher-copy strong {font-size:18px}
+html[data-large-text="true"] .avenzo-next .create-launcher-copy small {font-size:16px}
+
+/* Isolated account-authenticated review tool; opens actual product routes. */
+.avenzo-next .responsive-review {max-width:1600px;margin:auto;padding:28px;color:var(--premium-text)}
+.avenzo-next .responsive-review > header {display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+.avenzo-next .responsive-review h1 {margin:0;font-size:24px;letter-spacing:-.04em}
+.avenzo-next .responsive-review p {margin:8px 0 0;max-width:650px;color:var(--premium-muted);font-size:14px;line-height:1.5}
+.avenzo-next .responsive-review a {color:var(--premium-text);font-size:14px}
+.avenzo-next .responsive-review-controls {display:flex;flex-wrap:wrap;gap:16px;margin:24px 0}
+.avenzo-next .responsive-review-controls label {display:grid;gap:6px;font-size:13px}
+.avenzo-next .responsive-review-controls select {min-height:44px;padding:8px 12px;border:1px solid var(--premium-line);border-radius:10px;color:var(--premium-text);background:var(--premium-surface)}
