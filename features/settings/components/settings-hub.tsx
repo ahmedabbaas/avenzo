@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Icon, { type IconName } from "../../social/components/icon";
@@ -59,6 +59,8 @@ export default function SettingsHub({
   const [search, setSearch] = useState("");
   const [mobileSettings, setMobileSettings] = useState(initialSettings);
   const [themeStatus, setThemeStatus] = useState("");
+  const [themeSaving, setThemeSaving] = useState(false);
+  const themePending = useRef(false);
 
   const rows: MobileSettingRow[] = [
     {
@@ -137,7 +139,9 @@ export default function SettingsHub({
     "appearance light dark system theme color".includes(normalized);
 
   async function changeTheme(theme: ThemePreference) {
-    if (!mobileSettings || mobileSettings.theme === theme) return;
+    if (!mobileSettings || mobileSettings.theme === theme || themePending.current) return;
+    themePending.current = true;
+    setThemeSaving(true);
 
     const previous = mobileSettings;
     const next = { ...mobileSettings, theme };
@@ -145,19 +149,30 @@ export default function SettingsHub({
     setThemeStatus("");
     applyAppPreferences(next);
 
-    const { error } = await supabase
-      .from("app_settings")
-      .update({ theme })
-      .eq("user_id", next.user_id);
+    try {
+      const { data, error } = await supabase
+        .from("app_settings")
+        .update({ theme })
+        .eq("user_id", next.user_id)
+        .select("user_id")
+        .maybeSingle();
 
-    if (error) {
+      if (error || data?.user_id !== next.user_id) {
+        setMobileSettings(previous);
+        applyAppPreferences(previous);
+        setThemeStatus("Could not save theme.");
+        return;
+      }
+
+      setThemeStatus("Theme saved.");
+    } catch {
       setMobileSettings(previous);
       applyAppPreferences(previous);
       setThemeStatus("Could not save theme.");
-      return;
+    } finally {
+      themePending.current = false;
+      setThemeSaving(false);
     }
-
-    setThemeStatus("Theme saved.");
   }
 
   async function signOut() {
@@ -237,6 +252,7 @@ export default function SettingsHub({
                     type="button"
                     className={mobileSettings.theme === theme ? "active" : ""}
                     onClick={() => void changeTheme(theme)}
+                    disabled={themeSaving}
                   >
                     {theme === "light" ? "Light" : theme === "dark" ? "Dark" : "System"}
                   </button>

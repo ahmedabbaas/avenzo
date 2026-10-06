@@ -67,52 +67,65 @@ export default function AppSettingsForm({
   const [status, setStatus] = useState("");
   const [saving, setSaving] = useState(false);
   const initialized = useRef(false);
+  const saveQueue = useRef<Promise<void>>(Promise.resolve());
+  const pendingSaves = useRef(0);
 
   useEffect(() => {
     applyAppPreferences(settings);
   }, [settings]);
 
   async function persist(next = settings, quiet = false) {
+    pendingSaves.current += 1;
     setSaving(true);
     if (!quiet) setStatus("");
+    const operation = saveQueue.current.then(async () => {
+      try {
+        const { data, error } = await supabase
+          .from("app_settings")
+          .update({
+            theme: next.theme,
+            language: next.language,
+            notify_likes: next.notify_likes,
+            notify_comments: next.notify_comments,
+            notify_followers: next.notify_followers,
+            notify_messages: next.notify_messages,
+            notify_mentions: next.notify_mentions,
+            notify_stories: next.notify_stories,
+            notify_reels: next.notify_reels,
+            notify_other: next.notify_other,
+            show_suggested_posts: next.show_suggested_posts,
+            feed_autoplay_videos: next.feed_autoplay_videos,
+            show_sensitive_content: next.show_sensitive_content,
+            data_saving_mode: next.data_saving_mode,
+            media_autoplay_videos: next.media_autoplay_videos,
+            high_quality_uploads: next.high_quality_uploads,
+            use_less_mobile_data: next.use_less_mobile_data,
+            reduce_animations: next.reduce_animations,
+            larger_text: next.larger_text,
+            high_contrast: next.high_contrast,
+            confirm_delete_content: next.confirm_delete_content,
+            confirm_unfollow: next.confirm_unfollow,
+            auto_save_settings: next.auto_save_settings,
+          })
+          .eq("user_id", next.user_id)
+          .select("user_id")
+          .maybeSingle();
 
-    const { error } = await supabase
-      .from("app_settings")
-      .update({
-        theme: next.theme,
-        language: next.language,
-        notify_likes: next.notify_likes,
-        notify_comments: next.notify_comments,
-        notify_followers: next.notify_followers,
-        notify_messages: next.notify_messages,
-        notify_mentions: next.notify_mentions,
-        notify_stories: next.notify_stories,
-        notify_reels: next.notify_reels,
-        notify_other: next.notify_other,
-        show_suggested_posts: next.show_suggested_posts,
-        feed_autoplay_videos: next.feed_autoplay_videos,
-        show_sensitive_content: next.show_sensitive_content,
-        data_saving_mode: next.data_saving_mode,
-        media_autoplay_videos: next.media_autoplay_videos,
-        high_quality_uploads: next.high_quality_uploads,
-        use_less_mobile_data: next.use_less_mobile_data,
-        reduce_animations: next.reduce_animations,
-        larger_text: next.larger_text,
-        high_contrast: next.high_contrast,
-        confirm_delete_content: next.confirm_delete_content,
-        confirm_unfollow: next.confirm_unfollow,
-        auto_save_settings: next.auto_save_settings,
-      })
-      .eq("user_id", next.user_id);
+        if (error || data?.user_id !== next.user_id) {
+          setStatus("Could not save app settings.");
+          return;
+        }
 
-    setSaving(false);
-
-    if (error) {
-      setStatus("Could not save app settings.");
-      return;
-    }
-
-    if (!quiet) setStatus("App settings saved.");
+        if (!quiet) setStatus("App settings saved.");
+      } catch {
+        setStatus("Could not save app settings.");
+      } finally {
+        pendingSaves.current -= 1;
+        setSaving(pendingSaves.current > 0);
+      }
+    });
+    saveQueue.current = operation.catch(() => {});
+    await operation;
   }
 
   useEffect(() => {

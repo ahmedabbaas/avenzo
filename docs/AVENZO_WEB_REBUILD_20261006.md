@@ -157,3 +157,11 @@ inspection found default input/control geometry in Discover; canonical search
 bar styles were corrected. Text flow uses consecutive displayed step numbers.
 Responsive phone and physical Android behavior remain unverified; this is not
 completion of the full multi-phase redesign.
+
+### Appearance persistence audit before correction
+
+App settings autosave can overlap network requests, allowing an older snapshot
+to finish last. Both appearance entry points treat zero updated rows as success.
+Serialize form snapshots, check the returned own-user row, catch transport errors,
+and prevent overlapping quick-theme changes. Preserve optimistic local preview,
+restore the quick theme on failure, and retain existing RLS and preference fields.
