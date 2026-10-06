@@ -16,7 +16,7 @@ export function discoveryTerm(value: string) {
   return term.replace(/\s+/g, " ");
 }
 
-export function discoveryTextFilter(columns: string[], term: string) {
-  const pattern = JSON.stringify("%" + term.replace(/_/g, "\\_") + "%");
+export function discoveryTextFilter(columns: string[], term: string, prefix = false) {
+  const pattern = JSON.stringify((prefix ? "" : "%") + term.replace(/_/g, "\\_") + "%");
   return columns.map(column => column + ".ilike." + pattern).join(",");
 }

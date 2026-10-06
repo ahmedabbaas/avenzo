@@ -1551,7 +1551,7 @@ export default function MessagesWorkspace({
   const activeProfile = active ? profileFromInbox(active) : null;
 
   return (
-    <div className="dm-workspace">
+    <div className="dm-workspace rich-messages-workspace">
       <section className={"dm-sidebar " + (active ? "dm-mobile-hidden" : "")}>
         <div className="dm-mobile-inbox-head" style={{ display: "none" }}>
           <div className="dm-mobile-inbox-copy">
@@ -1618,6 +1618,7 @@ export default function MessagesWorkspace({
         >
           <Icon name="search" size={18} />
           <input
+            aria-label="Search conversations"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={tab === "requests" ? "Search requests" : "Search chats"}
@@ -1650,6 +1651,7 @@ export default function MessagesWorkspace({
           <Link href="/messages/groups">Groups</Link>
           <button
             className={tab === "requests" ? "active" : ""}
+            aria-pressed={tab === "requests"}
             onClick={() => {
               setTab("requests");
               setActive(null);
@@ -1661,29 +1663,15 @@ export default function MessagesWorkspace({
         </div>
 
         <div className="dm-sidebar-head">
-          <div>
-            <div className="eyebrow">MESSAGES</div>
-            <h1>Messages</h1>
-          </div>
-          <div className="dm-sidebar-actions">
-            <Link className="btn secondary small" href="/messages/groups">
-              <Icon name="messages" size={16} />
-              Groups
-            </Link>
-            <Link className="btn secondary small dm-channels-link" href="/channels">
-              <Icon name="activity" size={16} />
-              Channels
-            </Link>
-            <button
-              className="btn small"
-              onClick={() => setNewMessageOpen(true)}
-            >
-              <Icon name="plus" size={16} />
-              New Message
-            </button>
-          </div>
+          <div><h1>Messages</h1><p className="dm-account-label">@{currentUser.username}</p></div>
+          <button type="button" className="icon-button dm-compose-button" onClick={() => setNewMessageOpen(true)} aria-label="New message"><Icon name="edit" size={23} /></button>
         </div>
-
+        <nav className="dm-tools" aria-label="Messaging tools">
+          <Link href="/messages/groups"><Icon name="messages" size={16} />Groups</Link>
+          <Link href="/channels"><Icon name="activity" size={16} />Channels</Link>
+          <Link href="/calls"><Icon name="phone" size={16} />Calls</Link>
+        </nav>
+        <details className="dm-notes-disclosure"><summary>Notes <span>{visibleNotes.length ? visibleNotes.length + " active" : "Share a thought"}</span><Icon name="plus" size={16} /></summary>
         <div className="dm-notes-row" aria-label="Notes">
           <button
             type="button"
@@ -1735,9 +1723,11 @@ export default function MessagesWorkspace({
             ))}
         </div>
 
-        <div className="dm-tabs" role="tablist">
+        </details>
+        <div className="dm-tabs" role="group" aria-label="Conversation folders">
           <button
             className={tab === "primary" ? "active" : ""}
+            aria-pressed={tab === "primary"}
             onClick={() => {
               setTab("primary");
               setActive(null);
@@ -1747,6 +1737,7 @@ export default function MessagesWorkspace({
           </button>
           <button
             className={tab === "general" ? "active" : ""}
+            aria-pressed={tab === "general"}
             onClick={() => {
               setTab("general");
               setActive(null);
@@ -1756,6 +1747,7 @@ export default function MessagesWorkspace({
           </button>
           <button
             className={tab === "requests" ? "active" : ""}
+            aria-pressed={tab === "requests"}
             onClick={() => {
               setTab("requests");
               setActive(null);
@@ -1769,6 +1761,7 @@ export default function MessagesWorkspace({
         <label className="dm-search">
           <Icon name="search" size={17} />
           <input
+            aria-label="Search conversations"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={
@@ -1881,7 +1874,7 @@ export default function MessagesWorkspace({
                 </span>
                 <span className="dm-mobile-conversation-meta">
                   <small>{inboxTime(item.last_message_at)}</small>
-                  {item.unread_count > 0 && <i>{item.unread_count}</i>}
+                  {item.unread_count > 0 && <i aria-label={item.unread_count + " unread messages"}>{item.unread_count > 99 ? "99+" : item.unread_count}</i>}
                 </span>
               </button>
             ))
@@ -1973,15 +1966,14 @@ export default function MessagesWorkspace({
                 />
                 <span className="dm-conversation-copy">
                   <span>
-                    <b>{item.display_name}</b>
-                    <small >@{item.username}</small>
+                    <b>{item.display_name || item.username}</b>
                   </span>
                   <em>{item.last_message || "New conversation"}</em>
                 </span>
                 <span className="dm-conversation-meta">
                   <small>{formatRelativeTime(item.last_message_at)}</small>
                   {item.unread_count > 0 && (
-                    <i>{item.unread_count}</i>
+                    <i aria-label={item.unread_count + " unread messages"}>{item.unread_count > 99 ? "99+" : item.unread_count}</i>
                   )}
                   {item.pinned && (
                     <span className="dm-pinned-mark" title="Pinned">⌃</span>

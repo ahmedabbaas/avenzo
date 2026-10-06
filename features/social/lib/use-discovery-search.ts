@@ -38,7 +38,7 @@ export function useDiscoverySearch(query: string, enabled: boolean) {
         ...next, people:mergeRows(current.data.people, next.people), posts:mergeRows(current.data.posts, next.posts), reels:mergeRows(current.data.reels, next.reels),
       } : next }));
     } catch (error) {
-      if (controller.signal.aborted && !timedOut) return;
+      if (requestRef.current !== controller || (controller.signal.aborted && !timedOut)) return;
       setState(current => ({ ...current, loading:false, error:timedOut ? "Search took too long. Try again." : error instanceof Error ? error.message : "Search is unavailable. Try again." }));
     } finally {
       window.clearTimeout(timeout);
@@ -48,7 +48,7 @@ export function useDiscoverySearch(query: string, enabled: boolean) {
   useEffect(() => {
     requestRef.current?.abort();
     if (!active) return;
-    const timer = window.setTimeout(() => { void requestPage(term, 0); }, 300);
+    const timer = window.setTimeout(() => { void requestPage(term, 0); }, 220);
     return () => { window.clearTimeout(timer); requestRef.current?.abort(); };
   }, [active, term, requestPage]);
 

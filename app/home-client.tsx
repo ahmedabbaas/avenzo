@@ -129,6 +129,7 @@ export default function HomeClient({
   );
   const [people, setPeople] = useState<Profile[]>([]);
   const [query, setQuery] = useState("");
+  const [searchKind, setSearchKind] = useState<"people" | "posts" | "reels" | "all">("people");
   const [exploreFilter, setExploreFilter] = useState<
     "all" | "reels" | "photos" | "art" | "travel" | "gaming"
   >("all");
@@ -1204,6 +1205,7 @@ export default function HomeClient({
   const filteredReels = (discoverySearch.active ? discoverySearch.data.reels : reels).filter((reel) => {
     const text = exploreText(reel);
     if (normalizedQuery && !text.includes(normalizedQuery)) return false;
+    if (discoverySearch.active) return searchKind === "all" || searchKind === "reels";
     if (exploreFilter === "photos") return false;
     return matchesExploreCategory(text);
   });
@@ -1211,6 +1213,7 @@ export default function HomeClient({
   const filteredExplorePosts = (discoverySearch.active ? discoverySearch.data.posts : explorePosts).filter((post) => {
     const text = exploreText(post);
     if (normalizedQuery && !text.includes(normalizedQuery)) return false;
+    if (discoverySearch.active) return searchKind === "all" || searchKind === "posts";
     if (exploreFilter === "reels") return false;
     if (
       exploreFilter === "photos" &&
@@ -1223,7 +1226,7 @@ export default function HomeClient({
   });
 
   const searchResultCount =
-    (normalizedQuery ? filteredPeople.length : 0) +
+    (normalizedQuery && (searchKind === "people" || searchKind === "all") ? filteredPeople.length : 0) +
     filteredReels.length +
     filteredExplorePosts.length;
 
@@ -1732,9 +1735,9 @@ export default function HomeClient({
               </div>
 
               <PageTitle
-                eyebrow="AVENZO DISCOVER"
+                eyebrow=""
                 title="Discover"
-                text="People, moments, clips and communities across AVENZO."
+                text=""
               />
 
               <DiscoverSearch
@@ -1745,7 +1748,9 @@ export default function HomeClient({
                 inputRef={exploreSearchRef}
               />
 
-              <div
+              {discoverySearch.active ? <div className="discover-category-tabs discover-search-tabs" role="group" aria-label="Search result type">
+                {(["people", "posts", "reels", "all"] as const).map(kind => <button type="button" key={kind} aria-pressed={searchKind === kind} className={searchKind === kind ? "active" : ""} onClick={() => setSearchKind(kind)}>{kind === "people" ? "People" : kind === "posts" ? "Posts" : kind === "reels" ? "Reels" : "All"}</button>)}
+              </div> : <div
                 className="avenzo-mobile-explore-filters discover-category-tabs"
                 role="tablist"
                 aria-label="Explore filters"
@@ -1770,11 +1775,11 @@ export default function HomeClient({
                     <span>{label}</span>
                   </button>
                 ))}
-              </div>
+              </div>}
 
               {query && !discoverBusy && !discoverError && (
                 <div className="search-summary">
-                  {searchResultCount} loaded results for <strong>&quot;{query}&quot;</strong>
+                  {searchResultCount} results for <strong>&quot;{query}&quot;</strong>
                   <button type="button" onClick={() => setQuery("")}>Clear</button>
                 </div>
               )}
@@ -1813,7 +1818,7 @@ export default function HomeClient({
                 </div>
               ) : (
                 <>
-                  <section
+                  {(!discoverySearch.active || searchKind === "people" || searchKind === "all") && <section
                     className={
                       "explore-section explore-people-section" +
                       (!normalizedQuery ? " explore-people-idle" : "")
@@ -1822,16 +1827,18 @@ export default function HomeClient({
                     <div className="section-inline-head">
                       <div>
                         <div className="eyebrow">PEOPLE</div>
-                        <h3>{query ? "Users" : "People to discover"}</h3>
+                        <h3>{query ? "People" : "People to discover"}</h3>
                       </div>
                     </div>
 
                     {filteredPeople.length ? (
-                      <div className="people-grid explore-people-grid">
+                      <div className={"people-grid explore-people-grid" + (discoverySearch.active ? " discover-result-list" : "")}>
                         {filteredPeople.map((person) => (
                           <PersonCard
                             key={person.id}
                             person={person}
+                            compact={discoverySearch.active}
+                            own={person.id === initialProfile.id}
                             following={followed.includes(person.id)}
                             requested={requested.includes(person.id)}
                             onFollow={() => void toggleFollow(person)}
@@ -1848,9 +1855,9 @@ export default function HomeClient({
                         No matching users.
                       </div>
                     )}
-                  </section>
+                  </section>}
 
-                  <section className="explore-section explore-media-section">
+                  {(!discoverySearch.active || searchKind !== "people") && <section className="explore-section explore-media-section">
                     <div className="section-inline-head">
                       <div>
                         <div className="eyebrow">MEDIA</div>
@@ -1869,10 +1876,10 @@ export default function HomeClient({
                         No matching posts or reels.
                       </div>
                     )}
-                  </section>
+                  </section>}
                   {discoverySearch.active && discoverError && <div className="explore-error" role="alert"><span>{discoverError}</span><button type="button" className="btn secondary" onClick={discoverySearch.retry}>Retry search</button></div>}
                   {discoverySearch.active && discoverySearch.data.hasMore && discoverySearch.data.page < 99 && <button type="button" className="btn secondary discover-load-more" onClick={discoverySearch.loadMore} disabled={discoverBusy}>{discoverBusy ? "Loading more…" : "Load more results"}</button>}
-                  {discoverySearch.active && <p className="discover-search-note" role="status">Searches people, captions, locations, tags and Clip titles across content you can access.</p>}
+
                 </>
               )}
             </section>

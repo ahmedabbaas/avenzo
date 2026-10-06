@@ -3817,10 +3817,6 @@ html[data-large-text="true"] .avenzo-next :is(.profile-header-identity p,.dm-con
 .avenzo-next .profile-content-tabs .active :is(.profile-tab-label,.public-tab-label){color:var(--premium-text)!important;font-weight:700!important}
 @media(max-width:620px){.avenzo-next .social-app .brand{min-width:116px!important}.avenzo-next .social-app .brand-home-content{font-size:18px!important}}
 
-.avenzo-next .dm-sidebar-head{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:16px!important;padding:20px!important}
-.avenzo-next .dm-sidebar-actions{display:flex!important;flex-wrap:wrap!important;gap:8px!important;width:100%!important}
-.avenzo-next .dm-sidebar-actions :is(button,a){flex:1 1 auto!important;min-height:44px!important;padding:10px 12px!important;font-size:13px!important;text-decoration:none!important}
-.avenzo-next .dm-sidebar-actions>button{flex-basis:100%!important}
 .avenzo-next .empty-mark{display:grid!important;place-items:center!important;background:transparent!important;border:0!important}
 
 .avenzo-next .notification-copy p{font-size:15px!important;line-height:1.6!important;color:var(--premium-soft)!important}
@@ -3831,3 +3827,96 @@ html[data-large-text="true"] .avenzo-next :is(.profile-header-identity p,.dm-con
 
 .avenzo-next .social-app .right-rail button{color:var(--premium-text)!important;font-size:14px!important;line-height:1.5!important;min-height:44px!important}
 .avenzo-next .social-app .right-rail .who button{background:var(--premium-secondary)!important;color:var(--premium-text)!important;border:1px solid var(--premium-line)!important}
+
+/* Rich social surfaces: one shared system for web and the Capacitor shell. */
+.avenzo-next .discover-result-list{display:flex!important;flex-direction:column!important;gap:0!important;max-width:760px;}
+.avenzo-next .person-search-row{display:flex!important;align-items:center!important;gap:16px!important;padding:14px 0!important;border:0!important;border-bottom:1px solid var(--premium-line)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;}
+.avenzo-next .person-search-row .person-profile-link{display:flex!important;align-items:center;gap:14px;flex:1;min-width:0;text-decoration:none;color:var(--premium-text);}
+.avenzo-next .person-search-row .person-avatar{width:48px!important;height:48px!important;flex:none;}
+.avenzo-next .person-search-row .person-copy{min-width:0;text-align:start;}
+.avenzo-next .person-search-row .person-copy b{display:block;font-size:15px!important;line-height:1.5;font-weight:700;overflow-wrap:anywhere;color:var(--premium-text)!important;}
+.avenzo-next .person-search-row .person-copy span{display:block;font-size:14px!important;line-height:1.5;color:var(--premium-muted)!important;}
+.avenzo-next .person-search-row .person-actions{width:auto!important;margin:0!important;flex:none;}
+.avenzo-next .person-search-row .btn{min-width:92px;min-height:38px;padding:8px 14px!important;border-radius:9px!important;}
+.avenzo-next .explore-page .page-title{padding-block:20px!important;margin:0!important;}
+.avenzo-next .explore-page .page-title :is(.eyebrow,p):empty{display:none;}
+.avenzo-next .explore-page .explore-search-box{min-height:48px!important;border:0!important;border-radius:13px!important;background:var(--premium-secondary)!important;box-shadow:none!important;}
+.avenzo-next .explore-page .section-inline-head .eyebrow{display:none!important;}
+.avenzo-next .discover-search-tabs{margin-bottom:12px!important;}
+.avenzo-next .discover-search-tabs button{font-size:15px!important;}
+.avenzo-next .search-summary{font-size:13px;color:var(--premium-muted);padding-block:8px;}
+.avenzo-next .rich-messages-workspace{border-radius:14px!important;grid-template-columns:350px minmax(0,1fr)!important;}
+.avenzo-next .rich-messages-workspace .dm-sidebar-head{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;padding:24px 20px 14px!important;gap:12px!important;}
+.avenzo-next .rich-messages-workspace .dm-sidebar-head h1{font-size:28px!important;letter-spacing:-.05em!important;font-weight:750!important;}
+.avenzo-next .dm-account-label{margin:4px 0 0;font-size:13px;color:var(--premium-muted);}
+.avenzo-next .dm-tools{display:flex;gap:20px;align-items:center;padding:0 20px 16px;flex:none;}
+.avenzo-next .dm-tools a{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;text-decoration:none;color:var(--premium-muted);min-height:32px;}
+.avenzo-next .dm-notes-disclosure{margin:0 20px 12px;border-bottom:1px solid var(--premium-line);color:var(--premium-text);}
+.avenzo-next .dm-notes-disclosure>summary{display:flex;align-items:center;gap:10px;cursor:pointer;list-style:none;font-size:14px;font-weight:600;min-height:44px;}
+.avenzo-next .dm-notes-disclosure>summary span{flex:1;font-size:12px;font-weight:400;color:var(--premium-muted);}
+.avenzo-next .dm-notes-disclosure .dm-notes-row{display:flex!important;margin:0!important;padding:22px 0 10px!important;}
+.avenzo-next .rich-messages-workspace .dm-tabs{display:flex!important;order:4;margin:0 20px 12px!important;padding:0!important;gap:0!important;border:0!important;border-bottom:1px solid var(--premium-line)!important;border-radius:0!important;background:transparent!important;flex:none;}
+.avenzo-next .rich-messages-workspace .dm-tabs button{flex:1;min-height:46px!important;background:transparent!important;border-radius:0!important;border-bottom:2px solid transparent!important;font-size:14px!important;color:var(--premium-muted)!important;box-shadow:none!important;}
+.avenzo-next .rich-messages-workspace .dm-tabs button.active{border-bottom-color:var(--premium-text)!important;color:var(--premium-text)!important;}
+.avenzo-next .rich-messages-workspace .dm-search{display:flex!important;order:3;min-height:46px!important;margin:0 20px 14px!important;border:0!important;border-radius:12px!important;background:var(--premium-secondary)!important;color:var(--premium-muted)!important;flex:none;}
+.avenzo-next .rich-messages-workspace .dm-search input{color:var(--premium-text)!important;font-size:15px!important;}
+.avenzo-next .rich-messages-workspace .dm-unread-filter{order:5;padding:0 20px 12px;font-size:12px;color:var(--premium-muted);}
+.avenzo-next .rich-messages-workspace .dm-conversation-list{display:block!important;order:6;padding:0 0 24px!important;overflow-y:auto;min-height:0;flex:1;}
+.avenzo-next .rich-messages-workspace .dm-sidebar{display:flex;flex-direction:column;}
+.avenzo-next .rich-messages-workspace .dm-conversation{min-height:84px!important;gap:14px!important;padding:14px 20px!important;border-bottom:0!important;}
+.avenzo-next .rich-messages-workspace .dm-conversation img{width:54px!important;height:54px!important;border-radius:50%;flex:none;object-fit:cover;}
+.avenzo-next .rich-messages-workspace .dm-conversation-copy b{font-size:15px!important;line-height:1.5!important;}
+.avenzo-next .rich-messages-workspace .dm-conversation-copy em{font-size:14px!important;margin-top:3px;}
+.avenzo-next .rich-messages-workspace .dm-conversation.unread em{color:var(--premium-text)!important;font-weight:600;}
+.avenzo-next .rich-messages-workspace .dm-conversation-meta{align-self:center;gap:8px;}
+.avenzo-next .rich-messages-workspace .dm-conversation-meta i{min-width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-style:normal;}
+.avenzo-next .rich-messages-workspace :is(.dm-mobile-inbox-head,.dm-mobile-tabs,.dm-mobile-search,.dm-mobile-conversation-list,.dm-mobile-compose-fab){display:none!important;}
+.avenzo-next .rich-messages-workspace .dm-chat-head{min-height:76px!important;padding:14px 20px!important;}
+.avenzo-next .rich-messages-workspace .dm-message-area{padding:24px 20px!important;background:var(--premium-bg)!important;}
+.avenzo-next .rich-messages-workspace .dm-chat-empty h2{font-size:28px!important;letter-spacing:-.04em;}
+.avenzo-next .rich-messages-workspace .dm-chat-empty p{font-size:14px!important;max-width:280px;line-height:1.6;}
+.avenzo-next .rich-post-viewer{--feed-head:calc(66px + env(safe-area-inset-top));max-width:680px;margin:auto;min-height:100dvh!important;background:var(--premium-surface)!important;color:var(--premium-text)!important;overflow:visible!important;}
+.avenzo-next .rich-post-viewer .avenzo-mobile-profile-feed-head{position:sticky!important;inset:auto!important;top:0!important;z-index:60;display:grid;grid-template-columns:48px 1fr 48px;align-items:center;min-height:var(--feed-head);padding:env(safe-area-inset-top) 8px 0!important;border-bottom:1px solid var(--premium-line);background:var(--premium-dock)!important;backdrop-filter:blur(20px);color:var(--premium-text)!important;}
+.avenzo-next .rich-post-viewer .avenzo-mobile-profile-feed-head>button{display:grid;place-items:center;min-width:44px;min-height:44px;background:transparent;color:inherit!important;border:0;cursor:pointer;}
+.avenzo-next .rich-post-viewer .avenzo-mobile-profile-feed-head>span{display:grid;text-align:center;}
+.avenzo-next .rich-post-viewer .avenzo-mobile-profile-feed-head b{font-size:17px!important;color:var(--premium-text)!important;}
+.avenzo-next .rich-post-viewer .avenzo-mobile-profile-feed-head small{font-size:12px!important;color:var(--premium-muted)!important;}
+.avenzo-next .rich-post-viewer .avenzo-mobile-profile-feed-scroll{height:auto!important;overflow:visible!important;padding:0 0 max(20px,env(safe-area-inset-bottom))!important;scroll-snap-type:none!important;}
+.avenzo-next .rich-post-viewer .avenzo-mobile-post-slide{min-height:0!important;scroll-margin-top:var(--feed-head);display:block!important;background:var(--premium-surface)!important;}
+.avenzo-next .rich-post-viewer .post-card{min-height:0!important;border:0!important;border-radius:0!important;margin:0 0 24px!important;background:var(--premium-surface)!important;box-shadow:none!important;color:var(--premium-text)!important;overflow:visible!important;}
+.avenzo-next .rich-post-viewer :is(.post-head,.post-content){background:var(--premium-surface)!important;color:var(--premium-text)!important;padding:16px!important;}
+.avenzo-next .rich-post-viewer .post-media{width:100%!important;max-height:75dvh!important;object-fit:contain!important;border-radius:0!important;}
+.avenzo-next .rich-post-viewer .post-carousel-shell{border-radius:0!important;max-height:none!important;}
+.avenzo-next .rich-post-viewer .avenzo-mobile-profile-feed-notice{position:sticky!important;top:var(--feed-head);z-index:65;width:100%;padding:12px 16px;border:0;background:var(--premium-secondary);color:var(--premium-text);font:inherit;}
+.avenzo-next .rich-create-panel .modal-header{padding:20px!important;border-bottom:1px solid var(--premium-line);align-items:center;}
+.avenzo-next .rich-create-panel .modal-header h2{font-size:22px!important;letter-spacing:-.04em!important;}
+.avenzo-next .rich-create-panel .create-stepper{display:flex;gap:0!important;border:0!important;border-bottom:1px solid var(--premium-line)!important;border-radius:0!important;background:transparent!important;padding:0!important;}
+.avenzo-next .rich-create-panel .create-stepper button{flex:1;min-height:48px;border:0!important;border-radius:0!important;border-bottom:2px solid transparent!important;background:transparent!important;color:var(--premium-muted)!important;box-shadow:none!important;}
+.avenzo-next .rich-create-panel .create-stepper button.active{border-bottom-color:var(--premium-text)!important;color:var(--premium-text)!important;}
+.avenzo-next .rich-create-panel .create-stepper i{display:none!important;}
+.avenzo-next .rich-create-panel .create-step-copy>span{display:none!important;}
+.avenzo-next .rich-create-panel .create-step-copy h3{font-size:20px!important;}
+.avenzo-next .create-details-preview{width:100%;aspect-ratio:4/3;max-height:280px;overflow:hidden;border-radius:10px;margin-bottom:20px;background:var(--premium-secondary);}
+.avenzo-next .create-details-preview :is(img,video){width:100%;height:100%;object-fit:contain;}
+.avenzo-next .create-detail-option{border-bottom:1px solid var(--premium-line);padding:0;background:transparent;}
+.avenzo-next .create-detail-option>summary{display:flex;align-items:center;justify-content:space-between;min-height:56px;gap:12px;cursor:pointer;list-style:none;font-size:15px;font-weight:600;color:var(--premium-text);}
+.avenzo-next .create-detail-option[open]>summary svg{transform:rotate(45deg);}
+.avenzo-next .create-detail-option :is(.create-poll-section,.create-tag-section,.create-collab-section){margin:0 0 16px!important;padding:0!important;border:0!important;background:transparent!important;border-radius:0!important;}
+.avenzo-next .create-detail-option .create-collab-head b{display:none;}
+.avenzo-next .rich-create-panel .create-wizard-actions{background:var(--premium-surface)!important;border-top:1px solid var(--premium-line)!important;padding:16px 20px max(16px,env(safe-area-inset-bottom))!important;box-shadow:none!important;}
+.avenzo-next .rich-create-panel .create-wizard-actions>.btn:last-child{flex:1;min-height:48px;border-radius:10px!important;}
+.avenzo-next :is(.dm-notes-disclosure,.create-detail-option)>summary::-webkit-details-marker{display:none;}
+.avenzo-next :is(.dm-tools a,.person-search-row a,.rich-post-viewer button,.create-detail-option>summary,.dm-notes-disclosure>summary):focus-visible{outline:2px solid var(--premium-text);outline-offset:3px;}
+@media(max-width:900px){
+  .avenzo-next .discover-result-list{padding:0 16px;}
+  .avenzo-next .person-search-row .btn{min-width:80px;padding-inline:10px!important;}
+  .avenzo-next .rich-messages-workspace{border-radius:0!important;}
+  .avenzo-next .rich-messages-workspace .dm-sidebar{height:100%;overflow-y:auto!important;}
+  .avenzo-next .rich-messages-workspace .dm-conversation-list{padding-bottom:92px!important;overflow-y:visible;}
+  .avenzo-next .rich-messages-workspace .dm-sidebar-head{padding:20px 16px 12px!important;}
+  .avenzo-next .dm-tools{padding-inline:16px;}
+  .avenzo-next .rich-messages-workspace :is(.dm-tabs,.dm-search){margin-inline:16px!important;}
+  .avenzo-next .rich-messages-workspace .dm-conversation{padding-inline:16px!important;}
+  .avenzo-next .rich-create-panel .modal-header{padding:16px!important;}
+  .avenzo-next .rich-post-viewer{max-width:100%;}
+}

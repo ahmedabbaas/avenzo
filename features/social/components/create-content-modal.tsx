@@ -560,8 +560,9 @@ export default function CreateContentModal({
           <div className="create-step-copy">
             <span>STEP {postPreviews.length ? 3 : 2}</span>
             <h3>Add details</h3>
-            <p>Caption, people, location and accessibility details.</p>
+            <p>Make it yours.</p>
           </div>
+          {activePreview && <div className="create-details-preview">{activeFile?.type.startsWith("video/") ? <video src={activePreview} controls playsInline preload="metadata" /> : <UserMediaImage src={activePreview} alt="Selected post preview" loading="eager" />}</div>}
 
           <label className="create-field">
             <span>Caption</span>
@@ -594,7 +595,7 @@ export default function CreateContentModal({
             </label>
           </div>
 
-          <div className="create-poll-section">
+          <details className="create-detail-option"><summary>Add a poll<Icon name="plus" size={18} /></summary><div className="create-poll-section">
             <div className="create-collab-head">
               <div>
                 <b>Poll</b>
@@ -682,13 +683,13 @@ export default function CreateContentModal({
                 </label>
               </>
             )}
-          </div>
+          </div></details>
 
-          <div className="create-tag-section">
+          <details className="create-detail-option"><summary>Tag people<Icon name="plus" size={18} /></summary><div className="create-tag-section">
             <div className="create-collab-head">
               <div>
                 <b>Tag people</b>
-                <span>Tagged users are stored with the post and become searchable.</span>
+                <span>Choose who appears in your post.</span>
               </div>
               <small>{tagged.length} tagged</small>
             </div>
@@ -720,7 +721,7 @@ export default function CreateContentModal({
                 );
               })}
             </div>
-          </div>
+          </div></details>
 
           <ImageTextScan file={activeFile} busy={posting} caption={caption} onCaptionChange={onCaptionChange} />
 
@@ -784,7 +785,7 @@ export default function CreateContentModal({
             </div>
           )}
 
-          <div className="create-collab-section">
+          <details className="create-detail-option"><summary>Invite collaborators<Icon name="plus" size={18} /></summary><div className="create-collab-section">
             <div className="create-collab-head">
               <div>
                 <b>Collaborators</b>
@@ -818,7 +819,7 @@ export default function CreateContentModal({
                 );
               })}
             </div>
-          </div>
+          </div></details>
         </section>
       );
     }
@@ -1050,12 +1051,12 @@ export default function CreateContentModal({
   return (
     <div ref={dialogRef} tabIndex={-1} className="modal" role="dialog" aria-modal="true" aria-label={"Create " + mode}>
       <form
-        className="modal-box create-modal create-upload-panel"
+        className="modal-box create-modal create-upload-panel rich-create-panel"
         onSubmit={handleFormSubmit}
       >
         <div className="modal-header">
           <div>
-            <div className="eyebrow">CREATE SOMETHING</div>
+
             <h2>
               {mode === "post"
                 ? "Create post"

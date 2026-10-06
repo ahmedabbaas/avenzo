@@ -1073,13 +1073,28 @@ export async function searchDiscovery(
 ): Promise<DiscoverySearchPage> {
   const start = page * DISCOVERY_PAGE_SIZE;
   const profileFilter = discoveryTextFilter(["username", "display_name"], term);
+  // Prefix matches occupy the first pages; broader matches follow without duplicates.
+  // An exact count keeps pagination stable even when a prefix fills several pages.
+  const prefixPattern = term.replace(/_/g, "\\_") + "%";
   const [peopleResult, authorsResult] = await Promise.all([
-    supabase.from("profiles").select(PROFILE_COLUMNS).or(profileFilter).neq("id", userId)
-      .order("created_at", { ascending:false }).order("id", { ascending:false })
+    supabase.from("profiles").select(PROFILE_COLUMNS, { count:"exact" })
+      .or(discoveryTextFilter(["username", "display_name"], term, true))
+      .order("username", { ascending:true }).order("id", { ascending:true })
       .range(start, start + DISCOVERY_PAGE_SIZE),
     supabase.from("profiles").select("id").or(profileFilter).limit(80),
   ]);
   assertNoError(peopleResult.error); assertNoError(authorsResult.error);
+  const rawPeople = [...(peopleResult.data || [])];
+  if (rawPeople.length <= DISCOVERY_PAGE_SIZE) {
+    const offset = Math.max(0, start - (peopleResult.count || 0));
+    const remaining = DISCOVERY_PAGE_SIZE + 1 - rawPeople.length;
+    const broader = await supabase.from("profiles").select(PROFILE_COLUMNS).or(profileFilter)
+      .not("username", "ilike", prefixPattern).not("display_name", "ilike", prefixPattern)
+      .order("username", { ascending:true }).order("id", { ascending:true })
+      .range(offset, offset + remaining - 1);
+    assertNoError(broader.error);
+    rawPeople.push(...(broader.data || []));
+  }
   const authorIds = (authorsResult.data || []).map(row => String(row.id))
     .filter(id => /^[0-9a-f-]{36}$/i.test(id));
   const tag = term.toLowerCase().replace(/\s/g, "");
@@ -1096,7 +1111,6 @@ export async function searchDiscovery(
       .range(start, start + DISCOVERY_PAGE_SIZE),
   ]);
   assertNoError(postsResult.error); assertNoError(reelsResult.error);
-  const rawPeople = peopleResult.data || [];
   const rawPosts = postsResult.data || [];
   const rawReels = reelsResult.data || [];
   const reelIds = rawReels.slice(0, DISCOVERY_PAGE_SIZE).map(row => String(row.id));

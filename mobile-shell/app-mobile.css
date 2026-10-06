@@ -8748,8 +8748,8 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
     width:100%;
     min-height:100dvh;
     overflow:hidden;
-    background:#07080a;
-    color:#f7f8fa;
+    background:var(--native-bg);
+    color:var(--native-text);
   }
 
   html.avenzo-android-app .avenzo-mobile-profile-feed-head{
@@ -8774,7 +8774,7 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
     border:0;
     border-radius:50%;
     background:transparent;
-    color:#fff;
+    color:var(--native-text);
   }
 
   html.avenzo-android-app .avenzo-mobile-profile-feed-head>span{
@@ -8792,7 +8792,7 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
 
   html.avenzo-android-app .avenzo-mobile-profile-feed-head small{
     overflow:hidden;
-    color:#8f969e;
+    color:var(--native-muted);
     font-size:9px;
     text-overflow:ellipsis;
     white-space:nowrap;
@@ -8802,7 +8802,7 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
     height:100dvh;
     padding-top:var(--feed-head);
     overflow-y:auto;
-    scroll-snap-type:y mandatory;
+    scroll-snap-type:y proximity;
     overscroll-behavior-y:contain;
     -webkit-overflow-scrolling:touch;
     scrollbar-width:none;
@@ -8818,7 +8818,7 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
     scroll-snap-stop:always;
     display:flex;
     align-items:flex-start;
-    background:#07080a;
+    background:var(--native-bg);
   }
 
   html.avenzo-android-app .avenzo-mobile-post-slide>.post-card{
@@ -8827,14 +8827,14 @@ html.avenzo-android-app[data-theme="light"] .mobile-create small{
     margin:0;
     border:0;
     border-radius:0;
-    background:#0d0f12;
-    color:#f7f8fa;
+    background:var(--native-surface);
+    color:var(--native-text);
   }
 
   html.avenzo-android-app .avenzo-mobile-post-slide .post-head,
   html.avenzo-android-app .avenzo-mobile-post-slide .post-content{
-    color:#f7f8fa;
-    background:#0d0f12;
+    color:var(--native-text);
+    background:var(--native-surface);
   }
 
   html.avenzo-android-app .avenzo-mobile-post-slide .post-media,
