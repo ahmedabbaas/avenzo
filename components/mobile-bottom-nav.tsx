@@ -26,7 +26,7 @@ const ITEMS: Array<{
   { id: "search", label: "Discover", icon: "search" },
   { id: "create", label: "Create", icon: "plus" },
   { id: "reels", label: "Clips", icon: "reels" },
-  { id: "profile", label: "You", icon: "profile" },
+  { id: "profile", label: "Profile", icon: "profile" },
 ];
 
 function isTypingTarget(target: EventTarget | null) {
