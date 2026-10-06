@@ -393,6 +393,10 @@ export default function CreateContentModal({
               ))}
             </div>
           )}
+          {postPreviews.length === 0 && <button type="button" className="btn secondary create-text-post-entry"
+            disabled={posting || editing} onClick={() => setPostStep(3)}>
+            <Icon name="edit" size={18} /> Write a text post instead
+          </button>}
         </section>
       );
     }
@@ -1108,7 +1112,7 @@ export default function CreateContentModal({
                     onClick={() => {
                       void onRestoreDraft(draft);
                       setShowDrafts(false);
-                      setPostStep(1);
+                      setPostStep(draft.mode === "post" && !(draft.postMedia?.length || draft.file) ? 3 : 1);
                     }}
                   >
                     <span>{draft.mode === "story" ? "Moment" : draft.mode === "reel" ? "Clip" : "Post"}</span>
@@ -1150,8 +1154,9 @@ export default function CreateContentModal({
 
         {mode === "post" && (
           <div className="create-stepper" aria-label="Post creation progress">
-            {["Media", "Edit", "Details", "Publish"].map((label, index) => {
-              const number = index + 1;
+            {(postPreviews.length === 0 && postStep >= 3
+              ? [{ label:"Format", number:1 }, { label:"Details", number:3 }, { label:"Publish", number:4 }]
+              : [{ label:"Media", number:1 }, { label:"Edit", number:2 }, { label:"Details", number:3 }, { label:"Publish", number:4 }]).map(({ label, number }) => {
               return (
                 <button
                   type="button"
@@ -1165,7 +1170,7 @@ export default function CreateContentModal({
                   }
                   disabled={posting || editing || number > postStep + 1}
                   onClick={() => {
-                    if (number <= postStep || (number === postStep + 1 && postPreviews.length)) {
+                    if (number <= postStep || (number === postStep + 1 && (postPreviews.length || caption.trim()))) {
                       setPostStep(number);
                     }
                   }}
@@ -1203,7 +1208,7 @@ export default function CreateContentModal({
                   type="button"
                   className="btn secondary"
                   disabled={posting || editing}
-                  onClick={() => setPostStep((current) => Math.max(1, current - 1))}
+                  onClick={() => setPostStep((current) => current === 3 && !postPreviews.length ? 1 : Math.max(1, current - 1))}
                 >
                   Back
                 </button>
@@ -1223,7 +1228,7 @@ export default function CreateContentModal({
                 disabled={
                   posting ||
                   editing ||
-                  postPreviews.length === 0
+                  (postPreviews.length === 0 && (postStep < 3 || !caption.trim()))
                 }
               >
                 {posting

@@ -120,3 +120,26 @@ inspection. Initial iframe approach was rejected because the existing CSP forbid
 framing; CSP and X-Frame-Options remain intact. Window dimensions must be observed
 before reporting any responsive result. It is not linked from product navigation and is not Android evidence.
 Live responsive inspection is the next gate; physical Android remains pending.
+
+### Phase 2 audit and design intent before search implementation
+
+Discover currently filters up to 36 loaded Explore posts, 32 Clips and a bounded
+people list in HomeClient. A result beyond that window cannot be found. Extend
+existing query/hydration helpers with a cookie-authenticated, bounded endpoint;
+retain RLS for block/private-content filtering. Add debouncing, stale-response
+protection, pagination, deduplication, accessible loading/error/retry and a truthful
+loaded-results count. No new schema is required. Existing feed browsing and
+category filters remain intact. Supabase JS or/range documentation reviewed;
+changelog markdown retrieval was unsupported by the web tool. Existing installed
+SDK supplies these methods. New search must be live-tested before completion.
+
+### Text-post audit and implementation
+
+The existing database permits nonempty caption-only posts (`posts_have_content`),
+publication mutation handles null media, feed/explore render text content, but the
+Home validation and composer require a photo. Enable a 'Write a text post instead'
+entry in the existing Post composer, skip photo editing, require nonempty text,
+retain details/review/publish and restore text drafts into Details. Add early empty
+post validation in the publication helper. No schema/privilege changes, duplicate
+publisher or fake success. Live review can exercise the editor without publishing
+content to other users; actual publishing requires a deliberately authored post.

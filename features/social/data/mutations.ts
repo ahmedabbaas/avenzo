@@ -250,6 +250,9 @@ export async function publishContent({
   const cleanMentions = cleanTokenList(mentions, "@");
   const cleanLocation = location.trim().slice(0, 160);
   const cleanCaption = caption.trim().slice(0, 2200);
+  if (mode === "post" && normalizedPostMedia.length === 0 && !cleanCaption) {
+    throw new Error("Add text or a photo before publishing.");
+  }
   const cleanTitle = title.trim().slice(0, 120);
   const cleanPollQuestion = poll?.question.trim().slice(0, 180) || "";
   const cleanPollOptions = [...new Set(

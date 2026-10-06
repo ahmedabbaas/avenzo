@@ -46,6 +46,7 @@ import ActivityPanel from "../features/social/components/activity-panel";
 import AvatarImage from "../features/social/components/avatar-image";
 import EmptyState from "../features/social/components/empty-state";
 import DiscoverSearch from "../features/social/components/discover-search";
+import { useDiscoverySearch } from "../features/social/lib/use-discovery-search";
 import ExploreMediaGrid from "../features/social/components/explore-media-grid";
 import ProfileView from "../features/social/components/profile-view";
 import FeedSkeleton from "../features/social/components/feed-skeleton";
@@ -132,6 +133,7 @@ export default function HomeClient({
     "all" | "reels" | "photos" | "art" | "travel" | "gaming"
   >("all");
   const exploreSearchRef = useRef<HTMLInputElement | null>(null);
+  const discoverySearch = useDiscoverySearch(query, screen === "explore");
   const [followed, setFollowed] = useState<string[]>([]);
   const [requested, setRequested] = useState<string[]>([]);
   const [saved, setSaved] = useState<string[]>([]);
@@ -787,7 +789,7 @@ export default function HomeClient({
     if (posting) return;
 
     const validationError =
-      validateContentFile(file, createMode) ||
+      (createMode === "post" && !file ? null : validateContentFile(file, createMode)) ||
       validateCoverFile(coverFile) ||
       (createMode === "reel"
         ? validateVerticalReelDimensions(mediaDimensions)
@@ -1161,7 +1163,7 @@ export default function HomeClient({
 
   const normalizedQuery = query.toLowerCase().trim().replace(/^[@#]/, "");
 
-  const filteredPeople = people.filter((person) =>
+  const filteredPeople = (discoverySearch.active ? discoverySearch.data.people : people).filter((person) =>
     !normalizedQuery ||
     (person.display_name + " " + person.username)
       .toLowerCase()
@@ -1199,14 +1201,14 @@ export default function HomeClient({
     return true;
   }
 
-  const filteredReels = reels.filter((reel) => {
+  const filteredReels = (discoverySearch.active ? discoverySearch.data.reels : reels).filter((reel) => {
     const text = exploreText(reel);
     if (normalizedQuery && !text.includes(normalizedQuery)) return false;
     if (exploreFilter === "photos") return false;
     return matchesExploreCategory(text);
   });
 
-  const filteredExplorePosts = explorePosts.filter((post) => {
+  const filteredExplorePosts = (discoverySearch.active ? discoverySearch.data.posts : explorePosts).filter((post) => {
     const text = exploreText(post);
     if (normalizedQuery && !text.includes(normalizedQuery)) return false;
     if (exploreFilter === "reels") return false;
@@ -1224,6 +1226,9 @@ export default function HomeClient({
     (normalizedQuery ? filteredPeople.length : 0) +
     filteredReels.length +
     filteredExplorePosts.length;
+
+  const discoverBusy = discoverySearch.active ? discoverySearch.loading : exploreLoading;
+  const discoverError = discoverySearch.active ? discoverySearch.error : exploreError;
 
   const homeFeedPosts =
     homeFeedMode === "following" ? posts : explorePosts;
@@ -1599,7 +1604,7 @@ export default function HomeClient({
                   className={homeFeedMode === "following" ? "active" : ""}
                   onClick={() => setHomeFeedMode("following")}
                 >
-                  Inner Circle
+                  Following
                 </button>
                 <button
                   type="button"
@@ -1608,14 +1613,14 @@ export default function HomeClient({
                   className={homeFeedMode === "for-you" ? "active" : ""}
                   onClick={() => setHomeFeedMode("for-you")}
                 >
-                  Pulse
+                  Discover
                 </button>
               </div>
 
               <div className="feed-toolbar home-feed-toolbar">
                 <div>
-                  <div className="eyebrow">AVENZO PULSE</div>
-                  <h2>Pulse</h2>
+                  <div className="eyebrow">AVENZO FEED</div>
+                  <h2>Home</h2>
                   <span>
                     {homeFeedMode === "following"
                       ? "Posts from you and people you follow."
@@ -1783,14 +1788,14 @@ export default function HomeClient({
                 ))}
               </div>
 
-              {query && !exploreLoading && !exploreError && (
+              {query && !discoverBusy && !discoverError && (
                 <div className="search-summary">
-                  {searchResultCount} results for <strong>&quot;{query}&quot;</strong>
+                  {searchResultCount} loaded results for <strong>&quot;{query}&quot;</strong>
                   <button type="button" onClick={() => setQuery("")}>Clear</button>
                 </div>
               )}
 
-              {exploreLoading ? (
+              {discoverBusy && searchResultCount === 0 ? (
                 <div className="explore-loading" aria-label="Loading Explore">
                   <div className="explore-user-skeletons">
                     {Array.from({ length: 4 }, (_, index) => (
@@ -1803,14 +1808,14 @@ export default function HomeClient({
                     ))}
                   </div>
                 </div>
-              ) : exploreError ? (
+              ) : discoverError && searchResultCount === 0 ? (
                 <div className="explore-error" role="alert">
                   <strong>Explore could not load.</strong>
-                  <span>{exploreError}</span>
+                  <span>{discoverError}</span>
                   <button
                     type="button"
                     className="btn secondary"
-                    onClick={() => void loadExploreData()}
+                    onClick={() => discoverySearch.active ? discoverySearch.retry() : void loadExploreData()}
                   >
                     Retry
                   </button>
@@ -1820,6 +1825,7 @@ export default function HomeClient({
                   <Icon name="search" size={28} />
                   <strong>No results for &quot;{query}&quot;</strong>
                   <span>Try a username, display name, caption, hashtag or reel title.</span>
+                  {discoverySearch.data.hasMore && <button type="button" className="btn secondary" onClick={discoverySearch.loadMore} disabled={discoverBusy}>{discoverBusy ? "Loading more…" : "Search more results"}</button>}
                 </div>
               ) : (
                 <>
@@ -1880,6 +1886,9 @@ export default function HomeClient({
                       </div>
                     )}
                   </section>
+                  {discoverySearch.active && discoverError && <div className="explore-error" role="alert"><span>{discoverError}</span><button type="button" className="btn secondary" onClick={discoverySearch.retry}>Retry search</button></div>}
+                  {discoverySearch.active && discoverySearch.data.hasMore && discoverySearch.data.page < 99 && <button type="button" className="btn secondary discover-load-more" onClick={discoverySearch.loadMore} disabled={discoverBusy}>{discoverBusy ? "Loading more…" : "Load more results"}</button>}
+                  {discoverySearch.active && <p className="discover-search-note" role="status">Searches people, captions, locations, tags and Clip titles across content you can access.</p>}
                 </>
               )}
             </section>

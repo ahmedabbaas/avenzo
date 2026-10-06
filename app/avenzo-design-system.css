@@ -3583,3 +3583,6 @@ html[data-large-text="true"] .avenzo-next .create-launcher-copy small {font-size
 .avenzo-next .responsive-review-controls {display:flex;flex-wrap:wrap;gap:16px;margin:24px 0}
 .avenzo-next .responsive-review-controls label {display:grid;gap:6px;font-size:13px}
 .avenzo-next .responsive-review-controls select {min-height:44px;padding:8px 12px;border:1px solid var(--premium-line);border-radius:10px;color:var(--premium-text);background:var(--premium-surface)}
+.avenzo-next .discover-load-more {display:block;margin:24px auto;min-width:180px}
+.avenzo-next .discover-search-note {font-size:12px;line-height:1.5;color:var(--premium-muted);margin:20px 0;text-align:center}
+.avenzo-next .create-text-post-entry {display:flex;align-items:center;justify-content:center;gap:10px;margin:20px auto 0}

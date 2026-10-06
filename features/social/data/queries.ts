@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { countBy, groupBy } from "../../../lib/collections";
+import { DISCOVERY_PAGE_SIZE, discoveryTextFilter, type DiscoverySearchPage } from "../lib/discovery-search";
 import type {
   Chat,
   Message,
@@ -735,6 +736,7 @@ export async function fetchReels(
   options?: {
     authorId?: string;
     limit?: number;
+    ids?: string[];
   }
 ): Promise<{ reels: Reel[]; savedReels: string[] }> {
   let query = supabase
@@ -743,6 +745,10 @@ export async function fetchReels(
 
   if (options?.authorId) {
     query = query.eq("author_id", options.authorId);
+  }
+
+  if (options?.ids) {
+    query = query.in("id", options.ids);
   }
 
   const { data, error } = await query
@@ -1060,4 +1066,44 @@ export async function markConversationRead(
     .is("read_at", null);
 
   assertNoError(error);
+}
+
+export async function searchDiscovery(
+  supabase: SupabaseClient, userId: string, term: string, page: number
+): Promise<DiscoverySearchPage> {
+  const start = page * DISCOVERY_PAGE_SIZE;
+  const profileFilter = discoveryTextFilter(["username", "display_name"], term);
+  const [peopleResult, authorsResult] = await Promise.all([
+    supabase.from("profiles").select(PROFILE_COLUMNS).or(profileFilter).neq("id", userId)
+      .order("created_at", { ascending:false }).order("id", { ascending:false })
+      .range(start, start + DISCOVERY_PAGE_SIZE),
+    supabase.from("profiles").select("id").or(profileFilter).limit(80),
+  ]);
+  assertNoError(peopleResult.error); assertNoError(authorsResult.error);
+  const authorIds = (authorsResult.data || []).map(row => String(row.id))
+    .filter(id => /^[0-9a-f-]{36}$/i.test(id));
+  const tag = term.toLowerCase().replace(/\s/g, "");
+  const extras = [`hashtags.cs.{${tag}}`, `mentions.cs.{${tag}}`];
+  if (authorIds.length) extras.push("author_id.in.(" + authorIds.join(",") + ")");
+  const [postsResult, reelsResult] = await Promise.all([
+    supabase.from("posts").select("*")
+      .or([discoveryTextFilter(["caption", "location"], term), ...extras].join(","))
+      .order("created_at", { ascending:false }).order("id", { ascending:false })
+      .range(start, start + DISCOVERY_PAGE_SIZE),
+    supabase.from("reels").select("id")
+      .or([discoveryTextFilter(["title", "caption", "location"], term), ...extras].join(","))
+      .order("created_at", { ascending:false }).order("id", { ascending:false })
+      .range(start, start + DISCOVERY_PAGE_SIZE),
+  ]);
+  assertNoError(postsResult.error); assertNoError(reelsResult.error);
+  const rawPeople = peopleResult.data || [];
+  const rawPosts = postsResult.data || [];
+  const rawReels = reelsResult.data || [];
+  const reelIds = rawReels.slice(0, DISCOVERY_PAGE_SIZE).map(row => String(row.id));
+  const [posts, reels] = await Promise.all([
+    hydratePosts(supabase, userId, rawPosts.slice(0, DISCOVERY_PAGE_SIZE) as PostRow[]),
+    reelIds.length ? fetchReels(supabase, userId, { ids:reelIds, limit:DISCOVERY_PAGE_SIZE }) : Promise.resolve({ reels:[] as Reel[], savedReels:[] as string[] }),
+  ]);
+  return { people:rawPeople.slice(0, DISCOVERY_PAGE_SIZE) as Profile[], posts, reels:reels.reels, page,
+    hasMore:page < 99 && [rawPeople, rawPosts, rawReels].some(rows => rows.length > DISCOVERY_PAGE_SIZE) };
 }
