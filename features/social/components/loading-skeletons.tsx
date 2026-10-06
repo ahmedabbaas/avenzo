@@ -34,7 +34,7 @@ export function MessagesSkeleton() {
 
 export function ProfileSkeleton() {
   return (
-    <main className="profile-route-skeleton" aria-label="Loading profile">
+    <div className="profile-route-skeleton" role="status" aria-label="Loading profile" aria-busy="true">
       <div className="profile-skeleton-head">
         <i />
         <section>
@@ -52,7 +52,7 @@ export function ProfileSkeleton() {
       <div className="profile-skeleton-grid">
         {Array.from({ length: 9 }, (_, index) => <i key={index} />)}
       </div>
-    </main>
+    </div>
   );
 }
 
