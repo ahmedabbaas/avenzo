@@ -3828,3 +3828,6 @@ html[data-large-text="true"] .avenzo-next :is(.profile-header-identity p,.dm-con
 .avenzo-next :is(.saved-collections-head,.saved-collections-empty,.group-empty,.group-chat-placeholder,.channel-empty) p{font-size:14px!important;line-height:1.6!important;color:var(--premium-soft)!important}
 .avenzo-next :is(.saved-collections-empty,.group-empty) h3{font-size:20px!important;line-height:1.4!important;color:var(--premium-text)!important}
 .avenzo-next :is(.group-switch-row,.channel-switch-row) :is(a,span){font-size:14px!important;line-height:1.5!important}
+
+.avenzo-next .social-app .right-rail button{color:var(--premium-text)!important;font-size:14px!important;line-height:1.5!important;min-height:44px!important}
+.avenzo-next .social-app .right-rail .who button{background:var(--premium-secondary)!important;color:var(--premium-text)!important;border:1px solid var(--premium-line)!important}
