@@ -92,3 +92,12 @@ tested, and integrated with existing architecture.
 Before reporting completion, run the repository quality gate and explicitly note any
 remaining risk that could not be verified automatically.
 
+
+## 8. Preserve the approved product layout
+
+The user prefers the familiar social layout restored on 2026-10-06. Treat visual
+updates like app updates: improve spacing, alignment, typography, responsiveness,
+loading states and interactions within the established screens. Do not replace
+Home with an editorial/marketing introduction, rearrange the primary screen
+structure, or switch to decorative serif headlines without an explicit request.
+Keep web and Android improvements in the same design language.
