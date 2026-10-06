@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
+import BrandLogo from "../../../components/brand-logo";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
 import AvatarImage from "../../social/components/avatar-image";
@@ -2002,7 +2003,7 @@ export default function MessagesWorkspace({
       >
         {!active || !activeProfile ? (
           <div className="dm-chat-empty">
-            <span className="empty-mark">A</span>
+            <span className="empty-mark"><BrandLogo size={48} /></span>
             <h2>Your messages</h2>
             <p>
               Private conversations with real AVENZO accounts appear here.

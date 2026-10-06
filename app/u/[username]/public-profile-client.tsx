@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import BrandLogo from "../../../components/brand-logo";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
@@ -412,7 +413,7 @@ export default function PublicProfileClient({
               </div>
             ) : (
               <div className="empty">
-                <span className="empty-mark">A</span>
+                <span className="empty-mark"><BrandLogo size={48} /></span>
                 <b>No media posts yet.</b>
                 <p>This profile’s image posts will appear here.</p>
               </div>
@@ -450,7 +451,7 @@ export default function PublicProfileClient({
               </div>
             ) : (
               <div className="empty">
-                <span className="empty-mark">A</span>
+                <span className="empty-mark"><BrandLogo size={48} /></span>
                 <b>No reels yet.</b>
                 <p>This account has not uploaded a reel.</p>
               </div>

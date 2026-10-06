@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import BrandLogo from "../../../components/brand-logo";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import UserMediaImage from "./user-media-image";
 
@@ -375,7 +376,7 @@ export default function SavedCollectionsPanel({
         </div>
       ) : visibleEntries.length === 0 ? (
         <div className="saved-collections-empty saved-empty-designed">
-          <span className="empty-mark">A</span>
+          <span className="empty-mark"><BrandLogo size={48} /></span>
           <b>
             {activeCollection
               ? "This collection is empty."
