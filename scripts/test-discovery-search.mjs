@@ -60,10 +60,11 @@ function client(prefixCount) {
     return builder;
   }};
 }
-for (const prefixCount of [0, 1, 23, 24, 25, 48, 50]) {
+for (const peopleOnly of [false, true]) for (const prefixCount of [0, 1, 23, 24, 25, 48, 50]) {
   const ids = [];
   for (let page=0; page<6; page++) {
-    const result = await queryContext.exports.searchDiscovery(client(prefixCount), "viewer", "a", page);
+    const result = await queryContext.exports.searchDiscovery(client(prefixCount), "viewer", "a", page, peopleOnly);
+    if (peopleOnly) { assert.equal(result.posts.length, 0); assert.equal(result.reels.length, 0); }
     ids.push(...result.people.map(row => row.id));
     if (!result.hasMore) break;
   }
