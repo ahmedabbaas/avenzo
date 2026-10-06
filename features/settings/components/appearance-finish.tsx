@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 
 export const FINISHES = [
   { id: "chrome", label: "Chrome", color: "#9da6b1" },
-  { id: "citron", label: "Citron", color: "#c5f74f" },
-  { id: "ocean", label: "Ocean", color: "#7ab8e6" },
-  { id: "copper", label: "Copper", color: "#d6a17a" },
+  { id: "citron", label: "Silver", color: "#dededb" },
+  { id: "ocean", label: "Slate", color: "#a5adb8" },
+  { id: "copper", label: "Warm", color: "#c9bdb0" },
 ] as const;
 
 export default function AppearanceFinish() {
