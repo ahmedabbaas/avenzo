@@ -900,6 +900,10 @@ export default function MessagesWorkspace({
 
   async function scheduleCurrentMessage() {
     if (!active || !text.trim() || !scheduleAt) return;
+    if (!online) {
+      setNotice("You’re offline. Reconnect before scheduling a message.");
+      return;
+    }
 
     const sendDate = new Date(scheduleAt);
     if (Number.isNaN(sendDate.getTime())) {
@@ -1007,6 +1011,10 @@ export default function MessagesWorkspace({
 
   async function sendShare() {
     if (!active || active.request_incoming || !pendingShare) return;
+    if (!online) {
+      setNotice("You’re offline. Reconnect before sharing.");
+      return;
+    }
 
     const type = sharePostId
       ? "shared_post"
@@ -1100,6 +1108,11 @@ export default function MessagesWorkspace({
   async function sendVoiceBlob(blob: Blob, mimeType: string) {
     if (!active || active.request_incoming || cancelRecordingRef.current) {
       cancelRecordingRef.current = false;
+      return;
+    }
+
+    if (!online) {
+      setNotice("Voice message kept unsent because the connection dropped. Record again after reconnecting.");
       return;
     }
 
@@ -1301,6 +1314,10 @@ export default function MessagesWorkspace({
 
   function startAudioCall() {
     if (!active || active.request_incoming) return;
+    if (!online) {
+      setNotice("You’re offline. Reconnect before starting a call.");
+      return;
+    }
 
     if (active.request_status !== "accepted") {
       setNotice("The message request must be accepted before starting a call.");
@@ -1322,6 +1339,10 @@ export default function MessagesWorkspace({
 
   function startVideoCall() {
     if (!active || active.request_incoming) return;
+    if (!online) {
+      setNotice("You’re offline. Reconnect before starting a video call.");
+      return;
+    }
 
     if (active.request_status !== "accepted") {
       setNotice("The message request must be accepted before starting a video call.");
