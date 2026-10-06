@@ -30,6 +30,8 @@ export function validateContentFile(
     return null;
   }
 
+  if (!Number.isFinite(file.size) || file.size <= 0) return "This file is empty or unreadable. Choose another file.";
+
   if (!ALLOWED_CONTENT_MIME_TYPES.has(file.type)) {
     return "Choose a supported image or video file.";
   }
@@ -54,6 +56,8 @@ export function validateCoverFile(
 ): string | null {
   if (!file) return null;
 
+  if (!Number.isFinite(file.size) || file.size <= 0) return "This cover image is empty or unreadable. Choose another image.";
+
   if (!ALLOWED_COVER_MIME_TYPES.has(file.type)) {
     return "Cover image must be JPEG, PNG or WebP.";
   }
@@ -69,6 +73,7 @@ export function validateVerticalReelDimensions(
   dimensions: { width: number; height: number } | null
 ): string | null {
   if (!dimensions) return null;
+  if (!Number.isFinite(dimensions.width) || !Number.isFinite(dimensions.height) || dimensions.width <= 0 || dimensions.height <= 0) return "Video dimensions could not be read. Choose another video.";
   if (dimensions.height <= dimensions.width) {
     return "Reels must use a vertical video (portrait orientation).";
   }
