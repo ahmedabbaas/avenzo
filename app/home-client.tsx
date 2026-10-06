@@ -1254,7 +1254,7 @@ export default function HomeClient({
   }
 
   return (
-    <div className={"social-app screen-" + screen}>
+    <div className={"social-app editorial-social screen-" + screen}>
       <header className="top">
         {screen === "home" && (
           <div className="avenzo-mobile-home-bar" style={{ display: "none" }}>
@@ -1447,6 +1447,7 @@ export default function HomeClient({
 
       <div className="social-layout">
         <aside className="left-nav" aria-label="Primary navigation">
+          <button className="nav-wordmark" onClick={() => selectPrimaryScreen("home")} aria-label="AVENZO home">AVENZO</button>
           <div className="nav-identity">
             <AvatarImage src={avatarFor(profile)} alt={profile.display_name} size={96} />
             <div>
@@ -1529,9 +1530,9 @@ export default function HomeClient({
             <>
               <section className="home-dashboard-head">
                 <div>
-                  <div className="eyebrow">YOUR AVENZO</div>
-                  <h1>Home</h1>
-                  <p>People you follow. Moments worth sharing.</p>
+                  <div className="eyebrow">HOME</div>
+                  <h1>Your world,<br />in focus.</h1>
+                  <p>People. Perspectives. Moments that stay.</p>
                 </div>
                 <button
                   className="btn home-create-button"
@@ -1542,6 +1543,7 @@ export default function HomeClient({
                 </button>
               </section>
 
+              <div className="moments-section-head"><span>Moments</span><button type="button" onClick={() => openComposer("story")}>Make a moment <Icon name="plus" size={16} /></button></div>
               <div className="stories-row" aria-label="Active moments">
                 <button
                   className="story story-you"
@@ -1922,35 +1924,18 @@ export default function HomeClient({
         </main>
 
         <aside className="right-rail">
-          <div className="side-card side-profile-card">
-            <div className="side-profile-top">
-              <AvatarImage src={avatarFor(profile)} alt={profile.display_name} size={96} />
-              <div>
-                <strong>{profile.display_name}</strong>
-                <small className="verified-line">@{profile.username}<VerifiedBadge verified={profile.verified} /></small>
-              </div>
-            </div>
-            <div className="mini-stats">
-              <span>
-                <b>{stats.posts}</b>
-                posts
-              </span>
-              <span>
-                <b>{stats.followers}</b>
-                followers
-              </span>
-              <span>
-                <b>{stats.following}</b>
-                following
-              </span>
-            </div>
-          </div>
+          <section className="rail-create-editorial">
+            <span className="eyebrow">YOURS TO SHARE</span>
+            <h2>Make something<br />worth a pause.</h2>
+            <p>A photo, a thought, a little piece of your world.</p>
+            <button type="button" onClick={() => setShowCreatePicker(true)}>Create a post <Icon name="plus" size={18} /></button>
+          </section>
 
           <div className="side-card avenzo-spaces-card">
             <div className="side-card-head">
               <div>
-                <small>AVENZO SPACES</small>
-                <b>Your social hub</b>
+                <small>STAY CONNECTED</small>
+                <b>Your spaces</b>
               </div>
             </div>
             <div className="avenzo-spaces-grid">
@@ -1976,7 +1961,7 @@ export default function HomeClient({
 
           <div className="side-card">
             <div className="side-card-head">
-              <b>People to follow</b>
+              <b>Find your circle</b>
               <button onClick={() => setScreen("explore")}>See all</button>
             </div>
             {people
