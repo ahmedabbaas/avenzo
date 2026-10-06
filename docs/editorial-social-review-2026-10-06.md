@@ -1,5 +1,7 @@
 # Editorial social finish
 
+Superseded: the user rejected this structural redesign. The familiar pre-editorial layout is restored; future changes must enhance that layout incrementally. Live search and primary-screen scroll fixes are retained.
+
 ## Direction and architecture
 
 Previous production inspection found repetitive account summaries, boxed right-rail shortcuts, a clipped Add moment label, and saturated stored accent finishes. The reference direction uses editorial headings, graphite/silver surfaces, hairline boundaries, a restrained navigation rail and spacious media presentation. Generated Home, Profile and Messages references guide hierarchy and spacing; reference people/photos/counts are not product data.
