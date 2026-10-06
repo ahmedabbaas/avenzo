@@ -2123,6 +2123,15 @@ export default function MessagesWorkspace({
                 <Icon name="phone" size={20} />
               </button>
               <button
+                type="button"
+                className="icon-button dm-video-button"
+                onClick={startVideoCall}
+                aria-label="Start video call"
+                title="Video call"
+              >
+                <Icon name="video" size={20} />
+              </button>
+              <button
                 className="icon-button dm-head-search-button"
                 onClick={() => setSearchOpen((value) => !value)}
                 aria-label="Search messages"
@@ -2276,6 +2285,7 @@ export default function MessagesWorkspace({
                     setMessageQuery(event.target.value)
                   }
                   placeholder="Search in conversation"
+                  aria-label="Search in conversation"
                 />
               </label>
             </div>
@@ -2811,7 +2821,8 @@ export default function MessagesWorkspace({
                     onKeyDown={(event) => {
                       if (
                         event.key === "Enter" &&
-                        !event.shiftKey
+                        !event.shiftKey &&
+                        !event.nativeEvent.isComposing
                       ) {
                         event.preventDefault();
                         void send();
