@@ -1,3 +1,5 @@
+import BrandLogo from "../../../components/brand-logo";
+
 export default function EmptyState({
   title,
   text,
@@ -15,7 +17,7 @@ export default function EmptyState({
 }) {
   return (
     <div className="empty">
-      <span className="empty-mark">A</span>
+      <span className="empty-mark"><BrandLogo size={44} /></span>
       <b>{title}</b>
       <p>{text}</p>
       {(action && actionLabel) || (secondaryAction && secondaryActionLabel) ? (
@@ -35,4 +37,3 @@ export default function EmptyState({
     </div>
   );
 }
-

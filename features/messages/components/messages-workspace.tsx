@@ -204,6 +204,7 @@ export default function MessagesWorkspace({
   const [noteAudience, setNoteAudience] =
     useState<MessageNote["audience"]>("followers");
   const [query, setQuery] = useState("");
+  const [unreadOnly, setUnreadOnly] = useState(false);
   const [messageQuery, setMessageQuery] = useState("");
   const [text, setText] = useState("");
   const [replyTo, setReplyTo] = useState<DirectMessage | null>(null);
@@ -1523,6 +1524,7 @@ export default function MessagesWorkspace({
         );
 
   const shown = baseConversations.filter((item) =>
+    (!unreadOnly || item.unread_count > 0) &&
     (item.display_name + " " + item.username + " " + item.last_message)
       .toLowerCase()
       .includes(query.toLowerCase().trim())
@@ -1530,6 +1532,7 @@ export default function MessagesWorkspace({
 
   const mobileBaseConversations = tab === "requests" ? requests : inbox;
   const mobileShown = mobileBaseConversations.filter((item) =>
+    (!unreadOnly || item.unread_count > 0) &&
     (item.display_name + " " + item.username + " " + item.last_message)
       .toLowerCase()
       .includes(query.toLowerCase().trim())
@@ -1777,6 +1780,11 @@ export default function MessagesWorkspace({
           />
         </label>
 
+        <label className="dm-unread-filter">
+          <input type="checkbox" checked={unreadOnly} onChange={event => setUnreadOnly(event.target.checked)} />
+          Show unread conversations only
+        </label>
+
         {!active && notice && (
           <div className="dm-inline-notice" role="status" aria-live="polite">
             <span>{notice}</span>
@@ -1819,14 +1827,14 @@ export default function MessagesWorkspace({
             <div className="dm-empty-state">
               <Icon name="messages" size={28} />
               <b>
-                {tab === "requests"
+                {unreadOnly ? "You’re all caught up" : tab === "requests"
                   ? "No message requests"
                   : query.trim()
                     ? "No chats found"
                     : "No chats yet"}
               </b>
               <p>
-                {tab === "requests"
+                {unreadOnly ? "No unread conversations match this view. Turn off the filter to see all chats." : tab === "requests"
                   ? "New requests from real AVENZO users will appear here."
                   : query.trim()
                     ? "Try another username or name."
@@ -1922,14 +1930,14 @@ export default function MessagesWorkspace({
             <div className="dm-empty-state">
               <Icon name="messages" size={28} />
               <b>
-                {tab === "requests"
+                {unreadOnly ? "You’re all caught up" : tab === "requests"
                   ? "No message requests"
                   : tab === "general"
                     ? "No General chats"
                     : "No messages yet"}
               </b>
               <p>
-                {tab === "requests"
+                {unreadOnly ? "No unread conversations match this view. Turn off the filter to see all chats." : tab === "requests"
                   ? "New requests from real users will appear here."
                   : tab === "general"
                     ? "Move lower-priority conversations here to keep Primary focused."

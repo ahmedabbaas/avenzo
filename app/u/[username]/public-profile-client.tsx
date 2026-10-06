@@ -4,10 +4,9 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
-import AvatarImage from "../../../features/social/components/avatar-image";
 import UserMediaImage from "../../../features/social/components/user-media-image";
-import { formatProfileStat, initialsAvatar, normalizeProfileWebsite } from "../../../features/social/lib/profile";
-import VerifiedBadge from "../../../features/social/components/verified-badge";
+import { initialsAvatar } from "../../../features/social/lib/profile";
+import ProfileHeader from "../../../features/social/components/profile-header";
 import Icon from "../../../features/social/components/icon";
 import ProfileHighlightsRow from "../../../features/social/components/profile-highlights-row";
 import TaggedPostsGrid from "../../../features/social/components/tagged-posts-grid";
@@ -272,7 +271,6 @@ export default function PublicProfileClient({
 
   const avatar =
     profile.avatar_url || initialsAvatar(profile.display_name);
-  const website = normalizeProfileWebsite(profile.website);
 
   return (
     <main className="public-profile-shell profile-page profile-page-external">
@@ -310,168 +308,15 @@ export default function PublicProfileClient({
       </header>
 
       <section className="public-profile-wrap">
-        <div
-          className="public-profile-reference-mobile profile-reference-mobile"
-          style={{ display: "none" }}
-          aria-label="Profile overview"
-        >
-          <div className="public-profile-reference-top profile-reference-top">
-            <div className="public-profile-reference-avatar profile-reference-avatar">
-              <AvatarImage src={avatar} alt={profile.display_name} size={220} />
-            </div>
-
-            <div className="public-profile-reference-stats profile-reference-stats">
-              <span>
-                <b>{formatProfileStat(stats.posts)}</b>
-                <small>Posts</small>
-              </span>
-              <Link
-                href={
-                  "/connections/followers?user=" +
-                  encodeURIComponent(profile.username)
-                }
-              >
-                <b>{formatProfileStat(stats.followers)}</b>
-                <small>Followers</small>
-              </Link>
-              <Link
-                href={
-                  "/connections/following?user=" +
-                  encodeURIComponent(profile.username)
-                }
-              >
-                <b>{formatProfileStat(stats.following)}</b>
-                <small>Following</small>
-              </Link>
-            </div>
-          </div>
-
-          <div className="public-profile-reference-copy profile-reference-copy">
-            <div className="public-profile-reference-identity profile-reference-identity">
-              <h1 className="verified-line">
-                {profile.display_name}
-                <VerifiedBadge verified={profile.verified} />
-              </h1>
-              <span>@{profile.username}</span>
-            </div>
-
-            <p className="public-profile-reference-bio profile-reference-bio">
-              {profile.bio || "New to AVENZO."}
-            </p>
-
-            {website && (
-              <a
-                className="public-profile-reference-website profile-reference-website"
-                href={website.href}
-                target="_blank"
-                rel="noopener noreferrer nofollow"
-              >
-                <Icon name="link" size={14} />
-                <span>{website.label}</span>
-              </a>
-            )}
-          </div>
-
-          <div className="public-profile-reference-actions profile-reference-actions">
-            <button
-              type="button"
-              disabled={busy}
-              className={following ? "following" : requested ? "requested" : ""}
-              onClick={toggleFollow}
-            >
-              {following ? "Following" : requested ? "Requested" : "Follow"}
-            </button>
-            <Link
-              href={
-                "/messages?user=" +
-                encodeURIComponent(profile.username)
-              }
-            >
-              <Icon name="messages" size={16} />
-              Message
-            </Link>
-          </div>
-
-          {notice && (
-            <small className="public-profile-reference-notice" role="status">
-              {notice}
-            </small>
-          )}
-        </div>
-
-        <div className="public-profile-hero profile-hero">
-          <AvatarImage className="profile-desktop-avatar" src={avatar} alt={profile.display_name} size={220} />
-
-          <div className="public-profile-copy profile-hero-copy">
-            <div className="eyebrow verified-line">@{profile.username}<VerifiedBadge verified={profile.verified} /></div>
-            <h1>{profile.display_name}</h1>
-            <p>{profile.bio || "New to AVENZO."}</p>
-
-            {website && (
-              <a
-                className="public-profile-website"
-                href={website.href}
-                target="_blank"
-                rel="noopener noreferrer nofollow"
-              >
-                {website.label}
-              </a>
-            )}
-
-            <div className="public-profile-stats profile-stats">
-              <span>
-                <b>{formatProfileStat(stats.posts)}</b>
-                posts
-              </span>
-              <Link
-                href={
-                  "/connections/followers?user=" +
-                  encodeURIComponent(profile.username)
-                }
-              >
-                <b>{formatProfileStat(stats.followers)}</b>
-                followers
-              </Link>
-              <Link
-                href={
-                  "/connections/following?user=" +
-                  encodeURIComponent(profile.username)
-                }
-              >
-                <b>{formatProfileStat(stats.following)}</b>
-                following
-              </Link>
-            </div>
-
-            <div className="public-profile-actions">
-              <button
-                className="btn"
-                disabled={busy}
-                onClick={toggleFollow}
-              >
-                {following ? "Following" : requested ? "Requested" : "Follow"}
-              </button>
-
-              <Link
-                className="btn secondary"
-                href={
-                  "/messages?user=" +
-                  encodeURIComponent(profile.username)
-                }
-              >
-                Message
-              </Link>
-
-
-            </div>
-
-            {notice && (
-              <small className="public-profile-notice" role="status">
-                {notice}
-              </small>
-            )}
-          </div>
-        </div>
+        <ProfileHeader profile={profile} avatar={avatar} stats={stats}
+          followersHref={"/connections/followers?user=" + encodeURIComponent(profile.username)}
+          followingHref={"/connections/following?user=" + encodeURIComponent(profile.username)}
+          notice={notice}
+          actions={<>
+            <button type="button" className={"btn" + (following || requested ? " secondary" : "")} disabled={busy} onClick={toggleFollow}>{following ? "Following" : requested ? "Requested" : "Follow"}</button>
+            <Link className="btn secondary" href={"/messages?user=" + encodeURIComponent(profile.username)}><Icon name="messages" size={18} />Message</Link>
+          </>}
+        />
 
         <ProfileHighlightsRow profileId={profile.id} />
 
@@ -487,25 +332,25 @@ export default function PublicProfileClient({
           </section>
         ) : (
           <>
-        <div className="public-profile-tabs profile-content-tabs" role="tablist" aria-label="Profile content">
-          <button
-            className={contentTab === "posts" ? "active" : ""}
+        <div className="public-profile-tabs profile-content-tabs" role="group" aria-label="Profile content">
+          <button type="button" aria-pressed={contentTab === "posts"}
+          className={contentTab === "posts" ? "active" : ""}
             onClick={() => setContentTab("posts")}
           >
             <span className="public-tab-icon" style={{ display: "none" }}><Icon name="grid" size={20} /></span>
             <span className="public-tab-label">Posts</span>
             <span className="public-tab-count">{posts.length}</span>
           </button>
-          <button
-            className={contentTab === "reels" ? "active" : ""}
+          <button type="button" aria-pressed={contentTab === "reels"}
+          className={contentTab === "reels" ? "active" : ""}
             onClick={() => setContentTab("reels")}
           >
             <span className="public-tab-icon" style={{ display: "none" }}><Icon name="reels" size={20} /></span>
             <span className="public-tab-label">Reels</span>
             <span className="public-tab-count">{reelItems.length}</span>
           </button>
-          <button
-            className={contentTab === "tagged" ? "active" : ""}
+          <button type="button" aria-pressed={contentTab === "tagged"}
+          className={contentTab === "tagged" ? "active" : ""}
             onClick={() => setContentTab("tagged")}
           >
             <span className="public-tab-icon" style={{ display: "none" }}><Icon name="tag" size={20} /></span>

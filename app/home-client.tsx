@@ -1525,9 +1525,9 @@ export default function HomeClient({
             <>
               <section className="home-dashboard-head">
                 <div>
-                  <div className="eyebrow">AVENZO MOMENTS</div>
-                  <h1>Moments</h1>
-                  <p>Updates shared by real AVENZO accounts you can actually open and follow.</p>
+                  <div className="eyebrow">YOUR AVENZO</div>
+                  <h1>Home</h1>
+                  <p>People you follow. Moments worth sharing.</p>
                 </div>
                 <button
                   className="btn home-create-button"
@@ -1761,8 +1761,7 @@ export default function HomeClient({
               />
 
               <div
-                className="avenzo-mobile-explore-filters"
-                style={{ display: "none" }}
+                className="avenzo-mobile-explore-filters discover-category-tabs"
                 role="tablist"
                 aria-label="Explore filters"
               >
@@ -1917,6 +1916,7 @@ export default function HomeClient({
               media={mediaUrl}
               stats={stats}
               onEdit={() => router.push("/settings/account")}
+              onCreate={() => setShowCreatePicker(true)}
               onCreatePost={() => openComposer("post")}
               onCreateReel={() => openComposer("reel")}
               onCreateStory={() => openComposer("story")}

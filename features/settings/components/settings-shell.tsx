@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Icon from "../../social/components/icon";
+import BrandLogo from "../../../components/brand-logo";
 import type { ReactNode } from "react";
 import { useUiTranslation } from "../lib/i18n";
 
@@ -49,7 +50,7 @@ export default function SettingsShell({
         </Link>
 
         <div className="settings-sidebar-brand">
-          <span className="brand-mark">A</span>
+          <BrandLogo size={40} />
           <div>
             <b>AVENZO</b>
             <small>Settings</small>

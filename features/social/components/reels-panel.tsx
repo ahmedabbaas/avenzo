@@ -63,7 +63,7 @@ export default function ReelsPanel({
   const [notice, setNotice] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const [muted, setMuted] = useState(true);
-  const [manualPaused, setManualPaused] = useState(!preferences.media_autoplay_videos);
+  const [manualPaused, setManualPaused] = useState((!preferences.media_autoplay_videos || saveData));
   const [loadedIds, setLoadedIds] = useState<Set<string>>(new Set());
   const [failedIds, setFailedIds] = useState<Set<string>>(new Set());
 
@@ -249,7 +249,7 @@ export default function ReelsPanel({
           const index = Number(slide.dataset.reelIndex || 0);
           const reelId = slide.dataset.reelId;
           setActiveIndex(index);
-          setManualPaused(!preferences.media_autoplay_videos);
+          setManualPaused((!preferences.media_autoplay_videos || saveData));
 
           if (reelId && !viewedRef.current.has(reelId)) {
             viewedRef.current.add(reelId);
@@ -273,7 +273,7 @@ export default function ReelsPanel({
     });
 
     return () => observer.disconnect();
-  }, [reelOrder, displayedReels.length, preferences.media_autoplay_videos, supabase]);
+  }, [reelOrder, displayedReels.length, preferences.media_autoplay_videos, saveData, supabase]);
 
   useEffect(() => {
     // Capture mounted nodes: inline refs may be cleared before unmount cleanup.
@@ -306,12 +306,17 @@ export default function ReelsPanel({
     };
   }, []);
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => setManualPaused(!preferences.media_autoplay_videos || saveData), 0);
+    return () => window.clearTimeout(timer);
+  }, [preferences.media_autoplay_videos, saveData]);
+
   function changeReelTab(
     next: "for-you" | "following" | "trending" | "music" | "gaming" | "travel"
   ) {
     setReelTab(next);
     setActiveIndex(0);
-    setManualPaused(!preferences.media_autoplay_videos);
+    setManualPaused((!preferences.media_autoplay_videos || saveData));
     window.requestAnimationFrame(() => {
       viewportRef.current?.scrollTo({ top: 0, behavior: "auto" });
     });
@@ -512,12 +517,12 @@ export default function ReelsPanel({
           <BrandLogo size={32} /><b>AVENZO</b>
         </Link>
         <div>
-          <b>Reels</b>
-          <span>Vertical videos from real AVENZO accounts</span>
+          <b>Clips</b>
+          <span>Short videos. Real people.</span>
         </div>
         <Link className="btn small" href="/home?create=reel">
           <Icon name="plus" size={16} />
-          Upload Reel
+          Create Clip
         </Link>
       </header>
 
@@ -567,7 +572,7 @@ export default function ReelsPanel({
                     playsInline
                     loop
                     autoPlay={active && !manualPaused}
-                    preload={active ? "auto" : "metadata"}
+                    preload={active && !manualPaused && !saveData ? "auto" : "metadata"}
                     onClick={() => togglePlayback(reel, index)}
                     onLoadedMetadata={(event) => {
                       if (index === activeIndex && !manualPaused) {

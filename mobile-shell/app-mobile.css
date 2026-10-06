@@ -1,4 +1,4 @@
-/* Compatibility styles must never override the unlayered shared product layout. */
+/* Normal-priority compatibility fallback. Layered important rules would outrank the canonical web UI, so they are deliberately not used here. */
 @layer avenzo-native-compat {
 /* AVENZO MOBILE APP FRAME v1 */
 
@@ -16995,6 +16995,6 @@ html.avenzo-android-app .avenzo-call-card h2{overflow-wrap:anywhere}
 /* Premium shared product styles own appearance; native code owns only platform insets. */
 html.avenzo-android-app body.avenzo-next{font-family:-apple-system,BlinkMacSystemFont,var(--font-avenzo-ui),"Segoe UI",sans-serif;}
 html.avenzo-android-app .avenzo-brand-logo,html.avenzo-android-app .avenzo-native-logo{filter:none;background:transparent;border-radius:0;box-shadow:none;}
-html.avenzo-android-app.avenzo-composer-open .mobile-bottom-nav{display:none!important;}
+html.avenzo-android-app.avenzo-composer-open .mobile-bottom-nav{display:none;}
 
 }

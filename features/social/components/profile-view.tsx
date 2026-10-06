@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import EmptyState from "./empty-state";
-import { avatarFor, formatProfileStat, formatRelativeTime, normalizeProfileWebsite } from "../lib/profile";
+import { avatarFor, formatRelativeTime } from "../lib/profile";
 import type { Post, Profile, ProfileStats, Reel } from "../types";
-import AvatarImage from "./avatar-image";
+import ProfileHeader from "./profile-header";
 import UserMediaImage from "./user-media-image";
 import Icon from "./icon";
 import TaggedPostsGrid from "./tagged-posts-grid";
@@ -23,6 +23,7 @@ export default function ProfileView({
   onCreatePost,
   onCreateReel,
   onCreateStory,
+  onCreate,
 }: {
   profile: Profile;
   posts: Post[];
@@ -33,27 +34,17 @@ export default function ProfileView({
   onCreatePost: () => void;
   onCreateReel: () => void;
   onCreateStory: () => void;
+  onCreate?: () => void;
 }) {
   const router = useRouter();
   const [tab, setTab] =
     useState<"posts" | "reels" | "saved" | "tagged">("posts");
   const [shareLabel, setShareLabel] = useState("Share Profile");
-  const website = normalizeProfileWebsite(profile.website);
-
-  function openMobileProfilePost(postId: string) {
-    if (
-      typeof document === "undefined" ||
-      !document.documentElement.classList.contains("avenzo-android-app")
-    ) {
-      return;
+  function openProfilePost(event: MouseEvent<HTMLAnchorElement>, postId: string) {
+    if (document.documentElement.classList.contains("avenzo-android-app")) {
+      event.preventDefault();
+      router.push("/mobile/profile-posts/" + encodeURIComponent(profile.username) + "/" + encodeURIComponent(postId));
     }
-
-    router.push(
-      "/mobile/profile-posts/" +
-        encodeURIComponent(profile.username) +
-        "/" +
-        encodeURIComponent(postId)
-    );
   }
 
   async function shareProfile() {
@@ -90,194 +81,21 @@ export default function ProfileView({
 
   return (
     <div className="profile-page">
-      <section className="profile-hero">
-        <div
-          className="profile-reference-mobile"
-          style={{ display: "none" }}
-          aria-label="Profile overview"
-        >
-          <div className="profile-reference-top">
-            <div className="profile-reference-avatar">
-              <AvatarImage
-                src={avatarFor(profile)}
-                alt={profile.display_name}
-                size={180}
-              />
-              <button
-                type="button"
-                onClick={onCreateStory}
-                aria-label="Add story"
-              >
-                <Icon name="plus" size={15} />
-              </button>
-            </div>
-
-            <div
-              className="profile-reference-stats"
-              aria-label="Profile statistics"
-            >
-              <span>
-                <b>{formatProfileStat(stats.posts)}</b>
-                <small>Posts</small>
-              </span>
-              <Link href="/connections/followers">
-                <b>{formatProfileStat(stats.followers)}</b>
-                <small>Followers</small>
-              </Link>
-              <Link href="/connections/following">
-                <b>{formatProfileStat(stats.following)}</b>
-                <small>Following</small>
-              </Link>
-            </div>
-          </div>
-
-          <div className="profile-reference-copy">
-            <div className="profile-reference-identity">
-              <h1 >
-                {profile.display_name}
-              </h1>
-              <span>@{profile.username}</span>
-            </div>
-
-            {profile.bio && (
-              <p className="profile-reference-bio">{profile.bio}</p>
-            )}
-
-            {website && (
-              <a
-                className="profile-reference-website"
-                href={website.href}
-                target="_blank"
-                rel="noopener noreferrer nofollow"
-              >
-                <Icon name="link" size={15} />
-                <span>{website.label}</span>
-              </a>
-            )}
-          </div>
-
-          <div className="profile-reference-actions">
-            <button type="button" onClick={onEdit}>
-              Edit profile
-            </button>
-            <button type="button" onClick={() => void shareProfile()}>
-              {shareLabel}
-            </button>
-            <button
-              className="profile-reference-discover"
-              type="button"
-              onClick={() => router.push("/home?screen=explore")}
-              aria-label="Discover people"
-            >
-              <Icon name="userPlus" size={20} />
-            </button>
-          </div>
-        </div>
-
-        <div className="profile-mobile-top" aria-label="Profile overview">
-          <span className="profile-mobile-avatar-wrap">
-            <AvatarImage
-              src={avatarFor(profile)}
-              alt={profile.display_name}
-              size={180}
-            />
-            <button
-              type="button"
-              onClick={onCreateStory}
-              aria-label="Add story"
-            >
-              <Icon name="plus" size={16} />
-            </button>
-          </span>
-          <span className="profile-mobile-stat">
-            <b>{formatProfileStat(stats.posts)}</b>
-            <small>Posts</small>
-          </span>
-          <Link className="profile-mobile-stat" href="/connections/followers">
-            <b>{formatProfileStat(stats.followers)}</b>
-            <small>Followers</small>
-          </Link>
-          <Link className="profile-mobile-stat" href="/connections/following">
-            <b>{formatProfileStat(stats.following)}</b>
-            <small>Following</small>
-          </Link>
-        </div>
-
-        <AvatarImage
-          className="profile-desktop-avatar"
-          src={avatarFor(profile)}
-          alt={profile.display_name}
-          size={180}
-        />
-
-        <div className="profile-hero-copy">
-          <div className="profile-title-row">
-            <div className="profile-identity">
-              <div className="eyebrow verified-line">
-                @{profile.username}
-              </div>
-              <h1>{profile.display_name}</h1>
-            </div>
-
-            <button className="btn secondary small profile-edit" onClick={onEdit}>
-              Edit Profile
-            </button>
-            <button
-              className="btn secondary small profile-edit"
-              type="button"
-              onClick={() => void shareProfile()}
-            >
-              {shareLabel}
-            </button>
-            <button
-              className="btn secondary small profile-edit"
-              type="button"
-              onClick={() => router.push("/insights")}
-            >
-              Insights
-            </button>
-          </div>
-
-          <p className="profile-bio">{profile.bio || "Welcome to AVENZO."}</p>
-
-          {website && (
-            <a
-              className="profile-website"
-              href={website.href}
-              target="_blank"
-              rel="noopener noreferrer nofollow"
-            >
-              {website.label}
-            </a>
-          )}
-
-          <div className="profile-mobile-actions" aria-label="Profile actions">
-            <button type="button" onClick={onEdit}>Edit Profile</button>
-            <button type="button" onClick={() => void shareProfile()}>{shareLabel}</button>
-            <button type="button" onClick={() => router.push("/insights")}>Insights</button>
-          </div>
-
-          <div className="profile-stats" aria-label="Profile statistics">
-            <span><b>{formatProfileStat(stats.posts)}</b><small>Posts</small></span>
-            <Link href="/connections/followers"><b>{formatProfileStat(stats.followers)}</b><small>Followers</small></Link>
-            <Link href="/connections/following"><b>{formatProfileStat(stats.following)}</b><small>Following</small></Link>
-          </div>
-
-          <div className="profile-create-panel">
-            <span className="profile-create-label">Create</span>
-            <div className="profile-create-actions" aria-label="Create content">
-              <button className="btn small" onClick={onCreatePost}>Create Post</button>
-              <button className="btn secondary small" onClick={onCreateReel}>Create Reel</button>
-              <button className="btn secondary small" onClick={onCreateStory}>Create Story</button>
-            </div>
-          </div>
-        </div>
-      </section>
+      <ProfileHeader profile={profile} avatar={avatarFor(profile)} stats={stats}
+        followersHref="/connections/followers" followingHref="/connections/following"
+        onAddStory={onCreateStory}
+        actions={<>
+          <button type="button" className="btn" onClick={onEdit}>Edit profile</button>
+          <button type="button" className="btn secondary" onClick={() => void shareProfile()}>{shareLabel}</button>
+          <button type="button" className="btn secondary" onClick={() => router.push("/insights")}>Insights</button>
+          <button type="button" className="icon-button profile-header-create" aria-label="Create content" onClick={onCreate || onCreatePost}><Icon name="plus" size={20} /></button>
+        </>}
+      />
 
       <ProfileHighlightsRow profileId={profile.id} own />
 
-      <div className="profile-content-tabs" role="tablist" aria-label="Profile content">
-        <button
+      <div className="profile-content-tabs" role="group" aria-label="Profile content">
+        <button type="button" aria-pressed={tab === "posts"}
           className={tab === "posts" ? "active" : ""}
           onClick={() => setTab("posts")}
           aria-label="Posts"
@@ -286,7 +104,7 @@ export default function ProfileView({
           <span className="profile-tab-label">Posts</span>
           <span className="profile-tab-count">{posts.length}</span>
         </button>
-        <button
+        <button type="button" aria-pressed={tab === "reels"}
           className={tab === "reels" ? "active" : ""}
           onClick={() => setTab("reels")}
           aria-label="Reels"
@@ -295,7 +113,7 @@ export default function ProfileView({
           <span className="profile-tab-label">Reels</span>
           <span className="profile-tab-count">{reels.length}</span>
         </button>
-        <button
+        <button type="button" aria-pressed={tab === "saved"}
           className={tab === "saved" ? "active" : ""}
           onClick={() => setTab("saved")}
           aria-label="Saved"
@@ -303,7 +121,7 @@ export default function ProfileView({
           <Icon name="saved" size={20} />
           <span className="profile-tab-label">Saved</span>
         </button>
-        <button
+        <button type="button" aria-pressed={tab === "tagged"}
           className={tab === "tagged" ? "active" : ""}
           onClick={() => setTab("tagged")}
           aria-label="Tagged"
@@ -325,62 +143,19 @@ export default function ProfileView({
 
           {posts.length > 0 ? (
             <div className="profile-grid">
-              {posts.map((post) => {
-                if (!post.media_path) {
-                  return (
-                    <article
-                      className={
-                        "profile-text-post avenzo-mobile-profile-post" +
-                        (post.pinned_at ? " profile-post-pinned" : "")
-                      }
-                      key={post.id}
-                      data-avenzo-post-id={post.id}
-                      onClick={() => openMobileProfilePost(post.id)}
-                    >
-                      {post.pinned_at && (
-                        <i className="profile-pin-badge"><Icon name="pin" size={12} /></i>
-                      )}
-                      <span>TEXT POST</span>
-                      <p>{post.caption}</p>
-                      <small>{formatRelativeTime(post.created_at)}</small>
-                    </article>
-                  );
-                }
-
-                return post.media_type === "video" ? (
-                  <span className={"profile-media-pin-wrap" + (post.pinned_at ? " pinned" : "")} key={post.id}>
-                    {post.pinned_at && (
-                      <i className="profile-pin-badge"><Icon name="pin" size={12} /></i>
-                    )}
-                    <video
-                    className="avenzo-mobile-profile-post"
-                    data-avenzo-post-id={post.id}
-                    onClick={() => openMobileProfilePost(post.id)}
-                    src={media(post.media_path)}
-                    preload="metadata"
-                    controls
-                    muted
-                    playsInline
-                  />
-                  </span>
-                ) : (
-                  <span className={"profile-media-pin-wrap" + (post.pinned_at ? " pinned" : "")} key={post.id}>
-                    {post.pinned_at && (
-                      <i className="profile-pin-badge"><Icon name="pin" size={12} /></i>
-                    )}
-                    <UserMediaImage
-                      sizes="(max-width: 900px) 33vw, 240px"
-                    className="avenzo-mobile-profile-post"
-                    dataAvenzoPostId={post.id}
-                    onClick={() => openMobileProfilePost(post.id)}
-                    src={media(post.media_path)}
-                    alt={post.caption || "AVENZO post"}
-                    width={post.media_width}
-                    height={post.media_height}
-                  />
-                  </span>
-                );
-              })}
+              {posts.map((post) => <Link
+                key={post.id}
+                href={"/p/" + encodeURIComponent(post.id)}
+                onClick={event => openProfilePost(event, post.id)}
+                className={"profile-media-pin-wrap avenzo-mobile-profile-post" + (!post.media_path ? " profile-text-post" : "") + (post.pinned_at ? " profile-post-pinned" : "")}
+                data-avenzo-post-id={post.id}
+                aria-label={"Open post" + (post.caption ? ": " + post.caption.slice(0, 100) : "")}
+              >
+                {post.pinned_at && <i className="profile-pin-badge"><Icon name="pin" size={12} /></i>}
+                {!post.media_path ? <><span>TEXT POST</span><p>{post.caption}</p><small>{formatRelativeTime(post.created_at)}</small></>
+                  : post.media_type === "video" ? <><video src={media(post.media_path)} preload="none" muted playsInline /><i className="profile-pin-badge"><Icon name="play" size={16} /></i></>
+                  : <UserMediaImage sizes="(max-width: 900px) 33vw, 280px" src={media(post.media_path)} alt={post.caption || "AVENZO post"} width={post.media_width} height={post.media_height} />}
+              </Link>)}
             </div>
           ) : (
             <EmptyState

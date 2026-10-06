@@ -20,12 +20,12 @@ export default function AppearanceFinish() {
     document.documentElement.setAttribute("data-finish", id);
     try { localStorage.setItem("avenzo-appearance-finish", id); } catch { /* Still applies for this session. */ }
   }
-  return <div className="appearance-finish" role="group" aria-label="Accent finish on this device">
+  return <div className="appearance-finish-wrap"><div className="appearance-finish" role="group" aria-label="Accent finish on this device">
     {FINISHES.map(item => <button type="button" key={item.id}
       className={selected === item.id ? "selected" : ""} aria-pressed={selected === item.id}
       onClick={() => select(item.id)}>
       <i style={{ background: item.color }} aria-hidden="true" />
       <span>{item.label}</span>
     </button>)}
-  </div>;
+  </div><button type="button" className="appearance-reset" disabled={selected === "chrome"} onClick={() => select("chrome")}>Reset accent to Chrome</button></div>;
 }
