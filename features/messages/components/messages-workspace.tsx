@@ -232,12 +232,17 @@ export default function MessagesWorkspace({
   const [recording, setRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [notice, setNotice] = useState("");
+  const [online, setOnline] = useState(true);
+  const [showJumpToLatest, setShowJumpToLatest] = useState(false);
+  const [unreadAnchorId, setUnreadAnchorId] = useState("");
   const [viewer, setViewer] = useState("");
   const [sharePending, setSharePending] = useState(
     sharePostId || shareReelId || shareProfileId
   );
   const fileRef = useRef<HTMLInputElement | null>(null);
   const bodyRef = useRef<HTMLDivElement | null>(null);
+  const composerRef = useRef<HTMLTextAreaElement | null>(null);
+  const messageSearchRef = useRef<HTMLInputElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordingStreamRef = useRef<MediaStream | null>(null);
   const recordingChunksRef = useRef<BlobPart[]>([]);
@@ -273,12 +278,73 @@ export default function MessagesWorkspace({
     const distanceFromBottom =
       node.scrollHeight - node.scrollTop - node.clientHeight;
 
-    stickToBottomRef.current = distanceFromBottom < 120;
+    const nearBottom = distanceFromBottom < 120;
+    stickToBottomRef.current = nearBottom;
+    setShowJumpToLatest(distanceFromBottom > 180);
   }
 
   useEffect(() => {
     activeRef.current = active;
   }, [active]);
+
+  useEffect(() => {
+    const syncNetworkState = () => setOnline(navigator.onLine);
+    syncNetworkState();
+    window.addEventListener("online", syncNetworkState);
+    window.addEventListener("offline", syncNetworkState);
+    return () => {
+      window.removeEventListener("online", syncNetworkState);
+      window.removeEventListener("offline", syncNetworkState);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!active) return;
+    const key =
+      "avenzo:dm-draft:" + currentUser.id + ":" + active.conversation_id;
+    const timer = window.setTimeout(() => {
+      if (text.trim()) {
+        window.localStorage.setItem(key, text);
+      } else {
+        window.localStorage.removeItem(key);
+      }
+    }, 220);
+    return () => window.clearTimeout(timer);
+  }, [active, currentUser.id, text]);
+
+  useEffect(() => {
+    const node = composerRef.current;
+    if (!node) return;
+    node.style.height = "0px";
+    node.style.height = Math.min(Math.max(node.scrollHeight, 36), 132) + "px";
+  }, [text, recording]);
+
+  useEffect(() => {
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMoreOpen(false);
+        setThemeOpen(false);
+        setSearchOpen(false);
+        setMobileInboxMenuOpen(false);
+        setActionMessage(null);
+        setViewer("");
+        setReplyTo(null);
+      }
+
+      if (
+        activeRef.current &&
+        (event.metaKey || event.ctrlKey) &&
+        event.key.toLowerCase() === "k"
+      ) {
+        event.preventDefault();
+        setSearchOpen(true);
+        window.setTimeout(() => messageSearchRef.current?.focus(), 0);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   useEffect(() => {
     if (!notice) return;
@@ -368,6 +434,12 @@ export default function MessagesWorkspace({
 
   const loadConversation = useCallback(
     async (conversation: InboxConversation) => {
+      const draftKey =
+        "avenzo:dm-draft:" + currentUser.id + ":" + conversation.conversation_id;
+      setText(window.localStorage.getItem(draftKey) || "");
+      setReplyTo(null);
+      setUnreadAnchorId("");
+      setShowJumpToLatest(false);
       setActive(conversation);
       router.prefetch("/u/" + encodeURIComponent(conversation.username));
       setChatLoading(true);
@@ -393,6 +465,13 @@ export default function MessagesWorkspace({
         setMessages(nextMessages);
         setPinnedMessages(nextPinnedMessages);
         setScheduledMessages(nextScheduledMessages);
+        setUnreadAnchorId(
+          conversation.unread_count > 0
+            ? nextMessages[
+                Math.max(0, nextMessages.length - conversation.unread_count)
+              ]?.id || ""
+            : ""
+        );
 
         if (!conversation.request_incoming) {
           void markMessagesRead(
@@ -417,7 +496,7 @@ export default function MessagesWorkspace({
         setChatLoading(false);
       }
     },
-    [supabase, loadLists, router, scrollToLatest]
+    [supabase, loadLists, router, scrollToLatest, currentUser.id]
   );
 
   useEffect(() => {
@@ -821,6 +900,10 @@ export default function MessagesWorkspace({
 
   async function scheduleCurrentMessage() {
     if (!active || !text.trim() || !scheduleAt) return;
+    if (!online) {
+      setNotice("You’re offline. Reconnect before scheduling a message.");
+      return;
+    }
 
     const sendDate = new Date(scheduleAt);
     if (Number.isNaN(sendDate.getTime())) {
@@ -880,6 +963,10 @@ export default function MessagesWorkspace({
     event?.preventDefault();
     const clean = text.trim();
     if (!active || !clean || sending || active.request_incoming) return;
+    if (!online) {
+      setNotice("You’re offline. Reconnect to send this message.");
+      return;
+    }
 
     setSending(true);
     setNotice("");
@@ -900,6 +987,9 @@ export default function MessagesWorkspace({
         { ...message, attachments: [], reactions: [], reply_to: replyTo },
       ]);
       setText("");
+      window.localStorage.removeItem(
+        "avenzo:dm-draft:" + currentUser.id + ":" + active.conversation_id
+      );
       setReplyTo(null);
       await loadLists();
     } catch (error) {
@@ -921,6 +1011,10 @@ export default function MessagesWorkspace({
 
   async function sendShare() {
     if (!active || active.request_incoming || !pendingShare) return;
+    if (!online) {
+      setNotice("You’re offline. Reconnect before sharing.");
+      return;
+    }
 
     const type = sharePostId
       ? "shared_post"
@@ -959,6 +1053,10 @@ export default function MessagesWorkspace({
     const file = event.target.files?.[0] || null;
     event.target.value = "";
     if (!active || !file || active.request_incoming) return;
+    if (!online) {
+      setNotice("You’re offline. Reconnect before sending an attachment.");
+      return;
+    }
 
     if (
       file.size > MAX_ATTACHMENT_BYTES ||
@@ -969,6 +1067,7 @@ export default function MessagesWorkspace({
     }
 
     setSending(true);
+    setNotice("Sending " + file.name + "…");
     try {
       await sendMessageAttachment({
         supabase,
@@ -979,6 +1078,7 @@ export default function MessagesWorkspace({
         replyToId: replyTo?.id || null,
       });
       setReplyTo(null);
+      setNotice("");
       setMessages(
         await fetchConversationMessages(
           supabase,
@@ -1008,6 +1108,11 @@ export default function MessagesWorkspace({
   async function sendVoiceBlob(blob: Blob, mimeType: string) {
     if (!active || active.request_incoming || cancelRecordingRef.current) {
       cancelRecordingRef.current = false;
+      return;
+    }
+
+    if (!online) {
+      setNotice("Voice message kept unsent because the connection dropped. Record again after reconnecting.");
       return;
     }
 
@@ -1077,7 +1182,28 @@ export default function MessagesWorkspace({
       return;
     }
 
+    if (!window.isSecureContext) {
+      setNotice("Voice recording needs a secure connection.");
+      return;
+    }
+
     try {
+      if (navigator.permissions?.query) {
+        try {
+          const permission = await navigator.permissions.query(
+            { name: "microphone" } as PermissionDescriptor
+          );
+          if (permission.state === "denied") {
+            setNotice(
+              "Microphone access is blocked. Enable it in your browser or app settings."
+            );
+            return;
+          }
+        } catch {
+          // Permission querying is not supported consistently in every WebView.
+        }
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -1188,6 +1314,10 @@ export default function MessagesWorkspace({
 
   function startAudioCall() {
     if (!active || active.request_incoming) return;
+    if (!online) {
+      setNotice("You’re offline. Reconnect before starting a call.");
+      return;
+    }
 
     if (active.request_status !== "accepted") {
       setNotice("The message request must be accepted before starting a call.");
@@ -1209,6 +1339,10 @@ export default function MessagesWorkspace({
 
   function startVideoCall() {
     if (!active || active.request_incoming) return;
+    if (!online) {
+      setNotice("You’re offline. Reconnect before starting a video call.");
+      return;
+    }
 
     if (active.request_status !== "accepted") {
       setNotice("The message request must be accepted before starting a video call.");
@@ -2280,6 +2414,7 @@ export default function MessagesWorkspace({
               <label>
                 <Icon name="search" size={15} />
                 <input
+                  ref={messageSearchRef}
                   value={messageQuery}
                   onChange={(event) =>
                     setMessageQuery(event.target.value)
@@ -2394,6 +2529,11 @@ export default function MessagesWorkspace({
                       {showDate && (
                         <div className="dm-date-separator">
                           <span>{nextDate}</span>
+                        </div>
+                      )}
+                      {message.id === unreadAnchorId && (
+                        <div className="dm-unread-divider" role="separator">
+                          <span>New messages</span>
                         </div>
                       )}
                       <div
@@ -2717,6 +2857,22 @@ export default function MessagesWorkspace({
               )}
             </div>
 
+            {showJumpToLatest && (
+              <button
+                type="button"
+                className="dm-jump-latest"
+                onClick={() => {
+                  stickToBottomRef.current = true;
+                  setShowJumpToLatest(false);
+                  scrollToLatest("smooth");
+                }}
+                aria-label="Jump to latest message"
+              >
+                <Icon name="chevronDown" size={16} />
+                <span>Latest</span>
+              </button>
+            )}
+
             {typing && !active.request_incoming && (
               <div className="dm-live-typing" aria-live="polite">
                 <AvatarImage
@@ -2742,8 +2898,19 @@ export default function MessagesWorkspace({
               </div>
             )}
 
+            {!active.request_incoming && !online && (
+              <div className="dm-offline-banner" role="status">
+                <span />
+                You’re offline. Drafts stay saved on this device until you reconnect.
+              </div>
+            )}
+
             {!active.request_incoming && (
-              <form className="dm-composer" onSubmit={send}>
+              <form
+                className="dm-composer"
+                onSubmit={send}
+                aria-busy={sending}
+              >
                 {scheduledMessages.length > 0 && (
                   <button
                     type="button"
@@ -2815,6 +2982,7 @@ export default function MessagesWorkspace({
                     onChange={(event) => void attach(event)}
                   />
                   <textarea
+                    ref={composerRef}
                     value={text}
                     rows={1}
                     onChange={(event) => updateTyping(event.target.value)}
@@ -2830,7 +2998,8 @@ export default function MessagesWorkspace({
                     }}
                     placeholder={recording ? "Recording…" : "Message…"}
                     aria-label="Message"
-                    disabled={recording}
+                    maxLength={5000}
+                    disabled={recording || !online}
                   />
                   <button
                     type="button"
@@ -2854,7 +3023,7 @@ export default function MessagesWorkspace({
                         type="button"
                         className="dm-compose-icon dm-schedule-button"
                         onClick={openSchedule}
-                        disabled={sending || recording}
+                        disabled={sending || recording || !online}
                         aria-label="Schedule message"
                         title="Schedule message"
                       >
@@ -2862,7 +3031,7 @@ export default function MessagesWorkspace({
                       </button>
                       <button
                         className="send-button dm-send-button"
-                      disabled={sending || recording}
+                      disabled={sending || recording || !online}
                       aria-label={sending ? "Sending message" : "Send message"}
                       title={sending ? "Sending…" : "Send"}
                     >
@@ -2876,7 +3045,7 @@ export default function MessagesWorkspace({
                         "dm-compose-icon dm-voice-button" +
                         (recording ? " recording" : "")
                       }
-                      disabled={sending}
+                      disabled={sending || !online}
                       onClick={() =>
                         recording
                           ? stopVoiceRecording(true)
@@ -2896,6 +3065,18 @@ export default function MessagesWorkspace({
                       <Icon name="mic" size={19} />
                     </button>
                   )}
+                </div>
+                <div className="dm-composer-meta" aria-live="polite">
+                  <span>
+                    {text.trim()
+                      ? "Draft saved automatically"
+                      : sending
+                        ? "Sending…"
+                        : online
+                          ? "Connected"
+                          : "Waiting for connection"}
+                  </span>
+                  {text.length >= 4500 && <b>{5000 - text.length} left</b>}
                 </div>
               </form>
             )}
