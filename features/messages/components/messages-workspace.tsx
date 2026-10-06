@@ -2847,7 +2847,7 @@ export default function MessagesWorkspace({
                 }}
                 aria-label="Jump to latest message"
               >
-                <Icon name="down" size={16} />
+                <Icon name="chevronDown" size={16} />
                 <span>Latest</span>
               </button>
             )}
