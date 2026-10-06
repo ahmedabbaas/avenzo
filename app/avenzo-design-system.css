@@ -3999,7 +3999,7 @@ html[data-large-text="true"] .avenzo-next :is(.profile-header-identity p,.dm-con
 .avenzo-next .social-app.editorial-social .side-card-head {margin-bottom:16px!important;}
 .avenzo-next .social-app.editorial-social .side-card-head b {font-family:var(--editorial-serif);font-weight:400;font-size:20px;}
 .avenzo-next .social-app.editorial-social .avenzo-spaces-grid {display:flex!important;flex-direction:column!important;gap:0!important;}
-.avenzo-next .social-app.editorial-social .avenzo-spaces-grid button {display:flex!important;flex-direction:row!important;align-items:center!important;gap:14px!important;min-height:68px!important;padding:12px 0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;}
+.avenzo-next .social-app.editorial-social .avenzo-spaces-grid button {justify-content:flex-start!important;display:flex!important;flex-direction:row!important;align-items:center!important;gap:14px!important;min-height:68px!important;padding:12px 0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;}
 .avenzo-next .social-app.editorial-social .avenzo-spaces-grid button>svg {width:22px;height:22px;flex:none;}
 .avenzo-next .social-app.editorial-social .avenzo-spaces-grid button>span {display:grid;gap:3px;text-align:start;}
 .avenzo-next .social-app.editorial-social .mini-person {padding:12px 0!important;}
@@ -4063,3 +4063,7 @@ html[data-large-text="true"] .avenzo-next :is(.profile-header-identity p,.dm-con
   .avenzo-next .profile-header-avatar {width:80px!important;height:80px!important;}
   .avenzo-next .profile-header-identity h1 {font-size:24px!important;}
 }
+
+@media(min-width:901px) {.avenzo-next .social-app.editorial-social .top .brand {visibility:hidden;pointer-events:none;}}
+@media(max-width:900px) {.avenzo-next .social-app.editorial-social .home-dashboard-head h1 span {display:block;}}
+.avenzo-next .avenzo-brand-logo {filter:grayscale(1);}
