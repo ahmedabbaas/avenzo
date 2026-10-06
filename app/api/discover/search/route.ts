@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     const decision = await consumeRateLimit({ supabase, request, scope:"discovery-search", subject:user.id, limit:60, windowSeconds:60 });
     if (!decision.allowed) return rateLimitResponse(decision.retryAfter);
     // Cookie-authenticated publishable client: all queries retain existing RLS.
-    const result = await searchDiscovery(supabase, user.id, term, Number(pageValue));
+    const result = await searchDiscovery(supabase, user.id, term, Number(pageValue), params.get("kind") === "people");
     return Response.json(result, { headers });
   } catch {
     return Response.json({ error:"Search is unavailable right now. Try again." }, { status:503, headers });
