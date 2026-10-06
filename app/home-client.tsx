@@ -1164,7 +1164,7 @@ export default function HomeClient({
 
   const normalizedQuery = query.toLowerCase().trim().replace(/^[@#]/, "");
 
-  const filteredPeople = (discoverySearch.active ? discoverySearch.data.people : people).filter((person) =>
+  const filteredPeople = discoverySearch.active ? discoverySearch.data.people : people.filter((person) =>
     !normalizedQuery ||
     (person.display_name + " " + person.username)
       .toLowerCase()
@@ -1204,16 +1204,16 @@ export default function HomeClient({
 
   const filteredReels = (discoverySearch.active ? discoverySearch.data.reels : reels).filter((reel) => {
     const text = exploreText(reel);
-    if (normalizedQuery && !text.includes(normalizedQuery)) return false;
     if (discoverySearch.active) return searchKind === "all" || searchKind === "reels";
+    if (normalizedQuery && !text.includes(normalizedQuery)) return false;
     if (exploreFilter === "photos") return false;
     return matchesExploreCategory(text);
   });
 
   const filteredExplorePosts = (discoverySearch.active ? discoverySearch.data.posts : explorePosts).filter((post) => {
     const text = exploreText(post);
-    if (normalizedQuery && !text.includes(normalizedQuery)) return false;
     if (discoverySearch.active) return searchKind === "all" || searchKind === "posts";
+    if (normalizedQuery && !text.includes(normalizedQuery)) return false;
     if (exploreFilter === "reels") return false;
     if (
       exploreFilter === "photos" &&
