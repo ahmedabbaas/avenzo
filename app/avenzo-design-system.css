@@ -3830,13 +3830,13 @@ html[data-large-text="true"] .avenzo-next :is(.profile-header-identity p,.dm-con
 
 /* Rich social surfaces: one shared system for web and the Capacitor shell. */
 .avenzo-next .discover-result-list{display:flex!important;flex-direction:column!important;gap:0!important;max-width:760px;}
-.avenzo-next .person-search-row{display:flex!important;align-items:center!important;gap:16px!important;padding:14px 0!important;border:0!important;border-bottom:1px solid var(--premium-line)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;}
-.avenzo-next .person-search-row .person-profile-link{display:flex!important;align-items:center;gap:14px;flex:1;min-width:0;text-decoration:none;color:var(--premium-text);}
+.avenzo-next .person-search-row{display:flex!important;flex-direction:row!important;justify-content:flex-start!important;align-items:center!important;gap:16px!important;padding:14px 0!important;border:0!important;border-bottom:1px solid var(--premium-line)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;}
+.avenzo-next .person-search-row .person-profile-link{display:flex!important;flex-direction:row!important;justify-content:flex-start!important;align-items:center;gap:14px;flex:1;min-width:0;text-decoration:none;color:var(--premium-text);}
 .avenzo-next .person-search-row .person-avatar{width:48px!important;height:48px!important;flex:none;}
 .avenzo-next .person-search-row .person-copy{min-width:0;text-align:start;}
 .avenzo-next .person-search-row .person-copy b{display:block;font-size:15px!important;line-height:1.5;font-weight:700;overflow-wrap:anywhere;color:var(--premium-text)!important;}
 .avenzo-next .person-search-row .person-copy span{display:block;font-size:14px!important;line-height:1.5;color:var(--premium-muted)!important;}
-.avenzo-next .person-search-row .person-actions{width:auto!important;margin:0!important;flex:none;}
+.avenzo-next .person-search-row .person-actions{display:flex!important;flex-direction:row!important;width:auto!important;margin:0!important;flex:none;}
 .avenzo-next .person-search-row .btn{min-width:92px;min-height:38px;padding:8px 14px!important;border-radius:9px!important;}
 .avenzo-next .explore-page .page-title{padding-block:20px!important;margin:0!important;}
 .avenzo-next .explore-page .page-title :is(.eyebrow,p):empty{display:none;}
@@ -3844,7 +3844,7 @@ html[data-large-text="true"] .avenzo-next :is(.profile-header-identity p,.dm-con
 .avenzo-next .explore-page .section-inline-head .eyebrow{display:none!important;}
 .avenzo-next .discover-search-tabs{margin-bottom:12px!important;}
 .avenzo-next .discover-search-tabs button{font-size:15px!important;}
-.avenzo-next .search-summary{font-size:13px;color:var(--premium-muted);padding-block:8px;}
+.avenzo-next .search-summary{display:block!important;background:transparent!important;border:0!important;border-radius:0!important;font-size:13px;color:var(--premium-muted);padding-block:8px;}
 .avenzo-next .rich-messages-workspace{border-radius:14px!important;grid-template-columns:350px minmax(0,1fr)!important;}
 .avenzo-next .rich-messages-workspace .dm-sidebar-head{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;padding:24px 20px 14px!important;gap:12px!important;}
 .avenzo-next .rich-messages-workspace .dm-sidebar-head h1{font-size:28px!important;letter-spacing:-.05em!important;font-weight:750!important;}
@@ -3859,7 +3859,7 @@ html[data-large-text="true"] .avenzo-next :is(.profile-header-identity p,.dm-con
 .avenzo-next .rich-messages-workspace .dm-tabs button{flex:1;min-height:46px!important;background:transparent!important;border-radius:0!important;border-bottom:2px solid transparent!important;font-size:14px!important;color:var(--premium-muted)!important;box-shadow:none!important;}
 .avenzo-next .rich-messages-workspace .dm-tabs button.active{border-bottom-color:var(--premium-text)!important;color:var(--premium-text)!important;}
 .avenzo-next .rich-messages-workspace .dm-search{display:flex!important;order:3;min-height:46px!important;margin:0 20px 14px!important;border:0!important;border-radius:12px!important;background:var(--premium-secondary)!important;color:var(--premium-muted)!important;flex:none;}
-.avenzo-next .rich-messages-workspace .dm-search input{color:var(--premium-text)!important;font-size:15px!important;}
+.avenzo-next .rich-messages-workspace .dm-search input{background:transparent!important;border:0!important;padding:0!important;color:var(--premium-text)!important;font-size:15px!important;}
 .avenzo-next .rich-messages-workspace .dm-unread-filter{order:5;padding:0 20px 12px;font-size:12px;color:var(--premium-muted);}
 .avenzo-next .rich-messages-workspace .dm-conversation-list{display:block!important;order:6;padding:0 0 24px!important;overflow-y:auto;min-height:0;flex:1;}
 .avenzo-next .rich-messages-workspace .dm-sidebar{display:flex;flex-direction:column;}
@@ -3920,3 +3920,5 @@ html[data-large-text="true"] .avenzo-next :is(.profile-header-identity p,.dm-con
   .avenzo-next .rich-create-panel .modal-header{padding:16px!important;}
   .avenzo-next .rich-post-viewer{max-width:100%;}
 }
+
+.avenzo-next .explore-page .explore-search-box input:focus{outline:none!important;}
