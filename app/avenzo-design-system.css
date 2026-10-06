@@ -3962,3 +3962,7 @@ html[data-large-text="true"] .avenzo-next :is(.profile-header-identity p,.dm-con
 .avenzo-next .social-app .story small {display:block!important;width:100%!important;max-width:100%!important;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;font-size:11px!important;line-height:1.4!important;}
 .avenzo-next .social-app .search-wrap input {min-width:0;background:transparent!important;border:0!important;outline:none!important;}
 .avenzo-next .social-app .search-wrap:focus-within {outline:2px solid var(--premium-finish);outline-offset:2px;}
+
+.avenzo-next .section-load-error {padding:24px;margin:16px 0;border:1px solid var(--premium-line);border-radius:16px;background:var(--premium-surface);color:var(--premium-text);}
+.avenzo-next .section-load-error p {margin:0 0 16px;font-size:14px;line-height:1.6;}
+.avenzo-next .section-load-error button {min-height:44px;}
