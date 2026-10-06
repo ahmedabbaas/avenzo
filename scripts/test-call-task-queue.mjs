@@ -1,0 +1,10 @@
+import { readFile } from "node:fs/promises";
+import vm from "node:vm";
+import ts from "typescript";
+import { test } from "node:test";
+const source = await readFile("features/messages/lib/call-task-queue.ts", "utf8");
+const context = { exports: {} };
+vm.runInNewContext(ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, context);
+const tests = await readFile("tests/call-task-queue.test.ts", "utf8");
+const compiled = ts.transpileModule(tests, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
+vm.runInNewContext(compiled, { exports: {}, require: () => context.exports, Deno: { test }, Promise, Error });

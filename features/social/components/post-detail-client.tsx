@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
 import PostCard from "./post-card";
 import Icon from "./icon";
+import { useRuntimePreferences } from "../../settings/lib/runtime-preferences";
 import type {
   Comment,
   Post,
@@ -44,6 +45,7 @@ export default function PostDetailClient({
   detailOnly?: boolean;
 }) {
   const router = useRouter();
+  const preferences = useRuntimePreferences();
   const supabase = useMemo(() => createClient(), []);
   const [posts, setPosts] = useState(initialPosts);
   const [saved, setSaved] = useState(initialSaved);
@@ -245,7 +247,7 @@ export default function PostDetailClient({
   }
 
   async function deletePost(post: Post) {
-    if (!window.confirm("Delete this post permanently?")) return;
+    if (preferences.confirm_delete_content && !window.confirm("Delete this post permanently?")) return;
 
     try {
       await removePost(supabase, currentUserId, post);
@@ -325,7 +327,7 @@ export default function PostDetailClient({
               own={post.author_id === currentUserId}
               onDelete={() => void deletePost(post)}
               autoplayVideo={false}
-              dataSaving={false}
+              dataSaving={preferences.data_saving_mode || preferences.use_less_mobile_data}
             />
           </div>
         ))}

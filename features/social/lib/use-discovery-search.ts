@@ -9,10 +9,10 @@ function mergeRows<T extends { id: string }>(current: T[], next: T[]) {
   return [...new Map([...current, ...next].map(row => [row.id, row])).values()];
 }
 
-export function useDiscoverySearch(query: string, enabled: boolean) {
+export function useDiscoverySearch(query: string, enabled: boolean, kind: "all" | "people" = "all") {
   const term = query.trim();
   const active = enabled && term.length > 0;
-  const [state, setState] = useState({ term:"", data:EMPTY, loading:false, error:"" });
+  const [state, setState] = useState({ term:"", kind, data:EMPTY, loading:false, error:"" });
   const requestRef = useRef<AbortController | null>(null);
 
   const requestPage = useCallback(async (requestedTerm: string, page: number) => {
@@ -21,9 +21,9 @@ export function useDiscoverySearch(query: string, enabled: boolean) {
     requestRef.current = controller;
     let timedOut = false;
     const timeout = window.setTimeout(() => { timedOut = true; controller.abort(); }, 20000);
-    setState(current => ({ term:requestedTerm, data:page ? current.data : EMPTY, loading:true, error:"" }));
+    setState(current => ({ term:requestedTerm, kind, data:page ? current.data : EMPTY, loading:true, error:"" }));
     try {
-      const response = await fetch("/api/discover/search?q=" + encodeURIComponent(requestedTerm) + "&page=" + page, {
+      const response = await fetch("/api/discover/search?q=" + encodeURIComponent(requestedTerm) + "&page=" + page + "&kind=" + kind, {
         signal:controller.signal, cache:"no-store",
       });
       if (!response.headers.get("content-type")?.includes("application/json")) {
@@ -34,7 +34,7 @@ export function useDiscoverySearch(query: string, enabled: boolean) {
       if (!Array.isArray(result.people) || !Array.isArray(result.posts) || !Array.isArray(result.reels) || result.page !== page) throw new Error("Search returned an incomplete response. Try again.");
       if (controller.signal.aborted) return;
       const next = result as DiscoverySearchPage;
-      setState(current => ({ term:requestedTerm, loading:false, error:"", data:page ? {
+      setState(current => ({ term:requestedTerm, kind, loading:false, error:"", data:page ? {
         ...next, people:mergeRows(current.data.people, next.people), posts:mergeRows(current.data.posts, next.posts), reels:mergeRows(current.data.reels, next.reels),
       } : next }));
     } catch (error) {
@@ -43,7 +43,7 @@ export function useDiscoverySearch(query: string, enabled: boolean) {
     } finally {
       window.clearTimeout(timeout);
     }
-  }, []);
+  }, [kind]);
 
   useEffect(() => {
     requestRef.current?.abort();
@@ -52,7 +52,7 @@ export function useDiscoverySearch(query: string, enabled: boolean) {
     return () => { window.clearTimeout(timer); requestRef.current?.abort(); };
   }, [active, term, requestPage]);
 
-  const current = state.term === term;
+  const current = state.term === term && state.kind === kind;
   return {
     active,
     data:active && current ? state.data : EMPTY,

@@ -241,6 +241,7 @@ export default function AppSettingsForm({
       </Section>
 
       <Section
+        id="accessibility"
         title={t("Accessibility")}
         text="Adjust motion, text size and contrast."
       >

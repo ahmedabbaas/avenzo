@@ -94,7 +94,7 @@ const NAV_ITEMS: Array<{
   { id: "messages", label: "Messages", icon: "messages" },
   { id: "activity", label: "Activity", icon: "activity" },
   { id: "saved", label: "Saved", icon: "saved" },
-  { id: "profile", label: "You", icon: "profile" },
+  { id: "profile", label: "Profile", icon: "profile" },
 ];
 
 export default function HomeClient({
@@ -134,7 +134,8 @@ export default function HomeClient({
     "all" | "reels" | "photos" | "art" | "travel" | "gaming"
   >("all");
   const exploreSearchRef = useRef<HTMLInputElement | null>(null);
-  const discoverySearch = useDiscoverySearch(query, screen === "explore");
+  const [headerSearchOpen, setHeaderSearchOpen] = useState(false);
+  const discoverySearch = useDiscoverySearch(query, screen === "explore" || headerSearchOpen, screen === "explore" ? "all" : "people");
   const [followed, setFollowed] = useState<string[]>([]);
   const [requested, setRequested] = useState<string[]>([]);
   const [saved, setSaved] = useState<string[]>([]);
@@ -1164,7 +1165,7 @@ export default function HomeClient({
 
   const normalizedQuery = query.toLowerCase().trim().replace(/^[@#]/, "");
 
-  const filteredPeople = (discoverySearch.active ? discoverySearch.data.people : people).filter((person) =>
+  const filteredPeople = discoverySearch.active ? discoverySearch.data.people : people.filter((person) =>
     !normalizedQuery ||
     (person.display_name + " " + person.username)
       .toLowerCase()
@@ -1204,16 +1205,16 @@ export default function HomeClient({
 
   const filteredReels = (discoverySearch.active ? discoverySearch.data.reels : reels).filter((reel) => {
     const text = exploreText(reel);
-    if (normalizedQuery && !text.includes(normalizedQuery)) return false;
     if (discoverySearch.active) return searchKind === "all" || searchKind === "reels";
+    if (normalizedQuery && !text.includes(normalizedQuery)) return false;
     if (exploreFilter === "photos") return false;
     return matchesExploreCategory(text);
   });
 
   const filteredExplorePosts = (discoverySearch.active ? discoverySearch.data.posts : explorePosts).filter((post) => {
     const text = exploreText(post);
-    if (normalizedQuery && !text.includes(normalizedQuery)) return false;
     if (discoverySearch.active) return searchKind === "all" || searchKind === "posts";
+    if (normalizedQuery && !text.includes(normalizedQuery)) return false;
     if (exploreFilter === "reels") return false;
     if (
       exploreFilter === "photos" &&
@@ -1353,13 +1354,17 @@ export default function HomeClient({
           <Icon name="search" size={21} />
         </button>
 
-        <div className="search-wrap">
+        <div className="search-wrap" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setHeaderSearchOpen(false); }}>
           <Icon name="search" size={17} />
           <input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onFocus={() => setHeaderSearchOpen(true)}
+            onChange={(event) => { setQuery(event.target.value); setHeaderSearchOpen(true); }}
+            maxLength={120}
+            aria-controls={headerSearchOpen && query.trim() ? "header-account-results" : undefined}
             onKeyDown={(event) => {
-              if (event.key === "Enter" && query.trim()) setScreen("explore");
+              if (event.key === "Escape") setHeaderSearchOpen(false);
+              if (event.key === "Enter" && !event.nativeEvent.isComposing && query.trim()) { setHeaderSearchOpen(false); setSearchKind("people"); selectPrimaryScreen("explore"); }
             }}
             placeholder="Search people, posts, reels or #hashtags"
             aria-label="Search AVENZO"
@@ -1373,6 +1378,17 @@ export default function HomeClient({
               <Icon name="close" size={15} />
             </button>
           )}
+          {headerSearchOpen && query.trim() && <section id="header-account-results" className="header-account-results" aria-label="Matching accounts">
+            <div className="header-account-results-title">Accounts <span aria-live="polite">{discoverySearch.loading ? "Searching…" : `${discoverySearch.data.people.length} matches`}</span></div>
+            {discoverySearch.data.people.map((person) => <Link key={person.id} href={`/u/${encodeURIComponent(person.username)}`} className="header-account-result" onClick={() => setHeaderSearchOpen(false)}>
+              <AvatarImage src={avatarFor(person)} alt="" size={48} />
+              <span><b>{person.username}</b><small>{person.display_name}</small></span>
+              <Icon name="profile" size={16} />
+            </Link>)}
+            {!discoverySearch.loading && !discoverySearch.error && !discoverySearch.data.people.length && <p>No matching accounts.</p>}
+            {discoverySearch.error && <div role="alert"><p>{discoverySearch.error}</p><button type="button" onClick={discoverySearch.retry}>Retry search</button></div>}
+            {discoverySearch.data.hasMore && <button type="button" className="header-account-more" disabled={discoverySearch.loading} onClick={discoverySearch.loadMore}>{discoverySearch.loading ? "Loading…" : "Load more accounts"}</button>}
+          </section>}
         </div>
 
         <button
@@ -1539,19 +1555,6 @@ export default function HomeClient({
                   </span>
                   <small>Add moment</small>
                 </button>
-
-                {stories.length === 0 && (
-                  <div className="story-empty-inline">
-                    <Icon name="camera" size={19} />
-                    <span>
-                      <b>No active stories</b>
-                      <small>Stories from people you follow will appear here for 24 hours.</small>
-                    </span>
-                    <button type="button" onClick={() => openComposer("story")}>
-                      Create story
-                    </button>
-                  </div>
-                )}
 
                 {stories.map((story) => (
                   <button

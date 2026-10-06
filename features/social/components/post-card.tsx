@@ -427,7 +427,10 @@ export default function PostCard({
             <span>{post.likeCount}</span>
           </button>
 
-          <span className="post-stat">
+          <button type="button" className="post-stat" aria-label="Comment on post" onClick={() => {
+            commentInputRef.current?.scrollIntoView({ block: "center", behavior: "auto" });
+            commentInputRef.current?.focus({ preventScroll: true });
+          }}>
             <span className="post-action-icon-web">
               <Icon name="comment" size={20} />
             </span>
@@ -438,7 +441,7 @@ export default function PostCard({
               <Icon name="commentModern" size={21} />
             </span>
             <span>{post.commentCount}</span>
-          </span>
+          </button>
 
           <button onClick={onShare} aria-label="Share post">
             <span className="post-action-icon-web">
