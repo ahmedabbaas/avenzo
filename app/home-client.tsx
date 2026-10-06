@@ -1237,8 +1237,9 @@ export default function HomeClient({
   const homeFeedPosts =
     homeFeedMode === "following" ? posts : explorePosts;
 
-  function selectPrimaryScreen(nextScreen: "home" | "explore" | "profile") {
+  function selectPrimaryScreen(nextScreen: Screen) {
     setScreen(nextScreen);
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
 
     const params = new URLSearchParams(window.location.search);
     params.set("screen", nextScreen);
@@ -1292,7 +1293,7 @@ export default function HomeClient({
               <button
                 type="button"
                 onClick={() => {
-                  setScreen("activity");
+                  selectPrimaryScreen("activity");
                   setUnreadActivity(0);
                 }}
                 aria-label="Notifications"
@@ -1335,7 +1336,7 @@ export default function HomeClient({
 
         <button
           className="brand"
-          onClick={() => setScreen("home")}
+          onClick={() => selectPrimaryScreen("home")}
           aria-label="AVENZO home"
         >
           <span className="brand-home-content">
@@ -1393,7 +1394,7 @@ export default function HomeClient({
 
         <button
           className="top-activity"
-          onClick={() => setScreen("activity")}
+          onClick={() => selectPrimaryScreen("activity")}
           aria-label="Activity"
         >
           <Icon name="bellModern" size={20} />
@@ -1437,7 +1438,7 @@ export default function HomeClient({
 
         <button
           className="top-profile"
-          onClick={() => setScreen("profile")}
+          onClick={() => selectPrimaryScreen("profile")}
           aria-label="Open profile"
         >
           <AvatarImage src={avatarFor(profile)} className="avatar" alt={profile.display_name} size={72} />
@@ -1483,7 +1484,7 @@ export default function HomeClient({
                   ? router.push("/messages")
                   : item.id === "reels"
                     ? router.push("/reels")
-                    : setScreen(item.id)
+                    : selectPrimaryScreen(item.id)
               }
             >
               <Icon name={item.icon} />
@@ -1531,7 +1532,7 @@ export default function HomeClient({
               <section className="home-dashboard-head">
                 <div>
                   <div className="eyebrow">HOME</div>
-                  <h1>Your world,<br />in focus.</h1>
+                  <h1>Your world,<span> in focus.</span></h1>
                   <p>People. Perspectives. Moments that stay.</p>
                 </div>
                 <button
@@ -1654,7 +1655,7 @@ export default function HomeClient({
                     setShowCreate(true);
                   }}
                   actionLabel="Create Post"
-                  secondaryAction={() => setScreen("explore")}
+                  secondaryAction={() => selectPrimaryScreen("explore")}
                   secondaryActionLabel="Explore people"
                 />
               ) : (
@@ -1730,7 +1731,7 @@ export default function HomeClient({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setScreen("activity")}
+                    onClick={() => selectPrimaryScreen("activity")}
                     aria-label="Notifications"
                   >
                     <Icon name="bellModern" size={20} />
@@ -1962,7 +1963,7 @@ export default function HomeClient({
           <div className="side-card">
             <div className="side-card-head">
               <b>Find your circle</b>
-              <button onClick={() => setScreen("explore")}>See all</button>
+              <button onClick={() => selectPrimaryScreen("explore")}>See all</button>
             </div>
             {people
               .filter(
