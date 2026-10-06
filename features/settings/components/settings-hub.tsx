@@ -84,6 +84,10 @@ export default function SettingsHub({
       title: "Notifications",
       text: "Likes, comments, follows, messages and more",
     },
+    { id: "accessibility", href: "/settings/app#accessibility", icon: "sliders", title: "Accessibility", text: "Motion, text size and contrast" },
+    { id: "requests", href: "/settings/follow-requests", icon: "profile", title: "Follow requests", text: "Review who can follow your private account" },
+    { id: "close-friends", href: "/settings/close-friends", icon: "profile", title: "Close friends", text: "Choose your private sharing circle" },
+    { id: "archive", href: "/settings/archive", icon: "clock", title: "Archive", text: "Manage your archived moments and posts" },
     {
       id: "language",
       href: "/settings/app#language",
