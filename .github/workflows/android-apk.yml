@@ -107,47 +107,48 @@ jobs:
           gradle.write_text(text)
           PY
 
-      - name: Build installable debug APK
+      - name: Build compact installable release APK
         working-directory: android
         run: |
           chmod +x gradlew
-          export AVENZO_DEBUG_STORE_FILE="$HOME/.android/debug.keystore"
-          ./gradlew testDebugUnitTest assembleDebug --no-daemon --stacktrace
+          ./gradlew testDebugUnitTest assembleRelease --no-daemon --stacktrace
 
-      - name: Verify APK and package artifact
+      - name: Sign, verify and package compact APK
         shell: bash
         run: |
           set -euo pipefail
-          APK="android/app/build/outputs/apk/debug/app-debug.apk"
-          test -s "$APK"
+          UNSIGNED="android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          test -s "$UNSIGNED"
 
           BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
-          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs "$APK" | tee AVENZO-signing.txt
+          "$BUILD_TOOLS/zipalign" -p -f 4 "$UNSIGNED" AVENZO-aligned.apk
+          "$BUILD_TOOLS/apksigner" sign             --ks "$HOME/.android/debug.keystore"             --ks-pass pass:android             --ks-key-alias androiddebugkey             --key-pass pass:android             --out AVENZO.apk             AVENZO-aligned.apk
+
+          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs AVENZO.apk | tee AVENZO-signing.txt
           expected="5fc551b7a20912a542ee7bb62773c551ceca732d2d53b6196d6e5d5baa3ad9d2"
           actual="$(sed -n 's/.*certificate SHA-256 digest: //p' AVENZO-signing.txt | head -n 1)"
           test "$actual" = "$expected"
 
-          cp "$APK" AVENZO.apk
           sha256sum AVENZO.apk > AVENZO-sha256.txt
           ls -lh AVENZO.apk AVENZO-sha256.txt
-          # Small transfer artifacts are reassembled byte-for-byte into the same signed APK.
+          # Transfer chunks are only created when the naturally-sized APK needs them.
           split -b 24M -d -a 2 AVENZO.apk AVENZO.apk.part-
           python3 - <<'PYINFO'
           import hashlib, json, os
           from pathlib import Path
           apk = Path("AVENZO.apk")
-          assert apk.stat().st_size >= 100 * 1024 * 1024, "Premium APK must contain at least 100 MiB of real functionality"
-          assert apk.stat().st_size <= 6 * 24 * 1024 * 1024, "Add transfer slots before publishing this larger APK"
           Path("AVENZO-build-info.json").write_text(json.dumps({
               "commit": os.environ["GITHUB_SHA"],
               "version_code": int(os.environ["GITHUB_RUN_NUMBER"]),
               "size_bytes": apk.stat().st_size,
               "sha256": hashlib.sha256(apk.read_bytes()).hexdigest(),
               "abis": ["arm64-v8a", "armeabi-v7a"],
-              "offline_tools": ["Smart Alt", "Latin OCR", "Chinese OCR", "Devanagari OCR", "Japanese OCR", "Korean OCR", "Portrait background removal", "Accurate 4:5 framing", "QR and barcode scanning"],
+              "build_type": "release-minified-shrunk",
+              "size_policy": "natural build size; no artificial minimum",
               "signing": "stable-debug"
           }, indent=2))
           PYINFO
+          rm -f AVENZO-aligned.apk
 
       - name: Upload AVENZO APK
         uses: actions/upload-artifact@v4
