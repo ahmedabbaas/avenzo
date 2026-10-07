@@ -205,6 +205,7 @@ export default function MessagesWorkspace({
   const [noteAudience, setNoteAudience] =
     useState<MessageNote["audience"]>("followers");
   const [query, setQuery] = useState("");
+  const inboxSearchRef = useRef<HTMLInputElement | null>(null);
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [messageQuery, setMessageQuery] = useState("");
   const [text, setText] = useState("");
@@ -1658,6 +1659,10 @@ export default function MessagesWorkspace({
             (item.inbox_folder || "primary") === tab
         );
 
+  const unreadConversationCount = baseConversations.filter(item => item.unread_count > 0).length;
+  const primaryCount = inbox.filter(item => (item.inbox_folder || "primary") === "primary").length;
+  const generalCount = inbox.filter(item => item.inbox_folder === "general").length;
+
   const shown = baseConversations.filter((item) =>
     (!unreadOnly || item.unread_count > 0) &&
     (item.display_name + " " + item.username + " " + item.last_message)
@@ -1867,7 +1872,7 @@ export default function MessagesWorkspace({
               setActive(null);
             }}
           >
-            Primary
+            Primary {primaryCount > 0 && <span>{primaryCount}</span>}
           </button>
           <button
             className={tab === "general" ? "active" : ""}
@@ -1877,7 +1882,7 @@ export default function MessagesWorkspace({
               setActive(null);
             }}
           >
-            General
+            General {generalCount > 0 && <span>{generalCount}</span>}
           </button>
           <button
             className={tab === "requests" ? "active" : ""}
@@ -1892,26 +1897,24 @@ export default function MessagesWorkspace({
           </button>
         </div>
 
-        <label className="dm-search">
+        <div className="dm-search">
           <Icon name="search" size={17} />
           <input
+            ref={inboxSearchRef}
             aria-label="Search conversations"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder={
-              tab === "requests"
-                ? "Search requests"
-                : tab === "general"
-                  ? "Search General"
-                  : "Search Primary"
-            }
+            onKeyDown={(event) => { if (event.key === "Escape") setQuery(""); }}
+            placeholder={tab === "requests" ? "Search requests" : tab === "general" ? "Search General" : "Search Primary"}
           />
-        </label>
+          {query && <button type="button" className="dm-search-clear" aria-label="Clear conversation search" onClick={() => { setQuery(""); inboxSearchRef.current?.focus(); }}><Icon name="close" size={16} /></button>}
+        </div>
 
-        <label className="dm-unread-filter">
-          <input type="checkbox" checked={unreadOnly} onChange={event => setUnreadOnly(event.target.checked)} />
-          Show unread conversations only
-        </label>
+        <div className="dm-inbox-filters" role="group" aria-label="Filter conversations">
+          <button type="button" aria-pressed={!unreadOnly} className={!unreadOnly ? "active" : ""} onClick={() => setUnreadOnly(false)}>All</button>
+          <button type="button" aria-pressed={unreadOnly} className={unreadOnly ? "active" : ""} onClick={() => setUnreadOnly(true)}>Unread {unreadConversationCount > 0 && <span>{unreadConversationCount}</span>}</button>
+          {query.trim() && <small role="status">{shown.length} {shown.length === 1 ? "result" : "results"}</small>}
+        </div>
 
         {!active && notice && (
           <div className="dm-inline-notice" role="status" aria-live="polite">
@@ -1955,14 +1958,14 @@ export default function MessagesWorkspace({
             <div className="dm-empty-state">
               <Icon name="messages" size={28} />
               <b>
-                {unreadOnly ? "You’re all caught up" : tab === "requests"
+                {query.trim() ? "No chats found" : unreadOnly ? "You’re all caught up" : tab === "requests"
                   ? "No message requests"
                   : query.trim()
                     ? "No chats found"
                     : "No chats yet"}
               </b>
               <p>
-                {unreadOnly ? "No unread conversations match this view. Turn off the filter to see all chats." : tab === "requests"
+                {query.trim() ? "Try another name, username or message." : unreadOnly ? "No unread conversations match this view. Turn off the filter to see all chats." : tab === "requests"
                   ? "New requests from real AVENZO users will appear here."
                   : query.trim()
                     ? "Try another username or name."
@@ -2004,6 +2007,7 @@ export default function MessagesWorkspace({
                       </span>
                     )}
                   </span>
+                  <small className="dm-conversation-username">@{item.username}</small>
                   <em>{item.last_message || "New conversation"}</em>
                 </span>
                 <span className="dm-mobile-conversation-meta">
@@ -2058,20 +2062,21 @@ export default function MessagesWorkspace({
             <div className="dm-empty-state">
               <Icon name="messages" size={28} />
               <b>
-                {unreadOnly ? "You’re all caught up" : tab === "requests"
+                {query.trim() ? "No chats found" : unreadOnly ? "You’re all caught up" : tab === "requests"
                   ? "No message requests"
                   : tab === "general"
                     ? "No General chats"
                     : "No messages yet"}
               </b>
               <p>
-                {unreadOnly ? "No unread conversations match this view. Turn off the filter to see all chats." : tab === "requests"
+                {query.trim() ? "Try another name, username or message." : unreadOnly ? "No unread conversations match this view. Turn off the filter to see all chats." : tab === "requests"
                   ? "New requests from real users will appear here."
                   : tab === "general"
                     ? "Move lower-priority conversations here to keep Primary focused."
                     : "Start a conversation with another AVENZO user."}
               </p>
-              {tab === "primary" && (
+              {(query.trim() || unreadOnly) && <button type="button" className="btn small secondary" onClick={() => { setQuery(""); setUnreadOnly(false); }}>Clear filters</button>}
+              {tab === "primary" && !query.trim() && !unreadOnly && (
                 <button
                   className="btn small"
                   onClick={() => setNewMessageOpen(true)}

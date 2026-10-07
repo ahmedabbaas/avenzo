@@ -6,6 +6,8 @@ await import("../tests/auth-validation.test.ts");
 await import("../tests/upload-validation.test.ts");
 await import("../tests/collections.test.ts");
 await import("../tests/action-gate.test.ts");
+await import("../tests/social-ux.test.ts");
+await import("../tests/post-card-interactions.test.mjs");
 test("empty and corrupt uploads cannot reach publishing", () => {
   for (const size of [0, -1, NaN, Infinity]) {
     assert.ok(validateContentFile({type:"image/jpeg",size}, "post"));

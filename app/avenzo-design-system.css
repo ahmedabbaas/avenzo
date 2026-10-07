@@ -4022,3 +4022,68 @@ html.avenzo-android-app .avenzo-next .rich-messages-workspace .dm-mobile-chat-co
  .avenzo-next .screen-home .post-view-comments-mobile { display:block; border:0; background:transparent; color:var(--premium-muted); padding:6px 0; text-align:left; cursor:pointer; }
 }
 html.avenzo-android-app .avenzo-next .screen-home .post-view-comments-mobile { display:block; }
+
+/* Social usability update: shared profile hierarchy, feed controls and inbox filters. */
+.avenzo-next .profile-header-identity h1 { margin:0 0 4px!important; }
+.avenzo-next .profile-header-identity > span { margin-bottom:10px; }
+.avenzo-next .profile-header-stats > * + * { border-inline-start:1px solid var(--premium-line); }
+.avenzo-next .profile-header-actions :is(.btn,.icon-button) { min-height:44px; }
+.avenzo-next .profile-header-actions .btn { display:inline-flex; justify-content:center; align-items:center; gap:8px; }
+.avenzo-next .profile-completion-strip { display:flex; align-items:center; gap:16px; padding:18px 0; border-bottom:1px solid var(--premium-line); margin-bottom:18px; }
+.avenzo-next .profile-completion-strip > div { flex:1; min-width:0; }
+.avenzo-next .profile-completion-strip b { font-size:15px; color:var(--premium-text); }
+.avenzo-next .profile-completion-strip p { margin:5px 0 0; font-size:13px; line-height:1.5; color:var(--premium-muted); }
+.avenzo-next .profile-completion-strip .btn { flex:none; min-height:44px; }
+.avenzo-next .profile-media-kind { position:absolute; inset:8px auto auto 8px; display:grid; place-items:center; padding:4px; color:white; background:rgba(0,0,0,.5); border-radius:5px; }
+.avenzo-next .profile-grid-engagement { position:absolute; inset:0; display:flex; justify-content:center; align-items:center; gap:18px; opacity:0; background:rgba(0,0,0,.55); color:white; pointer-events:none; transition:opacity .15s ease; }
+.avenzo-next .profile-grid-engagement > span { display:flex; align-items:center; gap:6px; font-size:14px; font-weight:650; }
+.avenzo-next .profile-grid > a:is(:hover,:focus-visible) .profile-grid-engagement { opacity:1; }
+.avenzo-next .profile-content-section .empty-mark { display:grid; place-items:center; width:76px; height:76px; border:1px solid var(--premium-muted); border-radius:50%; color:var(--premium-text); background:transparent; }
+.avenzo-next .profile-content-section .empty { min-height:260px; }
+.avenzo-next .post-caption-author-mobile,.avenzo-next .story-label-mobile { display:none; }
+.avenzo-next .post-comment-current-avatar { display:grid; place-items:center; flex:none; width:28px; height:28px; }
+.avenzo-next .post-comment-current-avatar img { width:28px!important; height:28px!important; border-radius:50%; }
+.avenzo-next .comment-input input { min-width:0; }
+.avenzo-next .comment-input button { min-height:44px; min-width:48px; }
+.avenzo-next .comment-submit-feedback { margin:8px 0; font-size:13px; line-height:1.5; color:var(--premium-text); }
+.avenzo-next .social-app .home-feed-modes { display:flex; align-items:center; gap:20px!important; }
+.avenzo-next .social-app .home-feed-modes .home-refresh-action { margin-inline-start:auto; display:inline-flex; align-items:center; justify-content:center; gap:7px; padding-inline:8px!important; font-size:13px!important; min-height:44px; border:0!important; }
+.avenzo-next .home-refresh-action:disabled { opacity:.6; cursor:wait; }
+.avenzo-next .dm-inbox-filters { display:flex; align-items:center; gap:8px; padding:0 20px 14px; order:5; flex:none; }
+.avenzo-next .dm-inbox-filters button { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:6px 13px; border:1px solid var(--premium-line); border-radius:8px; background:transparent; color:var(--premium-muted); font:inherit; font-size:13px; cursor:pointer; }
+.avenzo-next .dm-inbox-filters button.active { background:var(--premium-secondary); color:var(--premium-text); border-color:var(--premium-muted); }
+.avenzo-next .dm-inbox-filters small { margin-inline-start:auto; color:var(--premium-muted); font-size:12px; }
+.avenzo-next .dm-inbox-filters span { font-size:12px; font-variant-numeric:tabular-nums; }
+.avenzo-next .rich-messages-workspace .dm-search input { min-width:0; flex:1; width:auto; }
+.avenzo-next .dm-search-clear { display:grid; place-items:center; width:36px; height:36px; flex:none; border:0; background:transparent; color:var(--premium-muted); cursor:pointer; }
+.avenzo-next .dm-search:focus-within { outline:1px solid var(--premium-muted); outline-offset:2px; }
+.avenzo-next .dm-conversation-username { display:block; margin:1px 0; }
+.avenzo-next .dm-conversation-copy b { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.avenzo-next :is(.dm-inbox-filters button,.dm-search-clear,.home-refresh-action):focus-visible { outline:2px solid var(--premium-text); outline-offset:3px; }
+@media(max-width:900px) {
+ .avenzo-next .profile-header-premium { grid-template-columns:88px minmax(0,1fr); grid-template-areas:"avatar stats" "identity identity" "actions actions"; gap:20px 16px; padding:20px; }
+ .avenzo-next .profile-header-avatar { grid-area:avatar; width:88px; height:88px; }
+ .avenzo-next .profile-header-stats { grid-area:stats; padding:0; gap:0; align-self:center; }
+ .avenzo-next .profile-header-stats b { font-size:20px; }
+ .avenzo-next .profile-header-stats small { font-size:11px; }
+ .avenzo-next .profile-header-identity { grid-area:identity; }
+ .avenzo-next .profile-header-identity h1 { font-size:20px!important; }
+ .avenzo-next .profile-header-actions { grid-area:actions; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)) 44px; gap:8px; }
+ .avenzo-next .profile-header-actions .btn { min-width:0!important; font-size:13px!important; padding-inline:8px!important; }
+ .avenzo-next .profile-header-actions .profile-insights-action { grid-column:1/-1; grid-row:2; justify-content:flex-start; background:transparent!important; border:0!important; padding-inline:0!important; }
+ .avenzo-next .profile-header-notice { grid-column:1/-1; grid-row:4; }
+ .avenzo-next .profile-header-actions .profile-header-create { grid-column:3; grid-row:1; }
+ .avenzo-next .profile-completion-strip { margin-inline:20px; }
+ .avenzo-next .post-caption-author-mobile,.avenzo-next .story-label-mobile { display:inline; }
+ .avenzo-next .post-caption-author-web,.avenzo-next .story-label-desktop { display:none; }
+ .avenzo-next .social-app .home-feed-modes { padding:8px 16px!important; margin:0!important; border-bottom:1px solid var(--premium-line); }
+ .avenzo-next .social-app .home-feed-modes > button { min-height:44px; font-size:14px!important; }
+ .avenzo-next .dm-inbox-filters { padding-inline:16px; }
+}
+/* Native shell used to suppress the working feed selector entirely. */
+html.avenzo-android-app .avenzo-next .social-app .home-feed-modes { display:flex!important; }
+html.avenzo-android-app .avenzo-next .screen-home .post-caption-author-mobile,
+html.avenzo-android-app .avenzo-next .screen-home .story-label-mobile { display:inline!important; }
+@media(prefers-reduced-motion:reduce) { .avenzo-next .profile-grid-engagement { transition:none; } }
+.avenzo-next .post-video-error { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; font-size:13px; color:var(--premium-text); background:var(--premium-secondary); }
+.avenzo-next .post-video-error button { min-height:44px; padding:8px 12px; border:1px solid var(--premium-muted); border-radius:8px; background:transparent; color:inherit; cursor:pointer; flex:none; }

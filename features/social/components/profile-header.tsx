@@ -24,8 +24,8 @@ export default function ProfileHeader({ profile, avatar, stats, followersHref, f
       {onAddStory && <button type="button" aria-label="Add moment" onClick={onAddStory}><Icon name="plus" size={18} /></button>}
     </div>
     <div className="profile-header-identity">
-      <span>@{profile.username}</span>
       <h1>{profile.display_name}</h1>
+      <span>@{profile.username}</span>
       {profile.bio && <p>{profile.bio}</p>}
       {website && <a className="profile-header-website" href={website.href} target="_blank" rel="noopener noreferrer nofollow"><Icon name="link" size={16} /><span>{website.label}</span></a>}
     </div>

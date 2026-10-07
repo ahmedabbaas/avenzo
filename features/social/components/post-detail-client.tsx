@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
+import { commitAndRefresh } from "../lib/commit-and-refresh";
 import PostCard from "./post-card";
 import Icon from "./icon";
 import { useRuntimePreferences } from "../../settings/lib/runtime-preferences";
@@ -166,18 +167,13 @@ export default function PostDetailClient({
     body: string,
     parentId: string | null
   ) {
-    try {
-      await createPostComment(
-        supabase,
-        currentUserId,
-        post.id,
-        body,
-        parentId
-      );
-      await refresh();
-    } catch {
-      setNotice("Comment could not be posted.");
-    }
+    const result = await commitAndRefresh(
+      () => createPostComment(supabase, currentUserId, post.id, body.trim(), parentId),
+      refresh,
+    );
+    if (!result.saved) setNotice("Comment could not be posted.");
+    else if (!result.refreshed) setNotice("Comment posted. Refresh to see the latest comments.");
+    return result.saved;
   }
 
   async function toggleCommentLike(post: Post, comment: Comment) {
@@ -311,7 +307,7 @@ export default function PostDetailClient({
               onRepost={() => void toggleRepost(post)}
               onPollVote={optionId => { void setPostPollVote(supabase, currentUserId, post.poll!.id, optionId, post.poll!.selectedOptionId || null).then(refresh).catch(() => setNotice("Vote could not be saved. Try again.")); }}
               onComment={(body, parentId) =>
-                void addComment(post, body, parentId || null)
+                addComment(post, body, parentId || null)
               }
               onCommentLike={(comment) =>
                 void toggleCommentLike(post, comment)
