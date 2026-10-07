@@ -3966,3 +3966,32 @@ html[data-large-text="true"] .avenzo-next :is(.profile-header-identity p,.dm-con
 .avenzo-next .section-load-error {padding:24px;margin:16px 0;border:1px solid var(--premium-line);border-radius:16px;background:var(--premium-surface);color:var(--premium-text);}
 .avenzo-next .section-load-error p {margin:0 0 16px;font-size:14px;line-height:1.6;}
 .avenzo-next .section-load-error button {min-height:44px;}
+
+/* Mobile variants must override legacy inline hiding, including installed APKs.
+   Keep this in the served design system so native asset updates are not required. */
+@media(max-width:900px){
+  .avenzo-next .screen-home .post-actions .post-action-icon-mobile{display:grid!important;place-items:center;}
+  .avenzo-next .screen-home .post-actions .post-action-icon-web{display:none!important;}
+  .avenzo-next .screen-profile .avenzo-mobile-profile-bar{display:flex!important;align-items:center;justify-content:space-between;min-width:0;width:100%;gap:12px;}
+}
+html.avenzo-android-app .avenzo-next .screen-profile .avenzo-mobile-profile-bar{display:flex!important;}
+html.avenzo-android-app .avenzo-next .post-actions .post-action-icon-mobile{display:grid!important;place-items:center;}
+html.avenzo-android-app .avenzo-next .rich-messages-workspace .dm-chat-head{display:block!important;padding:0!important;}
+html.avenzo-android-app .avenzo-next .rich-messages-workspace .dm-chat-head>:not(.dm-mobile-chat-head):not(.dm-more-menu){display:none!important;}
+html.avenzo-android-app .avenzo-next .rich-messages-workspace .dm-mobile-chat-head{display:grid!important;grid-template-columns:36px minmax(0,1fr) 40px 40px 40px;gap:4px;padding:8px;min-height:64px;}
+html.avenzo-android-app .avenzo-next .rich-messages-workspace .dm-mobile-chat-person{min-width:0;grid-template-columns:36px minmax(0,1fr);gap:6px;}
+html.avenzo-android-app .avenzo-next .rich-messages-workspace .dm-mobile-chat-avatar,
+html.avenzo-android-app .avenzo-next .rich-messages-workspace .dm-mobile-chat-avatar img{width:36px!important;height:36px!important;}
+html.avenzo-android-app .avenzo-next .rich-messages-workspace .dm-mobile-chat-copy{min-width:0;}
+html.avenzo-android-app .avenzo-next .rich-messages-workspace .dm-mobile-chat-copy b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+@media(prefers-reduced-motion:reduce){
+  .rich-messages-workspace *,
+  .rich-messages-workspace *::before,
+  .rich-messages-workspace *::after{
+    scroll-behavior:auto !important;
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+  }
+}

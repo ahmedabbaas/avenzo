@@ -7,6 +7,24 @@ import ts from "typescript";
 const require = createRequire(import.meta.url);
 const postcss = createRequire(require.resolve("next/package.json"))("postcss");
 const design = postcss.parse(await readFile("app/avenzo-design-system.css", "utf8"));
+// Installed APKs inject legacy CSS and React still emits inline display:none.
+// These controls must have an unlayered important rule in the served stylesheet.
+for (const [selector, expected] of [
+  ["html.avenzo-android-app .avenzo-next .screen-profile .avenzo-mobile-profile-bar", "flex"],
+  ["html.avenzo-android-app .avenzo-next .post-actions .post-action-icon-mobile", "grid"],
+  ["html.avenzo-android-app .avenzo-next .rich-messages-workspace .dm-mobile-chat-head", "grid"],
+]) {
+  let visible = false;
+  design.walkRules(selector, rule => {
+    let parent = rule.parent;
+    while (parent) {
+      assert.ok(parent.type !== "atrule" || parent.name !== "layer", "Native visibility repair must outrank compatibility layers");
+      parent = parent.parent;
+    }
+    rule.walkDecls("display", decl => { visible ||= decl.important && decl.value === expected; });
+  });
+  assert.ok(visible, `${selector} must override inline hiding`);
+}
 const premium = postcss.parse(await readFile("app/avenzo-premium.css", "utf8"));
 for (const file of ["app/globals.css", "app/avenzo-ad-theme.css", "app/avenzo-premium.css"]) {
   const root = postcss.parse(await readFile(file, "utf8"));
