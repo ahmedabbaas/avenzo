@@ -178,6 +178,8 @@ export default function HomeClient({
   const [exploreLoading, setExploreLoading] = useState(false);
   const loadedScreensRef = useRef(new Set<string>());
   const followingFeedLoadedRef = useRef(false);
+  const screenScrollRef = useRef<Partial<Record<Screen, number>>>({});
+  const pendingScreenScrollRef = useRef<number | null>(null);
   const [exploreError, setExploreError] = useState("");
   const [unreadActivity, setUnreadActivity] = useState(0);
   const [stats, setStats] = useState<ProfileStats>({
@@ -473,6 +475,16 @@ export default function HomeClient({
     // loader graph reactive would refetch the full social shell after each state update.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const top = pendingScreenScrollRef.current;
+    if (top === null) return;
+    pendingScreenScrollRef.current = null;
+    const frame = window.requestAnimationFrame(() => {
+      window.scrollTo({ top, left: 0, behavior: "instant" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [screen]);
 
   useEffect(() => {
     if (screen === "home" && !loadedScreensRef.current.has("home")) {
@@ -1271,8 +1283,13 @@ export default function HomeClient({
     homeFeedMode === "following" ? posts : explorePosts;
 
   function selectPrimaryScreen(nextScreen: Screen) {
+    if (nextScreen === screen) {
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+      return;
+    }
+    screenScrollRef.current[screen] = window.scrollY;
+    pendingScreenScrollRef.current = screenScrollRef.current[nextScreen] || 0;
     setScreen(nextScreen);
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
 
     const params = new URLSearchParams(window.location.search);
     params.set("screen", nextScreen);
