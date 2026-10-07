@@ -686,6 +686,7 @@ public class MainActivity extends BridgeActivity {
 
     final WebView webView = getBridge().getWebView();
     webView.setOverScrollMode(WebView.OVER_SCROLL_IF_CONTENT_SCROLLS);
+    webView.setNestedScrollingEnabled(true);
     webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       webView.setRendererPriorityPolicy(
