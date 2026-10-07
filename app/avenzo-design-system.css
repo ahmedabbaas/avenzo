@@ -4068,7 +4068,8 @@ html.avenzo-android-app .avenzo-next .screen-home .post-view-comments-mobile { d
  .avenzo-next .profile-header-stats small { font-size:11px; }
  .avenzo-next .profile-header-identity { grid-area:identity; }
  .avenzo-next .profile-header-identity h1 { font-size:20px!important; }
- .avenzo-next .profile-header-actions { grid-area:actions; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)) 44px; gap:8px; }
+ .avenzo-next .profile-header-actions { grid-area:actions; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+ .avenzo-next .profile-header-actions:has(.profile-header-create) { grid-template-columns:repeat(2,minmax(0,1fr)) 44px; }
  .avenzo-next .profile-header-actions .btn { min-width:0!important; font-size:13px!important; padding-inline:8px!important; }
  .avenzo-next .profile-header-actions .profile-insights-action { grid-column:1/-1; grid-row:2; justify-content:flex-start; background:transparent!important; border:0!important; padding-inline:0!important; }
  .avenzo-next .profile-header-notice { grid-column:1/-1; grid-row:4; }
