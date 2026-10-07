@@ -7,11 +7,15 @@ import ts from "typescript";
 const require = createRequire(import.meta.url);
 const postcss = createRequire(require.resolve("next/package.json"))("postcss");
 const design = postcss.parse(await readFile("app/avenzo-design-system.css", "utf8"));
-for (const file of ["app/globals.css", "app/avenzo-ad-theme.css", "mobile-shell/app-mobile.css"]) {
+const premium = postcss.parse(await readFile("app/avenzo-premium.css", "utf8"));
+for (const file of ["app/globals.css", "app/avenzo-ad-theme.css", "app/avenzo-premium.css"]) {
   const root = postcss.parse(await readFile(file, "utf8"));
   root.walkDecls(decl => assert.ok(!decl.important, `${file}: compatibility important rule overrides canonical UI: ${decl.prop}`));
   assert.equal(root.nodes[0].type === "comment" ? root.nodes[1].name : root.nodes[0].name, "layer");
 }
+const nativeRoot = postcss.parse(await readFile("mobile-shell/app-mobile.css", "utf8"));
+assert.equal(nativeRoot.nodes[0].type === "comment" ? nativeRoot.nodes[1].name : nativeRoot.nodes[0].name, "layer");
+assert.ok(premium.toString().includes("AVENZO PREMIUM OBSIDIAN — 2026-10-07"), "Premium Obsidian layer marker is missing");
 design.walkAtRules("layer", layer => layer.walkDecls(decl => assert.ok(!decl.important, "Legacy layer cannot outrank the canonical UI")));
 
 function tokens(selector) {
@@ -62,4 +66,4 @@ assert.equal(result.data_saving_mode, true);
 assert.equal(result.media_autoplay_videos, false);
 assert.equal(result.language, "ur");
 assert.equal("unknown" in result, false);
-console.log("Visual system checks passed: CSS parsing, compatibility priority, light/dark text and accent contrast, malformed preference recovery.");
+console.log("Visual system checks passed: CSS parsing, premium layer priority, native compatibility parsing, light/dark contrast, malformed preference recovery.");

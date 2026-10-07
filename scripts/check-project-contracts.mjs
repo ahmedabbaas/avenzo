@@ -43,6 +43,7 @@ async function walk(relativeDir) {
 const layout = await read("app/layout.tsx");
 const globals = await read("app/globals.css");
 const design = await read("app/avenzo-design-system.css");
+const premium = await read("app/avenzo-premium.css");
 const adTheme = await read("app/avenzo-ad-theme.css");
 const nativeMobile = await read("mobile-shell/app-mobile.css");
 const nativeInject = await read("mobile-shell/native-inject.js");
@@ -50,15 +51,20 @@ const capacitor = await read("capacitor.config.ts");
 const nextConfig = await read("next.config.ts");
 
 const designImport = 'import "./avenzo-design-system.css";';
+const premiumImport = 'import "./avenzo-premium.css";';
 const adImport = 'import "./avenzo-ad-theme.css";';
 
 requireText(layout, designImport, "Root layout");
+requireText(layout, premiumImport, "Root layout");
 requireText(layout, adImport, "Root layout");
 requireText(layout, "Plus_Jakarta_Sans", "Premium typography");
 requireText(layout, "/avenzo-logo-premium.png", "Premium brand mark");
 
 if (layout.indexOf(designImport) < layout.indexOf(adImport)) {
   fail("avenzo-design-system.css must load after avenzo-ad-theme.css");
+}
+if (layout.indexOf(premiumImport) < layout.indexOf(designImport)) {
+  fail("avenzo-premium.css must load after avenzo-design-system.css");
 }
 
 requireText(
@@ -68,6 +74,8 @@ requireText(
 );
 requireText(design, "--av-accent:#d2d7dd", "Design system");
 requireText(design, "--av-secondary:#8d98a4", "Design system");
+requireText(premium, "AVENZO PREMIUM OBSIDIAN — 2026-10-07", "Premium visual layer");
+requireText(premium, "--premium-ease:cubic-bezier(.22,.8,.24,1)", "Premium motion system");
 
 if (globals.includes("/* AVENZO AURORA UI v1 */")) {
   fail("the final product theme must not be appended back into globals.css");
@@ -95,6 +103,7 @@ const forbiddenLegacyAccents = [
 for (const [label, content] of [
   ["globals.css", globals],
   ["avenzo-design-system.css", design],
+  ["avenzo-premium.css", premium],
   ["avenzo-ad-theme.css", adTheme],
   ["mobile-shell/app-mobile.css", nativeMobile],
 ]) {
@@ -121,6 +130,7 @@ requireText(
 );
 requireText(nativeMobile, "touch-action:pan-y pinch-zoom !important", "Android vertical scrolling");
 requireText(nativeMobile, "aspect-ratio:4 / 5 !important", "Android Home media ratio");
+requireText(nativeMobile, "AVENZO NATIVE PREMIUM OBSIDIAN — 2026-10-07", "Android premium layer");
 
 for (const header of [
   "Content-Security-Policy",
