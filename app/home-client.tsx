@@ -13,6 +13,7 @@ import BrandLogo from "../components/brand-logo";
 import MobileBottomNav from "../components/mobile-bottom-nav";
 import CreateLauncher, { type CreateDestination } from "../components/create-launcher";
 import { useRouter } from "next/navigation";
+import { createActionGate } from "../features/social/lib/action-gate";
 import { createClient } from "../lib/supabase/client";
 import { fetchInbox } from "../features/messages/data";
 import {
@@ -174,6 +175,10 @@ export default function HomeClient({
   const [toast, setToast] = useState("");
   const [unreadMessages, setUnreadMessages] = useState(0);
   const toastTimerRef = useRef<number | null>(null);
+  const postActionGateRef = useRef(createActionGate());
+  const mountedRef = useRef(false);
+  const secondaryIdleRef = useRef<number | null>(null);
+  const secondaryTimerRef = useRef<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [exploreLoading, setExploreLoading] = useState(false);
   const loadedScreensRef = useRef(new Set<string>());
@@ -263,7 +268,11 @@ export default function HomeClient({
   }, []);
 
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
+      mountedRef.current = false;
+      if (secondaryIdleRef.current !== null) window.cancelIdleCallback?.(secondaryIdleRef.current);
+      if (secondaryTimerRef.current !== null) window.clearTimeout(secondaryTimerRef.current);
       if (toastTimerRef.current !== null) {
         window.clearTimeout(toastTimerRef.current);
       }
@@ -429,6 +438,9 @@ export default function HomeClient({
     // Counters and the already-rendered profile are useful, but they should
     // never keep the first useful screen behind a loading skeleton.
     const loadSecondary = () => {
+      secondaryIdleRef.current = null;
+      secondaryTimerRef.current = null;
+      if (!mountedRef.current) return;
       void Promise.allSettled([
         loadProfile(),
         loadStats(),
@@ -440,10 +452,13 @@ export default function HomeClient({
     };
 
     const idle = window.requestIdleCallback;
+    if (!mountedRef.current) return;
+    if (secondaryIdleRef.current !== null) window.cancelIdleCallback?.(secondaryIdleRef.current);
+    if (secondaryTimerRef.current !== null) window.clearTimeout(secondaryTimerRef.current);
     if (typeof idle === "function") {
-      idle(loadSecondary, { timeout: 900 });
+      secondaryIdleRef.current = window.requestIdleCallback(loadSecondary, { timeout: 900 });
     } else {
-      globalThis.setTimeout(loadSecondary, 180);
+      secondaryTimerRef.current = window.setTimeout(loadSecondary, 180);
     }
   }
 
@@ -953,55 +968,68 @@ export default function HomeClient({
   }
 
   async function toggleLike(post: Post) {
-    const update = (current: Post[]) =>
-      current.map((item) =>
-        item.id === post.id
-          ? {
-              ...item,
-              liked: !item.liked,
-              likeCount: Math.max(
-                0,
-                item.likeCount + (item.liked ? -1 : 1)
-              ),
-            }
-          : item
-      );
+    await postActionGateRef.current.run("like:" + post.id, async () => {
+      const update = (current: Post[]) =>
+        current.map((item) =>
+          item.id === post.id
+            ? {
+                ...item,
+                liked: !item.liked,
+                likeCount: Math.max(
+                  0,
+                  item.likeCount + (item.liked ? -1 : 1)
+                ),
+              }
+            : item
+        );
 
-    setPosts(update);
-    setExplorePosts(update);
+      setPosts(update);
+      setExplorePosts(update);
 
-    try {
-      await setPostLike(
-        supabase,
-        initialProfile.id,
-        post.id,
-        post.liked
-      );
-    } catch {
-      showToast("Could not update like.");
-      await Promise.all([loadPosts(), loadExplorePosts()]);
-    }
+      try {
+        await setPostLike(
+          supabase,
+          initialProfile.id,
+          post.id,
+          post.liked
+        );
+      } catch {
+        showToast("Could not update like.");
+        const rollback = (current: Post[]) => current.map(item =>
+          item.id === post.id ? { ...item, liked: post.liked, likeCount: post.likeCount } : item
+        );
+        setPosts(rollback);
+        setExplorePosts(rollback);
+        await Promise.allSettled([loadPosts(), loadExplorePosts()]);
+      }
+    });
   }
 
   async function toggleSave(post: Post) {
-    const isSaved = saved.includes(post.id);
-    setSaved((current) =>
-      isSaved
-        ? current.filter((id) => id !== post.id)
-        : [...current, post.id]
-    );
-
-    try {
-      await setPostSaved(
-        supabase,
-        initialProfile.id,
-        post.id,
+    await postActionGateRef.current.run("save:" + post.id, async () => {
+      const isSaved = saved.includes(post.id);
+      setSaved((current) =>
         isSaved
+          ? current.filter((id) => id !== post.id)
+          : [...current, post.id]
       );
-    } catch {
-      showToast("Could not update saved posts.");
-      await Promise.all([loadPosts(), loadExplorePosts(), loadSavedPosts()]);
-    }
+
+      try {
+        await setPostSaved(
+          supabase,
+          initialProfile.id,
+          post.id,
+          isSaved
+        );
+      } catch {
+        showToast("Could not update saved posts.");
+        setSaved(current => isSaved
+          ? current.includes(post.id) ? current : [...current, post.id]
+          : current.filter(id => id !== post.id)
+        );
+        await Promise.allSettled([loadPosts(), loadExplorePosts(), loadSavedPosts()]);
+      }
+    });
   }
 
   async function addComment(
