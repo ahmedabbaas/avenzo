@@ -13,6 +13,54 @@
         el.getClientRects().length > 0;
     }
 
+    function hasBlockingOverlay() {
+      if (ROOT.classList.contains("avenzo-native-drawer-open")) return true;
+
+      var selectors = [
+        ".modal",
+        ".story-viewer-shell",
+        ".avenzo-call-overlay",
+        ".avenzo-native-drawer[aria-hidden='false']"
+      ];
+
+      return selectors.some(function(selector){
+        return Array.prototype.some.call(
+          document.querySelectorAll(selector),
+          isVisible
+        );
+      });
+    }
+
+    function repairDocumentScroll() {
+      var body = document.body;
+      if (!body) return;
+
+      var drawer = document.querySelector(".avenzo-native-drawer");
+      if (
+        ROOT.classList.contains("avenzo-native-drawer-open") &&
+        (!drawer || drawer.getAttribute("aria-hidden") === "true")
+      ) {
+        ROOT.classList.remove("avenzo-native-drawer-open");
+      }
+
+      var blocked = hasBlockingOverlay();
+      ROOT.classList.toggle("avenzo-scroll-unlocked", !blocked);
+
+      if (!blocked) {
+        [
+          "overflow",
+          "overflow-y",
+          "position",
+          "height",
+          "max-height",
+          "touch-action"
+        ].forEach(function(property){
+          body.style.removeProperty(property);
+          ROOT.style.removeProperty(property);
+        });
+      }
+    }
+
     var styleId = "avenzo-android-mobile-style";
     var style = document.getElementById(styleId);
     if (!style) {
@@ -837,6 +885,7 @@
     }
 
     function syncMobileState() {
+      repairDocumentScroll();
       applyBranding();
       syncNativeTheme();
       ensureDrawer();
@@ -849,6 +898,7 @@
       if (!document.body.classList.contains("avenzo-next")) enhanceReferenceProfileHeader();
       installNativeNotificationSessionCapture();
       syncHomeState();
+      repairDocumentScroll();
 
       var activeChat = document.querySelector(".dm-chat:not(.dm-mobile-hidden)");
       ROOT.classList.toggle(
@@ -1003,8 +1053,18 @@
         window.setTimeout(scheduleSync, 120);
       }, true);
 
-      window.addEventListener("popstate", scheduleSync);
-      window.addEventListener("pageshow", scheduleSync);
+      document.addEventListener("touchend", function(){
+        window.setTimeout(repairDocumentScroll, 0);
+      }, { passive: true });
+
+      window.addEventListener("popstate", function(){
+        repairDocumentScroll();
+        scheduleSync();
+      });
+      window.addEventListener("pageshow", function(){
+        repairDocumentScroll();
+        scheduleSync();
+      });
       window.addEventListener("avenzo:theme", function(){
         syncNativeTheme();
         scheduleSync();
