@@ -112,6 +112,15 @@ requireText(androidWorkflow, "avenzo_logo_premium", "Android launcher branding")
 requireText(androidWorkflow, "native-inject.js", "Android native injection asset");
 requireText(nativeInject, "__LOGO_PNG__", "Android injected brand mark");
 requireText(nativeInject, "__CSS__", "Android injected mobile CSS");
+requireText(nativeInject, "repairDocumentScroll", "Android scroll recovery");
+requireText(nativeInject, "avenzo-scroll-unlocked", "Android scroll recovery state");
+requireText(
+  nativeMobile,
+  "AVENZO ANDROID SCROLL RECOVERY + HOME REFERENCE FINAL 2026-10-07",
+  "Android final mobile layer"
+);
+requireText(nativeMobile, "touch-action:pan-y pinch-zoom !important", "Android vertical scrolling");
+requireText(nativeMobile, "aspect-ratio:4 / 5 !important", "Android Home media ratio");
 
 for (const header of [
   "Content-Security-Policy",
