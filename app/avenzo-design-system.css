@@ -4008,3 +4008,17 @@ html.avenzo-android-app .avenzo-next .rich-messages-workspace .dm-mobile-chat-co
     transition-duration:.01ms !important;
   }
 }
+
+/* Feed parity: use existing post structure across web and Android. */
+.avenzo-next .post-carousel-shell { position:relative; }
+.avenzo-next .post-carousel-nav { position:absolute; top:45%; z-index:2; display:grid; place-items:center; width:36px; height:36px; padding:6px; border:1px solid var(--premium-muted); border-radius:50%; background:var(--premium-secondary); color:var(--premium-text); cursor:pointer; }
+.avenzo-next .post-carousel-prev { left:10px; }
+.avenzo-next .post-carousel-next { right:10px; }
+.avenzo-next .post-carousel-next svg { transform:rotate(180deg); }
+.avenzo-next .post-carousel-nav:disabled { visibility:hidden; }
+.avenzo-next .post-caption-toggle { border:0; background:transparent; color:var(--premium-muted); font:inherit; padding:2px 6px; cursor:pointer; }
+.avenzo-next :is(.post-caption-toggle,.post-carousel-nav,.post-carousel-track):focus-visible { outline:2px solid currentColor; outline-offset:3px; }
+@media(max-width:900px) {
+ .avenzo-next .screen-home .post-view-comments-mobile { display:block; border:0; background:transparent; color:var(--premium-muted); padding:6px 0; text-align:left; cursor:pointer; }
+}
+html.avenzo-android-app .avenzo-next .screen-home .post-view-comments-mobile { display:block; }
