@@ -17533,3 +17533,276 @@ html.avenzo-android-app.avenzo-composer-open .mobile-bottom-nav{display:none;}
     transform:none !important;
   }
 }
+
+
+/* AVENZO NATIVE PREMIUM OBSIDIAN — 2026-10-07 */
+@media(max-width:900px){
+  html.avenzo-android-app{
+    --native-premium-bg:#f6f7f8;
+    --native-premium-surface:#ffffff;
+    --native-premium-soft:#f0f2f4;
+    --native-premium-text:#111317;
+    --native-premium-muted:#747d86;
+    --native-premium-line:#e4e8eb;
+    --native-premium-line-strong:#d7dce1;
+    --native-premium-shadow:0 10px 28px rgba(17,24,31,.07);
+  }
+
+  html.avenzo-android-app[data-theme="dark"]{
+    --native-premium-bg:#08090b;
+    --native-premium-surface:#0d0f12;
+    --native-premium-soft:#15181c;
+    --native-premium-text:#f7f8f9;
+    --native-premium-muted:#8f98a2;
+    --native-premium-line:#23272c;
+    --native-premium-line-strong:#30363d;
+    --native-premium-shadow:0 12px 34px rgba(0,0,0,.24);
+  }
+
+  html.avenzo-android-app body.avenzo-next{
+    background:var(--native-premium-bg) !important;
+    color:var(--native-premium-text) !important;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+
+  html.avenzo-android-app .screen-home{
+    --home-ref-bg:var(--native-premium-bg) !important;
+    --home-ref-surface:var(--native-premium-surface) !important;
+    --home-ref-text:var(--native-premium-text) !important;
+    --home-ref-muted:var(--native-premium-muted) !important;
+    --home-ref-line:var(--native-premium-line) !important;
+    --home-ref-soft:var(--native-premium-soft) !important;
+  }
+
+  html.avenzo-android-app .screen-home>.top{
+    background:color-mix(in srgb,var(--native-premium-surface) 94%,transparent) !important;
+    border-bottom:1px solid var(--native-premium-line) !important;
+    backdrop-filter:blur(22px) saturate(120%) !important;
+    -webkit-backdrop-filter:blur(22px) saturate(120%) !important;
+  }
+
+  html.avenzo-android-app .screen-home .avenzo-mobile-home-wordmark{
+    font-weight:880 !important;
+    letter-spacing:-.055em !important;
+  }
+
+  html.avenzo-android-app .screen-home .avenzo-mobile-home-actions>button{
+    transition:transform .16s cubic-bezier(.22,.8,.24,1),background-color .16s ease !important;
+  }
+
+  html.avenzo-android-app .screen-home .avenzo-mobile-home-actions>button:active{
+    transform:scale(.9) !important;
+    background:var(--native-premium-soft) !important;
+  }
+
+  html.avenzo-android-app .screen-home .stories-row{
+    padding-top:12px !important;
+    padding-bottom:11px !important;
+    border-bottom-color:var(--native-premium-line) !important;
+  }
+
+  html.avenzo-android-app .screen-home .story{
+    transition:transform .16s cubic-bezier(.22,.8,.24,1),opacity .16s ease !important;
+  }
+
+  html.avenzo-android-app .screen-home .story:active{
+    transform:scale(.94) !important;
+  }
+
+  html.avenzo-android-app .screen-home .story-ring{
+    border-color:var(--native-premium-line-strong) !important;
+    box-shadow:0 6px 18px rgba(17,24,31,.07) !important;
+  }
+
+  html.avenzo-android-app[data-theme="dark"] .screen-home .story-ring{
+    box-shadow:0 7px 22px rgba(0,0,0,.24) !important;
+  }
+
+  html.avenzo-android-app .screen-home .story:not(.viewed) .story-ring{
+    border-color:var(--native-premium-text) !important;
+  }
+
+  html.avenzo-android-app .screen-home .home-feed-grid{
+    padding-top:8px !important;
+    background:var(--native-premium-bg) !important;
+  }
+
+  html.avenzo-android-app .screen-home .post-card{
+    width:calc(100% - 14px) !important;
+    margin:0 7px 12px !important;
+    border-color:var(--native-premium-line) !important;
+    border-radius:20px !important;
+    background:var(--native-premium-surface) !important;
+    box-shadow:var(--native-premium-shadow) !important;
+  }
+
+  html.avenzo-android-app .screen-home .post-head{
+    min-height:62px !important;
+    padding:10px 12px 9px !important;
+    border-radius:20px 20px 0 0 !important;
+  }
+
+  html.avenzo-android-app .screen-home .post-head .person-line b{
+    font-weight:790 !important;
+    letter-spacing:-.012em !important;
+  }
+
+  html.avenzo-android-app .screen-home .post-content{
+    padding:9px 12px 13px !important;
+    border-radius:0 0 20px 20px !important;
+  }
+
+  html.avenzo-android-app .screen-home .post-actions{
+    gap:17px !important;
+  }
+
+  html.avenzo-android-app .screen-home .post-actions button{
+    transition:transform .14s cubic-bezier(.22,.8,.24,1),color .14s ease !important;
+  }
+
+  html.avenzo-android-app .screen-home .post-actions button:active{
+    transform:scale(.9) !important;
+  }
+
+  html.avenzo-android-app .screen-home .post-actions .liked,
+  html.avenzo-android-app .screen-home .post-actions .save-action.saved{
+    color:var(--native-premium-text) !important;
+  }
+
+  html.avenzo-android-app .screen-home .mobile-bottom-nav,
+  html.avenzo-android-app .screen-home .mobile-nav,
+  html.avenzo-android-app .mobile-bottom-nav{
+    border-color:var(--native-premium-line-strong) !important;
+    background:color-mix(in srgb,var(--native-premium-surface) 94%,transparent) !important;
+    box-shadow:0 14px 36px rgba(17,24,31,.13) !important;
+    backdrop-filter:blur(22px) saturate(120%) !important;
+    -webkit-backdrop-filter:blur(22px) saturate(120%) !important;
+  }
+
+  html.avenzo-android-app[data-theme="dark"] .screen-home .mobile-bottom-nav,
+  html.avenzo-android-app[data-theme="dark"] .screen-home .mobile-nav,
+  html.avenzo-android-app[data-theme="dark"] .mobile-bottom-nav{
+    box-shadow:0 16px 42px rgba(0,0,0,.34) !important;
+  }
+
+  html.avenzo-android-app .screen-home .mobile-bottom-nav>.mobile-nav-item,
+  html.avenzo-android-app .screen-home .mobile-nav>button,
+  html.avenzo-android-app .mobile-bottom-nav>.mobile-nav-item{
+    transition:transform .15s cubic-bezier(.22,.8,.24,1),color .15s ease,background-color .15s ease !important;
+  }
+
+  html.avenzo-android-app .screen-home .mobile-bottom-nav>.mobile-nav-item:active,
+  html.avenzo-android-app .screen-home .mobile-nav>button:active,
+  html.avenzo-android-app .mobile-bottom-nav>.mobile-nav-item:active{
+    transform:scale(.91) !important;
+  }
+
+  html.avenzo-android-app .screen-home .mobile-bottom-nav .mobile-create .mobile-icon-wrap,
+  html.avenzo-android-app .screen-home .mobile-nav .avenzo-primary-create .mobile-icon-wrap,
+  html.avenzo-android-app .mobile-bottom-nav .mobile-create .mobile-icon-wrap{
+    background:var(--native-premium-text) !important;
+    color:var(--native-premium-surface) !important;
+    box-shadow:0 8px 20px rgba(17,24,31,.16) !important;
+  }
+
+  html.avenzo-android-app .screen-profile,
+  html.avenzo-android-app .screen-explore,
+  html.avenzo-android-app .screen-search,
+  html.avenzo-android-app .screen-notifications{
+    background:var(--native-premium-bg) !important;
+    color:var(--native-premium-text) !important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-hero,
+  html.avenzo-android-app .screen-profile .profile-tabs,
+  html.avenzo-android-app .screen-explore .search-wrap,
+  html.avenzo-android-app .screen-search .search-wrap{
+    border-color:var(--native-premium-line) !important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-hero>img{
+    border-color:var(--native-premium-line-strong) !important;
+    background:var(--native-premium-surface) !important;
+    box-shadow:0 10px 28px rgba(17,24,31,.08) !important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-stats b{
+    color:var(--native-premium-text) !important;
+    font-weight:800 !important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-tabs button,
+  html.avenzo-android-app .screen-profile .profile-bio,
+  html.avenzo-android-app .screen-explore .section-title p{
+    color:var(--native-premium-muted) !important;
+  }
+
+  html.avenzo-android-app .screen-profile .profile-tabs button.active{
+    color:var(--native-premium-text) !important;
+  }
+
+  html.avenzo-android-app .rich-messages-workspace{
+    --dm-page:var(--native-premium-bg) !important;
+    --dm-surface:var(--native-premium-surface) !important;
+    --dm-line:var(--native-premium-line) !important;
+    --dm-text:var(--native-premium-text) !important;
+    --dm-muted:var(--native-premium-muted) !important;
+    --dm-premium-soft:var(--native-premium-soft) !important;
+    --dm-premium-border:var(--native-premium-line) !important;
+  }
+
+  html.avenzo-android-app .rich-messages-workspace .dm-mobile-inbox-head,
+  html.avenzo-android-app .rich-messages-workspace .dm-chat-head,
+  html.avenzo-android-app .rich-messages-workspace .dm-composer{
+    background:color-mix(in srgb,var(--native-premium-surface) 96%,transparent) !important;
+    border-color:var(--native-premium-line) !important;
+  }
+
+  html.avenzo-android-app .rich-messages-workspace .dm-mobile-search,
+  html.avenzo-android-app .rich-messages-workspace .dm-mobile-tabs,
+  html.avenzo-android-app .rich-messages-workspace .dm-compose-row{
+    background:var(--native-premium-soft) !important;
+    border-color:var(--native-premium-line) !important;
+  }
+
+  html.avenzo-android-app .rich-messages-workspace .dm-mobile-conversation{
+    border-color:var(--native-premium-line) !important;
+    transition:transform .15s cubic-bezier(.22,.8,.24,1),background-color .15s ease !important;
+  }
+
+  html.avenzo-android-app .rich-messages-workspace .dm-mobile-conversation:active{
+    transform:scale(.985) !important;
+    background:var(--native-premium-soft) !important;
+  }
+
+  html.avenzo-android-app .rich-messages-workspace .dm-mobile-compose-fab,
+  html.avenzo-android-app .rich-messages-workspace .dm-send-button{
+    background:var(--native-premium-text) !important;
+    color:var(--native-premium-surface) !important;
+    box-shadow:0 10px 24px rgba(17,24,31,.16) !important;
+  }
+
+  html.avenzo-android-app .empty,
+  html.avenzo-android-app .system-card{
+    border-color:var(--native-premium-line) !important;
+    background:var(--native-premium-surface) !important;
+    color:var(--native-premium-text) !important;
+  }
+
+  html.avenzo-android-app button,
+  html.avenzo-android-app a{
+    -webkit-tap-highlight-color:transparent;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  html.avenzo-android-app *,
+  html.avenzo-android-app *::before,
+  html.avenzo-android-app *::after{
+    transition-duration:.01ms !important;
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    scroll-behavior:auto !important;
+  }
+}
