@@ -3967,6 +3967,19 @@ html[data-large-text="true"] .avenzo-next :is(.profile-header-identity p,.dm-con
 .avenzo-next .section-load-error p {margin:0 0 16px;font-size:14px;line-height:1.6;}
 .avenzo-next .section-load-error button {min-height:44px;}
 
+/* Small interaction feedback stays on compositor-friendly properties. */
+.avenzo-next .post-actions button{transition:transform 140ms ease,opacity 140ms ease,color 140ms ease;touch-action:manipulation;}
+.avenzo-next .post-actions button:active{transform:scale(.9);}
+.avenzo-next .post-actions button:focus-visible{outline:2px solid var(--premium-text);outline-offset:3px;border-radius:8px;}
+.avenzo-next .post-media-open{touch-action:manipulation;}
+.avenzo-next .post-menu{animation:avenzo-menu-enter 140ms ease-out;transform-origin:top right;}
+@keyframes avenzo-menu-enter{from{opacity:0;transform:translateY(-4px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+@media(prefers-reduced-motion:reduce){
+  .avenzo-next .post-actions button{transition:none;}
+  .avenzo-next .post-actions button:active{transform:none;}
+  .avenzo-next .post-menu{animation:none;}
+}
+
 /* Mobile variants must override legacy inline hiding, including installed APKs.
    Keep this in the served design system so native asset updates are not required. */
 @media(max-width:900px){
