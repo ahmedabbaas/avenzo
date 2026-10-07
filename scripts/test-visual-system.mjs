@@ -13,6 +13,7 @@ for (const [selector, expected] of [
   ["html.avenzo-android-app .avenzo-next .screen-profile .avenzo-mobile-profile-bar", "flex"],
   ["html.avenzo-android-app .avenzo-next .post-actions .post-action-icon-mobile", "grid"],
   ["html.avenzo-android-app .avenzo-next .rich-messages-workspace .dm-mobile-chat-head", "grid"],
+  ["html.avenzo-android-app .avenzo-next .settings-mobile-reference", "grid"],
 ]) {
   let visible = false;
   design.walkRules(selector, rule => {
@@ -25,6 +26,8 @@ for (const [selector, expected] of [
   });
   assert.ok(visible, `${selector} must override inline hiding`);
 }
+const settingsHub = await readFile("features/settings/components/settings-hub.tsx", "utf8");
+assert.ok(!/className="settings-mobile-reference"\s+style=/.test(settingsHub), "Settings must not be hidden by inline styling when Android hides its desktop alternative");
 const premium = postcss.parse(await readFile("app/avenzo-premium.css", "utf8"));
 for (const file of ["app/globals.css", "app/avenzo-ad-theme.css", "app/avenzo-premium.css"]) {
   const root = postcss.parse(await readFile(file, "utf8"));
