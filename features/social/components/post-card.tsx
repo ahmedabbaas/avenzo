@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Icon from "./icon";
 import { avatarFor, formatRelativeTime, initialsAvatar } from "../lib/profile";
@@ -86,6 +86,31 @@ export default function PostCard({
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [heartBurst, setHeartBurst] = useState(false);
   const [showMobileComments, setShowMobileComments] = useState(false);
+  const imageOpenTimerRef = useRef<number | null>(null);
+  const heartTimerRef = useRef<number | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => () => {
+    if (imageOpenTimerRef.current !== null) window.clearTimeout(imageOpenTimerRef.current);
+    if (heartTimerRef.current !== null) window.clearTimeout(heartTimerRef.current);
+  }, []);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const closeOutside = (event: PointerEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        menuRef.current?.querySelector<HTMLButtonElement>(".post-more-button")?.focus();
+      }
+    };
+    document.addEventListener("pointerdown", closeOutside, { passive: true });
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOutside);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [menuOpen]);
   const author = post.profile;
   const authorName = author?.display_name || "Account unavailable";
   const rootComments = post.comments.filter((item) => !item.parent_id);
@@ -118,21 +143,21 @@ export default function PostCard({
       onDoubleClick={(event) => {
         const target = event.target as HTMLElement;
         if (
-          target.closest("button") ||
+          (target.closest("button") && !target.closest(".post-media-open")) ||
           target.closest("input") ||
           target.closest("form") ||
+          target.closest("video") ||
           target.closest("a")
         ) {
           return;
         }
 
         nativeImpact("medium");
+        if (imageOpenTimerRef.current !== null) window.clearTimeout(imageOpenTimerRef.current);
+        if (heartTimerRef.current !== null) window.clearTimeout(heartTimerRef.current);
         if (!post.liked) onLike();
-        setHeartBurst(false);
-        window.requestAnimationFrame(() => {
-          setHeartBurst(true);
-          window.setTimeout(() => setHeartBurst(false), 620);
-        });
+        setHeartBurst(true);
+        heartTimerRef.current = window.setTimeout(() => setHeartBurst(false), 620);
       }}
     >
       {post.pinned_at && own && (
@@ -181,7 +206,7 @@ export default function PostCard({
             </div>
           </div>
         )}
-        <div className="post-menu-shell">
+        <div className="post-menu-shell" ref={menuRef}>
           <button
             className="post-more-button"
             type="button"
@@ -329,7 +354,17 @@ export default function PostCard({
         <button
           className="post-media-open"
           type="button"
-          onClick={() => setViewerUrl(mediaUrl)}
+          onClick={(event) => {
+            // Keyboard activation opens immediately; pointer clicks allow a
+            // second tap to like without opening the viewer underneath it.
+            if (event.detail === 0) {
+              setViewerUrl(mediaUrl);
+              return;
+            }
+            if (imageOpenTimerRef.current !== null) window.clearTimeout(imageOpenTimerRef.current);
+            if (event.detail > 1) return;
+            imageOpenTimerRef.current = window.setTimeout(() => setViewerUrl(mediaUrl), 300);
+          }}
           aria-label="Open image full screen"
         >
           <UserMediaImage
@@ -414,6 +449,7 @@ export default function PostCard({
             className={post.liked ? "liked" : ""}
             onClick={onLike}
             aria-label={post.liked ? "Unlike post" : "Like post"}
+            aria-pressed={post.liked}
           >
             <span className="post-action-icon-web">
               <Icon name="heart" size={20} />
@@ -478,6 +514,7 @@ export default function PostCard({
             className={"save-action " + (saved ? "saved" : "")}
             onClick={onSave}
             aria-label={saved ? "Remove from saved" : "Save post"}
+            aria-pressed={saved}
           >
             <span className="post-action-icon-web">
               <Icon name="bookmark" size={20} />
