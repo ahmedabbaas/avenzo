@@ -187,7 +187,7 @@ export default function SettingsHub({
 
   return (
     <>
-      <div className="settings-mobile-reference" style={{ display: "none" }}>
+      <div className="settings-mobile-reference">
         {profile && (
           <Link className="settings-mobile-profile-card" href="/settings/account">
             <AvatarImage

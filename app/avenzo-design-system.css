@@ -4088,3 +4088,34 @@ html.avenzo-android-app .avenzo-next .screen-home .story-label-mobile { display:
 @media(prefers-reduced-motion:reduce) { .avenzo-next .profile-grid-engagement { transition:none; } }
 .avenzo-next .post-video-error { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; font-size:13px; color:var(--premium-text); background:var(--premium-secondary); }
 .avenzo-next .post-video-error button { min-height:44px; padding:8px 12px; border:1px solid var(--premium-muted); border-radius:8px; background:transparent; color:inherit; cursor:pointer; flex:none; }
+
+/* Settings visibility belongs to responsive CSS, never an inline hidden flag. */
+.avenzo-next .settings-mobile-reference { display:none; }
+.avenzo-next .settings-recovery-page { max-width:680px; margin:auto; padding:32px 20px; min-height:100dvh; color:var(--premium-text); background:var(--premium-bg); }
+.avenzo-next .settings-recovery-page h1 { font-size:24px; margin:0 0 14px; }
+.avenzo-next .settings-recovery-page p { color:var(--premium-muted); line-height:1.6; }
+.avenzo-next .settings-recovery-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:20px; }
+.avenzo-next .settings-loading-rows { display:grid; gap:12px; margin:24px 0; }
+.avenzo-next .settings-loading-rows span { min-height:64px; border-radius:12px; background:var(--premium-secondary); }
+@media(max-width:900px) {
+ .avenzo-next .settings-mobile-reference { display:grid; gap:16px; }
+ .avenzo-next .settings-desktop-hub { display:none; }
+ .avenzo-next .settings-mobile-profile-card { display:flex; align-items:center; gap:14px; padding:16px; color:var(--premium-text); text-decoration:none; min-width:0; }
+ .avenzo-next .settings-mobile-profile-card img { width:60px; height:60px; border-radius:50%; flex:none; }
+ .avenzo-next .settings-mobile-profile-card > span { flex:1; min-width:0; }
+ .avenzo-next .settings-mobile-profile-card :is(b,small,em) { display:block; overflow-wrap:anywhere; }
+ .avenzo-next .settings-mobile-profile-card small { margin-top:4px; color:var(--premium-muted); }
+ .avenzo-next .settings-mobile-search { display:flex; align-items:center; gap:10px; min-height:48px; padding:0 14px; border:1px solid var(--premium-line); border-radius:12px; background:var(--premium-secondary); color:var(--premium-muted); }
+ .avenzo-next .settings-mobile-search input { width:100%; min-width:0; border:0; background:transparent; color:var(--premium-text); }
+ .avenzo-next .settings-mobile-search:focus-within { outline:2px solid var(--premium-muted); outline-offset:2px; }
+ .avenzo-next .settings-mobile-row { display:grid; grid-template-columns:38px minmax(0,1fr) auto; align-items:center; gap:12px; padding:14px; text-decoration:none; color:var(--premium-text); border-bottom:1px solid var(--premium-line); }
+ .avenzo-next .settings-mobile-row :is(b,small) { display:block; overflow-wrap:anywhere; }
+ .avenzo-next .settings-mobile-row small { margin-top:4px; line-height:1.5; font-size:12px; color:var(--premium-muted); }
+ .avenzo-next .settings-mobile-row > i { font-style:normal; color:var(--premium-muted); }
+ .avenzo-next .settings-mobile-appearance .settings-theme-segment { grid-column:1/-1; display:flex; gap:8px; }
+ .avenzo-next .settings-theme-segment button { flex:1; min-height:44px; padding:8px; border:1px solid var(--premium-line); border-radius:8px; background:var(--premium-secondary); color:var(--premium-text); }
+ .avenzo-next .settings-theme-segment button.active { border-color:var(--premium-text); }
+ .avenzo-next .settings-mobile-logout { display:flex; align-items:center; gap:12px; width:100%; min-height:48px; padding:14px; border:1px solid var(--premium-line); border-radius:12px; background:var(--premium-surface); color:var(--premium-text); }
+}
+html.avenzo-android-app .avenzo-next .settings-mobile-reference { display:grid!important; }
+html.avenzo-android-app .avenzo-next .settings-desktop-hub { display:none!important; }
