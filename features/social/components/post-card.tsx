@@ -84,6 +84,13 @@ export default function PostCard({
   const [captionDraft, setCaptionDraft] = useState(post.caption || "");
   const [viewerUrl, setViewerUrl] = useState("");
   const [carouselIndex, setCarouselIndex] = useState(0);
+  const carouselRef = useRef<HTMLDivElement | null>(null);
+  const [captionExpanded, setCaptionExpanded] = useState(false);
+  const moveCarousel = (index: number) => {
+    const node = carouselRef.current;
+    if (!node) return;
+    node.scrollTo({ left: node.clientWidth * index, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+  };
   const [heartBurst, setHeartBurst] = useState(false);
   const [showMobileComments, setShowMobileComments] = useState(false);
   const imageOpenTimerRef = useRef<number | null>(null);
@@ -304,7 +311,16 @@ export default function PostCard({
       (post.mediaItems?.length || 0) > 1 ? (
         <div className="post-carousel-shell">
           <div
+            ref={carouselRef}
             className="post-carousel-track"
+            tabIndex={0}
+            role="region"
+            aria-label="Post images"
+            onKeyDown={(event) => {
+              if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+              event.preventDefault();
+              moveCarousel(Math.max(0, Math.min(carouselIndex + (event.key === "ArrowRight" ? 1 : -1), (post.mediaItems?.length || 1) - 1)));
+            }}
             onScroll={(event) => {
               const node = event.currentTarget;
               const width = node.clientWidth || 1;
@@ -337,6 +353,8 @@ export default function PostCard({
             ))}
           </div>
 
+          <button type="button" className="post-carousel-nav post-carousel-prev" aria-label="Previous image" disabled={carouselIndex === 0} onClick={() => moveCarousel(carouselIndex - 1)}><Icon name="back" /></button>
+          <button type="button" className="post-carousel-nav post-carousel-next" aria-label="Next image" disabled={carouselIndex >= (post.mediaItems?.length || 1) - 1} onClick={() => moveCarousel(carouselIndex + 1)}><Icon name="back" /></button>
           <span className="post-carousel-count" aria-live="polite">
             {carouselIndex + 1}/{post.mediaItems?.length || 1}
           </span>
@@ -562,7 +580,8 @@ export default function PostCard({
             >
               {authorName}
             </b>
-            <span>{post.caption}</span>
+            <span>{post.caption.length > 180 && !captionExpanded ? post.caption.slice(0, 180).trimEnd() + "…" : post.caption}</span>
+            {post.caption.length > 180 && <button type="button" className="post-caption-toggle" aria-expanded={captionExpanded} onClick={() => setCaptionExpanded((expanded) => !expanded)}>{captionExpanded ? "less" : "more"}</button>}
           </p>
         ) : null}
 
@@ -578,7 +597,7 @@ export default function PostCard({
           <button
             type="button"
             className="post-view-comments-mobile"
-            style={{ display: "none" }}
+            aria-expanded={showMobileComments}
             onClick={() => setShowMobileComments((open) => !open)}
           >
             {showMobileComments ? "Hide comments" : "View all comments"}
