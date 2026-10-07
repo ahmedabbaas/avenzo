@@ -8,6 +8,7 @@ import type { Comment, Post, Profile } from "../types";
 import AvatarImage from "./avatar-image";
 import UserMediaImage from "./user-media-image";
 import { nativeImpact, shareExternal } from "../lib/native-social";
+import { observeFeedVideo } from "../lib/video-playback";
 
 function renderCommentBody(body: string) {
   const parts = body.split(/(@[a-zA-Z0-9._-]{1,30})/g);
@@ -60,7 +61,7 @@ export default function PostCard({
   onShare: () => void;
   onRepost?: () => void;
   onPollVote?: (optionId: string) => void;
-  onComment: (value: string, parentId?: string | null) => void;
+  onComment: (value: string, parentId?: string | null) => Promise<boolean>;
   onCommentLike: (comment: Comment) => void;
   onCommentDelete: (comment: Comment) => void;
   onEditCaption: (caption: string) => void;
@@ -74,6 +75,11 @@ export default function PostCard({
   commentAvatarUrl?: string;
 }) {
   const [comment, setComment] = useState("");
+  const [commentPosting, setCommentPosting] = useState(false);
+  const [commentError, setCommentError] = useState("");
+  const feedVideoRef = useRef<HTMLVideoElement | null>(null);
+  const [failedVideoUrl, setFailedVideoUrl] = useState("");
+  const commentPendingRef = useRef(false);
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
   const [visibleRootCount, setVisibleRootCount] = useState(3);
   const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({});
@@ -96,6 +102,11 @@ export default function PostCard({
   const imageOpenTimerRef = useRef<number | null>(null);
   const heartTimerRef = useRef<number | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const video = feedVideoRef.current;
+    if (!video) return;
+    return observeFeedVideo(video, autoplayVideo && !dataSaving);
+  }, [autoplayVideo, dataSaving, mediaUrl, post.media_type]);
   useEffect(() => () => {
     if (imageOpenTimerRef.current !== null) window.clearTimeout(imageOpenTimerRef.current);
     if (heartTimerRef.current !== null) window.clearTimeout(heartTimerRef.current);
@@ -396,15 +407,19 @@ export default function PostCard({
       ) : null}
 
       {post.media_path && post.media_type === "video" && (
+        <>
         <video
+          ref={feedVideoRef}
           className="post-media"
           src={mediaUrl}
           controls
-          autoPlay={autoplayVideo}
           muted={autoplayVideo}
           preload={dataSaving ? "none" : "metadata"}
           playsInline
+          onError={() => setFailedVideoUrl(mediaUrl)}
         />
+        {failedVideoUrl === mediaUrl && <div className="post-video-error" role="alert"><span>Video could not load. Check your connection.</span><button type="button" onClick={() => { setFailedVideoUrl(""); feedVideoRef.current?.load(); }}>Retry video</button></div>}
+        </>
       )}
 
       {heartBurst && (
@@ -576,7 +591,6 @@ export default function PostCard({
             </b>
             <b
               className="post-caption-author-mobile"
-              style={{ display: "none" }}
             >
               {authorName}
             </b>
@@ -906,19 +920,30 @@ export default function PostCard({
         )}
 
         <form
-          onSubmit={(event) => {
+          onSubmit={async (event) => {
             event.preventDefault();
-            if (!comment.trim()) return;
-            onComment(comment, replyTo?.id || null);
-            setComment("");
-            setReplyTo(null);
+            if (!comment.trim() || commentPendingRef.current) return;
+            commentPendingRef.current = true;
+            setCommentPosting(true);
+            setCommentError("");
+            try {
+              if (await onComment(comment, replyTo?.id || null)) {
+                setComment("");
+                setReplyTo(null);
+              } else setCommentError("Could not post. Your text is saved here—try again.");
+            } catch {
+              setCommentError("Could not post. Your text is saved here—try again.");
+            } finally {
+              commentPendingRef.current = false;
+              setCommentPosting(false);
+            }
           }}
+          aria-busy={commentPosting}
           className="comment-input"
         >
           {commentAvatarUrl && (
             <span
               className="post-comment-current-avatar"
-              style={{ display: "none" }}
               aria-hidden="true"
             >
               <AvatarImage
@@ -930,6 +955,8 @@ export default function PostCard({
           )}
           <input
             ref={commentInputRef}
+            disabled={commentPosting}
+            maxLength={1000}
             value={comment}
             onChange={(event) =>
               setComment(event.target.value.slice(0, 1000))
@@ -937,8 +964,9 @@ export default function PostCard({
             placeholder={replyTo ? "Write a reply…" : "Add a comment…"}
             aria-label={replyTo ? "Write a reply" : "Add a comment"}
           />
-          <button disabled={!comment.trim()}>Post</button>
+          <button type="submit" disabled={!comment.trim() || commentPosting}>{commentPosting ? "Posting…" : "Post"}</button>
         </form>
+        {commentError && <p className="comment-submit-feedback" role="alert">{commentError}</p>}
       </div>
 
       {viewerUrl && (

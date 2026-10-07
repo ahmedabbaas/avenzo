@@ -1,3 +1,4 @@
+import Icon, { type IconName } from "./icon";
 import BrandLogo from "../../../components/brand-logo";
 
 export default function EmptyState({
@@ -7,7 +8,9 @@ export default function EmptyState({
   actionLabel,
   secondaryAction,
   secondaryActionLabel,
+  icon,
 }: {
+  icon?: IconName;
   title: string;
   text: string;
   action?: () => void;
@@ -17,7 +20,7 @@ export default function EmptyState({
 }) {
   return (
     <div className="empty">
-      <span className="empty-mark"><BrandLogo size={44} /></span>
+      <span className="empty-mark">{icon ? <Icon name={icon} size={38} /> : <BrandLogo size={44} />}</span>
       <b>{title}</b>
       <p>{text}</p>
       {(action && actionLabel) || (secondaryAction && secondaryActionLabel) ? (

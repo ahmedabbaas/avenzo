@@ -13,6 +13,8 @@ import BrandLogo from "../components/brand-logo";
 import MobileBottomNav from "../components/mobile-bottom-nav";
 import CreateLauncher, { type CreateDestination } from "../components/create-launcher";
 import { useRouter } from "next/navigation";
+import { commitAndRefresh } from "../features/social/lib/commit-and-refresh";
+import { groupStoriesForTray } from "../features/social/lib/story-tray";
 import { createActionGate } from "../features/social/lib/action-gate";
 import { createClient } from "../lib/supabase/client";
 import { fetchInbox } from "../features/messages/data";
@@ -180,6 +182,8 @@ export default function HomeClient({
   const secondaryIdleRef = useRef<number | null>(null);
   const secondaryTimerRef = useRef<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [feedRefreshing, setFeedRefreshing] = useState(false);
+  const feedRefreshPendingRef = useRef(false);
   const [exploreLoading, setExploreLoading] = useState(false);
   const loadedScreensRef = useRef(new Set<string>());
   const followingFeedLoadedRef = useRef(false);
@@ -195,6 +199,22 @@ export default function HomeClient({
 
   const mediaUrl = (path: string) =>
     supabase.storage.from("media").getPublicUrl(path).data.publicUrl;
+
+  const storyAvatars = useMemo(() => groupStoriesForTray(stories), [stories]);
+
+  async function refreshHomeFeed() {
+    if (feedRefreshPendingRef.current) return;
+    feedRefreshPendingRef.current = true;
+    setFeedRefreshing(true);
+    try {
+      await Promise.all([homeFeedMode === "following" ? loadPosts() : loadExplorePosts(), loadStories()]);
+    } catch {
+      showToast("Could not refresh. Check your connection and try again.");
+    } finally {
+      feedRefreshPendingRef.current = false;
+      if (mountedRef.current) setFeedRefreshing(false);
+    }
+  }
 
   const storySequence = useMemo(() => {
     const groups = new Map<string, Story[]>();
@@ -1038,20 +1058,14 @@ export default function HomeClient({
     parentId: string | null = null
   ) {
     const clean = body.trim();
-    if (!clean) return;
-
-    try {
-      await createPostComment(
-        supabase,
-        initialProfile.id,
-        post.id,
-        clean,
-        parentId
-      );
-      await Promise.all([loadPosts(), loadExplorePosts(), loadProfileContent()]);
-    } catch {
-      showToast(parentId ? "Could not post reply." : "Could not post comment.");
-    }
+    if (!clean) return false;
+    const result = await commitAndRefresh(
+      () => createPostComment(supabase, initialProfile.id, post.id, clean, parentId),
+      () => Promise.all([loadPosts(), loadExplorePosts(), loadProfileContent()]),
+    );
+    if (!result.saved) showToast(parentId ? "Could not post reply." : "Could not post comment.");
+    else if (!result.refreshed) showToast("Comment posted. Refresh to see the latest comments.");
+    return result.saved;
   }
 
   async function toggleCommentLike(post: Post, comment: Comment) {
@@ -1635,7 +1649,7 @@ export default function HomeClient({
                   <small>Add moment</small>
                 </button>
 
-                {stories.map((story) => (
+                {storyAvatars.map((story) => (
                   <button
                     className={"story " + (story.viewed ? "viewed" : "unseen")}
                     key={story.id}
@@ -1655,7 +1669,6 @@ export default function HomeClient({
                       </span>
                       <span
                         className="story-label-mobile"
-                        style={{ display: "none" }}
                       >
                         {story.author_id === profile.id
                           ? "Your story"
@@ -1666,11 +1679,10 @@ export default function HomeClient({
                 ))}
               </div>
 
-              <div className="home-feed-modes" role="tablist" aria-label="Home feed">
+              <div className="home-feed-modes" role="group" aria-label="Home feed">
                 <button
                   type="button"
-                  role="tab"
-                  aria-selected={homeFeedMode === "following"}
+                  aria-pressed={homeFeedMode === "following"}
                   className={homeFeedMode === "following" ? "active" : ""}
                   onClick={() => setHomeFeedMode("following")}
                 >
@@ -1678,13 +1690,13 @@ export default function HomeClient({
                 </button>
                 <button
                   type="button"
-                  role="tab"
-                  aria-selected={homeFeedMode === "for-you"}
+                  aria-pressed={homeFeedMode === "for-you"}
                   className={homeFeedMode === "for-you" ? "active" : ""}
                   onClick={() => setHomeFeedMode("for-you")}
                 >
                   Discover
                 </button>
+                <button type="button" className="home-refresh-action" disabled={feedRefreshing} aria-label="Refresh feed" onClick={() => void refreshHomeFeed()}><Icon name="refresh" size={18} /><span>{feedRefreshing ? "Refreshing…" : "Refresh"}</span></button>
               </div>
 
               <div className="feed-toolbar home-feed-toolbar">
@@ -1697,19 +1709,6 @@ export default function HomeClient({
                       : "Real public content across AVENZO."}
                   </span>
                 </div>
-                <button
-                  className="quiet-button"
-                  onClick={() =>
-                    void Promise.all([
-                      homeFeedMode === "following"
-                        ? loadPosts()
-                        : loadExplorePosts(),
-                      loadStories(),
-                    ])
-                  }
-                >
-                  Refresh
-                </button>
               </div>
 
               {loading ? (
@@ -1750,7 +1749,7 @@ export default function HomeClient({
                       onRepost={() => void togglePostRepost(post)}
                       onPollVote={(optionId) => void voteOnPostPoll(post, optionId)}
                       onComment={(body, parentId) =>
-                        void addComment(post, body, parentId || null)
+                        addComment(post, body, parentId || null)
                       }
                       onCommentLike={(comment) =>
                         void toggleCommentLike(post, comment)

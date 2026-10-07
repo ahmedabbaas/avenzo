@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import EmptyState from "./empty-state";
@@ -40,6 +40,12 @@ export default function ProfileView({
   const [tab, setTab] =
     useState<"posts" | "reels" | "saved" | "tagged">("posts");
   const [shareLabel, setShareLabel] = useState("Share Profile");
+  const [sharing, setSharing] = useState(false);
+  const sharePendingRef = useRef(false);
+  const shareTimerRef = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (shareTimerRef.current !== null) window.clearTimeout(shareTimerRef.current);
+  }, []);
   function openProfilePost(event: MouseEvent<HTMLAnchorElement>, postId: string) {
     if (document.documentElement.classList.contains("avenzo-android-app")) {
       event.preventDefault();
@@ -48,6 +54,9 @@ export default function ProfileView({
   }
 
   async function shareProfile() {
+    if (sharePendingRef.current) return;
+    sharePendingRef.current = true;
+    setSharing(true);
     const url =
       window.location.origin +
       "/u/" +
@@ -66,7 +75,11 @@ export default function ProfileView({
         setShareLabel("Link copied");
       }
     } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") return;
+      if (error instanceof DOMException && error.name === "AbortError") {
+        sharePendingRef.current = false;
+        setSharing(false);
+        return;
+      }
 
       try {
         await navigator.clipboard.writeText(url);
@@ -76,7 +89,10 @@ export default function ProfileView({
       }
     }
 
-    window.setTimeout(() => setShareLabel("Share Profile"), 1600);
+    sharePendingRef.current = false;
+    setSharing(false);
+    if (shareTimerRef.current !== null) window.clearTimeout(shareTimerRef.current);
+    shareTimerRef.current = window.setTimeout(() => setShareLabel("Share Profile"), 1600);
   }
 
   return (
@@ -86,11 +102,13 @@ export default function ProfileView({
         onAddStory={onCreateStory}
         actions={<>
           <button type="button" className="btn" onClick={onEdit}>Edit profile</button>
-          <button type="button" className="btn secondary" onClick={() => void shareProfile()}>{shareLabel}</button>
-          <button type="button" className="btn secondary" onClick={() => router.push("/insights")}>Insights</button>
+          <button type="button" className="btn secondary profile-share-action" disabled={sharing} onClick={() => void shareProfile()}><Icon name="shareModern" size={16} />{sharing ? "Sharing…" : shareLabel}</button>
+          <button type="button" className="btn secondary profile-insights-action" onClick={() => router.push("/insights")}><Icon name="activity" size={16} />Insights</button>
           <button type="button" className="icon-button profile-header-create" aria-label="Create content" onClick={onCreate || onCreatePost}><Icon name="plus" size={20} /></button>
         </>}
       />
+
+      {(!profile.bio?.trim() || !profile.avatar_url) && <div className="profile-completion-strip"><div><b>Make it yours</b><p>{!profile.avatar_url ? "Add a profile photo so people recognize you." : "Add a bio so people can get to know you."}</p></div><button type="button" className="btn secondary" onClick={onEdit}>Edit profile</button></div>}
 
       <ProfileHighlightsRow profileId={profile.id} own />
 
@@ -153,14 +171,17 @@ export default function ProfileView({
               >
                 {post.pinned_at && <i className="profile-pin-badge"><Icon name="pin" size={12} /></i>}
                 {!post.media_path ? <><span>TEXT POST</span><p>{post.caption}</p><small>{formatRelativeTime(post.created_at)}</small></>
-                  : post.media_type === "video" ? <><video src={media(post.media_path)} preload="none" muted playsInline /><i className="profile-pin-badge"><Icon name="play" size={16} /></i></>
+                  : post.media_type === "video" ? <><video src={media(post.media_path)} preload="none" muted playsInline /><i className="profile-media-kind"><Icon name="play" size={16} /></i></>
                   : <UserMediaImage sizes="(max-width: 900px) 33vw, 280px" src={media(post.media_path)} alt={post.caption || "AVENZO post"} width={post.media_width} height={post.media_height} />}
+                {(post.mediaItems?.length || 0) > 1 && <i className="profile-media-kind" aria-label="Multiple images"><Icon name="grid" size={16} /></i>}
+                <span className="profile-grid-engagement" aria-hidden="true"><span><Icon name="heart" size={16} />{post.likeCount}</span><span><Icon name="comment" size={16} />{post.commentCount}</span></span>
               </Link>)}
             </div>
           ) : (
             <EmptyState
-              title="No posts yet."
-              text="Your profile starts empty. Publish your first real post when you’re ready."
+              icon="camera"
+              title="Share your first post"
+              text="Your photos and videos will appear here."
               action={onCreatePost}
               actionLabel="Create Post"
             />
@@ -208,7 +229,8 @@ export default function ProfileView({
             </div>
           ) : (
             <EmptyState
-              title="No reels yet."
+              icon="reels"
+              title="Create your first reel"
               text="Your reels will appear here after you upload a real vertical video."
               action={onCreateReel}
               actionLabel="Create Reel"
