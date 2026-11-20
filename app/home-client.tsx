@@ -15,6 +15,7 @@ import CreateLauncher, { type CreateDestination } from "../components/create-lau
 import { useRouter } from "next/navigation";
 import { commitAndRefresh } from "../features/social/lib/commit-and-refresh";
 import { groupStoriesForTray } from "../features/social/lib/story-tray";
+import { sortFeedPosts, type FeedSortMode } from "../features/social/lib/feed-ranking";
 import { createActionGate } from "../features/social/lib/action-gate";
 import { createClient } from "../lib/supabase/client";
 import { fetchInbox } from "../features/messages/data";
@@ -121,6 +122,7 @@ export default function HomeClient({
   const [screen, setScreen] = useState<Screen>(initialScreen || "home");
   const [homeFeedMode, setHomeFeedMode] =
     useState<"following" | "for-you">("for-you");
+  const [feedSortMode, setFeedSortMode] = useState<FeedSortMode>("latest");
   const [posts, setPosts] = useState<Post[]>([]);
   const [profilePosts, setProfilePosts] = useState<Post[]>([]);
   const [profileContentLoading, setProfileContentLoading] = useState(true);
@@ -201,6 +203,20 @@ export default function HomeClient({
     supabase.storage.from("media").getPublicUrl(path).data.publicUrl;
 
   const storyAvatars = useMemo(() => groupStoriesForTray(stories), [stories]);
+
+  useEffect(() => {
+    try {
+      const savedMode = window.localStorage.getItem("avenzo-feed-sort:" + initialProfile.id);
+      if (savedMode === "latest" || savedMode === "top") setFeedSortMode(savedMode);
+    } catch { /* Feed sorting remains available when storage is disabled. */ }
+  }, [initialProfile.id]);
+
+  function changeFeedSortMode(nextMode: FeedSortMode) {
+    setFeedSortMode(nextMode);
+    try {
+      window.localStorage.setItem("avenzo-feed-sort:" + initialProfile.id, nextMode);
+    } catch { /* Preference is session-only when storage is unavailable. */ }
+  }
 
   async function refreshHomeFeed() {
     if (feedRefreshPendingRef.current) return;
@@ -1321,8 +1337,10 @@ export default function HomeClient({
   const discoverBusy = discoverySearch.active ? discoverySearch.loading : exploreLoading;
   const discoverError = discoverySearch.active ? discoverySearch.error : exploreError;
 
-  const homeFeedPosts =
-    homeFeedMode === "following" ? posts : explorePosts;
+  const homeFeedPosts = useMemo(
+    () => sortFeedPosts(homeFeedMode === "following" ? posts : explorePosts, feedSortMode),
+    [homeFeedMode, posts, explorePosts, feedSortMode]
+  );
 
   function selectPrimaryScreen(nextScreen: Screen) {
     if (nextScreen === screen) {
@@ -1708,6 +1726,10 @@ export default function HomeClient({
                       ? "Posts from you and people you follow."
                       : "Real public content across AVENZO."}
                   </span>
+                </div>
+                <div className="home-feed-sort" role="group" aria-label="Sort feed">
+                  <button type="button" className={feedSortMode === "latest" ? "active" : ""} aria-pressed={feedSortMode === "latest"} onClick={() => changeFeedSortMode("latest")}>Latest</button>
+                  <button type="button" className={feedSortMode === "top" ? "active" : ""} aria-pressed={feedSortMode === "top"} onClick={() => changeFeedSortMode("top")}>Top</button>
                 </div>
               </div>
 
