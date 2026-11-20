@@ -178,3 +178,34 @@
     }
   }
 }
+
+
+/* AVENZO 2.1: focused, shareable conversation route */
+.messages-focused-page .dm-workspace.dm-focused-conversation {
+  grid-template-columns: minmax(0, 1fr);
+  width: min(1040px, calc(100% - 40px));
+  margin: 22px auto 40px;
+  min-height: min(78dvh, 820px);
+}
+.messages-focused-page .dm-focused-conversation > .dm-sidebar { display: none !important; }
+.messages-focused-page .dm-focused-conversation > .dm-chat {
+  width: 100%;
+  min-width: 0;
+  min-height: min(78dvh, 820px);
+  border: 1px solid var(--av-line, #252e31);
+  border-radius: 22px;
+  overflow: hidden;
+}
+@media (max-width: 760px) {
+  .messages-focused-page .dm-workspace.dm-focused-conversation {
+    width: 100%;
+    margin: 0;
+    min-height: calc(100dvh - 64px);
+  }
+  .messages-focused-page .dm-focused-conversation > .dm-chat {
+    min-height: calc(100dvh - 64px);
+    height: calc(100dvh - 64px);
+    border: 0;
+    border-radius: 0;
+  }
+}
