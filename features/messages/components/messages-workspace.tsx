@@ -891,7 +891,7 @@ export default function MessagesWorkspace({
 
       setNewMessageOpen(false);
       setQuery("");
-      await loadConversation(item);
+      openConversation(item);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Unable to start chat.";
