@@ -27,7 +27,7 @@ export default async function GroupMessagesPage() {
   return (
     <main className="messages-page">
       <header className="messages-page-topbar">
-        <a
+        <Link
           className="messages-brand"
           href="/messages"
           aria-label="Back to AVENZO messages"
