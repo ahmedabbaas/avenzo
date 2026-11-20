@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "verify": "npm run contracts && npm run native:tests && npm run draft:tests && npm run search:tests && npm run visual:tests && npm run brand:tests && npm run call:tests && npm run feature:tests && npm run lint && npm run typecheck && npm run build",
-    "feature:tests": "node scripts/test-feature-contracts.mjs && node --test tests/video-playback.test.mjs",
+    "feature:tests": "node scripts/test-feature-contracts.mjs && node --test tests/video-playback.test.mjs && npm run brand:tests",
     "call:tests": "node scripts/test-call-task-queue.mjs",
     "search:tests": "node scripts/test-discovery-search.mjs",
     "draft:tests": "node scripts/test-content-drafts.mjs",
