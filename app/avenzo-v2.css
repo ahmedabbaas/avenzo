@@ -1,0 +1,113 @@
+@layer avenzo-v2 {
+  /* AVENZO 2.0: graphite + electric lime, with accessible interaction states. */
+  .social-app {
+    --av-violet: #c9f34e;
+    --av-violet-2: #dfff91;
+    --av-secondary: #a8c94a;
+    --av-secondary-hover: #dfff91;
+    --av-glow: rgba(201, 243, 78, .14);
+    --accent: #c9f34e;
+    --accent-strong: #dfff91;
+    --accent-soft: rgba(201, 243, 78, .12);
+    --av-accent-ink: #11150a;
+    background:
+      radial-gradient(circle at 17% -10%, rgba(201,243,78,.055), transparent 28%),
+      radial-gradient(circle at 92% 8%, rgba(201,243,78,.035), transparent 24%),
+      var(--av-bg);
+  }
+
+  .social-app .btn:not(.secondary),
+  .social-app .left-nav .create-nav,
+  .social-app .top-create {
+    background: linear-gradient(135deg, #dfff91, #c9f34e);
+    color: var(--av-accent-ink);
+    border-color: rgba(201,243,78,.38);
+    box-shadow: 0 8px 24px rgba(201,243,78,.12);
+  }
+
+  .social-app .btn:not(.secondary):hover:not(:disabled),
+  .social-app .left-nav .create-nav:hover,
+  .social-app .top-create:hover {
+    background: #e7ffb2;
+    color: #11150a;
+    box-shadow: 0 10px 28px rgba(201,243,78,.2);
+  }
+
+  .social-app .left-nav button.active {
+    background: linear-gradient(90deg, rgba(201,243,78,.12), rgba(201,243,78,.025));
+    box-shadow: inset 0 0 0 1px rgba(201,243,78,.16);
+  }
+
+  .social-app .left-nav button.active:before {
+    background: linear-gradient(#dfff91, #a8c94a);
+  }
+
+  .social-app .left-nav button.active svg,
+  .social-app .eyebrow,
+  .social-app .post-actions .liked,
+  .social-app .post-actions .save-action.saved {
+    color: #c9f34e;
+  }
+
+  .social-app .story:not(.viewed) .story-ring {
+    background:
+      linear-gradient(var(--av-surface),var(--av-surface)) padding-box,
+      linear-gradient(145deg,#dfff91,#a8c94a) border-box;
+  }
+
+  .social-app :focus-visible {
+    outline: 2px solid #c9f34e;
+    outline-offset: 3px;
+    box-shadow: 0 0 0 4px rgba(201,243,78,.12);
+  }
+
+  .social-app button,
+  .social-app a,
+  .social-app input,
+  .social-app textarea,
+  .social-app select {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .social-app .post-card,
+  .social-app .person-card,
+  .social-app .side-card {
+    transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+  }
+
+  @media (hover:hover) and (min-width: 901px) {
+    .social-app .person-card:hover,
+    .social-app .side-card:hover {
+      border-color: rgba(201,243,78,.22);
+    }
+  }
+
+  .social-app .mobile-bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .social-app .mobile-nav-item.active {
+    color: var(--av-text);
+  }
+
+  .social-app .mobile-nav-item.active .mobile-icon-wrap {
+    color: #c9f34e;
+  }
+
+  .social-app .mobile-create .mobile-icon-wrap {
+    background: #c9f34e;
+    color: #11150a;
+    box-shadow: 0 6px 20px rgba(201,243,78,.18);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .social-app *,
+    .social-app *::before,
+    .social-app *::after {
+      scroll-behavior: auto !important;
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+    }
+  }
+}
