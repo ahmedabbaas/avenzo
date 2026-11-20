@@ -111,3 +111,53 @@
     }
   }
 }
+
+@layer avenzo-v2 {
+  .social-app .home-feed-toolbar {
+    align-items: end;
+    gap: 16px;
+  }
+
+  .social-app .home-feed-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 4px;
+    border: 1px solid rgba(201,243,78,.14);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--av-surface, var(--panel)) 88%, transparent);
+    flex: 0 0 auto;
+  }
+
+  .social-app .home-feed-sort button {
+    min-height: 34px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .16s ease, color .16s ease;
+  }
+
+  .social-app .home-feed-sort button.active {
+    color: #11150a;
+    background: #c9f34e;
+    box-shadow: 0 3px 12px rgba(201,243,78,.14);
+  }
+
+  .social-app .home-feed-sort button:focus-visible {
+    outline: 2px solid #c9f34e;
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 560px) {
+    .social-app .home-feed-toolbar {
+      align-items: start;
+      flex-direction: column;
+    }
+  }
+}
