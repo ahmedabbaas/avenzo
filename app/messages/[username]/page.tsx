@@ -40,7 +40,7 @@ export default async function ConversationPage({
       </header>
       <MessagesWorkspace
         currentUser={profile}
-        initialUsername={decodeURIComponent(username)}
+        initialUsername={username}
         focusedConversation
       />
     </main>
