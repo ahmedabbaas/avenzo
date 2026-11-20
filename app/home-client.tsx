@@ -205,10 +205,13 @@ export default function HomeClient({
   const storyAvatars = useMemo(() => groupStoriesForTray(stories), [stories]);
 
   useEffect(() => {
-    try {
-      const savedMode = window.localStorage.getItem("avenzo-feed-sort:" + initialProfile.id);
-      if (savedMode === "latest" || savedMode === "top") setFeedSortMode(savedMode);
-    } catch { /* Feed sorting remains available when storage is disabled. */ }
+    const timer = window.setTimeout(() => {
+      try {
+        const savedMode = window.localStorage.getItem("avenzo-feed-sort:" + initialProfile.id);
+        if (savedMode === "latest" || savedMode === "top") setFeedSortMode(savedMode);
+      } catch { /* Feed sorting remains available when storage is disabled. */ }
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [initialProfile.id]);
 
   function changeFeedSortMode(nextMode: FeedSortMode) {
