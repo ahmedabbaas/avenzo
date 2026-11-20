@@ -52,7 +52,7 @@ Build AVENZO as a polished, trustworthy, mobile-first social platform with its o
 - Reels: real video playback, mute, playback state, captions/actions, responsive viewport behavior, data-saving preferences.
 - Discovery: real search, people/content discovery, filters that actually affect results, no fabricated recommendations.
 - Profiles: avatar, bio, counts, follow state, posts/reels/tagged sections, edit profile, safety actions.
-- Messaging: inbox, requests, primary/general folders where supported, unread state, realtime updates, attachment validation, drafts, message actions, privacy and block/report controls. On mobile, inbox and conversation are distinct full-screen states with predictable back behavior. On desktop, a selected conversation should have a stable, navigable URL when route architecture permits.
+- Messaging: inbox, requests, primary/general folders where supported, unread state, realtime updates, attachment validation, drafts, message actions, privacy and block/report controls. Inbox selections open a dedicated, shareable `/messages/[username]` conversation route. Desktop receives a focused conversation workspace; mobile receives a full-screen conversation with a back path to the inbox.
 - Notifications: real event types, read/unread state, sensible grouping, empty/loading/error states.
 - Saved collections: real saved items, collection management, empty states.
 - Settings: grouped and searchable where useful; clear labels, descriptions, toggles, confirmation for destructive actions, persistent preferences.
