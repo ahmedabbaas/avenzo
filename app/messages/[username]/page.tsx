@@ -35,8 +35,8 @@ export default async function ConversationPage({
           <b>AVENZO</b>
         </Link>
         <div className="messages-page-actions">
-          <a className="btn secondary small" href="/calls">Calls</Link>
-          <a className="btn secondary small" href="/home">Home</Link>
+          <a className="btn secondary small" href="/calls">Calls</a>
+          <a className="btn secondary small" href="/home">Home</a>
         </div>
       </header>
       <MessagesWorkspace
