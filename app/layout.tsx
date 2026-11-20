@@ -4,6 +4,7 @@ import "./globals.css";
 import "./avenzo-ad-theme.css";
 import "./avenzo-design-system.css";
 import "./avenzo-premium.css";
+import "./avenzo-v2.css";
 import PreferencesBootstrap from "../features/settings/components/preferences-bootstrap";
 import NetworkStatus from "../components/network-status";
 import AuthenticatedRuntime from "../components/authenticated-runtime";
