@@ -1,9 +1,21 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { sortFeedPosts } from "../features/social/lib/feed-ranking.ts";
+import type { Post } from "../features/social/types.ts";
 
-function post(id, created_at, likeCount, commentCount) {
-  return { id, created_at, likeCount, commentCount };
+function post(id: string, created_at: string, likeCount: number, commentCount: number): Post {
+  return {
+    id,
+    created_at,
+    likeCount,
+    commentCount,
+    author_id: "test-author",
+    caption: "",
+    media_path: null,
+    media_type: null,
+    liked: false,
+    comments: [],
+  };
 }
 
 test("latest feed sorts newest first without mutating source", () => {
