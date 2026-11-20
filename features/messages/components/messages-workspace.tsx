@@ -182,6 +182,7 @@ export default function MessagesWorkspace({
   shareReelId = "",
   shareProfileId = "",
   initialTab = "primary",
+  focusedConversation = false,
 }: {
   currentUser: Profile;
   initialUsername?: string;
@@ -189,6 +190,7 @@ export default function MessagesWorkspace({
   shareReelId?: string;
   shareProfileId?: string;
   initialTab?: "primary" | "requests";
+  focusedConversation?: boolean;
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -259,6 +261,18 @@ export default function MessagesWorkspace({
   );
 
   const pendingShare = sharePending;
+
+  const returnToInbox = useCallback(() => {
+    if (focusedConversation) {
+      router.push("/messages");
+      return;
+    }
+    setActive(null);
+  }, [focusedConversation, router]);
+
+  const openConversation = useCallback((conversation: InboxConversation) => {
+    router.push("/messages/" + encodeURIComponent(conversation.username));
+  }, [router]);
 
   const scrollToLatest = useCallback((behavior: ScrollBehavior = "auto") => {
     const node = bodyRef.current;
@@ -1690,7 +1704,7 @@ export default function MessagesWorkspace({
   const activeProfile = active ? profileFromInbox(active) : null;
 
   return (
-    <div className="dm-workspace rich-messages-workspace">
+    <div className={"dm-workspace rich-messages-workspace" + (focusedConversation ? " dm-focused-conversation" : "")}>
       <section className={"dm-sidebar " + (active ? "dm-mobile-hidden" : "")}>
         <div className="dm-mobile-inbox-head" style={{ display: "none" }}>
           <div className="dm-mobile-inbox-copy">
@@ -1989,7 +2003,7 @@ export default function MessagesWorkspace({
                   (item.unread_count ? "unread " : "") +
                   (item.pinned ? "pinned" : "")
                 }
-                onClick={() => void loadConversation(item)}
+                onClick={() => openConversation(item)}
               >
                 <span className="dm-mobile-conversation-avatar">
                   <AvatarImage
@@ -2153,7 +2167,7 @@ export default function MessagesWorkspace({
                 <button
                   className="dm-mobile-chat-back"
                   type="button"
-                  onClick={() => setActive(null)}
+                  onClick={returnToInbox}
                   aria-label="Back to conversations"
                 >
                   <Icon name="back" size={22} />
