@@ -1,4 +1,3 @@
-@layer avenzo-v2 {
   /* AVENZO 2.0: graphite + electric lime, with accessible interaction states. */
   .social-app {
     --av-violet: #c9f34e;
@@ -110,9 +109,7 @@
       transition-duration: .01ms !important;
     }
   }
-}
 
-@layer avenzo-v2 {
   .social-app .home-feed-toolbar {
     align-items: end;
     gap: 16px;
@@ -160,4 +157,3 @@
       flex-direction: column;
     }
   }
-}
