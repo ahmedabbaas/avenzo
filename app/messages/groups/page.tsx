@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "../../../lib/supabase/server";
 import BrandLogo from "../../../components/brand-logo";
@@ -26,17 +27,17 @@ export default async function GroupMessagesPage() {
   return (
     <main className="messages-page">
       <header className="messages-page-topbar">
-        <a
+        <Link
           className="messages-brand"
           href="/messages"
           aria-label="Back to AVENZO messages"
         >
           <BrandLogo size={32} />
           <b>AVENZO</b>
-        </a>
-        <a className="btn secondary small" href="/messages">
+        </Link>
+        <Link className="btn secondary small" href="/messages">
           Direct Messages
-        </a>
+        </Link>
       </header>
 
       <GroupMessagesWorkspace currentUser={profile} />

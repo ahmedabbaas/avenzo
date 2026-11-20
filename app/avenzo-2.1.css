@@ -1,0 +1,211 @@
+/* AVENZO 2.1 — canonical brand layer.
+   Loaded after legacy compatibility layers so the product has one visual source of truth. */
+@layer avenzo-21 {
+  :root {
+    --accent: #c9f34e;
+    --accent-strong: #dfff91;
+    --accent-soft: rgba(201, 243, 78, .12);
+    --avenzo-brand-accent: #c9f34e;
+    --avenzo-brand-ink: #11150a;
+    --avenzo-motion-fast: 140ms;
+    --avenzo-motion-base: 190ms;
+    --avenzo-ease: cubic-bezier(.2, .75, .25, 1);
+  }
+
+  html, body { accent-color: #c9f34e; }
+
+  .social-app {
+    --av-bg: #080a0b;
+    --av-surface: #0e1214;
+    --av-surface-2: #141a1d;
+    --av-surface-3: #1a2225;
+    --av-line: #252e31;
+    --av-line-strong: #3b484b;
+    --av-text: #f5f7f4;
+    --av-soft: #c9d0ca;
+    --av-muted: #929d96;
+    --av-muted-2: #707c75;
+    --av-violet: #c9f34e;
+    --av-violet-2: #dfff91;
+    --av-secondary: #9cac84;
+    --av-secondary-hover: #c9f34e;
+    --av-glow: rgba(201, 243, 78, .10);
+    --bg: var(--av-bg);
+    --panel: var(--av-surface);
+    --panel-2: var(--av-surface-2);
+    --panel-3: var(--av-surface-3);
+    --line: var(--av-line);
+    --line-strong: var(--av-line-strong);
+    --text: var(--av-text);
+    --text-soft: var(--av-soft);
+    --muted: var(--av-muted);
+    --muted-2: var(--av-muted-2);
+    --accent: #c9f34e;
+    --accent-strong: #dfff91;
+    --accent-soft: rgba(201, 243, 78, .12);
+    color: var(--av-text);
+    background:
+      radial-gradient(ellipse at 50% -24%, rgba(201,243,78,.045), transparent 38%),
+      var(--av-bg);
+  }
+
+  html[data-theme="light"] .social-app {
+    --av-bg: #f5f7f3;
+    --av-surface: #ffffff;
+    --av-surface-2: #eef1eb;
+    --av-surface-3: #e5eae1;
+    --av-line: #dfe5da;
+    --av-line-strong: #c5d0bc;
+    --av-text: #171c16;
+    --av-soft: #414a40;
+    --av-muted: #687365;
+    --av-muted-2: #899485;
+    --av-violet: #718d2d;
+    --av-violet-2: #526b1c;
+    --av-secondary: #7c8d68;
+    --av-secondary-hover: #526b1c;
+    --av-glow: rgba(113,141,45,.08);
+    --bg: var(--av-bg);
+    --panel: var(--av-surface);
+    --panel-2: var(--av-surface-2);
+    --panel-3: var(--av-surface-3);
+    --line: var(--av-line);
+    --line-strong: var(--av-line-strong);
+    --text: var(--av-text);
+    --text-soft: var(--av-soft);
+    --muted: var(--av-muted);
+    --muted-2: var(--av-muted-2);
+    --accent: #718d2d;
+    --accent-strong: #526b1c;
+    --accent-soft: rgba(113,141,45,.12);
+    background:
+      radial-gradient(ellipse at 50% -24%, rgba(113,141,45,.055), transparent 38%),
+      var(--av-bg);
+  }
+
+  .social-app .eyebrow { color: var(--accent-strong); }
+  .social-app .brand i { background: var(--accent); box-shadow: 0 0 16px rgba(201,243,78,.18); }
+  .social-app .left-nav button.active {
+    color: var(--av-text);
+    background: var(--av-surface-2);
+    border-color: var(--av-line);
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+  .social-app .left-nav button.active svg,
+  .social-app .post-actions button.liked,
+  .social-app .post-actions button.saved { color: var(--accent-strong); }
+  .social-app .left-nav .create-nav,
+  .social-app .btn:not(.secondary),
+  .social-app .top-create,
+  .social-app .auth-submit {
+    background: var(--accent);
+    color: #11150a;
+    border: 1px solid rgba(201,243,78,.35);
+    box-shadow: 0 8px 22px rgba(201,243,78,.10);
+  }
+  .social-app .left-nav .create-nav:hover,
+  .social-app .btn:not(.secondary):hover:not(:disabled),
+  .social-app .top-create:hover,
+  .social-app .auth-submit:hover:not(:disabled) {
+    background: var(--accent-strong);
+    color: #11150a;
+    filter: none;
+  }
+  .social-app .btn.secondary {
+    color: var(--av-text);
+    background: var(--av-surface-2);
+    border-color: var(--av-line);
+    box-shadow: none;
+  }
+  .social-app :is(.icon-button, .top-activity, .top-messages, .top-profile-menu) {
+    color: var(--av-muted);
+    border-color: transparent;
+    transition: color var(--avenzo-motion-base) var(--avenzo-ease),
+      background-color var(--avenzo-motion-base) var(--avenzo-ease),
+      border-color var(--avenzo-motion-base) var(--avenzo-ease),
+      transform var(--avenzo-motion-fast) var(--avenzo-ease);
+  }
+  .social-app :is(.icon-button, .top-activity, .top-messages, .top-profile-menu):hover {
+    color: var(--av-text);
+    background: var(--av-surface-2);
+    border-color: var(--av-line);
+  }
+  .social-app .post-card,
+  .social-app .side-card,
+  .social-app .person-card,
+  .social-app .search-summary {
+    border-color: var(--av-line);
+    background: var(--av-surface);
+    box-shadow: 0 12px 36px rgba(0,0,0,.10);
+  }
+  .social-app :is(button, a, input, textarea, select):focus-visible,
+  .auth-shell :is(button, a, input, textarea, select):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  .social-app :is(button, a) { -webkit-tap-highlight-color: transparent; }
+  .social-app button { touch-action: manipulation; }
+
+  .auth-shell {
+    --accent: #c9f34e;
+    --accent-strong: #dfff91;
+  }
+  .auth-shell .brand-mark {
+    background: var(--accent);
+    color: #11150a;
+    box-shadow: 0 10px 30px rgba(201,243,78,.12);
+  }
+  .auth-shell .auth-links a { color: #c9f34e; }
+
+  @media (max-width: 760px) {
+    .social-app .left-nav button,
+    .social-app .icon-button,
+    .social-app .top-activity,
+    .social-app .top-messages,
+    .social-app .top-profile-menu {
+      min-width: 44px;
+      min-height: 44px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .social-app *, .social-app *::before, .social-app *::after,
+    .auth-shell *, .auth-shell *::before, .auth-shell *::after {
+      scroll-behavior: auto !important;
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+    }
+  }
+}
+
+
+/* AVENZO 2.1: focused, shareable conversation route */
+.messages-focused-page .dm-workspace.dm-focused-conversation {
+  grid-template-columns: minmax(0, 1fr);
+  width: min(1040px, calc(100% - 40px));
+  margin: 22px auto 40px;
+  min-height: min(78dvh, 820px);
+}
+.messages-focused-page .dm-focused-conversation > .dm-sidebar { display: none !important; }
+.messages-focused-page .dm-focused-conversation > .dm-chat {
+  width: 100%;
+  min-width: 0;
+  min-height: min(78dvh, 820px);
+  border: 1px solid var(--av-line, #252e31);
+  border-radius: 22px;
+  overflow: hidden;
+}
+@media (max-width: 760px) {
+  .messages-focused-page .dm-workspace.dm-focused-conversation {
+    width: 100%;
+    margin: 0;
+    min-height: calc(100dvh - 64px);
+  }
+  .messages-focused-page .dm-focused-conversation > .dm-chat {
+    min-height: calc(100dvh - 64px);
+    height: calc(100dvh - 64px);
+    border: 0;
+    border-radius: 0;
+  }
+}
