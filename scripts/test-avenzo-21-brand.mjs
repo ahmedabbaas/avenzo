@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import postcss from "postcss";
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
+const postcss = createRequire(require.resolve("next/package.json"))("postcss");
 
 const css = await readFile("app/avenzo-2.1.css", "utf8");
 const root = postcss.parse(css);
