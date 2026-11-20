@@ -2110,7 +2110,7 @@ export default function MessagesWorkspace({
                     : "") +
                   (item.unread_count ? "unread" : "")
                 }
-                onClick={() => void loadConversation(item)}
+                onClick={() => openConversation(item)}
               >
                 <AvatarImage
                   src={avatarFor(profileFromInbox(item))}
