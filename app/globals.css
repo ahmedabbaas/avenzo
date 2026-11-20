@@ -11,9 +11,9 @@
   --muted-2:#69737c;
   --text:#f7f8f8;
   --text-soft:#d5dade;
-  --accent:#eef0f2;
+  --accent:#c9f34e;
   --accent-strong:#c9f34e;
-  --accent-soft:rgba(145,133,255,.1);
+  --accent-soft:rgba(201,243,78,.1);
   --danger:#ff7474;
   --shadow:0 24px 80px rgba(0,0,0,.35);
   --radius-xl:26px;
@@ -33,8 +33,8 @@ img{max-width:100%}
 ::selection{background:var(--accent);color:#111}
 :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .social-app{min-height:100vh;background:
-  radial-gradient(circle at 8% -10%,rgba(145,133,255,.055),transparent 28%),
-  radial-gradient(circle at 100% 18%,rgba(145,133,255,.05),transparent 24%),
+  radial-gradient(circle at 8% -10%,rgba(201,243,78,.055),transparent 28%),
+  radial-gradient(circle at 100% 18%,rgba(201,243,78,.05),transparent 24%),
   var(--bg)
 }
 .muted{color:var(--muted)}
@@ -60,8 +60,8 @@ img{max-width:100%}
   position:relative;
   overflow:hidden;
   background:
-    radial-gradient(circle at 18% 18%,rgba(145,133,255,.075),transparent 26%),
-    radial-gradient(circle at 90% 12%,rgba(145,133,255,.07),transparent 24%),
+    radial-gradient(circle at 18% 18%,rgba(201,243,78,.075),transparent 26%),
+    radial-gradient(circle at 90% 12%,rgba(201,243,78,.07),transparent 24%),
     #07090b
 }
 .auth-glow{position:absolute;border-radius:999px;filter:blur(90px);opacity:.13;pointer-events:none}
@@ -71,7 +71,7 @@ img{max-width:100%}
 .auth-brand>div span,.auth-brand>div strong{display:block}
 .auth-brand>div strong{font:700 30px -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;letter-spacing:-.055em}
 .auth-brand>div span{font-size:12px;color:var(--muted);margin-top:2px}
-.brand-mark{display:grid;place-items:center;width:54px;height:54px;border-radius:18px;background:var(--accent);color:#111;font:700 25px -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;box-shadow:0 15px 50px rgba(145,133,255,.12)}
+.brand-mark{display:grid;place-items:center;width:54px;height:54px;border-radius:18px;background:var(--accent);color:#111;font:700 25px -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;box-shadow:0 15px 50px rgba(201,243,78,.12)}
 .auth-card{
   position:relative;
   z-index:2;
@@ -97,7 +97,7 @@ img{max-width:100%}
   transition:border-color .18s ease,box-shadow .18s ease,background .18s ease
 }
 .auth-form input:hover{border-color:#303a42}
-.auth-form input:focus{border-color:#52606b;box-shadow:0 0 0 3px rgba(145,133,255,.04);background:#11161a}
+.auth-form input:focus{border-color:#52606b;box-shadow:0 0 0 3px rgba(201,243,78,.04);background:#11161a}
 .auth-label{font-size:12px;color:#a9b1b8;margin-bottom:-5px}
 .auth-links{display:flex;justify-content:flex-end;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
 .auth-links a{color:var(--accent);text-decoration:none}
@@ -140,7 +140,7 @@ img{max-width:100%}
   backdrop-filter:blur(22px) saturate(130%)
 }
 .brand{display:flex;align-items:center;border:0;background:none;color:#fff;font:700 22px -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;letter-spacing:-.055em;padding:8px}
-.brand i{width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:8px;box-shadow:0 0 20px rgba(145,133,255,.35)}
+.brand i{width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:8px;box-shadow:0 0 20px rgba(201,243,78,.35)}
 .search-wrap{
   margin-left:auto;
   margin-right:12px;
@@ -240,10 +240,10 @@ img{max-width:100%}
   border:1px solid var(--line);
   border-radius:var(--radius-xl);
   background:
-    radial-gradient(circle at 92% 7%,rgba(145,133,255,.11),transparent 34%),
+    radial-gradient(circle at 92% 7%,rgba(201,243,78,.11),transparent 34%),
     linear-gradient(145deg,#11171a,#0b0f12)
 }
-.welcome:after{content:"";position:absolute;width:150px;height:150px;border-radius:50%;right:-70px;bottom:-80px;border:1px solid rgba(145,133,255,.12)}
+.welcome:after{content:"";position:absolute;width:150px;height:150px;border-radius:50%;right:-70px;bottom:-80px;border:1px solid rgba(201,243,78,.12)}
 .welcome>div,.welcome>button{position:relative;z-index:1}
 .welcome h1{margin:9px 0 8px;font:700 clamp(34px,5vw,45px)/.98 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;letter-spacing:-.055em}
 .welcome p{max-width:550px;color:var(--muted);line-height:1.58;margin:0}
@@ -446,7 +446,7 @@ img{max-width:100%}
   padding:16px;
   overflow:hidden;
   background:
-    radial-gradient(circle at 90% 8%,rgba(145,133,255,.08),transparent 38%),
+    radial-gradient(circle at 90% 8%,rgba(201,243,78,.08),transparent 38%),
     var(--panel)
 }
 .profile-text-post>span{
@@ -690,14 +690,14 @@ img{max-width:100%}
 .password-control button:hover{background:#171d21;color:#fff}
 .auth-session-note{margin:13px 0 0;color:#606a72;font-size:10px;line-height:1.5;text-align:center}
 .username-control{position:relative;display:flex;align-items:center;background:#0f1418;border:1px solid var(--line);border-radius:14px;transition:border-color .18s ease,background .18s ease}
-.username-control:focus-within{border-color:#52606b;box-shadow:0 0 0 3px rgba(145,133,255,.04);background:#11161a}
+.username-control:focus-within{border-color:#52606b;box-shadow:0 0 0 3px rgba(201,243,78,.04);background:#11161a}
 .username-control>span{padding-left:14px;color:#68727a;font-size:13px}
 .username-control input{border:0;box-shadow:none;padding-left:3px;background:transparent}
 .username-state{display:flex;align-items:center;gap:6px}
 .username-state>i{width:6px;height:6px;border-radius:50%;background:#68727a;flex:0 0 auto}
 .username-state.checking>i{background:#a8b0b7;box-shadow:0 0 0 3px rgba(168,176,183,.08)}
 .username-state.available{color:var(--accent)}
-.username-state.available>i{background:var(--accent);box-shadow:0 0 0 3px rgba(145,133,255,.08)}
+.username-state.available>i{background:var(--accent);box-shadow:0 0 0 3px rgba(201,243,78,.08)}
 .username-state.taken,.username-state.invalid{color:#ff9797}
 .username-state.taken>i,.username-state.invalid>i{background:#ff7d7d}
 .username-state.offline{color:#a6afb6}
@@ -718,7 +718,7 @@ img{max-width:100%}
   place-items:center;
   padding:24px;
   background:
-    radial-gradient(circle at 50% 15%,rgba(145,133,255,.055),transparent 28%),
+    radial-gradient(circle at 50% 15%,rgba(201,243,78,.055),transparent 28%),
     var(--bg)
 }
 .system-card{width:min(520px,100%);text-align:center;padding:36px;border:1px solid var(--line);border-radius:26px;background:var(--panel);box-shadow:var(--shadow)}
@@ -771,7 +771,7 @@ img{max-width:100%}
 .person-link{text-decoration:none;color:inherit}
 .mini-person-link{display:flex;align-items:center;gap:9px;min-width:0;flex:1;color:inherit;text-decoration:none}
 .mini-person-link>div{min-width:0;flex:1}
-.public-profile-shell{min-height:100vh;background:radial-gradient(circle at 70% -10%,rgba(145,133,255,.055),transparent 28%),var(--bg)}
+.public-profile-shell{min-height:100vh;background:radial-gradient(circle at 70% -10%,rgba(201,243,78,.055),transparent 28%),var(--bg)}
 .public-profile-top{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 max(24px,calc((100vw - 1120px)/2));border-bottom:1px solid var(--line);background:rgba(6,8,10,.88);backdrop-filter:blur(20px);position:sticky;top:0;z-index:20}
 .public-brand{display:flex;align-items:center;text-decoration:none;color:#fff;font:700 21px -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;letter-spacing:-.05em}
 .public-brand i{width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:8px}
@@ -848,7 +848,7 @@ button,a{-webkit-tap-highlight-color:transparent}
 
 /* Trust + information surfaces */
 .site-footer{grid-column:1/-1;position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:18px;margin-top:8px;padding:16px 4px;color:#6f7780;font-size:11px}.site-footer nav{display:flex;flex-wrap:wrap;gap:14px}.site-footer a{color:#8f98a1;text-decoration:none}.site-footer a:hover{color:var(--accent)}
-.info-shell{min-height:100svh;display:grid;place-items:center;padding:48px 22px;background:radial-gradient(circle at 15% 10%,rgba(145,133,255,.07),transparent 26%),radial-gradient(circle at 90% 20%,rgba(120,144,255,.07),transparent 28%),#07090b}
+.info-shell{min-height:100svh;display:grid;place-items:center;padding:48px 22px;background:radial-gradient(circle at 15% 10%,rgba(201,243,78,.07),transparent 26%),radial-gradient(circle at 90% 20%,rgba(120,144,255,.07),transparent 28%),#07090b}
 .info-card{width:min(860px,100%);border:1px solid var(--line);background:rgba(12,16,19,.94);border-radius:28px;padding:clamp(26px,5vw,54px);box-shadow:0 30px 120px rgba(0,0,0,.34)}
 .info-card h1{margin:10px 0 18px;font:700 clamp(38px,6vw,66px)/.98 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;letter-spacing:-.055em}.info-card>p{color:#a3abb3;line-height:1.7;max-width:720px}
 .info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:28px 0}.info-grid article,.info-list p{border:1px solid var(--line);background:#0f1418;border-radius:16px;padding:17px}.info-grid b,.info-grid span{display:block}.info-grid span{margin-top:7px;color:#8e969f;font-size:13px;line-height:1.55}
@@ -994,7 +994,7 @@ html[data-reduce-motion="true"] *,html[data-reduce-motion="true"] *:before,html[
 .settings-page-shell{
   min-height:100svh;
   background:
-    radial-gradient(circle at 92% 4%,rgba(145,133,255,.045),transparent 22%),
+    radial-gradient(circle at 92% 4%,rgba(201,243,78,.045),transparent 22%),
     var(--bg);
   display:grid;
   grid-template-columns:270px minmax(0,860px);
@@ -1412,7 +1412,7 @@ html[data-theme="light"] .settings-save-bar{background:rgba(255,255,255,.94)}
 .messages-page{
   padding:12px 16px 16px;
   background:
-    radial-gradient(circle at 72% -15%,rgba(145,133,255,.035),transparent 30%),
+    radial-gradient(circle at 72% -15%,rgba(201,243,78,.035),transparent 30%),
     #06080a;
 }
 .messages-page-topbar{
@@ -1460,7 +1460,7 @@ html[data-theme="light"] .settings-save-bar{background:rgba(255,255,255,.94)}
 }
 .dm-search:focus-within{
   border-color:#3a454c;
-  box-shadow:0 0 0 3px rgba(145,133,255,.035);
+  box-shadow:0 0 0 3px rgba(201,243,78,.035);
 }
 .dm-conversation-list{
   padding:2px 8px 16px;
@@ -1633,7 +1633,7 @@ html[data-theme="light"] .settings-save-bar{background:rgba(255,255,255,.94)}
 .dm-compose-row:focus-within{
   border-color:#404c54;
   background:#11171a;
-  box-shadow:0 0 0 3px rgba(145,133,255,.035);
+  box-shadow:0 0 0 3px rgba(201,243,78,.035);
 }
 .dm-compose-row textarea{
   width:100%;
@@ -1670,7 +1670,7 @@ html[data-theme="light"] .settings-save-bar{background:rgba(255,255,255,.94)}
 .dm-send-button:disabled{opacity:.28;cursor:not-allowed}
 .dm-chat-empty{
   background:
-    radial-gradient(circle at 50% 45%,rgba(145,133,255,.035),transparent 24%),
+    radial-gradient(circle at 50% 45%,rgba(201,243,78,.035),transparent 24%),
     transparent;
 }
 .dm-chat-empty .empty-mark{margin-bottom:2px}
@@ -2423,7 +2423,7 @@ html[data-theme="dark"] button{
   gap:2px;
 }
 .reel-actions-rail button:hover,.reel-actions-rail button.active{
-  background:rgba(145,133,255,.18);
+  background:rgba(201,243,78,.18);
   color:var(--accent);
 }
 .reel-actions-rail b,.reel-metric b{font-size:10px}
@@ -9102,7 +9102,7 @@ html[data-theme="light"] .top-messages:hover{
 .login-card-visual span:nth-child(2){
   color:#e8ff7a;
   background:
-    radial-gradient(circle at 72% 30%,rgba(145,133,255,.34),transparent 34%),
+    radial-gradient(circle at 72% 30%,rgba(201,243,78,.34),transparent 34%),
     radial-gradient(circle at 24% 76%,rgba(84,109,255,.34),transparent 36%),
     #15171d;
 }
