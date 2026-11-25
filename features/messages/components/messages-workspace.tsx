@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import Link from "next/link";
 import BrandLogo from "../../../components/brand-logo";
@@ -160,6 +161,14 @@ function fileSizeLabel(value: number) {
   return (value / (1024 * 1024)).toFixed(value >= 10 * 1024 * 1024 ? 0 : 1) + " MB";
 }
 
+const subscribeToWideMessagesLayout = (notify: () => void) => {
+  const query = window.matchMedia("(min-width: 1181px)");
+  query.addEventListener("change", notify);
+  return () => query.removeEventListener("change", notify);
+};
+const getWideMessagesLayout = () => window.matchMedia("(min-width: 1181px)").matches;
+const getServerMessagesLayout = () => false;
+
 function defaultScheduleValue() {
   const date = new Date(Date.now() + 15 * 60 * 1000);
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
@@ -222,7 +231,13 @@ export default function MessagesWorkspace({
     useState<"primary" | "general" | "requests">(initialTab);
   const [newMessageOpen, setNewMessageOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
-  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsOverride, setDetailsOverride] = useState<boolean | null>(null);
+  const wideMessagesLayout = useSyncExternalStore(
+    subscribeToWideMessagesLayout,
+    getWideMessagesLayout,
+    getServerMessagesLayout,
+  );
+  const detailsOpen = detailsOverride ?? wideMessagesLayout;
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [mobileInboxMenuOpen, setMobileInboxMenuOpen] = useState(false);
@@ -305,13 +320,6 @@ export default function MessagesWorkspace({
     activeRef.current = active;
   }, [active]);
 
-  useEffect(() => {
-    const desktop = window.matchMedia("(min-width: 1181px)");
-    setDetailsOpen(desktop.matches);
-    const syncDetailsLayout = (event: MediaQueryListEvent) => setDetailsOpen(event.matches);
-    desktop.addEventListener("change", syncDetailsLayout);
-    return () => desktop.removeEventListener("change", syncDetailsLayout);
-  }, []);
 
   useEffect(() => {
     const syncNetworkState = () => setOnline(navigator.onLine);
@@ -2372,7 +2380,7 @@ export default function MessagesWorkspace({
               <button
                 type="button"
                 className="icon-button dm-details-toggle"
-                onClick={() => setDetailsOpen((value) => !value)}
+                onClick={() => setDetailsOverride(!detailsOpen)}
                 aria-label={detailsOpen ? "Hide chat details" : "Show chat details"}
                 aria-expanded={detailsOpen}
                 title={detailsOpen ? "Hide chat details" : "Chat details"}
@@ -3189,7 +3197,7 @@ export default function MessagesWorkspace({
           <button
             type="button"
             className="dm-details-scrim"
-            onClick={() => setDetailsOpen(false)}
+            onClick={() => setDetailsOverride(false)}
             aria-label="Close chat details"
           />
           <aside className="dm-details" aria-label="Chat details">
@@ -3197,7 +3205,7 @@ export default function MessagesWorkspace({
               <h2>Chat details</h2>
               <button
                 type="button"
-                onClick={() => setDetailsOpen(false)}
+                onClick={() => setDetailsOverride(false)}
                 aria-label="Close chat details"
               >
                 <Icon name="close" size={18} />
@@ -3225,7 +3233,7 @@ export default function MessagesWorkspace({
               <button
                 type="button"
                 onClick={() => {
-                  setDetailsOpen(false);
+                  setDetailsOverride(false);
                   setSearchOpen(true);
                   window.setTimeout(() => messageSearchRef.current?.focus(), 0);
                 }}
