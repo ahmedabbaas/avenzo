@@ -294,34 +294,53 @@ async function hydratePosts(
     ...new Set(commentRows.map((comment) => comment.user_id)),
   ];
 
-  let commentUsers: Profile[] = [];
-  if (commentUserIds.length) {
-    const result = await supabase
-      .from("profiles")
-      .select(PROFILE_COLUMNS)
-      .in("id", commentUserIds);
+  const pollRows = (pollsResult.data || []) as Array<{
+    id: string;
+    post_id: string;
+    question: string;
+    multiple_choice: boolean;
+    closes_at: string | null;
+  }>;
+  const pollIds = pollRows.map((poll) => poll.id);
+  const collaboratorRows = (collaboratorsResult.data || []) as Array<{
+    post_id: string;
+    user_id: string;
+    status: string;
+  }>;
+  const collaboratorUserIds = [...new Set(collaboratorRows.map((row) => row.user_id))];
 
-    assertNoError(result.error);
-    commentUsers = (result.data || []) as Profile[];
-  }
+  // These lookups depend on the first batch of rows, but not on each other.
+  // Run them together to avoid a multi-round-trip waterfall on every panel.
+  const [commentUsersResult, commentLikesResult, collaboratorProfilesResult, pollData] = await Promise.all([
+    commentUserIds.length
+      ? supabase.from("profiles").select(PROFILE_COLUMNS).in("id", commentUserIds)
+      : Promise.resolve({ data: [], error: null }),
+    commentRows.length
+      ? supabase.from("comment_likes").select("comment_id,user_id").in("comment_id", commentRows.map((comment) => comment.id))
+      : Promise.resolve({ data: [], error: null }),
+    collaboratorUserIds.length
+      ? supabase.from("profiles").select(PROFILE_COLUMNS).in("id", collaboratorUserIds)
+      : Promise.resolve({ data: [], error: null }),
+    pollIds.length
+      ? Promise.all([
+          supabase.from("post_poll_options").select("id,poll_id,label,position").in("poll_id", pollIds).order("position", { ascending: true }),
+          supabase.from("post_poll_votes").select("poll_id,option_id,user_id").in("poll_id", pollIds),
+        ])
+      : Promise.resolve([{ data: [], error: null }, { data: [], error: null }] as const),
+  ]);
+  assertNoError(commentUsersResult.error);
+  assertNoError(commentLikesResult.error);
+  assertNoError(collaboratorProfilesResult.error);
+  const commentUsers = (commentUsersResult.data || []) as Profile[];
 
   const commentUserMap = new Map(
     commentUsers.map((profile) => [profile.id, profile])
   );
 
-  let commentLikes: Array<{ comment_id: string; user_id: string }> = [];
-  if (commentRows.length) {
-    const result = await supabase
-      .from("comment_likes")
-      .select("comment_id,user_id")
-      .in("comment_id", commentRows.map((comment) => comment.id));
-
-    assertNoError(result.error);
-    commentLikes = (result.data || []) as Array<{
-      comment_id: string;
-      user_id: string;
-    }>;
-  }
+  const commentLikes = (commentLikesResult.data || []) as Array<{
+    comment_id: string;
+    user_id: string;
+  }>;
 
   const likes = (likesResult.data || []) as Array<{
     post_id: string;
@@ -339,35 +358,10 @@ async function hydratePosts(
     url: supabase.storage.from("media").getPublicUrl(item.media_path).data.publicUrl,
   })) as PostMediaItem[];
 
-  const collaboratorRows = (collaboratorsResult.data || []) as Array<{
-    post_id: string;
-    user_id: string;
-    status: string;
-  }>;
-  const collaboratorUserIds = [
-    ...new Set(collaboratorRows.map((row) => row.user_id)),
-  ];
-  let collaboratorProfiles: Profile[] = [];
-  if (collaboratorUserIds.length) {
-    const result = await supabase
-      .from("profiles")
-      .select(PROFILE_COLUMNS)
-      .in("id", collaboratorUserIds);
-    assertNoError(result.error);
-    collaboratorProfiles = (result.data || []) as Profile[];
-  }
+  const collaboratorProfiles = (collaboratorProfilesResult.data || []) as Profile[];
   const collaboratorProfileMap = new Map(
     collaboratorProfiles.map((profile) => [profile.id, profile])
   );
-
-  const pollRows = (pollsResult.data || []) as Array<{
-    id: string;
-    post_id: string;
-    question: string;
-    multiple_choice: boolean;
-    closes_at: string | null;
-  }>;
-  const pollIds = pollRows.map((poll) => poll.id);
 
   let pollOptions: Array<{
     id: string;
@@ -381,23 +375,11 @@ async function hydratePosts(
     user_id: string;
   }> = [];
 
-  if (pollIds.length) {
-    const [optionsResult, votesResult] = await Promise.all([
-      supabase
-        .from("post_poll_options")
-        .select("id,poll_id,label,position")
-        .in("poll_id", pollIds)
-        .order("position", { ascending: true }),
-      supabase
-        .from("post_poll_votes")
-        .select("poll_id,option_id,user_id")
-        .in("poll_id", pollIds),
-    ]);
-    assertNoError(optionsResult.error);
-    assertNoError(votesResult.error);
-    pollOptions = (optionsResult.data || []) as typeof pollOptions;
-    pollVotes = (votesResult.data || []) as typeof pollVotes;
-  }
+  const [pollOptionsResult, pollVotesResult] = pollData;
+  assertNoError(pollOptionsResult.error);
+  assertNoError(pollVotesResult.error);
+  pollOptions = (pollOptionsResult.data || []) as typeof pollOptions;
+  pollVotes = (pollVotesResult.data || []) as typeof pollVotes;
 
   const pollByPost = new Map(pollRows.map((poll) => [poll.post_id, poll]));
   const pollOptionsByPoll = groupBy(pollOptions, (option) => option.poll_id);

@@ -31,6 +31,7 @@ import {
   fetchActiveNotes,
   fetchConversationMessages,
   fetchInbox,
+  fetchInboxPair,
   fetchMessageUsers,
   fetchMessagingPrivacy,
   fetchPinnedMessages,
@@ -430,10 +431,7 @@ export default function MessagesWorkspace({
   }, [supabase]);
 
   const loadLists = useCallback(async () => {
-    const [nextInbox, nextRequests] = await Promise.all([
-      fetchInbox(supabase, false),
-      fetchInbox(supabase, true),
-    ]);
+    const { inbox: nextInbox, requests: nextRequests } = await fetchInboxPair(supabase);
     setInbox(nextInbox);
     setRequests(nextRequests);
 
@@ -542,17 +540,18 @@ export default function MessagesWorkspace({
 
     const timer = window.setTimeout(() => {
       setLoadError("");
-      void Promise.all([
-        loadLists(),
-        supabase
-          .from("privacy_settings")
-          .select("online_status")
-          .eq("user_id", currentUser.id)
-          .single(),
-      ])
-        .then(async ([, privacyResult]) => {
+      void supabase
+        .from("privacy_settings")
+        .select("online_status")
+        .eq("user_id", currentUser.id)
+        .single()
+        .then(({ data }) => {
+          if (activeEffect) setOwnOnlineEnabled(data?.online_status ?? true);
+        })
+        .then(undefined, () => undefined);
+      void loadLists()
+        .then(async () => {
           if (!activeEffect) return;
-          setOwnOnlineEnabled(privacyResult.data?.online_status ?? true);
           setLoading(false);
           setLoadError("");
 

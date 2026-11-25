@@ -21,6 +21,27 @@ function assertNoError(error: unknown) {
   if (error) throw error;
 }
 
+async function attachInboxVerification(
+  supabase: SupabaseClient,
+  groups: unknown[][]
+): Promise<InboxConversation[][]> {
+  const normalized = groups.map((group) => (group as InboxConversation[]).map((item) => ({
+    ...item,
+    verified: false,
+    unread_count: Number(item.unread_count || 0),
+  })));
+  const userIds = [...new Set(normalized.flatMap((group) => group.map((item) => item.other_user_id)))];
+  if (!userIds.length) return normalized;
+
+  const { data, error } = await supabase.from("profiles").select("id,verified").in("id", userIds);
+  assertNoError(error);
+  const verified = new Map((data || []).map((profile) => [profile.id, Boolean(profile.verified)]));
+  return normalized.map((group) => group.map((item) => ({
+    ...item,
+    verified: verified.get(item.other_user_id) || false,
+  })));
+}
+
 export async function fetchInbox(
   supabase: SupabaseClient,
   requests = false
@@ -30,33 +51,23 @@ export async function fetchInbox(
   });
   assertNoError(error);
 
-  const rows = ((data || []) as InboxConversation[]).map((item) => ({
-    ...item,
-    verified: false,
-    unread_count: Number(item.unread_count || 0),
-  }));
+  return (await attachInboxVerification(supabase, [data || []]))[0];
+}
 
-  const userIds = [...new Set(rows.map((item) => item.other_user_id))];
-  if (!userIds.length) return rows;
-
-  const verificationResult = await supabase
-    .from("profiles")
-    .select("id,verified")
-    .in("id", userIds);
-
-  assertNoError(verificationResult.error);
-
-  const verifiedMap = new Map(
-    (verificationResult.data || []).map((profile) => [
-      profile.id,
-      Boolean(profile.verified),
-    ])
-  );
-
-  return rows.map((item) => ({
-    ...item,
-    verified: verifiedMap.get(item.other_user_id) || false,
-  }));
+export async function fetchInboxPair(
+  supabase: SupabaseClient
+): Promise<{ inbox: InboxConversation[]; requests: InboxConversation[] }> {
+  const [inboxResult, requestsResult] = await Promise.all([
+    supabase.rpc("get_dm_inbox_v4", { include_requests: false }),
+    supabase.rpc("get_dm_inbox_v4", { include_requests: true }),
+  ]);
+  assertNoError(inboxResult.error);
+  assertNoError(requestsResult.error);
+  const [inbox, requests] = await attachInboxVerification(supabase, [
+    inboxResult.data || [],
+    requestsResult.data || [],
+  ]);
+  return { inbox, requests };
 }
 
 export async function fetchMessageUsers(

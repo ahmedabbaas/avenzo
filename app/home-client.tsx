@@ -18,7 +18,7 @@ import { groupStoriesForTray } from "../features/social/lib/story-tray";
 import { sortFeedPosts, type FeedSortMode } from "../features/social/lib/feed-ranking";
 import { createActionGate } from "../features/social/lib/action-gate";
 import { createClient } from "../lib/supabase/client";
-import { fetchInbox } from "../features/messages/data";
+import { fetchInboxPair } from "../features/messages/data";
 import {
   createPostComment,
   publishContent,
@@ -186,6 +186,12 @@ export default function HomeClient({
   const [loading, setLoading] = useState(true);
   const [exploreLoading, setExploreLoading] = useState(false);
   const loadedScreensRef = useRef(new Set<string>());
+  const peopleLoadRef = useRef<Promise<void> | null>(null);
+  const explorePostsLoadRef = useRef<Promise<void> | null>(null);
+  const reelsLoadRef = useRef<Promise<void> | null>(null);
+  const peopleLoadedRef = useRef(false);
+  const explorePostsLoadedRef = useRef(false);
+  const reelsLoadedRef = useRef(false);
   const followingFeedLoadedRef = useRef(false);
   const screenScrollRef = useRef<Partial<Record<Screen, number>>>({});
   const pendingScreenScrollRef = useRef<number | null>(null);
@@ -321,15 +327,17 @@ export default function HomeClient({
     setStats(await fetchProfileStats(supabase, initialProfile.id));
   }
 
-  async function loadPeople() {
-    const result = await fetchPeopleAndFollowing(
-      supabase,
-      initialProfile.id
-    );
-
-    setPeople(result.people);
-    setFollowed(result.followed);
-    setRequested(result.requested);
+  async function loadPeople(force = true) {
+    if (!force && peopleLoadedRef.current) return;
+    if (peopleLoadRef.current) return peopleLoadRef.current;
+    const request = fetchPeopleAndFollowing(supabase, initialProfile.id).then((result) => {
+      setPeople(result.people);
+      setFollowed(result.followed);
+      setRequested(result.requested);
+      peopleLoadedRef.current = true;
+    }).finally(() => { peopleLoadRef.current = null; });
+    peopleLoadRef.current = request;
+    return request;
   }
 
   async function loadSavedPosts() {
@@ -375,22 +383,34 @@ export default function HomeClient({
     }
   }
 
-  async function loadExplorePosts() {
-    const nextPosts = await fetchExplorePosts(supabase, initialProfile.id);
-    setExplorePosts(nextPosts);
+  async function loadExplorePosts(force = true) {
+    if (!force && explorePostsLoadedRef.current) return;
+    if (explorePostsLoadRef.current) return explorePostsLoadRef.current;
+    const request = fetchExplorePosts(supabase, initialProfile.id).then((nextPosts) => {
+      setExplorePosts(nextPosts);
+      explorePostsLoadedRef.current = true;
+    }).finally(() => { explorePostsLoadRef.current = null; });
+    explorePostsLoadRef.current = request;
+    return request;
   }
 
-  async function loadReels() {
-    const result = await fetchReels(supabase, initialProfile.id);
-    setReels(result.reels);
+  async function loadReels(force = true) {
+    if (!force && reelsLoadedRef.current) return;
+    if (reelsLoadRef.current) return reelsLoadRef.current;
+    const request = fetchReels(supabase, initialProfile.id).then((result) => {
+      setReels(result.reels);
+      reelsLoadedRef.current = true;
+    }).finally(() => { reelsLoadRef.current = null; });
+    reelsLoadRef.current = request;
+    return request;
   }
 
-  async function loadExploreData(showLoading = true) {
+  async function loadExploreData(showLoading = true, force = false) {
     if (showLoading) setExploreLoading(true);
     setExploreError("");
 
     try {
-      await Promise.all([loadPeople(), loadExplorePosts(), loadReels()]);
+      await Promise.all([loadPeople(force), loadExplorePosts(force), loadReels(force)]);
     } catch {
       setExploreError("Could not load Explore right now. Please try again.");
     } finally {
@@ -415,10 +435,7 @@ export default function HomeClient({
   }
 
   const loadUnreadMessages = useCallback(async () => {
-    const [inbox, requests] = await Promise.all([
-      fetchInbox(supabase, false),
-      fetchInbox(supabase, true),
-    ]);
+    const { inbox, requests } = await fetchInboxPair(supabase);
 
     setUnreadMessages(
       [...inbox, ...requests].reduce(
@@ -436,13 +453,14 @@ export default function HomeClient({
 
       if (screen === "home") {
         loadedScreensRef.current.add("home");
-        criticalLoads.push(loadExplorePosts(), loadStories());
+        criticalLoads.push(loadExplorePosts(true));
+        void loadStories().catch(() => undefined);
       } else if (screen === "profile") {
         loadedScreensRef.current.add("profile");
         criticalLoads.push(loadProfileContent(), loadStats());
       } else if (screen === "explore") {
         loadedScreensRef.current.add("explore");
-        criticalLoads.push(loadExploreData());
+        criticalLoads.push(loadExploreData(true, true));
       } else if (screen === "saved") {
         loadedScreensRef.current.add("saved");
         criticalLoads.push(loadSavedPosts());
@@ -467,7 +485,8 @@ export default function HomeClient({
       void Promise.allSettled([
         loadProfile(),
         loadStats(),
-        loadPeople(),
+        loadPeople(false),
+        loadReels(false),
         followingFeedLoadedRef.current ? Promise.resolve() : loadPosts(),
         loadUnreadMessages(),
         loadUnreadActivity(),
@@ -503,11 +522,31 @@ export default function HomeClient({
   }, []);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void refreshEverything();
-    }, 0);
-
-    return () => window.clearTimeout(timer);
+    // The active-screen effect owns the first load. The old bootstrap called
+    // refreshEverything too, duplicating the same expensive first-screen queries.
+    const warmSecondaryData = () => {
+      secondaryIdleRef.current = null;
+      secondaryTimerRef.current = null;
+      if (!mountedRef.current) return;
+      void Promise.allSettled([
+        loadProfile(),
+        loadStats(),
+        loadPeople(false),
+        loadReels(false),
+        followingFeedLoadedRef.current ? Promise.resolve() : loadPosts(),
+        loadUnreadMessages(),
+        loadUnreadActivity(),
+      ]);
+    };
+    if (typeof window.requestIdleCallback === "function") {
+      secondaryIdleRef.current = window.requestIdleCallback(warmSecondaryData, { timeout: 700 });
+    } else {
+      secondaryTimerRef.current = window.setTimeout(warmSecondaryData, 120);
+    }
+    return () => {
+      if (secondaryIdleRef.current !== null) window.cancelIdleCallback?.(secondaryIdleRef.current);
+      if (secondaryTimerRef.current !== null) window.clearTimeout(secondaryTimerRef.current);
+    };
 
     // Initial account bootstrap is intentionally mount-only. Making the entire
     // loader graph reactive would refetch the full social shell after each state update.
@@ -528,11 +567,12 @@ export default function HomeClient({
     if (screen === "home" && !loadedScreensRef.current.has("home")) {
       loadedScreensRef.current.add("home");
       setLoading(true);
-      void Promise.all([loadExplorePosts(), loadStories()]).catch(() => {
+      void loadExplorePosts(false).catch(() => {
         setHomeError("Your feed could not load. Try again.");
       }).finally(() => {
         setLoading(false);
       });
+      void loadStories().catch(() => undefined);
       return;
     }
 
