@@ -2,17 +2,17 @@
    Loaded after legacy compatibility layers so the product has one visual source of truth. */
 @layer avenzo-21 {
   :root {
-    --accent: #c9f34e;
-    --accent-strong: #dfff91;
-    --accent-soft: rgba(201, 243, 78, .12);
-    --avenzo-brand-accent: #c9f34e;
+    --accent: #c6ff45;
+    --accent-strong: #d8ff80;
+    --accent-soft: rgba(198, 255, 69, .12);
+    --avenzo-brand-accent: #c6ff45;
     --avenzo-brand-ink: #11150a;
     --avenzo-motion-fast: 140ms;
     --avenzo-motion-base: 190ms;
     --avenzo-ease: cubic-bezier(.2, .75, .25, 1);
   }
 
-  html, body { accent-color: #c9f34e; }
+  html, body { accent-color: #c6ff45; }
 
   .social-app {
     --av-bg: #080a0b;
@@ -25,11 +25,11 @@
     --av-soft: #c9d0ca;
     --av-muted: #929d96;
     --av-muted-2: #707c75;
-    --av-violet: #c9f34e;
-    --av-violet-2: #dfff91;
+    --av-violet: #c6ff45;
+    --av-violet-2: #d8ff80;
     --av-secondary: #9cac84;
-    --av-secondary-hover: #c9f34e;
-    --av-glow: rgba(201, 243, 78, .10);
+    --av-secondary-hover: #c6ff45;
+    --av-glow: rgba(198, 255, 69, .10);
     --bg: var(--av-bg);
     --panel: var(--av-surface);
     --panel-2: var(--av-surface-2);
@@ -40,12 +40,12 @@
     --text-soft: var(--av-soft);
     --muted: var(--av-muted);
     --muted-2: var(--av-muted-2);
-    --accent: #c9f34e;
-    --accent-strong: #dfff91;
-    --accent-soft: rgba(201, 243, 78, .12);
+    --accent: #c6ff45;
+    --accent-strong: #d8ff80;
+    --accent-soft: rgba(198, 255, 69, .12);
     color: var(--av-text);
     background:
-      radial-gradient(ellipse at 50% -24%, rgba(201,243,78,.045), transparent 38%),
+      radial-gradient(ellipse at 50% -24%, rgba(198,255,69,.035), transparent 38%),
       var(--av-bg);
   }
 
@@ -60,11 +60,11 @@
     --av-soft: #414a40;
     --av-muted: #687365;
     --av-muted-2: #899485;
-    --av-violet: #718d2d;
-    --av-violet-2: #526b1c;
-    --av-secondary: #7c8d68;
-    --av-secondary-hover: #526b1c;
-    --av-glow: rgba(113,141,45,.08);
+    --av-violet: #57751b;
+    --av-violet-2: #3f5910;
+    --av-secondary: #74815f;
+    --av-secondary-hover: #3f5910;
+    --av-glow: rgba(87,117,27,.08);
     --bg: var(--av-bg);
     --panel: var(--av-surface);
     --panel-2: var(--av-surface-2);
@@ -75,16 +75,16 @@
     --text-soft: var(--av-soft);
     --muted: var(--av-muted);
     --muted-2: var(--av-muted-2);
-    --accent: #718d2d;
-    --accent-strong: #526b1c;
-    --accent-soft: rgba(113,141,45,.12);
+    --accent: #57751b;
+    --accent-strong: #3f5910;
+    --accent-soft: rgba(87,117,27,.12);
     background:
-      radial-gradient(ellipse at 50% -24%, rgba(113,141,45,.055), transparent 38%),
+      radial-gradient(ellipse at 50% -24%, rgba(87,117,27,.045), transparent 38%),
       var(--av-bg);
   }
 
   .social-app .eyebrow { color: var(--accent-strong); }
-  .social-app .brand i { background: var(--accent); box-shadow: 0 0 16px rgba(201,243,78,.18); }
+  .social-app .brand i { background: var(--accent); box-shadow: 0 0 14px rgba(198,255,69,.14); }
   .social-app .left-nav button.active {
     color: var(--av-text);
     background: var(--av-surface-2);
@@ -100,8 +100,8 @@
   .social-app .auth-submit {
     background: var(--accent);
     color: #11150a;
-    border: 1px solid rgba(201,243,78,.35);
-    box-shadow: 0 8px 22px rgba(201,243,78,.10);
+    border: 1px solid rgba(198,255,69,.32);
+    box-shadow: 0 8px 22px rgba(198,255,69,.08);
   }
   .social-app .left-nav .create-nav:hover,
   .social-app .btn:not(.secondary):hover:not(:disabled),
@@ -138,6 +138,26 @@
     background: var(--av-surface);
     box-shadow: 0 12px 36px rgba(0,0,0,.10);
   }
+  .social-app .search-wrap:focus-within {
+    border-color: color-mix(in srgb, var(--accent) 58%, transparent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .social-app .post-card,
+  .social-app .person-card,
+  .social-app .side-card,
+  .social-app .reel-card,
+  .social-app .settings-card,
+  .social-app .modal-box {
+    border-radius: 18px;
+    transition: border-color var(--avenzo-motion-base) var(--avenzo-ease),
+      transform var(--avenzo-motion-base) var(--avenzo-ease),
+      box-shadow var(--avenzo-motion-base) var(--avenzo-ease);
+  }
+  .social-app .stories-row { scroll-behavior: smooth; }
+  .social-app .story-avatar { transition: transform var(--avenzo-motion-base) var(--avenzo-ease); }
+  .social-app .story-avatar:hover { transform: translateY(-2px); }
+  .social-app .post-actions button { transition: color var(--avenzo-motion-fast) var(--avenzo-ease), transform var(--avenzo-motion-fast) var(--avenzo-ease); }
+  .social-app .post-actions button:active { transform: scale(.94); }
   .social-app :is(button, a, input, textarea, select):focus-visible,
   .auth-shell :is(button, a, input, textarea, select):focus-visible {
     outline: 2px solid var(--accent);
@@ -147,15 +167,15 @@
   .social-app button { touch-action: manipulation; }
 
   .auth-shell {
-    --accent: #c9f34e;
-    --accent-strong: #dfff91;
+    --accent: #c6ff45;
+    --accent-strong: #d8ff80;
   }
   .auth-shell .brand-mark {
     background: var(--accent);
     color: #11150a;
-    box-shadow: 0 10px 30px rgba(201,243,78,.12);
+    box-shadow: 0 10px 30px rgba(198,255,69,.10);
   }
-  .auth-shell .auth-links a { color: #c9f34e; }
+  .auth-shell .auth-links a { color: #c6ff45; }
 
   @media (max-width: 760px) {
     .social-app .left-nav button,

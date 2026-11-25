@@ -3,16 +3,16 @@
 import { useEffect, useState } from "react";
 
 export const FINISHES = [
-  { id: "chrome", label: "Chrome", color: "#9da6b1" },
-  { id: "citron", label: "Citron", color: "#c5f74f" },
+  { id: "chrome", label: "Chrome", color: "#c6ff45" },
+  { id: "citron", label: "Citron", color: "#c6ff45" },
   { id: "ocean", label: "Ocean", color: "#7ab8e6" },
   { id: "copper", label: "Copper", color: "#d6a17a" },
 ] as const;
 
 export default function AppearanceFinish() {
-  const [selected, setSelected] = useState("chrome");
+  const [selected, setSelected] = useState("citron");
   useEffect(() => {
-    const timer = window.setTimeout(() => setSelected(document.documentElement.dataset.finish || "chrome"), 0);
+    const timer = window.setTimeout(() => setSelected(document.documentElement.dataset.finish || "citron"), 0);
     return () => window.clearTimeout(timer);
   }, []);
   function select(id: string) {
@@ -27,5 +27,5 @@ export default function AppearanceFinish() {
       <i style={{ background: item.color }} aria-hidden="true" />
       <span>{item.label}</span>
     </button>)}
-  </div><button type="button" className="appearance-reset" disabled={selected === "chrome"} onClick={() => select("chrome")}>Reset accent to Chrome</button></div>;
+  </div><button type="button" className="appearance-reset" disabled={selected === "citron"} onClick={() => select("citron")}>Reset accent to AVENZO lime</button></div>;
 }
