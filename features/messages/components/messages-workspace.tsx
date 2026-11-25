@@ -1697,8 +1697,12 @@ export default function MessagesWorkspace({
         );
 
   const unreadConversationCount = baseConversations.filter(item => item.unread_count > 0).length;
-  const primaryCount = inbox.filter(item => (item.inbox_folder || "primary") === "primary").length;
-  const generalCount = inbox.filter(item => item.inbox_folder === "general").length;
+  const primaryUnreadCount = inbox
+    .filter((item) => (item.inbox_folder || "primary") === "primary")
+    .reduce((total, item) => total + Math.max(0, Number(item.unread_count) || 0), 0);
+  const generalUnreadCount = inbox
+    .filter((item) => item.inbox_folder === "general")
+    .reduce((total, item) => total + Math.max(0, Number(item.unread_count) || 0), 0);
 
   const shown = baseConversations.filter((item) =>
     (!unreadOnly || item.unread_count > 0) &&
@@ -1965,7 +1969,7 @@ export default function MessagesWorkspace({
               setActive(null);
             }}
           >
-            Primary {primaryCount > 0 && <span>{primaryCount}</span>}
+            Primary {primaryUnreadCount > 0 && <span aria-label={primaryUnreadCount + " unread messages"}>{primaryUnreadCount > 99 ? "99+" : primaryUnreadCount}</span>}
           </button>
           <button
             className={tab === "general" ? "active" : ""}
@@ -1975,7 +1979,7 @@ export default function MessagesWorkspace({
               setActive(null);
             }}
           >
-            General {generalCount > 0 && <span>{generalCount}</span>}
+            General {generalUnreadCount > 0 && <span aria-label={generalUnreadCount + " unread messages"}>{generalUnreadCount > 99 ? "99+" : generalUnreadCount}</span>}
           </button>
           <button
             className={tab === "requests" ? "active" : ""}
