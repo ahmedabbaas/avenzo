@@ -154,6 +154,12 @@ function recordingTime(value: number) {
   return minutes + ":" + String(seconds).padStart(2, "0");
 }
 
+function fileSizeLabel(value: number) {
+  if (!Number.isFinite(value) || value <= 0) return "File";
+  if (value < 1024 * 1024) return Math.max(1, Math.round(value / 1024)) + " KB";
+  return (value / (1024 * 1024)).toFixed(value >= 10 * 1024 * 1024 ? 0 : 1) + " MB";
+}
+
 function defaultScheduleValue() {
   const date = new Date(Date.now() + 15 * 60 * 1000);
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
@@ -216,6 +222,7 @@ export default function MessagesWorkspace({
     useState<"primary" | "general" | "requests">(initialTab);
   const [newMessageOpen, setNewMessageOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [mobileInboxMenuOpen, setMobileInboxMenuOpen] = useState(false);
@@ -270,10 +277,6 @@ export default function MessagesWorkspace({
     setActive(null);
   }, [focusedConversation, router]);
 
-  const openConversation = useCallback((conversation: InboxConversation) => {
-    router.push("/messages/" + encodeURIComponent(conversation.username));
-  }, [router]);
-
   const scrollToLatest = useCallback((behavior: ScrollBehavior = "auto") => {
     const node = bodyRef.current;
     if (!node) return;
@@ -301,6 +304,14 @@ export default function MessagesWorkspace({
   useEffect(() => {
     activeRef.current = active;
   }, [active]);
+
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 1181px)");
+    setDetailsOpen(desktop.matches);
+    const syncDetailsLayout = (event: MediaQueryListEvent) => setDetailsOpen(event.matches);
+    desktop.addEventListener("change", syncDetailsLayout);
+    return () => desktop.removeEventListener("change", syncDetailsLayout);
+  }, []);
 
   useEffect(() => {
     const syncNetworkState = () => setOnline(navigator.onLine);
@@ -513,6 +524,10 @@ export default function MessagesWorkspace({
     },
     [supabase, loadLists, router, scrollToLatest, currentUser.id]
   );
+
+  const openConversation = useCallback((conversation: InboxConversation) => {
+    router.push("/messages/" + encodeURIComponent(conversation.username));
+  }, [router]);
 
   useEffect(() => {
     let activeEffect = true;
@@ -1702,9 +1717,65 @@ export default function MessagesWorkspace({
 
   let previousDate = "";
   const activeProfile = active ? profileFromInbox(active) : null;
+  const sharedMedia = messages.flatMap((message) => {
+    if (message.deleted_for_everyone_at) return [];
+    const assets = message.attachments
+      .filter((item) => item.kind === "image" || item.kind === "video")
+      .map((item) => ({
+        key: item.id,
+        kind: item.kind as "image" | "video",
+        label: item.file_name || (item.kind === "video" ? "Video" : "Photo"),
+        src: supabase.storage.from("media").getPublicUrl(item.storage_path).data.publicUrl,
+      }));
+    if (message.shared_post?.media_path) {
+      assets.push({
+        key: "post-" + message.id,
+        kind: message.shared_post.media_type === "video" ? "video" : "image",
+        label: "Shared post",
+        src: supabase.storage.from("media").getPublicUrl(message.shared_post.media_path).data.publicUrl,
+      });
+    }
+    if (message.shared_reel?.media_path) {
+      assets.push({
+        key: "reel-" + message.id,
+        kind: "video",
+        label: "Shared reel",
+        src: supabase.storage.from("media").getPublicUrl(message.shared_reel.cover_path || message.shared_reel.media_path).data.publicUrl,
+      });
+    }
+    return assets;
+  }).slice(-18).reverse();
+  const sharedFiles = messages.flatMap((message) =>
+    message.deleted_for_everyone_at
+      ? []
+      : message.attachments
+          .filter((item) => item.kind === "file")
+          .map((item) => ({
+            ...item,
+            url: supabase.storage.from("media").getPublicUrl(item.storage_path).data.publicUrl,
+          }))
+  ).slice(-12).reverse();
+  const sharedLinks = [...new Set(messages.flatMap((message) =>
+    message.deleted_for_everyone_at
+      ? []
+      : (message.body.match(/https?:\/\/[^\s<>]+/g) || []).map((value) =>
+          value.replace(/[),.!?]+$/, "")
+        )
+  ))].slice(-12).reverse();
 
   return (
-    <div className={"dm-workspace rich-messages-workspace" + (focusedConversation ? " dm-focused-conversation" : "")}>
+    <div className={"dm-workspace rich-messages-workspace" + (focusedConversation ? " dm-focused-conversation" : "") + (active && detailsOpen ? " dm-with-details" : "")}>
+      <nav className="dm-app-rail" aria-label="AVENZO navigation">
+        <Link className="dm-app-rail-brand" href="/home" aria-label="AVENZO home">
+          <BrandLogo size={30} />
+        </Link>
+        <Link href="/home" aria-label="Home" title="Home"><Icon name="home" size={20} /></Link>
+        <Link href="/home?screen=explore" aria-label="Explore" title="Explore"><Icon name="explore" size={20} /></Link>
+        <Link href="/messages" className="active" aria-current="page" aria-label="Messages" title="Messages"><Icon name="messages" size={20} /></Link>
+        <Link href="/home?screen=activity" aria-label="Activity" title="Activity"><Icon name="activity" size={20} /></Link>
+        <Link href="/home?screen=profile" aria-label="Profile" title="Profile"><Icon name="profile" size={20} /></Link>
+        <Link className="dm-app-rail-settings" href="/settings" aria-label="Settings" title="Settings"><Icon name="settings" size={20} /></Link>
+      </nav>
       <section className={"dm-sidebar " + (active ? "dm-mobile-hidden" : "")}>
         <div className="dm-mobile-inbox-head" style={{ display: "none" }}>
           <div className="dm-mobile-inbox-copy">
@@ -2297,6 +2368,16 @@ export default function MessagesWorkspace({
                 aria-label="Conversation options"
               >
                 <Icon name="more" size={20} />
+              </button>
+              <button
+                type="button"
+                className="icon-button dm-details-toggle"
+                onClick={() => setDetailsOpen((value) => !value)}
+                aria-label={detailsOpen ? "Hide chat details" : "Show chat details"}
+                aria-expanded={detailsOpen}
+                title={detailsOpen ? "Hide chat details" : "Chat details"}
+              >
+                <Icon name="info" size={19} />
               </button>
 
               {moreOpen && (
@@ -3102,6 +3183,122 @@ export default function MessagesWorkspace({
           </>
         )}
       </section>
+
+      {active && activeProfile && detailsOpen && (
+        <>
+          <button
+            type="button"
+            className="dm-details-scrim"
+            onClick={() => setDetailsOpen(false)}
+            aria-label="Close chat details"
+          />
+          <aside className="dm-details" aria-label="Chat details">
+            <header className="dm-details-head">
+              <h2>Chat details</h2>
+              <button
+                type="button"
+                onClick={() => setDetailsOpen(false)}
+                aria-label="Close chat details"
+              >
+                <Icon name="close" size={18} />
+              </button>
+            </header>
+
+            <div className="dm-details-profile">
+              <Link href={"/u/" + encodeURIComponent(active.username)} aria-label={"View @" + active.username + " profile"}>
+                <AvatarImage
+                  src={avatarFor(activeProfile)}
+                  alt={activeProfile.display_name}
+                  size={120}
+                />
+                {otherAllowsOnline && otherOnline && <i aria-label="Online" />}
+              </Link>
+              <b>{active.display_name || active.username}</b>
+              <span>@{active.username}</span>
+              <small>{typing ? "Typing…" : otherAllowsOnline && otherOnline ? "Online now" : "AVENZO member"}</small>
+              <Link className="dm-details-profile-link" href={"/u/" + encodeURIComponent(active.username)}>
+                View profile
+              </Link>
+            </div>
+
+            <div className="dm-details-actions" aria-label="Conversation actions">
+              <button
+                type="button"
+                onClick={() => {
+                  setDetailsOpen(false);
+                  setSearchOpen(true);
+                  window.setTimeout(() => messageSearchRef.current?.focus(), 0);
+                }}
+                aria-label="Search messages"
+              >
+                <Icon name="search" size={18} /><span>Search</span>
+              </button>
+              <button type="button" onClick={startAudioCall} aria-label="Start audio call">
+                <Icon name="phone" size={18} /><span>Call</span>
+              </button>
+              <button type="button" onClick={startVideoCall} aria-label="Start video call">
+                <Icon name="video" size={18} /><span>Video</span>
+              </button>
+              <button
+                type="button"
+                className={active.muted ? "muted" : ""}
+                onClick={() => void conversationAction("mute")}
+                aria-label={active.muted ? "Unmute conversation" : "Mute conversation"}
+              >
+                <Icon name="mute" size={18} /><span>{active.muted ? "Unmute" : "Mute"}</span>
+              </button>
+            </div>
+
+            <div className="dm-details-sections">
+              <section className="dm-details-section">
+                <h3><span>Shared media</span><small>{sharedMedia.length}</small></h3>
+                {sharedMedia.length ? (
+                  <div className="dm-details-media-grid">
+                    {sharedMedia.slice(0, 9).map((item) => (
+                      <button type="button" key={item.key} onClick={() => setViewer(item.src)} aria-label={"Open " + item.label}>
+                        {item.kind === "video" ? (
+                          <video src={item.src} muted playsInline preload="metadata" />
+                        ) : (
+                          <UserMediaImage src={item.src} alt={item.label} loading="lazy" />
+                        )}
+                        {item.kind === "video" && <i><Icon name="play" size={14} /></i>}
+                      </button>
+                    ))}
+                  </div>
+                ) : <p className="dm-details-empty">Photos and videos shared in this chat will appear here.</p>}
+              </section>
+
+              <section className="dm-details-section">
+                <h3><span>Shared files</span><small>{sharedFiles.length}</small></h3>
+                {sharedFiles.length ? (
+                  <div className="dm-details-file-list">
+                    {sharedFiles.slice(0, 6).map((item) => (
+                      <a href={item.url} target="_blank" rel="noreferrer" key={item.id}>
+                        <i><Icon name="paperclip" size={16} /></i>
+                        <span><b>{item.file_name || "Shared file"}</b><small>{fileSizeLabel(item.size_bytes)}</small></span>
+                      </a>
+                    ))}
+                  </div>
+                ) : <p className="dm-details-empty">Files shared in this chat will appear here.</p>}
+              </section>
+
+              <section className="dm-details-section">
+                <h3><span>Shared links</span><small>{sharedLinks.length}</small></h3>
+                {sharedLinks.length ? (
+                  <div className="dm-details-link-list">
+                    {sharedLinks.slice(0, 6).map((url) => (
+                      <a href={url} target="_blank" rel="noreferrer" key={url}>
+                        <i><Icon name="link" size={16} /></i>
+                        <span><b>{new URL(url).hostname}</b><small>{url}</small></span>
+                      </a>
+                    ))}
+                  </div>
+                ) : <p className="dm-details-empty">Links shared in this chat will appear here.</p>}
+              </section>
+            </div>
+          </aside>
+        </>
+      )}
 
       {scheduleOpen && active && (
         <div
