@@ -174,7 +174,7 @@ export default function ProfileView({
                   : post.media_type === "video" ? <><video src={media(post.media_path)} preload="none" muted playsInline /><i className="profile-media-kind"><Icon name="play" size={16} /></i></>
                   : <UserMediaImage sizes="(max-width: 900px) 33vw, 280px" src={media(post.media_path)} alt={post.caption || "AVENZO post"} width={post.media_width} height={post.media_height} />}
                 {(post.mediaItems?.length || 0) > 1 && <i className="profile-media-kind" aria-label="Multiple images"><Icon name="grid" size={16} /></i>}
-                <span className="profile-grid-engagement" aria-hidden="true"><span><Icon name="heart" size={16} />{post.likeCount}</span><span><Icon name="comment" size={16} />{post.commentCount}</span></span>
+                <span className="profile-grid-engagement" aria-hidden="true"><span><Icon name="heartModern" size={16} />{post.likeCount}</span><span><Icon name="commentModern" size={16} />{post.commentCount}</span></span>
               </Link>)}
             </div>
           ) : (

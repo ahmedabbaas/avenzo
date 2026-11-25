@@ -107,15 +107,15 @@ export default function ReelCard({
             onClick={onLike}
             aria-label={reel.liked ? "Unlike reel" : "Like reel"}
           >
-            <Icon name="heart" size={20} />
+            <Icon name="heartModern" size={20} />
             <span>{reel.likeCount}</span>
           </button>
           <span className="post-stat">
-            <Icon name="comment" size={20} />
+            <Icon name="commentModern" size={20} />
             <span>{reel.commentCount}</span>
           </span>
           <button onClick={onShare} aria-label="Share reel">
-            <Icon name="send" size={20} />
+            <Icon name="shareModern" size={20} />
             <span>{reel.shareCount}</span>
           </button>
           {onRepost && (
@@ -125,7 +125,7 @@ export default function ReelCard({
               aria-label={reel.reposted ? "Undo repost" : "Repost reel"}
               title={reel.reposted ? "Undo repost" : "Repost"}
             >
-              <Icon name="repost" size={20} />
+              <Icon name="repostModern" size={20} />
             </button>
           )}
           <button
@@ -133,7 +133,7 @@ export default function ReelCard({
             onClick={onSave}
             aria-label={saved ? "Remove saved reel" : "Save reel"}
           >
-            <Icon name="bookmark" size={20} />
+            <Icon name="bookmarkModern" size={20} />
             <span>{reel.saveCount}</span>
           </button>
         </div>

@@ -79,14 +79,14 @@ export default function Icon({ name, size = 19 }: { name: IconName; size?: numbe
   };
 
   const paths: Record<IconName, ReactNode> = {
-    homeModern: <><path d="m3 10.5 9-7 9 7"/><path d="M5.5 9.5V20h13V9.5M9.5 20v-6.5h5V20"/></>,
-    compassModern: <><circle cx="12" cy="12" r="9"/><path d="m15.8 8.2-2.2 5.4-5.4 2.2 2.2-5.4 5.4-2.2Z"/><circle cx="12" cy="12" r=".7"/></>,
-    messagesModern: <><path d="M20.5 11.8a8.2 8.2 0 0 1-8.4 8.2 9 9 0 0 1-4-.9l-4.6 1.3 1.5-4.1A8 8 0 0 1 3.5 12a8.5 8.5 0 0 1 8.6-8.5 8.4 8.4 0 0 1 8.4 8.3Z"/><path d="M8.3 10h7.4M8.3 13.7h5.2"/></>,
-    settingsModern: <><circle cx="12" cy="12" r="3.2"/><path d="m19.3 13.8 1 .8-1.8 3.1-1.2-.5a7.9 7.9 0 0 1-1.6.9l-.2 1.3h-3.6l-.3-1.3a7.6 7.6 0 0 1-1.6-.9l-1.2.5L7 14.6l1-.8a7.5 7.5 0 0 1 0-1.9l-1-.8 1.8-3.1 1.2.5a7.9 7.9 0 0 1 1.6-.9l.3-1.3h3.6l.2 1.3a7.6 7.6 0 0 1 1.6.9l1.2-.5 1.8 3.1-1 .8a7.5 7.5 0 0 1 0 1.9Z"/></>,
-    userModern: <><circle cx="12" cy="8" r="3.7"/><path d="M4.5 20c.8-3.4 3.3-5.2 7.5-5.2s6.7 1.8 7.5 5.2"/></>,
-    gridModern: <><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></>,
-    filmModern: <><rect x="4" y="3.5" width="16" height="17" rx="3"/><path d="M8 3.8v3.4m8-3.4v3.4M4.3 8.5h15.4M4.3 15.5h15.4M8 17.2v3m8-3v3"/><path d="m10 10.5 4.5 2.4-4.5 2.3v-4.7Z"/></>,
-    cameraModern: <><rect x="3.5" y="6.5" width="17" height="14" rx="3"/><path d="m8 6.5 1.5-3h5l1.5 3"/><circle cx="12" cy="13.5" r="3.5"/></>,
+    homeModern: <><path d="m2.8 10.8 9.2-7.5 9.2 7.5v9.3a1 1 0 0 1-1 1h-5.1v-6.6h-6v6.6H3.8a1 1 0 0 1-1-1v-9.3Z" fill="currentColor" stroke="none"/><path d="M9.2 21v-6.5h5.6V21" stroke="var(--premium-bg)" stroke-width="1.8"/><circle cx="19" cy="5" r="2" fill="var(--premium-finish)" stroke="none"/></>,
+    compassModern: <><circle cx="12" cy="12" r="9.2" stroke-width="2.2"/><path d="m16.9 7.1-3.3 7.5-7.5 3.3 3.3-7.5 7.5-3.3Z" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.7" fill="var(--premium-finish)" stroke="none"/></>,
+    messagesModern: <><path d="M20.8 11.6a8.6 8.6 0 0 1-9 8.5 9.5 9.5 0 0 1-4.2-1l-4.2 1.4 1.4-4A8.1 8.1 0 0 1 3 11.8a8.9 8.9 0 0 1 9-8.7c5 0 8.8 3.6 8.8 8.5Z" fill="currentColor" stroke="none"/><path d="M8 10.3h8m-8 3.4h5" stroke="var(--premium-bg)" stroke-width="1.7"/><circle cx="19" cy="5" r="2" fill="var(--premium-finish)" stroke="none"/></>,
+    settingsModern: <><path d="m10 2.8 4-.1.7 2.2a7.8 7.8 0 0 1 1.8.8l2.1-.9 2 3.4-1.6 1.6c.2.7.2 1.5 0 2.2l1.6 1.6-2 3.4-2.1-.9a7.8 7.8 0 0 1-1.8.8l-.7 2.2-4 .1-.7-2.2a7.8 7.8 0 0 1-1.8-.8l-2.1.9-2-3.4L5 12a7 7 0 0 1 0-2.2L3.4 8.2l2-3.4 2.1.9a7.8 7.8 0 0 1 1.8-.8L10 2.8Z" fill="currentColor" stroke="none"/><circle cx="12" cy="10.9" r="3.1" fill="var(--premium-bg)" stroke="none"/><circle cx="12" cy="10.9" r="1.3" fill="var(--premium-finish)" stroke="none"/></>,
+    userModern: <><circle cx="12" cy="7.5" r="4.1" fill="currentColor" stroke="none"/><path d="M3.6 20.5c.6-4.2 3.4-6.4 8.4-6.4s7.8 2.2 8.4 6.4H3.6Z" fill="currentColor" stroke="none"/><path d="M8.7 20.5v-2.1a3.3 3.3 0 0 1 6.6 0v2.1" stroke="var(--premium-bg)" stroke-width="1.7"/></>,
+    gridModern: <><rect x="3" y="3" width="8" height="8" rx="2.5" fill="currentColor" stroke="none"/><rect x="13" y="3" width="8" height="8" rx="2.5" fill="var(--premium-finish)" stroke="none"/><rect x="3" y="13" width="8" height="8" rx="2.5" fill="var(--premium-finish)" stroke="none"/><rect x="13" y="13" width="8" height="8" rx="2.5" fill="currentColor" stroke="none"/></>,
+    filmModern: <><rect x="4" y="2.5" width="16" height="19" rx="4" fill="currentColor" stroke="none"/><path d="M8 3v3m8-3v3M4.5 8h15M4.5 16h15M8 18v3m8-3v3" stroke="var(--premium-bg)" stroke-width="1.5"/><path d="m10 10 5 2.5-5 2.5V10Z" fill="var(--premium-finish)" stroke="none"/></>,
+    cameraModern: <><path d="M3 7.4a3 3 0 0 1 3-3h2.5l1.4-2h4.2l1.4 2H18a3 3 0 0 1 3 3v10.8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7.4Z" fill="currentColor" stroke="none"/><circle cx="12" cy="12.8" r="4.6" fill="var(--premium-bg)" stroke="none"/><circle cx="12" cy="12.8" r="2.6" fill="var(--premium-finish)" stroke="none"/><circle cx="17.3" cy="7.7" r="1" fill="var(--premium-bg)" stroke="none"/></>,
     refresh: <><path d="M20 7v5h-5M4 17v-5h5" /><path d="M6.1 6.1A8 8 0 0 1 20 12M4 12a8 8 0 0 0 13.9 5.9" /></>,
     sun: <><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.4 1.4m11.2 11.2L19 19M5 19l1.4-1.4M17.6 6.4L19 5"/></>,
     moon: <path d="M20 15.5A8.5 8.5 0 0 1 8.5 4a8.5 8.5 0 1 0 11.5 11.5Z"/>,
@@ -289,29 +289,16 @@ export default function Icon({ name, size = 19 }: { name: IconName; size?: numbe
         <path d="M9.3 20a3.2 3.2 0 0 0 5.4 0" />
       </>
     ),
-    heartModern: (
-      <path d="M20.8 8.7c0 5.2-8.8 10.4-8.8 10.4S3.2 13.9 3.2 8.7A4.7 4.7 0 0 1 12 6.3a4.7 4.7 0 0 1 8.8 2.4Z" />
-    ),
-    commentModern: (
-      <path d="M20.2 11.4a8.2 8.2 0 0 1-8.4 8.2c-1.5 0-2.9-.4-4.1-1.1L3.8 20l1.3-3.7A8 8 0 0 1 3.8 12a8.2 8.2 0 0 1 8.2-8.2 8.2 8.2 0 0 1 8.2 7.6Z" />
-    ),
-    shareModern: (
-      <>
-        <path d="M3.8 11.2 20.4 4.3l-6.8 16.4-2.1-7.2-7.7-2.3Z" />
-        <path d="m11.5 13.5 8.9-9.2" />
-      </>
-    ),
+    heartModern: <path d="M12 21S2.7 15.2 2.7 8.7A5.1 5.1 0 0 1 12 6.1a5.1 5.1 0 0 1 9.3 2.6C21.3 15.2 12 21 12 21Z" fill="currentColor" stroke="none" />,
+    commentModern: <><path d="M21 11.5a8.8 8.8 0 0 1-9.1 8.4 9.6 9.6 0 0 1-4.1-.9L3 20.4l1.4-4.1a8.1 8.1 0 0 1-1.5-4.8A8.9 8.9 0 0 1 12 2.8c5.1 0 9 3.7 9 8.7Z" fill="currentColor" stroke="none"/><circle cx="8.3" cy="11.4" r=".9" fill="var(--premium-bg)" stroke="none"/><circle cx="12" cy="11.4" r=".9" fill="var(--premium-bg)" stroke="none"/><circle cx="15.7" cy="11.4" r=".9" fill="var(--premium-bg)" stroke="none"/></>,
+    shareModern: <><path d="m7.2 12.2 9.2-5.4m-9.2 5.1 9.1 5.4" stroke-width="2.4"/><circle cx="5.5" cy="12" r="3" fill="currentColor" stroke="none"/><circle cx="18.5" cy="5" r="3" fill="var(--premium-finish)" stroke="none"/><circle cx="18.5" cy="19" r="3" fill="currentColor" stroke="none"/></>,
     repostModern: (
       <>
-        <path d="M6.2 8h9.9l-2.2-2.2" />
-        <path d="m16.1 8-2.2 2.2" />
-        <path d="M17.8 16H7.9l2.2 2.2" />
-        <path d="m7.9 16 2.2-2.2" />
+        <path d="M5 8h13l-3.1-3.1M19 16H6l3.1 3.1" stroke-width="2.4" />
+        <path d="m18 6 2 2-2 2M6 14l-2 2 2 2" stroke-width="2.4" />
       </>
     ),
-    bookmarkModern: (
-      <path d="M6.8 4.2h10.4v15.6L12 16.6l-5.2 3.2V4.2Z" />
-    ),
+    bookmarkModern: <path d="M6 3.5h12a1.5 1.5 0 0 1 1.5 1.5v16L12 17l-7.5 4V5A1.5 1.5 0 0 1 6 3.5Z" fill="currentColor" stroke="none" />,
     pin: (
       <>
         <path d="m14.8 4.2 5 5-3.2 1.1-3 3 .5 3.2-1.3 1.3-6.6-6.6 1.3-1.3 3.2.5 3-3 1.1-3.2Z" />

@@ -832,7 +832,7 @@ export default function ReelsPanel({
                       aria-label={isSaved ? "Remove saved reel" : "Save reel"}
                     >
                       <span className="reel-action-icon-desktop">
-                        <Icon name="bookmark" size={24} />
+                    <Icon name="bookmarkModern" size={24} />
                       </span>
                       <span className="reel-action-icon-mobile" style={{ display: "none" }}>
                         <Icon name="bookmarkModern" size={25} />

@@ -334,7 +334,7 @@ export default function CreateContentModal({
             onDragLeave={() => setDragging(false)}
             onDrop={drop}
           >
-            <Icon name="camera" size={30} />
+            <Icon name="cameraModern" size={30} />
             <b>{postPreviews.length ? postPreviews.length + " image(s) selected" : "Add photos"}</b>
             <span>Up to 10 images · JPEG, PNG, WebP or GIF · 25 MB each</span>
 
@@ -919,7 +919,7 @@ export default function CreateContentModal({
           role="button"
           tabIndex={0}
         >
-          <Icon name={mode === "reel" ? "reels" : "camera"} size={26} />
+          <Icon name={mode === "reel" ? "filmModern" : "cameraModern"} size={26} />
           <b>
             {file
               ? file.name
@@ -1174,7 +1174,7 @@ export default function CreateContentModal({
               }}
               disabled={posting || editing}
             >
-              <Icon name={nextMode === "post" ? "cameraModern" : nextMode === "reel" ? "filmModern" : "activity"} size={17} />
+              <Icon name={nextMode === "post" ? "cameraModern" : nextMode === "reel" ? "filmModern" : "bellModern"} size={17} />
               {nextMode === "post" ? "Post" : nextMode === "reel" ? "Reel" : "Story"}
             </button>
           ))}
