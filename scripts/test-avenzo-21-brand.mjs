@@ -19,7 +19,7 @@ assert.doesNotMatch(compatibilityCss, /#[0-9a-f]{3,8}\s*;[^\n]*(?:violet|purple)
 const designCss = await readFile("app/avenzo-design-system.css", "utf8");
 const designRoot = postcss.parse(designCss);
 assert.match(designCss, /AVENZO PREMIUM EDITION — INTERACTION FINISH/);
-assert.match(designCss, /\.avenzo-premium-interactive/);
+assert.match(designCss, /--avenzo-premium-duration:/);
 assert.match(designCss, /prefers-reduced-motion:\s*reduce/);
 assert.match(designCss, /:active/);
 console.log("AVENZO Premium Edition checks passed: Obsidian Chrome compatibility, light theme, reduced motion, accessible touch targets, and shared interaction states.");
