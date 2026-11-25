@@ -4090,6 +4090,181 @@ html.avenzo-android-app .avenzo-next .screen-home .story-label-mobile { display:
 .avenzo-next .post-video-error { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; font-size:13px; color:var(--premium-text); background:var(--premium-secondary); }
 .avenzo-next .post-video-error button { min-height:44px; padding:8px 12px; border:1px solid var(--premium-muted); border-radius:8px; background:transparent; color:inherit; cursor:pointer; flex:none; }
 
+/* AVENZO Messages refresh: one viewport, a quiet inbox, and a steady chat composer. */
+.avenzo-next .messages-page {
+  --dm-page:var(--premium-bg);
+  --dm-surface:var(--premium-surface);
+  --dm-soft:var(--premium-secondary);
+  --dm-line:var(--premium-line);
+  --dm-text:var(--premium-text);
+  --dm-muted:var(--premium-muted);
+  --dm-active:var(--premium-finish-soft);
+  --dm-out-start:var(--premium-primary);
+  --dm-out-end:var(--premium-primary);
+  display:flex!important;
+  flex-direction:column!important;
+  width:100%!important;
+  max-width:none!important;
+  height:100dvh!important;
+  min-height:100dvh!important;
+  overflow:hidden!important;
+  margin:0!important;
+  padding:0!important;
+  background:var(--premium-bg)!important;
+  color:var(--premium-text)!important;
+}
+.avenzo-next .messages-page-topbar {
+  display:flex!important;
+  flex:0 0 64px!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  width:min(100%,1500px)!important;
+  min-height:64px!important;
+  margin:0 auto!important;
+  padding:0 28px!important;
+  border-bottom:1px solid var(--premium-line)!important;
+  background:var(--premium-bg)!important;
+}
+.avenzo-next .messages-brand { gap:10px!important; color:var(--premium-text)!important; font-size:15px!important; letter-spacing:.08em!important; }
+.avenzo-next .messages-brand .avenzo-brand-logo { width:30px!important; height:30px!important; }
+.avenzo-next .messages-page-actions { display:flex!important; align-items:center!important; gap:8px!important; }
+.avenzo-next .messages-page-actions .btn { min-height:40px!important; padding:8px 13px!important; }
+.avenzo-next .rich-messages-workspace {
+  flex:1 1 auto!important;
+  width:min(100%,1500px)!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  margin:0 auto!important;
+  border:0!important;
+  border-inline:1px solid var(--premium-line)!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  background:var(--premium-bg)!important;
+  grid-template-columns:minmax(300px,350px) minmax(0,1fr)!important;
+}
+.avenzo-next .rich-messages-workspace .dm-sidebar {
+  min-height:0!important;
+  overflow:hidden!important;
+  border-right:1px solid var(--premium-line)!important;
+  background:var(--premium-bg)!important;
+}
+.avenzo-next .rich-messages-workspace .dm-sidebar-head {
+  min-height:78px!important;
+  padding:18px 18px 12px!important;
+  background:var(--premium-bg)!important;
+}
+.avenzo-next .rich-messages-workspace .dm-sidebar-head h1 { font-size:25px!important; letter-spacing:-.045em!important; }
+.avenzo-next .rich-messages-workspace .dm-account-label { margin-top:3px!important; font-size:12px!important; }
+.avenzo-next .rich-messages-workspace .dm-compose-button {
+  width:42px!important; min-width:42px!important; height:42px!important; min-height:42px!important;
+  border:1px solid var(--premium-line)!important; border-radius:13px!important;
+  background:var(--premium-secondary)!important; color:var(--premium-text)!important;
+}
+.avenzo-next .rich-messages-workspace .dm-tools { gap:12px!important; padding:0 18px 10px!important; border-bottom:1px solid var(--premium-line); }
+.avenzo-next .rich-messages-workspace .dm-tools a { min-height:38px!important; gap:7px!important; font-size:12px!important; }
+.avenzo-next .rich-messages-workspace .dm-tools a:hover { color:var(--premium-text)!important; }
+.avenzo-next .rich-messages-workspace .dm-notes-disclosure { margin:0 18px 8px!important; border-bottom:1px solid var(--premium-line)!important; }
+.avenzo-next .rich-messages-workspace .dm-notes-disclosure>summary { min-height:40px!important; font-size:13px!important; }
+.avenzo-next .rich-messages-workspace .dm-notes-disclosure .dm-notes-row { padding:14px 0 8px!important; }
+.avenzo-next .rich-messages-workspace .dm-tabs { margin:0 18px 8px!important; }
+.avenzo-next .rich-messages-workspace .dm-tabs button { min-height:42px!important; font-size:13px!important; }
+.avenzo-next .rich-messages-workspace .dm-tabs button.active { border-bottom-color:var(--premium-finish)!important; }
+.avenzo-next .rich-messages-workspace .dm-search {
+  min-height:42px!important; margin:0 18px 7px!important; padding:0 12px!important;
+  border:1px solid transparent!important; border-radius:12px!important; background:var(--premium-secondary)!important;
+}
+.avenzo-next .rich-messages-workspace .dm-search:focus-within { border-color:var(--premium-finish)!important; outline:0!important; box-shadow:0 0 0 3px var(--premium-finish-soft)!important; }
+.avenzo-next .rich-messages-workspace .dm-search input { min-height:40px!important; font-size:14px!important; }
+.avenzo-next .rich-messages-workspace .dm-unread-filter { padding:3px 18px 8px!important; font-size:11px!important; }
+.avenzo-next .rich-messages-workspace .dm-conversation-list { padding:0 7px 12px!important; }
+.avenzo-next .rich-messages-workspace .dm-conversation {
+  min-height:72px!important; gap:11px!important; margin:1px 0!important; padding:9px 10px!important;
+  border:0!important; border-radius:12px!important; background:transparent!important;
+  transition:background-color .16s ease!important;
+}
+.avenzo-next .rich-messages-workspace .dm-conversation:hover { background:var(--premium-secondary)!important; }
+.avenzo-next .rich-messages-workspace .dm-conversation.active { background:var(--premium-finish-soft)!important; }
+.avenzo-next .rich-messages-workspace .dm-conversation img { width:48px!important; height:48px!important; }
+.avenzo-next .rich-messages-workspace .dm-conversation-copy b { font-size:13px!important; font-weight:650!important; }
+.avenzo-next .rich-messages-workspace .dm-conversation-copy em { margin-top:2px!important; font-size:12px!important; }
+.avenzo-next .rich-messages-workspace .dm-conversation-meta small { font-size:10px!important; }
+.avenzo-next .rich-messages-workspace .dm-chat {
+  display:flex!important; flex-direction:column!important; min-width:0!important; min-height:0!important;
+  height:100%!important; overflow:hidden!important; background:var(--premium-bg)!important;
+}
+.avenzo-next .rich-messages-workspace .dm-chat.dm-theme-violet { --dm-outgoing-start:var(--premium-primary); --dm-outgoing-end:var(--premium-primary); }
+.avenzo-next .rich-messages-workspace .dm-chat.dm-theme-ocean { --dm-outgoing-start:#087ff5; --dm-outgoing-end:#27c2ff; }
+.avenzo-next .rich-messages-workspace .dm-chat.dm-theme-emerald { --dm-outgoing-start:#13a66a; --dm-outgoing-end:#65d94d; }
+.avenzo-next .rich-messages-workspace .dm-chat.dm-theme-sunset { --dm-outgoing-start:#ff6b35; --dm-outgoing-end:#ff3f85; }
+.avenzo-next .rich-messages-workspace .dm-chat.dm-theme-mono { --dm-outgoing-start:#363a40; --dm-outgoing-end:#5a6068; }
+.avenzo-next .rich-messages-workspace .dm-chat-head {
+  flex:none!important; min-height:68px!important; padding:9px 18px!important;
+  border-bottom:1px solid var(--premium-line)!important; background:var(--premium-bg)!important;
+}
+.avenzo-next .rich-messages-workspace .dm-chat-head>img { width:42px!important; height:42px!important; }
+.avenzo-next .rich-messages-workspace .dm-head-identity b { font-size:14px!important; }
+.avenzo-next .rich-messages-workspace .dm-head-identity small { margin-top:2px!important; font-size:11px!important; }
+.avenzo-next .rich-messages-workspace .dm-chat-head>.icon-button { width:40px!important; min-width:40px!important; height:40px!important; min-height:40px!important; }
+.avenzo-next .rich-messages-workspace .dm-message-area {
+  flex:1 1 auto!important; min-height:0!important; overflow-y:auto!important; overscroll-behavior:contain!important;
+  padding:22px clamp(16px,4vw,54px)!important; background:var(--premium-bg)!important;
+  scrollbar-width:thin; scrollbar-color:var(--premium-line) transparent;
+}
+.avenzo-next .rich-messages-workspace .dm-message-row { margin:5px 0!important; }
+.avenzo-next .rich-messages-workspace .dm-message-stack { max-width:min(72%,620px)!important; }
+.avenzo-next .rich-messages-workspace .dm-bubble { padding:10px 14px!important; border:1px solid var(--premium-line)!important; border-radius:18px!important; font-size:14px!important; line-height:1.48!important; }
+.avenzo-next .rich-messages-workspace .dm-message-row.them .dm-bubble { border-bottom-left-radius:6px!important; background:var(--premium-secondary)!important; color:var(--premium-text)!important; }
+.avenzo-next .rich-messages-workspace .dm-message-row.me .dm-bubble { border-color:transparent!important; border-bottom-right-radius:6px!important; background:linear-gradient(135deg,var(--dm-outgoing-start),var(--dm-outgoing-end))!important; color:var(--premium-on-primary)!important; }
+.avenzo-next .rich-messages-workspace .dm-chat:is(.dm-theme-ocean,.dm-theme-emerald,.dm-theme-sunset,.dm-theme-mono) .dm-message-row.me .dm-bubble { color:#fff!important; }
+.avenzo-next .rich-messages-workspace .dm-message-meta { padding:3px 4px!important; color:var(--premium-muted)!important; font-size:10px!important; }
+.avenzo-next .rich-messages-workspace .dm-composer { flex:none!important; padding:10px 16px max(10px,env(safe-area-inset-bottom))!important; border-top:1px solid var(--premium-line)!important; background:var(--premium-bg)!important; }
+.avenzo-next .rich-messages-workspace .dm-compose-row { min-height:50px!important; padding:4px!important; border:1px solid var(--premium-line)!important; border-radius:18px!important; background:var(--premium-secondary)!important; }
+.avenzo-next .rich-messages-workspace .dm-compose-row:focus-within { border-color:var(--premium-finish)!important; background:var(--premium-surface)!important; box-shadow:0 0 0 3px var(--premium-finish-soft)!important; }
+.avenzo-next .rich-messages-workspace .dm-compose-row textarea { min-height:40px!important; max-height:132px!important; padding:10px 8px!important; font-size:15px!important; line-height:1.45!important; }
+.avenzo-next .rich-messages-workspace .dm-compose-icon { width:40px!important; min-width:40px!important; height:40px!important; min-height:40px!important; border-radius:12px!important; }
+.avenzo-next .rich-messages-workspace .dm-send-button { min-width:40px!important; min-height:40px!important; width:40px!important; height:40px!important; border-radius:13px!important; background:linear-gradient(135deg,var(--dm-outgoing-start),var(--dm-outgoing-end))!important; color:var(--premium-on-primary)!important; }
+.avenzo-next .rich-messages-workspace .dm-chat:is(.dm-theme-ocean,.dm-theme-emerald,.dm-theme-sunset,.dm-theme-mono) .dm-send-button { color:#fff!important; }
+.avenzo-next .rich-messages-workspace .dm-send-button:disabled { opacity:.42!important; }
+.avenzo-next .rich-messages-workspace .dm-offline-banner { flex:none!important; border-top:1px solid var(--premium-line)!important; background:var(--premium-secondary)!important; }
+.avenzo-next .messages-focused-page .rich-messages-workspace.dm-focused-conversation { grid-template-columns:minmax(0,1fr)!important; width:min(100%,1120px)!important; }
+
+@media(max-width:820px) {
+  .avenzo-next .messages-page { height:100dvh!important; min-height:100dvh!important; }
+  .avenzo-next .messages-page-topbar { display:none!important; }
+  .avenzo-next .rich-messages-workspace { width:100%!important; height:100dvh!important; flex:1 1 auto!important; border:0!important; grid-template-columns:minmax(0,1fr)!important; }
+  .avenzo-next .rich-messages-workspace .dm-sidebar { width:100%!important; height:100%!important; border:0!important; }
+  .avenzo-next .rich-messages-workspace .dm-sidebar-head { min-height:calc(70px + env(safe-area-inset-top))!important; padding:calc(12px + env(safe-area-inset-top)) 16px 8px!important; }
+  .avenzo-next .rich-messages-workspace .dm-tools { gap:16px!important; padding:0 16px 8px!important; }
+  .avenzo-next .rich-messages-workspace .dm-notes-disclosure { margin-inline:16px!important; }
+  .avenzo-next .rich-messages-workspace .dm-tabs { margin-inline:16px!important; }
+  .avenzo-next .rich-messages-workspace .dm-search { margin-inline:16px!important; }
+  .avenzo-next .rich-messages-workspace .dm-unread-filter { padding-inline:16px!important; }
+  .avenzo-next .rich-messages-workspace .dm-conversation-list { padding:0 8px calc(12px + env(safe-area-inset-bottom))!important; }
+  .avenzo-next .rich-messages-workspace .dm-conversation { min-height:72px!important; padding-inline:10px!important; }
+  .avenzo-next .rich-messages-workspace .dm-chat { width:100%!important; height:100%!important; min-height:0!important; }
+  .avenzo-next .rich-messages-workspace .dm-chat-head { min-height:calc(62px + env(safe-area-inset-top))!important; padding:calc(6px + env(safe-area-inset-top)) 8px 6px!important; }
+  .avenzo-next .rich-messages-workspace .dm-back { width:40px!important; min-width:40px!important; height:40px!important; min-height:40px!important; }
+  .avenzo-next .rich-messages-workspace .dm-chat-head>img { width:38px!important; height:38px!important; }
+  .avenzo-next .rich-messages-workspace .dm-chat-head>.icon-button { width:38px!important; min-width:38px!important; height:38px!important; min-height:38px!important; }
+  .avenzo-next .rich-messages-workspace .dm-message-area { padding:14px 12px!important; }
+  .avenzo-next .rich-messages-workspace .dm-message-stack { max-width:84%!important; }
+  .avenzo-next .rich-messages-workspace .dm-bubble { padding:9px 12px!important; font-size:14px!important; }
+  .avenzo-next .rich-messages-workspace .dm-composer { padding:7px 9px max(8px,env(safe-area-inset-bottom))!important; }
+  .avenzo-next .rich-messages-workspace .dm-compose-row { display:grid!important; grid-template-columns:38px minmax(0,1fr) 36px 38px!important; min-height:48px!important; border-radius:24px!important; }
+  .avenzo-next .rich-messages-workspace .dm-compose-row textarea { min-height:38px!important; padding:8px 5px!important; font-size:16px!important; }
+  .avenzo-next .rich-messages-workspace .dm-compose-icon,.avenzo-next .rich-messages-workspace .dm-send-button { width:36px!important; min-width:36px!important; height:36px!important; min-height:36px!important; }
+  .avenzo-next .rich-messages-workspace .dm-jump-latest { right:14px!important; bottom:calc(88px + env(safe-area-inset-bottom))!important; }
+}
+@media(max-width:380px) {
+  .avenzo-next .rich-messages-workspace .dm-tools { gap:10px!important; }
+  .avenzo-next .rich-messages-workspace .dm-tools a { font-size:11px!important; }
+  .avenzo-next .rich-messages-workspace .dm-message-stack { max-width:88%!important; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .avenzo-next .rich-messages-workspace :is(.dm-conversation,.dm-compose-row,.dm-send-button) { transition:none!important; }
+}
+
 /* Settings visibility belongs to responsive CSS, never an inline hidden flag. */
 .avenzo-next .settings-mobile-reference { display:none; }
 .avenzo-next .settings-recovery-page { max-width:680px; margin:auto; padding:32px 20px; min-height:100dvh; color:var(--premium-text); background:var(--premium-bg); }
