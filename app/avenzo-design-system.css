@@ -4119,3 +4119,88 @@ html.avenzo-android-app .avenzo-next .screen-home .story-label-mobile { display:
 }
 html.avenzo-android-app .avenzo-next .settings-mobile-reference { display:grid!important; }
 html.avenzo-android-app .avenzo-next .settings-desktop-hub { display:none!important; }
+
+
+/* =========================================================
+   AVENZO PREMIUM EDITION — INTERACTION FINISH
+   Shared interaction states for web and Capacitor surfaces.
+   ========================================================= */
+:root {
+  --avenzo-premium-duration: 160ms;
+  --avenzo-premium-ease: cubic-bezier(.2,.8,.2,1);
+  --avenzo-premium-focus: rgba(228,232,236,.22);
+}
+html[data-theme="light"] {
+  --avenzo-premium-focus: rgba(17,19,23,.16);
+}
+
+.social-app :is(
+  .btn, .icon-button, .top-activity, .top-messages, .top-profile-menu,
+  .left-nav>button, .mobile-bottom-nav>button, .post-actions>button,
+  .settings-sidebar a, .settings-nav a
+),
+.messages-page :is(button,a),
+.settings-page-shell :is(button,a),
+.public-profile-shell :is(button,a) {
+  transition:
+    color var(--avenzo-premium-duration) var(--avenzo-premium-ease),
+    background-color var(--avenzo-premium-duration) var(--avenzo-premium-ease),
+    border-color var(--avenzo-premium-duration) var(--avenzo-premium-ease),
+    box-shadow var(--avenzo-premium-duration) var(--avenzo-premium-ease),
+    transform var(--avenzo-premium-duration) var(--avenzo-premium-ease);
+}
+
+@media (hover:hover) and (pointer:fine) {
+  .social-app :is(.btn,.icon-button,.top-activity,.top-messages,.top-profile-menu):hover:not(:disabled),
+  .messages-page :is(button,a):hover:not(:disabled),
+  .settings-page-shell :is(button,a):hover:not(:disabled),
+  .public-profile-shell :is(button,a):hover:not(:disabled) {
+    border-color:var(--av-line-strong);
+  }
+  .social-app .post-card:focus-within,
+  .social-app .side-card:focus-within,
+  .messages-page .dm-chat:focus-within,
+  .settings-page-shell .settings-card:focus-within {
+    border-color:var(--av-line-strong);
+  }
+}
+
+.social-app :is(button,a):active,
+.messages-page :is(button,a):active,
+.settings-page-shell :is(button,a):active,
+.public-profile-shell :is(button,a):active {
+  transform:scale(.985);
+}
+
+.social-app :is(button,a):focus-visible,
+.messages-page :is(button,a,input,textarea):focus-visible,
+.settings-page-shell :is(button,a,input,textarea,select):focus-visible,
+.public-profile-shell :is(button,a):focus-visible {
+  outline:2px solid var(--av-accent);
+  outline-offset:3px;
+  box-shadow:0 0 0 4px var(--avenzo-premium-focus);
+}
+
+.social-app :is(button,a):disabled,
+.messages-page :is(button,a):disabled,
+.settings-page-shell :is(button,a):disabled {
+  cursor:not-allowed;
+  transform:none;
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .social-app :is(button,a),
+  .messages-page :is(button,a),
+  .settings-page-shell :is(button,a),
+  .public-profile-shell :is(button,a) {
+    transition:none !important;
+    animation:none !important;
+    scroll-behavior:auto !important;
+  }
+  .social-app :is(button,a):active,
+  .messages-page :is(button,a):active,
+  .settings-page-shell :is(button,a):active,
+  .public-profile-shell :is(button,a):active {
+    transform:none;
+  }
+}
