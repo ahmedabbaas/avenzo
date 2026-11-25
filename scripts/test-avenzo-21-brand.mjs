@@ -10,6 +10,8 @@ const compatibilityRoot = postcss.parse(compatibilityCss);
 assert.ok(compatibilityRoot.nodes.some(node => node.type === "atrule" && node.name === "layer" && node.params === "avenzo-21"));
 assert.match(compatibilityCss, /--accent:\s*#d2d7dd/i);
 assert.match(compatibilityCss, /--av-violet:\s*#d2d7dd/i, "legacy token names must resolve to the approved metallic accent");
+assert.match(compatibilityCss, /--av-secondary:\s*#8f99a4/i, "secondary accent must use neutral steel");
+assert.match(compatibilityCss, /--av-bg:\s*#f5f6f7/i, "light surfaces must use the neutral palette");
 assert.match(compatibilityCss, /html\[data-theme="light"\] \.social-app/);
 assert.match(compatibilityCss, /prefers-reduced-motion:\s*reduce/);
 assert.match(compatibilityCss, /min-width:\s*44px/);
@@ -18,6 +20,7 @@ assert.doesNotMatch(compatibilityCss, /#[0-9a-f]{3,8}\s*;[^\n]*(?:violet|purple)
 
 const designCss = await readFile("app/avenzo-design-system.css", "utf8");
 const designRoot = postcss.parse(designCss);
+assert.ok(designRoot.nodes.length > 0, "canonical design system must parse as CSS");
 assert.match(designCss, /AVENZO PREMIUM EDITION — INTERACTION FINISH/);
 assert.match(designCss, /--avenzo-premium-duration:/);
 assert.match(designCss, /prefers-reduced-motion:\s*reduce/);
