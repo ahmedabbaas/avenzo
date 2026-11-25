@@ -682,23 +682,16 @@ export default function PostCard({
 
                     <div className="post-comment-main">
                       <div className="post-comment-copy">
-                        <p>
+                        <div className="post-comment-meta">
                           {item.profile?.username ? (
-                            <Link
-                              className="post-comment-username verified-line"
-                              href={
-                                "/u/" +
-                                encodeURIComponent(item.profile.username)
-                              }
-                            >
-                              @{item.profile.username}
+                            <Link className="post-comment-username verified-line" href={"/u/" + encodeURIComponent(item.profile.username)}>
+                              {item.profile.display_name || "User"}
                             </Link>
-                          ) : (
-                            <b>@user</b>
-                          )}
-                          <span>{renderCommentBody(item.body)}</span>
-                        </p>
-                        <small>{formatRelativeTime(item.created_at)}</small>
+                          ) : <b className="post-comment-username">User</b>}
+                          {item.profile?.username && <span className="post-comment-handle">@{item.profile.username}</span>}
+                          <small>{formatRelativeTime(item.created_at)}</small>
+                        </div>
+                        <p className="post-comment-body">{renderCommentBody(item.body)}</p>
                       </div>
 
                       <div className="post-comment-tools">
@@ -791,27 +784,16 @@ export default function PostCard({
 
                           <div className="post-comment-main">
                             <div className="post-comment-copy">
-                              <p>
+                              <div className="post-comment-meta">
                                 {reply.profile?.username ? (
-                                  <Link
-                                    className="post-comment-username verified-line"
-                                    href={
-                                      "/u/" +
-                                      encodeURIComponent(
-                                        reply.profile.username
-                                      )
-                                    }
-                                  >
-                                    @{reply.profile.username}
+                                  <Link className="post-comment-username verified-line" href={"/u/" + encodeURIComponent(reply.profile.username)}>
+                                    {reply.profile.display_name || "User"}
                                   </Link>
-                                ) : (
-                                  <b>@user</b>
-                                )}
-                                <span>{renderCommentBody(reply.body)}</span>
-                              </p>
-                              <small>
-                                {formatRelativeTime(reply.created_at)}
-                              </small>
+                                ) : <b className="post-comment-username">User</b>}
+                                {reply.profile?.username && <span className="post-comment-handle">@{reply.profile.username}</span>}
+                                <small>{formatRelativeTime(reply.created_at)}</small>
+                              </div>
+                              <p className="post-comment-body">{renderCommentBody(reply.body)}</p>
                             </div>
 
                             <div className="post-comment-tools">

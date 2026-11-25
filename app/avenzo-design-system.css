@@ -4326,6 +4326,78 @@ html.avenzo-android-app .avenzo-next .screen-home .story-label-mobile { display:
   .avenzo-next .rich-messages-workspace :is(.dm-conversation,.dm-compose-row,.dm-send-button) { transition:none!important; }
 }
 
+/* Explore, feed comments and global actions: shared theme-aware finishing. */
+.avenzo-next .social-app .top :is(.top-activity,.top-messages) {
+  width:42px!important;height:42px!important;border:1px solid var(--premium-line)!important;
+  border-radius:15px!important;background:var(--premium-surface)!important;color:var(--premium-soft)!important;
+  box-shadow:0 5px 16px color-mix(in srgb,var(--premium-text) 5%,transparent);
+  transition:transform .2s cubic-bezier(.2,.8,.2,1),border-color .2s ease,background .2s ease,color .2s ease!important;
+}
+.avenzo-next .social-app .top :is(.top-activity,.top-messages):hover {transform:translateY(-2px);border-color:color-mix(in srgb,var(--premium-finish) 45%,var(--premium-line))!important;background:var(--premium-finish-soft)!important;color:var(--premium-text)!important;}
+.avenzo-next .social-app .top :is(.top-activity,.top-messages) svg {width:19px;height:19px;stroke-width:1.9;}
+.avenzo-next .social-app .right-rail .side-card {padding:16px!important;}
+.avenzo-next .social-app .right-rail .side-card-head {align-items:center!important;margin:0 0 9px!important;min-height:28px;}
+.avenzo-next .social-app .right-rail .side-card-head b {font-size:13px!important;letter-spacing:-.01em;}
+.avenzo-next .social-app .right-rail .side-card-head button {min-height:30px!important;padding:0 10px!important;border:1px solid var(--premium-line)!important;border-radius:999px!important;background:var(--premium-secondary)!important;color:var(--premium-text)!important;font-size:12px!important;transition:background .18s ease,transform .18s ease;}
+.avenzo-next .social-app .right-rail .side-card-head button:hover {transform:translateY(-1px);background:var(--premium-finish-soft)!important;}
+.avenzo-next .social-app .discover-category-tabs:not(.discover-search-tabs) {display:flex!important;align-items:center;gap:7px!important;width:max-content;max-width:100%;overflow-x:auto;padding:6px!important;margin:0 0 24px!important;border:1px solid var(--premium-line)!important;border-radius:17px!important;background:var(--premium-surface)!important;scrollbar-width:none;}
+.avenzo-next .discover-category-tabs:not(.discover-search-tabs) button {min-height:38px!important;padding:0 13px!important;border:1px solid transparent!important;border-radius:12px!important;background:transparent!important;color:var(--premium-muted)!important;font-size:13px!important;transition:color .18s ease,background .18s ease,transform .18s ease!important;}
+.avenzo-next .discover-category-tabs:not(.discover-search-tabs) button:hover {color:var(--premium-text)!important;background:var(--premium-secondary)!important;transform:translateY(-1px);}
+.avenzo-next .discover-category-tabs:not(.discover-search-tabs) button.active {border-color:color-mix(in srgb,var(--premium-finish) 25%,transparent)!important;background:var(--premium-finish-soft)!important;color:var(--premium-text)!important;box-shadow:0 2px 8px color-mix(in srgb,var(--premium-finish) 8%,transparent);}
+.avenzo-next .social-app .explore-people-grid {align-items:stretch;gap:14px!important;}
+.avenzo-next .social-app .explore-people-grid .person-card {display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:18px!important;min-width:0;min-height:232px;padding:20px!important;border:1px solid var(--premium-line)!important;border-radius:22px!important;background:linear-gradient(145deg,color-mix(in srgb,var(--premium-finish) 4%,var(--premium-surface)),var(--premium-surface) 58%)!important;box-shadow:0 8px 26px color-mix(in srgb,var(--premium-text) 4%,transparent);transition:transform .22s cubic-bezier(.2,.8,.2,1),border-color .22s ease,box-shadow .22s ease!important;}
+.avenzo-next .social-app .explore-people-grid .person-card:hover {transform:translateY(-3px);border-color:color-mix(in srgb,var(--premium-finish) 34%,var(--premium-line))!important;box-shadow:0 15px 32px color-mix(in srgb,var(--premium-text) 8%,transparent);}
+.avenzo-next .social-app .explore-people-grid .person-profile-link {display:grid!important;grid-template-columns:52px minmax(0,1fr)!important;align-items:center!important;gap:13px!important;min-width:0;text-decoration:none;}
+.avenzo-next .social-app .explore-people-grid .person-avatar {width:52px!important;height:52px!important;border:2px solid var(--premium-surface);box-shadow:0 0 0 1px var(--premium-line);}
+.avenzo-next .social-app .explore-people-grid .person-copy {display:grid;gap:4px;min-width:0;}
+.avenzo-next .social-app .explore-people-grid .person-copy b {overflow:hidden;color:var(--premium-text);font-size:15px;line-height:1.25;text-overflow:ellipsis;white-space:nowrap;}
+.avenzo-next .social-app .explore-people-grid .person-copy>span {overflow:hidden;color:var(--premium-muted);font-size:12px;text-overflow:ellipsis;white-space:nowrap;}
+.avenzo-next .social-app .explore-people-grid .person-copy p {display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;min-height:36px;margin:7px 0 0;overflow:hidden;color:var(--premium-soft);font-size:13px;line-height:1.45;}
+.avenzo-next .social-app .explore-people-grid .person-actions {display:flex!important;gap:9px!important;margin-top:auto;}
+.avenzo-next .social-app .explore-people-grid .person-actions .btn {flex:1;min-height:42px!important;border-radius:13px!important;font-size:13px!important;}
+.avenzo-next .social-app .explore-media-grid {gap:12px!important;}
+.avenzo-next .social-app .explore-media-tile {overflow:hidden;border:1px solid var(--premium-line);border-radius:17px!important;background:var(--premium-secondary);box-shadow:0 7px 22px color-mix(in srgb,var(--premium-text) 5%,transparent);transition:transform .24s cubic-bezier(.2,.8,.2,1),border-color .24s ease,box-shadow .24s ease;}
+.avenzo-next .social-app .explore-media-tile:hover {z-index:2;transform:translateY(-3px);border-color:color-mix(in srgb,var(--premium-finish) 45%,var(--premium-line));box-shadow:0 16px 30px color-mix(in srgb,var(--premium-text) 12%,transparent);}
+.avenzo-next .social-app .explore-media-open>img,.avenzo-next .social-app .explore-media-open>video {transition:transform .45s cubic-bezier(.2,.8,.2,1)!important;}
+.avenzo-next .social-app .explore-media-tile:hover .explore-media-open>img,.avenzo-next .social-app .explore-media-tile:hover .explore-media-open>video {transform:scale(1.045)!important;}
+.avenzo-next .social-app .explore-media-type {padding:6px 9px!important;border:1px solid #ffffff30;background:#101410bd!important;backdrop-filter:blur(12px);font-size:9px!important;}
+.avenzo-next .social-app .post-comment-thread {width:fit-content;min-width:min(300px,100%);max-width:min(100%,680px);justify-self:start;gap:8px!important;padding:12px 14px!important;border-radius:18px!important;background:color-mix(in srgb,var(--premium-secondary) 78%,transparent)!important;}
+.avenzo-next .social-app .post-comment-row,.avenzo-next .social-app .post-comment-reply {grid-template-columns:34px minmax(0,1fr)!important;gap:10px!important;}
+.avenzo-next .social-app .post-comment-avatar {width:34px!important;height:34px!important;}
+.avenzo-next .social-app .post-comment-copy {gap:5px!important;}
+.avenzo-next .social-app .post-comment-meta {display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px;min-width:0;}
+.avenzo-next .social-app .post-comment-meta .post-comment-username {max-width:100%;overflow:hidden;color:var(--premium-text)!important;font-size:13px!important;font-weight:700!important;text-overflow:ellipsis;white-space:nowrap;}
+.avenzo-next .social-app .post-comment-handle,.avenzo-next .social-app .post-comment-meta small {color:var(--premium-muted)!important;font-size:11px!important;}
+.avenzo-next .social-app .post-comment-copy .post-comment-body {margin:0!important;color:var(--premium-text)!important;font-size:14px!important;line-height:1.55!important;overflow-wrap:anywhere;}
+.avenzo-next .social-app .post-comment-copy .post-comment-body>span {margin:0!important;}
+.avenzo-next .social-app .post-comment-tools {gap:6px!important;margin-top:1px!important;}
+.avenzo-next .social-app .post-comment-tools button {min-height:28px!important;padding:3px 9px!important;border-radius:999px!important;color:var(--premium-muted)!important;font-size:11px!important;}
+.avenzo-next .social-app .post-comment-tools button:hover {background:var(--premium-finish-soft)!important;color:var(--premium-text)!important;}
+.avenzo-next .social-app .post-view-comments,.avenzo-next .social-app .comment-replies-toggle {width:fit-content;min-height:36px!important;padding:0 12px!important;border:1px solid var(--premium-line)!important;border-radius:999px!important;background:var(--premium-secondary)!important;color:var(--premium-soft)!important;font-size:12px!important;}
+@media(max-width:820px) {
+ .avenzo-next .discover-category-tabs:not(.discover-search-tabs) {gap:4px!important;margin-inline:12px!important;padding:5px!important;border-radius:15px!important;}
+ .avenzo-next .discover-category-tabs:not(.discover-search-tabs) button {min-height:36px!important;padding:0 11px!important;font-size:12px!important;}
+ .avenzo-next .social-app .explore-people-grid {grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;}
+ .avenzo-next .social-app .explore-people-grid .person-card {min-height:210px;padding:13px!important;border-radius:18px!important;}
+ .avenzo-next .social-app .explore-people-grid .person-profile-link {grid-template-columns:42px minmax(0,1fr)!important;gap:10px!important;}
+ .avenzo-next .social-app .explore-people-grid .person-avatar {width:42px!important;height:42px!important;}
+ .avenzo-next .social-app .explore-people-grid .person-copy b {font-size:13px;}
+ .avenzo-next .social-app .explore-people-grid .person-actions {gap:6px!important;}
+ .avenzo-next .social-app .explore-people-grid .person-actions .btn {min-height:38px!important;padding-inline:8px!important;font-size:11px!important;}
+ .avenzo-next .social-app .explore-media-grid {gap:7px!important;}
+ .avenzo-next .social-app .explore-media-tile {border-radius:13px!important;}
+ .avenzo-next .social-app .post-comment-thread {width:100%;min-width:0;}
+}
+@media(max-width:430px) {
+ .avenzo-next .social-app .explore-people-grid .person-card {min-height:196px;padding:11px!important;}
+ .avenzo-next .social-app .explore-people-grid .person-actions .btn {font-size:10px!important;}
+ .avenzo-next .social-app .explore-media-grid {gap:4px!important;}
+ .avenzo-next .social-app .explore-media-tile {border-radius:10px!important;}
+}
+@media(prefers-reduced-motion:reduce) {
+ .avenzo-next .social-app :is(.person-card,.explore-media-tile,.top .top-activity,.top .top-messages,.side-card-head button) {transition:none!important;transform:none!important;}
+}
+
 /* Settings visibility belongs to responsive CSS, never an inline hidden flag. */
 .avenzo-next .settings-mobile-reference { display:none; }
 .avenzo-next .settings-recovery-page { max-width:680px; margin:auto; padding:32px 20px; min-height:100dvh; color:var(--premium-text); background:var(--premium-bg); }
