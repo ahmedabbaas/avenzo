@@ -2,17 +2,17 @@
    Loaded after legacy compatibility layers so the product has one visual source of truth. */
 @layer avenzo-21 {
   :root {
-    --accent: #c9f34e;
-    --accent-strong: #dfff91;
-    --accent-soft: rgba(201, 243, 78, .12);
-    --avenzo-brand-accent: #c9f34e;
-    --avenzo-brand-ink: #11150a;
+    --accent: #d2d7dd;
+    --accent-strong: #f3f5f7;
+    --accent-soft: rgba(210, 215, 221, .12);
+    --avenzo-brand-accent: #d2d7dd;
+    --avenzo-brand-ink: #090a0c;
     --avenzo-motion-fast: 140ms;
     --avenzo-motion-base: 190ms;
     --avenzo-ease: cubic-bezier(.2, .75, .25, 1);
   }
 
-  html, body { accent-color: #c9f34e; }
+  html, body { accent-color: #d2d7dd; }
 
   .social-app {
     --av-bg: #080a0b;
@@ -25,11 +25,11 @@
     --av-soft: #c9d0ca;
     --av-muted: #929d96;
     --av-muted-2: #707c75;
-    --av-violet: #c9f34e;
-    --av-violet-2: #dfff91;
+    --av-violet: #d2d7dd;
+    --av-violet-2: #f3f5f7;
     --av-secondary: #9cac84;
-    --av-secondary-hover: #c9f34e;
-    --av-glow: rgba(201, 243, 78, .10);
+    --av-secondary-hover: #d2d7dd;
+    --av-glow: rgba(210, 215, 221, .10);
     --bg: var(--av-bg);
     --panel: var(--av-surface);
     --panel-2: var(--av-surface-2);
@@ -40,12 +40,12 @@
     --text-soft: var(--av-soft);
     --muted: var(--av-muted);
     --muted-2: var(--av-muted-2);
-    --accent: #c9f34e;
-    --accent-strong: #dfff91;
-    --accent-soft: rgba(201, 243, 78, .12);
+    --accent: #d2d7dd;
+    --accent-strong: #f3f5f7;
+    --accent-soft: rgba(210, 215, 221, .12);
     color: var(--av-text);
     background:
-      radial-gradient(ellipse at 50% -24%, rgba(201,243,78,.045), transparent 38%),
+      radial-gradient(ellipse at 50% -24%, rgba(210, 215, 221,.045), transparent 38%),
       var(--av-bg);
   }
 
@@ -60,11 +60,11 @@
     --av-soft: #414a40;
     --av-muted: #687365;
     --av-muted-2: #899485;
-    --av-violet: #718d2d;
-    --av-violet-2: #526b1c;
+    --av-violet: #59636e;
+    --av-violet-2: #22272d;
     --av-secondary: #7c8d68;
-    --av-secondary-hover: #526b1c;
-    --av-glow: rgba(113,141,45,.08);
+    --av-secondary-hover: #22272d;
+    --av-glow: rgba(89, 99, 110,.08);
     --bg: var(--av-bg);
     --panel: var(--av-surface);
     --panel-2: var(--av-surface-2);
@@ -75,16 +75,16 @@
     --text-soft: var(--av-soft);
     --muted: var(--av-muted);
     --muted-2: var(--av-muted-2);
-    --accent: #718d2d;
-    --accent-strong: #526b1c;
-    --accent-soft: rgba(113,141,45,.12);
+    --accent: #59636e;
+    --accent-strong: #22272d;
+    --accent-soft: rgba(89, 99, 110,.12);
     background:
-      radial-gradient(ellipse at 50% -24%, rgba(113,141,45,.055), transparent 38%),
+      radial-gradient(ellipse at 50% -24%, rgba(89, 99, 110,.055), transparent 38%),
       var(--av-bg);
   }
 
   .social-app .eyebrow { color: var(--accent-strong); }
-  .social-app .brand i { background: var(--accent); box-shadow: 0 0 16px rgba(201,243,78,.18); }
+  .social-app .brand i { background: var(--accent); box-shadow: 0 0 16px rgba(210, 215, 221,.18); }
   .social-app .left-nav button.active {
     color: var(--av-text);
     background: var(--av-surface-2);
@@ -99,16 +99,16 @@
   .social-app .top-create,
   .social-app .auth-submit {
     background: var(--accent);
-    color: #11150a;
-    border: 1px solid rgba(201,243,78,.35);
-    box-shadow: 0 8px 22px rgba(201,243,78,.10);
+    color: #090a0c;
+    border: 1px solid rgba(210, 215, 221,.35);
+    box-shadow: 0 8px 22px rgba(210, 215, 221,.10);
   }
   .social-app .left-nav .create-nav:hover,
   .social-app .btn:not(.secondary):hover:not(:disabled),
   .social-app .top-create:hover,
   .social-app .auth-submit:hover:not(:disabled) {
     background: var(--accent-strong);
-    color: #11150a;
+    color: #090a0c;
     filter: none;
   }
   .social-app .btn.secondary {
@@ -147,15 +147,15 @@
   .social-app button { touch-action: manipulation; }
 
   .auth-shell {
-    --accent: #c9f34e;
-    --accent-strong: #dfff91;
+    --accent: #d2d7dd;
+    --accent-strong: #f3f5f7;
   }
   .auth-shell .brand-mark {
     background: var(--accent);
-    color: #11150a;
-    box-shadow: 0 10px 30px rgba(201,243,78,.12);
+    color: #090a0c;
+    box-shadow: 0 10px 30px rgba(210, 215, 221,.12);
   }
-  .auth-shell .auth-links a { color: #c9f34e; }
+  .auth-shell .auth-links a { color: #d2d7dd; }
 
   @media (max-width: 760px) {
     .social-app .left-nav button,
