@@ -118,7 +118,7 @@ export default function ProfileView({
           onClick={() => setTab("posts")}
           aria-label="Posts"
         >
-          <Icon name="grid" size={20} />
+          <Icon name="gridModern" size={19} />
           <span className="profile-tab-label">Posts</span>
           <span className="profile-tab-count">{posts.length}</span>
         </button>
@@ -127,7 +127,7 @@ export default function ProfileView({
           onClick={() => setTab("reels")}
           aria-label="Reels"
         >
-          <Icon name="reels" size={20} />
+          <Icon name="filmModern" size={19} />
           <span className="profile-tab-label">Reels</span>
           <span className="profile-tab-count">{reels.length}</span>
         </button>
@@ -136,7 +136,7 @@ export default function ProfileView({
           onClick={() => setTab("saved")}
           aria-label="Saved"
         >
-          <Icon name="saved" size={20} />
+          <Icon name="bookmarkModern" size={19} />
           <span className="profile-tab-label">Saved</span>
         </button>
         <button type="button" aria-pressed={tab === "tagged"}
@@ -144,7 +144,7 @@ export default function ProfileView({
           onClick={() => setTab("tagged")}
           aria-label="Tagged"
         >
-          <Icon name="tagged" size={20} />
+          <Icon name="userModern" size={19} />
           <span className="profile-tab-label">Tagged</span>
         </button>
       </div>

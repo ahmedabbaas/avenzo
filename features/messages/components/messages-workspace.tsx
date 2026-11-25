@@ -1781,12 +1781,12 @@ export default function MessagesWorkspace({
         <Link className="dm-app-rail-brand" href="/home" aria-label="AVENZO home">
           <BrandLogo size={30} />
         </Link>
-        <Link href="/home" aria-label="Home" title="Home"><Icon name="home" size={20} /></Link>
-        <Link href="/home?screen=explore" aria-label="Explore" title="Explore"><Icon name="explore" size={20} /></Link>
-        <Link href="/messages" className="active" aria-current="page" aria-label="Messages" title="Messages"><Icon name="messages" size={20} /></Link>
-        <Link href="/home?screen=activity" aria-label="Activity" title="Activity"><Icon name="activity" size={20} /></Link>
-        <Link href="/home?screen=profile" aria-label="Profile" title="Profile"><Icon name="profile" size={20} /></Link>
-        <Link className="dm-app-rail-settings" href="/settings" aria-label="Settings" title="Settings"><Icon name="settings" size={20} /></Link>
+          <Link href="/home" aria-label="Home" title="Home"><Icon name="homeModern" size={20} /></Link>
+          <Link href="/home?screen=explore" aria-label="Explore" title="Explore"><Icon name="compassModern" size={20} /></Link>
+          <Link href="/messages" className="active" aria-current="page" aria-label="Messages" title="Messages"><Icon name="messagesModern" size={20} /></Link>
+          <Link href="/home?screen=activity" aria-label="Activity" title="Activity"><Icon name="bellModern" size={20} /></Link>
+          <Link href="/home?screen=profile" aria-label="Profile" title="Profile"><Icon name="userModern" size={20} /></Link>
+          <Link className="dm-app-rail-settings" href="/settings" aria-label="Settings" title="Settings"><Icon name="settingsModern" size={20} /></Link>
       </nav>
       <section className={"dm-sidebar " + (active ? "dm-mobile-hidden" : "")}>
         <div className="dm-mobile-inbox-head" style={{ display: "none" }}>
@@ -1903,9 +1903,7 @@ export default function MessagesWorkspace({
           <button type="button" className="icon-button dm-compose-button" onClick={() => setNewMessageOpen(true)} aria-label="New message"><Icon name="edit" size={23} /></button>
         </div>
         <nav className="dm-tools" aria-label="Messaging tools">
-          <Link href="/messages/groups"><Icon name="messages" size={16} />Groups</Link>
-          <Link href="/channels"><Icon name="activity" size={16} />Channels</Link>
-          <Link href="/calls"><Icon name="phone" size={16} />Calls</Link>
+          <Link href="/messages/groups"><Icon name="messagesModern" size={18} />Groups</Link>
         </nav>
         <details className="dm-notes-disclosure"><summary>Notes <span>{visibleNotes.length ? visibleNotes.length + " active" : "Share a thought"}</span><Icon name="plus" size={16} /></summary>
         <div className="dm-notes-row" aria-label="Notes">

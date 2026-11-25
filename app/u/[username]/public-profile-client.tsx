@@ -338,7 +338,7 @@ export default function PublicProfileClient({
           className={contentTab === "posts" ? "active" : ""}
             onClick={() => setContentTab("posts")}
           >
-            <span className="public-tab-icon" style={{ display: "none" }}><Icon name="grid" size={20} /></span>
+            <span className="public-tab-icon"><Icon name="gridModern" size={19} /></span>
             <span className="public-tab-label">Posts</span>
             <span className="public-tab-count">{posts.length}</span>
           </button>
@@ -346,7 +346,7 @@ export default function PublicProfileClient({
           className={contentTab === "reels" ? "active" : ""}
             onClick={() => setContentTab("reels")}
           >
-            <span className="public-tab-icon" style={{ display: "none" }}><Icon name="reels" size={20} /></span>
+            <span className="public-tab-icon"><Icon name="filmModern" size={19} /></span>
             <span className="public-tab-label">Reels</span>
             <span className="public-tab-count">{reelItems.length}</span>
           </button>
@@ -354,7 +354,7 @@ export default function PublicProfileClient({
           className={contentTab === "tagged" ? "active" : ""}
             onClick={() => setContentTab("tagged")}
           >
-            <span className="public-tab-icon" style={{ display: "none" }}><Icon name="tag" size={20} /></span>
+            <span className="public-tab-icon"><Icon name="userModern" size={19} /></span>
             <span className="public-tab-label">Tagged</span>
           </button>
         </div>

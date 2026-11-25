@@ -772,7 +772,7 @@ export default function ReelsPanel({
                       aria-label={reel.liked ? "Unlike reel" : "Like reel"}
                     >
                       <span className="reel-action-icon-desktop">
-                        <Icon name="heart" size={24} />
+                        <Icon name="heartModern" size={25} />
                       </span>
                       <span className="reel-action-icon-mobile" style={{ display: "none" }}>
                         <Icon name="heartModern" size={25} />
@@ -787,7 +787,7 @@ export default function ReelsPanel({
                       aria-label="Show comments"
                     >
                       <span className="reel-action-icon-desktop">
-                        <Icon name="comment" size={24} />
+                        <Icon name="commentModern" size={25} />
                       </span>
                       <span className="reel-action-icon-mobile" style={{ display: "none" }}>
                         <Icon name="commentModern" size={25} />
@@ -804,7 +804,7 @@ export default function ReelsPanel({
                       aria-label="Share reel"
                     >
                       <span className="reel-action-icon-desktop">
-                        <Icon name="send" size={24} />
+                        <Icon name="shareModern" size={25} />
                       </span>
                       <span className="reel-action-icon-mobile" style={{ display: "none" }}>
                         <Icon name="shareModern" size={25} />
@@ -820,7 +820,7 @@ export default function ReelsPanel({
                       aria-label={reel.reposted ? "Undo repost" : "Repost reel"}
                     >
                       <span className="reel-action-icon-desktop">
-                        <Icon name="repost" size={24} />
+                        <Icon name="repostModern" size={25} />
                       </span>
                       <span className="reel-action-icon-mobile" style={{ display: "none" }}>
                         <Icon name="repostModern" size={25} />

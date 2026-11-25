@@ -21,7 +21,7 @@ export default function ProfileHeader({ profile, avatar, stats, followersHref, f
   return <section className="profile-header-premium" aria-label="Profile overview">
     <div className="profile-header-avatar">
       <AvatarImage src={avatar} alt={profile.display_name} size={180} />
-      {onAddStory && <button type="button" aria-label="Add moment" onClick={onAddStory}><Icon name="plus" size={18} /></button>}
+      {onAddStory && <button type="button" aria-label="Add moment" onClick={onAddStory}><Icon name="plus" size={15} /></button>}
     </div>
     <div className="profile-header-identity">
       <h1>{profile.display_name}</h1>

@@ -20,13 +20,13 @@ type MobileBottomNavProps = {
 const ITEMS: Array<{
   id: MobilePrimaryTab;
   label: string;
-  icon: "home" | "search" | "plus" | "reels" | "profile";
+  icon: "homeModern" | "search" | "plus" | "filmModern" | "userModern";
 }> = [
-  { id: "home", label: "Home", icon: "home" },
+  { id: "home", label: "Home", icon: "homeModern" },
   { id: "search", label: "Discover", icon: "search" },
   { id: "create", label: "Create", icon: "plus" },
-  { id: "reels", label: "Clips", icon: "reels" },
-  { id: "profile", label: "Profile", icon: "profile" },
+  { id: "reels", label: "Clips", icon: "filmModern" },
+  { id: "profile", label: "Profile", icon: "userModern" },
 ];
 
 function isTypingTarget(target: EventTarget | null) {

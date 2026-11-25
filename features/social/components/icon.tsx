@@ -58,19 +58,35 @@ export type IconName =
   | "sun"
   | "moon"
   | "scan"
-  | "refresh";
+  | "refresh"
+  | "homeModern"
+  | "compassModern"
+  | "messagesModern"
+  | "settingsModern"
+  | "userModern"
+  | "gridModern"
+  | "filmModern"
+  | "cameraModern";
 
 
 export default function Icon({ name, size = 19 }: { name: IconName; size?: number }) {
   const common = {
     fill: "none",
     stroke: "currentColor",
-    strokeWidth: 1.8,
+    strokeWidth: 1.9,
     strokeLinecap: "round" as const,
     strokeLinejoin: "round" as const,
   };
 
   const paths: Record<IconName, ReactNode> = {
+    homeModern: <><path d="m3 10.5 9-7 9 7"/><path d="M5.5 9.5V20h13V9.5M9.5 20v-6.5h5V20"/></>,
+    compassModern: <><circle cx="12" cy="12" r="9"/><path d="m15.8 8.2-2.2 5.4-5.4 2.2 2.2-5.4 5.4-2.2Z"/><circle cx="12" cy="12" r=".7"/></>,
+    messagesModern: <><path d="M20.5 11.8a8.2 8.2 0 0 1-8.4 8.2 9 9 0 0 1-4-.9l-4.6 1.3 1.5-4.1A8 8 0 0 1 3.5 12a8.5 8.5 0 0 1 8.6-8.5 8.4 8.4 0 0 1 8.4 8.3Z"/><path d="M8.3 10h7.4M8.3 13.7h5.2"/></>,
+    settingsModern: <><circle cx="12" cy="12" r="3.2"/><path d="m19.3 13.8 1 .8-1.8 3.1-1.2-.5a7.9 7.9 0 0 1-1.6.9l-.2 1.3h-3.6l-.3-1.3a7.6 7.6 0 0 1-1.6-.9l-1.2.5L7 14.6l1-.8a7.5 7.5 0 0 1 0-1.9l-1-.8 1.8-3.1 1.2.5a7.9 7.9 0 0 1 1.6-.9l.3-1.3h3.6l.2 1.3a7.6 7.6 0 0 1 1.6.9l1.2-.5 1.8 3.1-1 .8a7.5 7.5 0 0 1 0 1.9Z"/></>,
+    userModern: <><circle cx="12" cy="8" r="3.7"/><path d="M4.5 20c.8-3.4 3.3-5.2 7.5-5.2s6.7 1.8 7.5 5.2"/></>,
+    gridModern: <><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></>,
+    filmModern: <><rect x="4" y="3.5" width="16" height="17" rx="3"/><path d="M8 3.8v3.4m8-3.4v3.4M4.3 8.5h15.4M4.3 15.5h15.4M8 17.2v3m8-3v3"/><path d="m10 10.5 4.5 2.4-4.5 2.3v-4.7Z"/></>,
+    cameraModern: <><rect x="3.5" y="6.5" width="17" height="14" rx="3"/><path d="m8 6.5 1.5-3h5l1.5 3"/><circle cx="12" cy="13.5" r="3.5"/></>,
     refresh: <><path d="M20 7v5h-5M4 17v-5h5" /><path d="M6.1 6.1A8 8 0 0 1 20 12M4 12a8 8 0 0 0 13.9 5.9" /></>,
     sun: <><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.4 1.4m11.2 11.2L19 19M5 19l1.4-1.4M17.6 6.4L19 5"/></>,
     moon: <path d="M20 15.5A8.5 8.5 0 0 1 8.5 4a8.5 8.5 0 1 0 11.5 11.5Z"/>,

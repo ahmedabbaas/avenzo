@@ -160,6 +160,7 @@ export default function CreateContentModal({
 
   const [dragging, setDragging] = useState(false);
   const [showDrafts, setShowDrafts] = useState(initialShowDrafts);
+  const [tagQuery, setTagQuery] = useState("");
   const [postStep, setPostStep] = useState(1);
   const [activeIndex, setActiveIndex] = useState(0);
   const [editing, setEditing] = useState(false);
@@ -175,6 +176,15 @@ export default function CreateContentModal({
 
   const isVideo = Boolean(file?.type.startsWith("video/"));
   const tagged = useMemo(() => parseMentions(mentions), [mentions]);
+  const tagMatches = useMemo(() => {
+    const query = tagQuery.trim().replace(/^@+/, "").toLowerCase();
+    if (!query) return [];
+    return people
+      .filter((person) =>
+        (person.display_name + " " + person.username).toLowerCase().includes(query)
+      )
+      .slice(0, 12);
+  }, [people, tagQuery]);
   const safeActiveIndex = Math.min(
     activeIndex,
     Math.max(0, postPreviews.length - 1)
@@ -694,8 +704,20 @@ export default function CreateContentModal({
               <small>{tagged.length} tagged</small>
             </div>
 
+            <label className="create-tag-search">
+              <Icon name="search" size={18} />
+              <input
+                type="search"
+                value={tagQuery}
+                onChange={(event) => setTagQuery(event.target.value)}
+                placeholder="Search people by name or @username"
+                aria-label="Search people to tag"
+              />
+              {tagQuery && <button type="button" onClick={() => setTagQuery("")} aria-label="Clear people search"><Icon name="close" size={16} /></button>}
+            </label>
+
             <div className="create-collab-list">
-              {people.slice(0, 40).map((person) => {
+              {tagMatches.map((person) => {
                 const selected = tagged.includes(person.username.toLowerCase());
                 return (
                   <button
@@ -720,6 +742,8 @@ export default function CreateContentModal({
                   </button>
                 );
               })}
+              {!tagQuery.trim() && <p className="create-tag-search-empty">Search for someone to tag them in your post.</p>}
+              {tagQuery.trim() && tagMatches.length === 0 && <p className="create-tag-search-empty">No people found. Try another name or username.</p>}
             </div>
           </div></details>
 
@@ -1139,6 +1163,8 @@ export default function CreateContentModal({
             <button
               key={nextMode}
               type="button"
+              role="tab"
+              aria-selected={mode === nextMode}
               className={mode === nextMode ? "active" : ""}
               onClick={() => {
                 setPostStep(1);
@@ -1148,6 +1174,7 @@ export default function CreateContentModal({
               }}
               disabled={posting || editing}
             >
+              <Icon name={nextMode === "post" ? "cameraModern" : nextMode === "reel" ? "filmModern" : "activity"} size={17} />
               {nextMode === "post" ? "Post" : nextMode === "reel" ? "Reel" : "Story"}
             </button>
           ))}

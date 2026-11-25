@@ -93,13 +93,13 @@ const NAV_ITEMS: Array<{
   label: string;
   icon: IconName;
 }> = [
-  { id: "home", label: "Home", icon: "home" },
-  { id: "explore", label: "Discover", icon: "explore" },
-  { id: "reels", label: "Clips", icon: "reels" },
-  { id: "messages", label: "Messages", icon: "messages" },
-  { id: "activity", label: "Activity", icon: "activity" },
-  { id: "saved", label: "Saved", icon: "saved" },
-  { id: "profile", label: "Profile", icon: "profile" },
+  { id: "home", label: "Home", icon: "homeModern" },
+  { id: "explore", label: "Discover", icon: "compassModern" },
+  { id: "reels", label: "Clips", icon: "filmModern" },
+  { id: "messages", label: "Messages", icon: "messagesModern" },
+  { id: "activity", label: "Activity", icon: "bellModern" },
+  { id: "saved", label: "Saved", icon: "bookmarkModern" },
+  { id: "profile", label: "Profile", icon: "userModern" },
 ];
 
 export default function HomeClient({
@@ -184,8 +184,6 @@ export default function HomeClient({
   const secondaryIdleRef = useRef<number | null>(null);
   const secondaryTimerRef = useRef<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [feedRefreshing, setFeedRefreshing] = useState(false);
-  const feedRefreshPendingRef = useRef(false);
   const [exploreLoading, setExploreLoading] = useState(false);
   const loadedScreensRef = useRef(new Set<string>());
   const followingFeedLoadedRef = useRef(false);
@@ -219,20 +217,6 @@ export default function HomeClient({
     try {
       window.localStorage.setItem("avenzo-feed-sort:" + initialProfile.id, nextMode);
     } catch { /* Preference is session-only when storage is unavailable. */ }
-  }
-
-  async function refreshHomeFeed() {
-    if (feedRefreshPendingRef.current) return;
-    feedRefreshPendingRef.current = true;
-    setFeedRefreshing(true);
-    try {
-      await Promise.all([homeFeedMode === "following" ? loadPosts() : loadExplorePosts(), loadStories()]);
-    } catch {
-      showToast("Could not refresh. Check your connection and try again.");
-    } finally {
-      feedRefreshPendingRef.current = false;
-      if (mountedRef.current) setFeedRefreshing(false);
-    }
   }
 
   const storySequence = useMemo(() => {
@@ -1434,7 +1418,7 @@ export default function HomeClient({
               onClick={() => router.push("/settings")}
               aria-label="Settings"
             >
-              <Icon name="settings" size={21} />
+              <Icon name="settingsModern" size={21} />
             </button>
           </div>
         )}
@@ -1611,13 +1595,13 @@ export default function HomeClient({
           ))}
 
           <button onClick={() => router.push("/settings")}>
-            <Icon name="settings" />
+            <Icon name="settingsModern" />
             <span>{t("Settings")}</span>
           </button>
 
           {profile.is_admin && (
             <button onClick={() => router.push("/admin/verification")}>
-              <Icon name="profile" />
+              <Icon name="userModern" />
               <span>Verification Admin</span>
             </button>
           )}
@@ -1717,7 +1701,6 @@ export default function HomeClient({
                 >
                   Discover
                 </button>
-                <button type="button" className="home-refresh-action" disabled={feedRefreshing} aria-label="Refresh feed" onClick={() => void refreshHomeFeed()}><Icon name="refresh" size={18} /><span>{feedRefreshing ? "Refreshing…" : "Refresh"}</span></button>
               </div>
 
               <div className="feed-toolbar home-feed-toolbar">
@@ -2115,7 +2098,7 @@ export default function HomeClient({
 
           <div className="product-note">
             <strong>AVENZO</strong>
-            <span>Real accounts. Real conversations.</span>
+            <span>A more thoughtful social space.</span>
           </div>
         </aside>
       </div>

@@ -485,7 +485,7 @@ export default function PostCard({
             aria-pressed={post.liked}
           >
             <span className="post-action-icon-web">
-              <Icon name="heart" size={20} />
+              <Icon name="heartModern" size={21} />
             </span>
             <span
               className="post-action-icon-mobile"
@@ -501,7 +501,7 @@ export default function PostCard({
             commentInputRef.current?.focus({ preventScroll: true });
           }}>
             <span className="post-action-icon-web">
-              <Icon name="comment" size={20} />
+              <Icon name="commentModern" size={21} />
             </span>
             <span
               className="post-action-icon-mobile"
@@ -514,7 +514,7 @@ export default function PostCard({
 
           <button onClick={onShare} aria-label="Share post">
             <span className="post-action-icon-web">
-              <Icon name="send" size={20} />
+              <Icon name="shareModern" size={21} />
             </span>
             <span
               className="post-action-icon-mobile"
@@ -532,7 +532,7 @@ export default function PostCard({
               title={post.reposted ? "Undo repost" : "Repost"}
             >
               <span className="post-action-icon-web">
-                <Icon name="repost" size={20} />
+                <Icon name="repostModern" size={21} />
               </span>
               <span
                 className="post-action-icon-mobile"
@@ -550,7 +550,7 @@ export default function PostCard({
             aria-pressed={saved}
           >
             <span className="post-action-icon-web">
-              <Icon name="bookmark" size={20} />
+              <Icon name="bookmarkModern" size={21} />
             </span>
             <span
               className="post-action-icon-mobile"
