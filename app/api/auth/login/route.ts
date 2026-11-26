@@ -14,6 +14,22 @@ import { verifyTurnstile } from "../../../../lib/turnstile";
 
 export const dynamic = "force-dynamic";
 
+// Temporary per-instance fallback if database rate-limit RPC fails.
+const fallbackBuckets = new Map<string, { count: number; expires: number }>();
+function fallbackLimit(request: Request, identifier: string) {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "unknown";
+  const key = ip + "|" + identifier.toLowerCase();
+  const now = Date.now();
+  const current = fallbackBuckets.get(key);
+  if (!current || current.expires <= now) {
+    fallbackBuckets.set(key, { count: 1, expires: now + 600_000 });
+    return { allowed: true, retryAfter: 0 };
+  }
+  current.count += 1;
+  return { allowed: current.count <= 10, retryAfter: Math.max(1, Math.ceil((current.expires - now) / 1000)) };
+}
+
+
 function json(body: unknown, status = 200) {
   return NextResponse.json(body, {
     status,
@@ -56,14 +72,13 @@ export async function POST(request: Request) {
 
     const supabase = await createClient();
 
-    const rate = await consumeRateLimit({
-      supabase,
-      request,
-      scope: "login",
-      subject: identifier,
-      limit: 10,
-      windowSeconds: 10 * 60,
-    });
+    let rate;
+    try {
+      rate = await consumeRateLimit({ supabase, request, scope: "login", subject: identifier, limit: 10, windowSeconds: 10 * 60 });
+    } catch (rateError) {
+      console.error("auth.login rate-limit RPC failed; fallback activated", JSON.stringify(rateError));
+      rate = fallbackLimit(request, identifier);
+    }
 
     if (!rate.allowed) {
       return rateLimitResponse(rate.retryAfter);
