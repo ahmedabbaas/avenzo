@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+
 .av-admin{min-height:100vh;background:#0b0d10;color:#e7e9ec;display:flex;font-family:"Plus Jakarta Sans",sans-serif;font-size:14px}
 .av-admin *{box-sizing:border-box}.av-admin-side{width:248px;flex:0 0 248px;border-right:1px solid #25282d;background:#0e1013;padding:25px 16px;display:flex;flex-direction:column;min-height:100vh}
 .av-admin-brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.13em;font-size:13px;padding:0 9px 35px}.av-admin-brand small{display:block;font-size:9px;color:#89919b;letter-spacing:.18em;margin-top:4px}.av-admin-mark{width:36px;height:36px;border:1px solid #b7c0c9;border-radius:12px;display:grid;place-items:center;font-size:18px;color:#e4e9ed;background:linear-gradient(140deg,#22262b,#101215);font-weight:800}.av-admin-mark.large{width:54px;height:54px;font-size:24px;border-radius:17px}
