@@ -38,6 +38,7 @@ function json(body: unknown, status = 200) {
 }
 
 export async function POST(request: Request) {
+  let diagnosticStage = "request-start";
   try {
     let body: Record<string, unknown>;
 
@@ -70,6 +71,7 @@ export async function POST(request: Request) {
       );
     }
 
+    diagnosticStage = "create-supabase-client";
     const supabase = await createClient();
 
     let rate;
@@ -84,6 +86,7 @@ export async function POST(request: Request) {
       return rateLimitResponse(rate.retryAfter);
     }
 
+    diagnosticStage = "turnstile-verification";
     const verified = await verifyTurnstile(
       request,
       turnstileToken,
@@ -97,6 +100,7 @@ export async function POST(request: Request) {
       );
     }
 
+    diagnosticStage = "username-login-edge-function-fetch";
     const response = await fetch(
       SUPABASE_URL + "/functions/v1/username-login",
       {
@@ -111,6 +115,7 @@ export async function POST(request: Request) {
       }
     );
 
+    diagnosticStage = "username-login-edge-function-response-json";
     const result = await response.json();
 
     if (!response.ok || !result.access_token || !result.refresh_token) {
@@ -126,6 +131,7 @@ export async function POST(request: Request) {
       );
     }
 
+    diagnosticStage = "cookie-write";
     const cookieStore = await cookies();
 
     if (rememberSession) {
@@ -139,6 +145,7 @@ export async function POST(request: Request) {
       });
     }
 
+    diagnosticStage = "set-session";
     const { error } = await supabase.auth.setSession({
       access_token: result.access_token,
       refresh_token: result.refresh_token,
@@ -151,11 +158,13 @@ export async function POST(request: Request) {
       );
     }
 
+    diagnosticStage = "profile-update";
     await supabase
       .from("profiles")
       .update({ deactivated_at: null })
       .eq("id", result.user?.id || "");
 
+    diagnosticStage = "mfa-assurance-level";
     const { data: aal } =
       await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
 
@@ -164,6 +173,8 @@ export async function POST(request: Request) {
 
     return json({ ok: true, requiresMfa });
   } catch (error) {
+    const diagnostic = error && typeof error === "object" ? JSON.stringify(error) : String(error);
+    console.error("auth.login diagnostic", JSON.stringify({ stage: diagnosticStage, error: diagnostic }));
     logServerError({ request, route: "auth.login", error });
     return json(
       { error: "Account services are temporarily unavailable." },
