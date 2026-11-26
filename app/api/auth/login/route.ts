@@ -100,35 +100,76 @@ export async function POST(request: Request) {
       );
     }
 
-    diagnosticStage = "username-login-edge-function-fetch";
-    const response = await fetch(
-      SUPABASE_URL + "/functions/v1/username-login",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: SUPABASE_PUBLISHABLE_KEY,
-        },
-        body: JSON.stringify({ identifier, password }),
-        cache: "no-store",
-        signal: AbortSignal.timeout(8000),
+    // Email sign-in goes directly through Supabase Auth. The username Edge
+    // Function is only needed for username-to-email lookup, avoiding an
+    // unnecessary dependency for the common email login path.
+    let userId = "";
+    let needsSetSession = false;
+
+    if (identifier.includes("@")) {
+      diagnosticStage = "direct-email-auth";
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: identifier,
+        password,
+      });
+
+      if (error || !data.user || !data.session) {
+        const message = error?.message?.toLowerCase().includes("confirm")
+          ? "Verify your email before signing in."
+          : "The username/email or password is incorrect.";
+        return json({ error: message, field: "credentials" }, 401);
       }
-    );
-
-    diagnosticStage = "username-login-edge-function-response-json";
-    const result = await response.json();
-
-    if (!response.ok || !result.access_token || !result.refresh_token) {
-      return json(
+      userId = data.user.id;
+    } else {
+      diagnosticStage = "username-login-edge-function-fetch";
+      const response = await fetch(
+        SUPABASE_URL + "/functions/v1/username-login",
         {
-          error:
-            response.status === 401
-              ? "The username/email or password is incorrect."
-              : result.error || "Account services are temporarily unavailable.",
-          field: response.status === 401 ? "credentials" : "form",
-        },
-        response.status === 401 ? 401 : 503
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ identifier, password }),
+          cache: "no-store",
+          signal: AbortSignal.timeout(8000),
+        }
       );
+
+      diagnosticStage = "username-login-edge-function-response-json";
+      const result = await response.json();
+
+      if (!response.ok || !result.access_token || !result.refresh_token) {
+        console.error("auth.login username function response", JSON.stringify({
+          status: response.status,
+          error: result?.error || "No error detail",
+        }));
+        return json(
+          {
+            error:
+              response.status === 401
+                ? "The username/email or password is incorrect."
+                : result.error || "Account services are temporarily unavailable.",
+            field: response.status === 401 ? "credentials" : "form",
+          },
+          response.status === 401 ? 401 : 503
+        );
+      }
+
+      userId = result.user?.id || "";
+      needsSetSession = true;
+      diagnosticStage = "username-set-session";
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: result.access_token,
+        refresh_token: result.refresh_token,
+      });
+      if (sessionError) {
+        console.error("auth.login username session error", sessionError.message);
+        return json(
+          { error: "Your session could not be started. Please try again.", field: "form" },
+          503
+        );
+      }
     }
 
     diagnosticStage = "cookie-write";
@@ -145,24 +186,13 @@ export async function POST(request: Request) {
       });
     }
 
-    diagnosticStage = "set-session";
-    const { error } = await supabase.auth.setSession({
-      access_token: result.access_token,
-      refresh_token: result.refresh_token,
-    });
-
-    if (error) {
-      return json(
-        { error: "Your session could not be started. Please try again.", field: "form" },
-        503
-      );
-    }
-
     diagnosticStage = "profile-update";
-    await supabase
-      .from("profiles")
-      .update({ deactivated_at: null })
-      .eq("id", result.user?.id || "");
+    if (userId) {
+      await supabase
+        .from("profiles")
+        .update({ deactivated_at: null })
+        .eq("id", userId);
+    }
 
     diagnosticStage = "mfa-assurance-level";
     const { data: aal } =
