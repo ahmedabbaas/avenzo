@@ -14,11 +14,11 @@ Build AVENZO as a polished, trustworthy, mobile-first social platform with its o
 
 ## Brand and visual identity
 - Brand: AVENZO. Do not rename, rebrand, or add unrelated slogans.
-- Core palette: obsidian/graphite surfaces with a signature citron-lime accent (#C9F34E).
-- Prohibited accent direction: purple, violet, magenta, and blue as primary brand accents.
-- Dark theme: near-black canvas, layered graphite surfaces, subtle neutral borders, pearl text, muted steel secondary text, lime for primary actions and active states.
-- Light theme: warm-neutral/off-white canvas, white surfaces, dark ink text, quiet borders, the same lime accent.
-- Lime is a functional accent, not a background wash. Reserve it for primary actions, active navigation, focus rings, progress, and meaningful status.
+- Core palette: Obsidian Chrome, graphite surfaces, pearl text, and restrained silver/steel accents (#D2D7DD).
+- Prohibited primary accent direction: citron lime, violet, purple, magenta, and saturated blue.
+- Dark theme: near-black canvas, layered graphite surfaces, subtle neutral borders, pearl text, muted steel secondary text, silver for primary actions and active states.
+- Light theme: warm-neutral/off-white canvas, white surfaces, dark ink text, quiet borders, the same restrained silver/charcoal accent system.
+- Silver is a functional accent, not a background wash. Reserve it for primary actions, active navigation, focus rings, progress, and meaningful status.
 - Use a restrained shadow system. Prefer spacing, surface contrast, and hairline borders over stacks of glowing cards.
 - Avoid excessive gradients, glass effects, neon glow, pill overload, giant headings, and unnecessary decoration.
 - Typography: Plus Jakarta Sans / system fallback. Establish a consistent scale: 11–12px metadata, 13–14px controls/body compact, 15–16px body, 20–24px section titles, 30–40px page titles. Never shrink text to force a layout to fit.
