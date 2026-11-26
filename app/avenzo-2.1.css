@@ -2,17 +2,17 @@
    Loaded after legacy compatibility layers so the product has one visual source of truth. */
 @layer avenzo-21 {
   :root {
-    --accent: #c6ff45;
-    --accent-strong: #d8ff80;
-    --accent-soft: rgba(198, 255, 69, .12);
-    --avenzo-brand-accent: #c6ff45;
-    --avenzo-brand-ink: #11150a;
+    --accent: #d2d7dd;
+    --accent-strong: #f3f5f7;
+    --accent-soft: rgba(210, 215, 221, .12);
+    --avenzo-brand-accent: #d2d7dd;
+    --avenzo-brand-ink: #090a0c;
     --avenzo-motion-fast: 140ms;
     --avenzo-motion-base: 190ms;
     --avenzo-ease: cubic-bezier(.2, .75, .25, 1);
   }
 
-  html, body { accent-color: #c6ff45; }
+  html, body { accent-color: #d2d7dd; }
 
   .social-app {
     --av-bg: #080a0b;
@@ -22,14 +22,14 @@
     --av-line: #252e31;
     --av-line-strong: #3b484b;
     --av-text: #f5f7f4;
-    --av-soft: #c9d0ca;
-    --av-muted: #929d96;
-    --av-muted-2: #707c75;
-    --av-violet: #c6ff45;
-    --av-violet-2: #d8ff80;
-    --av-secondary: #9cac84;
-    --av-secondary-hover: #c6ff45;
-    --av-glow: rgba(198, 255, 69, .10);
+    --av-soft: #d1d5da;
+    --av-muted: #929aa4;
+    --av-muted-2: #69727c;
+    --av-violet: #d2d7dd;
+    --av-violet-2: #f3f5f7;
+    --av-secondary: #8f99a4;
+    --av-secondary-hover: #d2d7dd;
+    --av-glow: rgba(210, 215, 221, .10);
     --bg: var(--av-bg);
     --panel: var(--av-surface);
     --panel-2: var(--av-surface-2);
@@ -40,31 +40,31 @@
     --text-soft: var(--av-soft);
     --muted: var(--av-muted);
     --muted-2: var(--av-muted-2);
-    --accent: #c6ff45;
-    --accent-strong: #d8ff80;
-    --accent-soft: rgba(198, 255, 69, .12);
+    --accent: #d2d7dd;
+    --accent-strong: #f3f5f7;
+    --accent-soft: rgba(210, 215, 221, .12);
     color: var(--av-text);
     background:
-      radial-gradient(ellipse at 50% -24%, rgba(198,255,69,.035), transparent 38%),
+      radial-gradient(ellipse at 50% -24%, rgba(210,215,221,.035), transparent 38%),
       var(--av-bg);
   }
 
   html[data-theme="light"] .social-app {
-    --av-bg: #f5f7f3;
+    --av-bg: #f5f6f7;
     --av-surface: #ffffff;
-    --av-surface-2: #eef1eb;
-    --av-surface-3: #e5eae1;
-    --av-line: #dfe5da;
-    --av-line-strong: #c5d0bc;
+    --av-surface-2: #f0f2f4;
+    --av-surface-3: #e8ebee;
+    --av-line: #e0e4e8;
+    --av-line-strong: #cbd1d7;
     --av-text: #171c16;
     --av-soft: #414a40;
-    --av-muted: #687365;
-    --av-muted-2: #899485;
-    --av-violet: #57751b;
-    --av-violet-2: #3f5910;
+    --av-muted: #6f7882;
+    --av-muted-2: #9aa2ab;
+    --av-violet: #59636e;
+    --av-violet-2: #22272d;
     --av-secondary: #74815f;
-    --av-secondary-hover: #3f5910;
-    --av-glow: rgba(87,117,27,.08);
+    --av-secondary-hover: #22272d;
+    --av-glow: rgba(89,99,110,.08);
     --bg: var(--av-bg);
     --panel: var(--av-surface);
     --panel-2: var(--av-surface-2);
@@ -75,16 +75,16 @@
     --text-soft: var(--av-soft);
     --muted: var(--av-muted);
     --muted-2: var(--av-muted-2);
-    --accent: #57751b;
-    --accent-strong: #3f5910;
-    --accent-soft: rgba(87,117,27,.12);
+    --accent: #59636e;
+    --accent-strong: #22272d;
+    --accent-soft: rgba(89,99,110,.12);
     background:
-      radial-gradient(ellipse at 50% -24%, rgba(87,117,27,.045), transparent 38%),
+      radial-gradient(ellipse at 50% -24%, rgba(89,99,110,.045), transparent 38%),
       var(--av-bg);
   }
 
   .social-app .eyebrow { color: var(--accent-strong); }
-  .social-app .brand i { background: var(--accent); box-shadow: 0 0 14px rgba(198,255,69,.14); }
+  .social-app .brand i { background: var(--accent); box-shadow: 0 0 14px rgba(210,215,221,.14); }
   .social-app .left-nav button.active {
     color: var(--av-text);
     background: var(--av-surface-2);
@@ -99,16 +99,16 @@
   .social-app .top-create,
   .social-app .auth-submit {
     background: var(--accent);
-    color: #11150a;
-    border: 1px solid rgba(198,255,69,.32);
-    box-shadow: 0 8px 22px rgba(198,255,69,.08);
+    color: #090a0c;
+    border: 1px solid rgba(210,215,221,.32);
+    box-shadow: 0 8px 22px rgba(210,215,221,.08);
   }
   .social-app .left-nav .create-nav:hover,
   .social-app .btn:not(.secondary):hover:not(:disabled),
   .social-app .top-create:hover,
   .social-app .auth-submit:hover:not(:disabled) {
     background: var(--accent-strong);
-    color: #11150a;
+    color: #090a0c;
     filter: none;
   }
   .social-app .btn.secondary {
@@ -167,15 +167,15 @@
   .social-app button { touch-action: manipulation; }
 
   .auth-shell {
-    --accent: #c6ff45;
-    --accent-strong: #d8ff80;
+    --accent: #d2d7dd;
+    --accent-strong: #f3f5f7;
   }
   .auth-shell .brand-mark {
     background: var(--accent);
-    color: #11150a;
-    box-shadow: 0 10px 30px rgba(198,255,69,.10);
+    color: #090a0c;
+    box-shadow: 0 10px 30px rgba(210,215,221,.10);
   }
-  .auth-shell .auth-links a { color: #c6ff45; }
+  .auth-shell .auth-links a { color: #d2d7dd; }
 
   @media (max-width: 760px) {
     .social-app .left-nav button,
@@ -213,5 +213,47 @@
     height: calc(100dvh - 64px);
     border: 0;
     border-radius: 0;
+  }
+}
+
+
+/* AVENZO PREMIUM UI — shared finish across desktop, mobile and native webview. */
+@layer avenzo-21 {
+  :root {
+    --avenzo-premium-duration: 160ms;
+    --avenzo-premium-ease: cubic-bezier(.2,.8,.2,1);
+    --avenzo-premium-focus: rgba(228,232,236,.22);
+  }
+  html[data-theme="light"] { --avenzo-premium-focus: rgba(17,19,23,.16); }
+  .social-app :is(.btn,.icon-button,.top-activity,.top-messages,.top-profile-menu,.left-nav>button,.mobile-bottom-nav>button,.post-actions>button),
+  .messages-page :is(button,a),.settings-page-shell :is(button,a),.public-profile-shell :is(button,a) {
+    transition: color var(--avenzo-premium-duration) var(--avenzo-premium-ease),
+      background-color var(--avenzo-premium-duration) var(--avenzo-premium-ease),
+      border-color var(--avenzo-premium-duration) var(--avenzo-premium-ease),
+      box-shadow var(--avenzo-premium-duration) var(--avenzo-premium-ease),
+      transform var(--avenzo-premium-duration) var(--avenzo-premium-ease);
+  }
+  @media (hover:hover) and (pointer:fine) {
+    .social-app :is(.btn,.icon-button,.top-activity,.top-messages,.top-profile-menu):hover:not(:disabled),
+    .messages-page :is(button,a):hover:not(:disabled),.settings-page-shell :is(button,a):hover:not(:disabled),
+    .public-profile-shell :is(button,a):hover:not(:disabled) { border-color:var(--av-line-strong); }
+    .social-app :is(.post-card,.side-card,.person-card,.search-summary):hover { border-color:var(--av-line-strong); }
+  }
+  .social-app :is(button,a):active,.messages-page :is(button,a):active,
+  .settings-page-shell :is(button,a):active,.public-profile-shell :is(button,a):active { transform:scale(.985); }
+  .social-app :is(button,a,input,textarea,select):focus-visible,
+  .messages-page :is(button,a,input,textarea):focus-visible,
+  .settings-page-shell :is(button,a,input,textarea,select):focus-visible,
+  .public-profile-shell :is(button,a):focus-visible {
+    outline:2px solid var(--accent);outline-offset:3px;box-shadow:0 0 0 4px var(--avenzo-premium-focus);
+  }
+  .social-app :is(button,a):disabled,.messages-page :is(button,a):disabled,
+  .settings-page-shell :is(button,a):disabled { cursor:not-allowed;transform:none; }
+  @media (prefers-reduced-motion:reduce) {
+    .social-app :is(button,a),.messages-page :is(button,a),.settings-page-shell :is(button,a),.public-profile-shell :is(button,a) {
+      transition:none!important;animation:none!important;scroll-behavior:auto!important;
+    }
+    .social-app :is(button,a):active,.messages-page :is(button,a):active,
+    .settings-page-shell :is(button,a):active,.public-profile-shell :is(button,a):active { transform:none; }
   }
 }
