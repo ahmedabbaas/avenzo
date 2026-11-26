@@ -148,6 +148,7 @@ export default function HomeClient({
   const [followed, setFollowed] = useState<string[]>([]);
   const [requested, setRequested] = useState<string[]>([]);
   const [saved, setSaved] = useState<string[]>([]);
+  const [savedPanelPrimed, setSavedPanelPrimed] = useState(false);
   const [showCreate, setShowCreate] = useState(Boolean(initialCreateMode) || initialShowDrafts);
   const [showCreatePicker, setShowCreatePicker] = useState(false);
   const [draftsInitiallyOpen, setDraftsInitiallyOpen] = useState(initialShowDrafts);
@@ -189,6 +190,8 @@ export default function HomeClient({
   const peopleLoadRef = useRef<Promise<void> | null>(null);
   const explorePostsLoadRef = useRef<Promise<void> | null>(null);
   const reelsLoadRef = useRef<Promise<void> | null>(null);
+  const profileContentLoadRef = useRef<Promise<void> | null>(null);
+  const profileContentLoadedRef = useRef(false);
   const peopleLoadedRef = useRef(false);
   const explorePostsLoadedRef = useRef(false);
   const reelsLoadedRef = useRef(false);
@@ -365,22 +368,29 @@ export default function HomeClient({
     followingFeedLoadedRef.current = true;
   }
 
-  async function loadProfileContent() {
+  async function loadProfileContent(force = true) {
+    if (!force && profileContentLoadedRef.current) return;
+    if (profileContentLoadRef.current) return profileContentLoadRef.current;
     setProfileContentLoading(true);
     setProfileContentError("");
-    try {
+    const request = (async () => {
+      try {
       const [ownPosts, ownReels] = await Promise.all([
         fetchProfilePosts(supabase, initialProfile.id),
         fetchReels(supabase, initialProfile.id, { authorId: initialProfile.id, limit: 60 }),
       ]);
       setProfilePosts(ownPosts);
       setProfileReels(ownReels.reels);
-    } catch (error) {
+      profileContentLoadedRef.current = true;
+      } catch (error) {
       setProfileContentError("Your profile content could not load. Try again.");
       throw error;
-    } finally {
+      } finally {
       setProfileContentLoading(false);
-    }
+      }
+    })().finally(() => { profileContentLoadRef.current = null; });
+    profileContentLoadRef.current = request;
+    return request;
   }
 
   async function loadExplorePosts(force = true) {
@@ -434,8 +444,8 @@ export default function HomeClient({
     }
   }
 
-  const loadUnreadMessages = useCallback(async () => {
-    const { inbox, requests } = await fetchInboxPair(supabase);
+  const loadUnreadMessages = useCallback(async (preferCache = false) => {
+    const { inbox, requests } = await fetchInboxPair(supabase, initialProfile.id, preferCache);
 
     setUnreadMessages(
       [...inbox, ...requests].reduce(
@@ -443,7 +453,7 @@ export default function HomeClient({
         0
       )
     );
-  }, [supabase]);
+  }, [supabase, initialProfile.id]);
 
   async function refreshEverything() {
     setLoading(true);
@@ -528,13 +538,16 @@ export default function HomeClient({
       secondaryIdleRef.current = null;
       secondaryTimerRef.current = null;
       if (!mountedRef.current) return;
+      setSavedPanelPrimed(true);
+      ["/messages", "/messages/groups", "/reels", "/settings", "/settings/app", "/settings/account", "/settings/follow-requests", "/settings/close-friends", "/settings/archive", "/settings/blocked", "/channels"].forEach((path) => router.prefetch(path));
       void Promise.allSettled([
         loadProfile(),
         loadStats(),
         loadPeople(false),
         loadReels(false),
+        loadProfileContent(false),
         followingFeedLoadedRef.current ? Promise.resolve() : loadPosts(),
-        loadUnreadMessages(),
+        loadUnreadMessages(true),
         loadUnreadActivity(),
       ]);
     };
@@ -584,7 +597,7 @@ export default function HomeClient({
 
     if (screen === "profile" && !loadedScreensRef.current.has("profile")) {
       loadedScreensRef.current.add("profile");
-      void Promise.all([loadProfileContent(), loadStats()]).catch(() => {
+      void Promise.all([loadProfileContent(false), loadStats()]).catch(() => {
         showToast("Your profile could not fully load. Try again.");
       });
       return;
@@ -1759,7 +1772,9 @@ export default function HomeClient({
                 </div>
               </div>
 
-              {loading ? (
+              {loading && homeFeedPosts.length > 0 && <div className="feed-refresh-indicator" role="status"><i />Refreshing feed…</div>}
+
+              {loading && homeFeedPosts.length === 0 ? (
                 <FeedSkeleton />
               ) : homeError && homeFeedPosts.length === 0 ? (
                 <div className="section-load-error" role="alert"><p>{homeError}</p><button type="button" className="btn secondary" onClick={() => void refreshEverything()}>Retry feed</button></div>
@@ -2016,12 +2031,11 @@ export default function HomeClient({
             </section>
           )}
 
-          {screen === "saved" && (
-            <SavedCollectionsPanel
-              supabase={supabase}
-              userId={initialProfile.id}
-            />
-          )}
+      {(screen === "saved" || savedPanelPrimed) && (
+        <div hidden={screen !== "saved"}>
+          <SavedCollectionsPanel supabase={supabase} userId={initialProfile.id} />
+        </div>
+      )}
 
           {screen === "activity" && (
             <ActivityPanel
@@ -2032,7 +2046,7 @@ export default function HomeClient({
           )}
 
           {screen === "profile" && profileContentError && <div className="section-load-error" role="alert"><p>{profileContentError}</p><button type="button" className="btn secondary" disabled={profileContentLoading} onClick={() => void loadProfileContent().catch(() => undefined)}>Retry profile</button></div>}
-          {screen === "profile" && profileContentLoading ? <ProfileSkeleton /> : screen === "profile" && !profileContentError && (
+          {screen === "profile" && profileContentLoading && profilePosts.length === 0 && profileReels.length === 0 ? <ProfileSkeleton /> : screen === "profile" && !profileContentError && (
             <ProfileView
               profile={profile}
               posts={profilePosts}

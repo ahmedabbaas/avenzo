@@ -485,13 +485,13 @@ export default function PostCard({
             aria-pressed={post.liked}
           >
             <span className="post-action-icon-web">
-              <Icon name="heartModern" size={21} />
+              <Icon name={post.liked ? "heartFilled" : "heartModern"} size={21} />
             </span>
             <span
               className="post-action-icon-mobile"
               style={{ display: "none" }}
             >
-              <Icon name="heartModern" size={21} />
+              <Icon name={post.liked ? "heartFilled" : "heartModern"} size={21} />
             </span>
             <span>{post.likeCount}</span>
           </button>
@@ -550,13 +550,13 @@ export default function PostCard({
             aria-pressed={saved}
           >
             <span className="post-action-icon-web">
-              <Icon name="bookmarkModern" size={21} />
+              <Icon name={saved ? "bookmarkFilled" : "bookmarkModern"} size={21} />
             </span>
             <span
               className="post-action-icon-mobile"
               style={{ display: "none" }}
             >
-              <Icon name="bookmarkModern" size={21} />
+              <Icon name={saved ? "bookmarkFilled" : "bookmarkModern"} size={21} />
             </span>
           </button>
         </div>
@@ -701,7 +701,7 @@ export default function PostCard({
                           onClick={() => onCommentLike(item)}
                           aria-label={item.liked ? "Unlike comment" : "Like comment"}
                         >
-                          <Icon name="heart" size={13} />
+                          <Icon name={item.liked ? "heartFilled" : "heart"} size={13} />
                           {item.likeCount ? <span>{item.likeCount}</span> : null}
                         </button>
                         <button
@@ -807,7 +807,7 @@ export default function PostCard({
                                     : "Like reply"
                                 }
                               >
-                                <Icon name="heart" size={12} />
+                                <Icon name={reply.liked ? "heartFilled" : "heart"} size={12} />
                                 {reply.likeCount ? (
                                   <span>{reply.likeCount}</span>
                                 ) : null}

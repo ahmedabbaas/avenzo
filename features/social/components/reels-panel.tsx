@@ -772,10 +772,10 @@ export default function ReelsPanel({
                       aria-label={reel.liked ? "Unlike reel" : "Like reel"}
                     >
                       <span className="reel-action-icon-desktop">
-                        <Icon name="heartModern" size={25} />
+                        <Icon name={reel.liked ? "heartFilled" : "heartModern"} size={25} />
                       </span>
                       <span className="reel-action-icon-mobile" style={{ display: "none" }}>
-                        <Icon name="heartModern" size={25} />
+                        <Icon name={reel.liked ? "heartFilled" : "heartModern"} size={25} />
                       </span>
                       <b className="reel-count-desktop">{reel.likeCount}</b>
                       <b className="reel-count-mobile" style={{ display: "none" }}>
@@ -832,10 +832,10 @@ export default function ReelsPanel({
                       aria-label={isSaved ? "Remove saved reel" : "Save reel"}
                     >
                       <span className="reel-action-icon-desktop">
-                    <Icon name="bookmarkModern" size={24} />
+                    <Icon name={isSaved ? "bookmarkFilled" : "bookmarkModern"} size={24} />
                       </span>
                       <span className="reel-action-icon-mobile" style={{ display: "none" }}>
-                        <Icon name="bookmarkModern" size={25} />
+                        <Icon name={isSaved ? "bookmarkFilled" : "bookmarkModern"} size={25} />
                       </span>
                       <b className="reel-count-desktop">{reel.saveCount}</b>
                       <b className="reel-count-mobile" style={{ display: "none" }}>

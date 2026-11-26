@@ -21,6 +21,10 @@ function assertNoError(error: unknown) {
   if (error) throw error;
 }
 
+type InboxPair = { inbox: InboxConversation[]; requests: InboxConversation[] };
+const inboxPairCache = new Map<string, { value: InboxPair; savedAt: number }>();
+const inboxPairRequests = new Map<string, Promise<InboxPair>>();
+
 async function attachInboxVerification(
   supabase: SupabaseClient,
   groups: unknown[][]
@@ -55,19 +59,32 @@ export async function fetchInbox(
 }
 
 export async function fetchInboxPair(
-  supabase: SupabaseClient
-): Promise<{ inbox: InboxConversation[]; requests: InboxConversation[] }> {
-  const [inboxResult, requestsResult] = await Promise.all([
-    supabase.rpc("get_dm_inbox_v4", { include_requests: false }),
-    supabase.rpc("get_dm_inbox_v4", { include_requests: true }),
-  ]);
-  assertNoError(inboxResult.error);
-  assertNoError(requestsResult.error);
-  const [inbox, requests] = await attachInboxVerification(supabase, [
-    inboxResult.data || [],
-    requestsResult.data || [],
-  ]);
-  return { inbox, requests };
+  supabase: SupabaseClient,
+  userId: string,
+  preferCache = false
+): Promise<InboxPair> {
+  const cached = inboxPairCache.get(userId);
+  if (preferCache && cached && Date.now() - cached.savedAt < 15_000) return cached.value;
+  const pending = inboxPairRequests.get(userId);
+  if (pending) return pending;
+
+  const request = (async () => {
+    const [inboxResult, requestsResult] = await Promise.all([
+      supabase.rpc("get_dm_inbox_v4", { include_requests: false }),
+      supabase.rpc("get_dm_inbox_v4", { include_requests: true }),
+    ]);
+    assertNoError(inboxResult.error);
+    assertNoError(requestsResult.error);
+    const [inbox, requests] = await attachInboxVerification(supabase, [
+      inboxResult.data || [],
+      requestsResult.data || [],
+    ]);
+    const value = { inbox, requests };
+    inboxPairCache.set(userId, { value, savedAt: Date.now() });
+    return value;
+  })().finally(() => inboxPairRequests.delete(userId));
+  inboxPairRequests.set(userId, request);
+  return request;
 }
 
 export async function fetchMessageUsers(

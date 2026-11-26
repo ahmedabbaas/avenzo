@@ -70,6 +70,8 @@ export type IconName =
   | "homeModern" | "compassModern" | "messagesModern" | "settingsModern" | "userModern"
   | "gridModern" | "filmModern" | "cameraModern";
 
+type PackedIconName = IconName | "heartFilled" | "bookmarkFilled";
+
 const ICONS: Record<IconName, LucideIcon> = {
   home: House,
   homeModern: House,
@@ -139,8 +141,37 @@ const ICONS: Record<IconName, LucideIcon> = {
   refresh: RefreshCw,
 };
 
-export default function Icon({ name, size = 19 }: { name: IconName; size?: number }) {
-  const Glyph = ICONS[name] ?? CircleHelp;
+const PACKED_ICONS: Partial<Record<PackedIconName, string>> = {
+  home: "home.png", homeModern: "home.png",
+  explore: "discover.png", compassModern: "discover.png",
+  messages: "messages.png", messagesModern: "messages.png", chatRound: "messages.png",
+  activity: "notification.png", bellModern: "notification.png",
+  saved: "bookmark-outline.png", bookmark: "bookmark-outline.png", bookmarkModern: "bookmark-outline.png",
+  bookmarkFilled: "bookmark-filled.png",
+  heart: "heart-outline.png", heartModern: "heart-outline.png", heartFilled: "heart-filled.png",
+  comment: "comment.png", commentModern: "messages.png",
+  search: "search.png", camera: "media.png", cameraModern: "media.png",
+  plus: "create.png", play: "play.png", phone: "phone.png", mic: "microphone.png",
+  shareModern: "share.png", userPlus: "following.png",
+};
+
+export default function Icon({ name, size = 19 }: { name: PackedIconName; size?: number }) {
+  const packedIcon = PACKED_ICONS[name];
+  if (packedIcon) {
+    return (
+      <img
+        className="avenzo-icon avenzo-icon-asset"
+        src={"/icons/avenzo/" + packedIcon}
+        width={size}
+        height={size}
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+      />
+    );
+  }
+
+  const Glyph = (ICONS as Partial<Record<PackedIconName, LucideIcon>>)[name] ?? CircleHelp;
 
   return (
     <Glyph

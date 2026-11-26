@@ -430,8 +430,8 @@ export default function MessagesWorkspace({
     setNotes(await fetchActiveNotes(supabase));
   }, [supabase]);
 
-  const loadLists = useCallback(async () => {
-    const { inbox: nextInbox, requests: nextRequests } = await fetchInboxPair(supabase);
+  const loadLists = useCallback(async (preferCache = false) => {
+    const { inbox: nextInbox, requests: nextRequests } = await fetchInboxPair(supabase, currentUser.id, preferCache);
     setInbox(nextInbox);
     setRequests(nextRequests);
 
@@ -442,7 +442,7 @@ export default function MessagesWorkspace({
       );
       if (replacement) setActive(replacement);
     }
-  }, [supabase]);
+  }, [supabase, currentUser.id]);
 
   useEffect(() => {
     const candidates = [...inbox, ...requests].slice(0, 8);
@@ -549,7 +549,7 @@ export default function MessagesWorkspace({
           if (activeEffect) setOwnOnlineEnabled(data?.online_status ?? true);
         })
         .then(undefined, () => undefined);
-      void loadLists()
+      void loadLists(true)
         .then(async () => {
           if (!activeEffect) return;
           setLoading(false);
