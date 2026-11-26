@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../../../lib/supabase/server";
 import { isAdminEmail } from "../../../../lib/admin/auth";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-import { SUPABASE_URL } from "../../../../lib/supabase/config";
 
 export const dynamic = "force-dynamic";
 
@@ -13,16 +11,14 @@ async function authorize() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!isAdminEmail(user?.email)) return null;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceKey) return null;
-  return createSupabaseClient(SUPABASE_URL, serviceKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  // Use the authenticated user's session client. RLS grants this specific admin
+  // email access to the single "brand" settings row; no service-role secret needed.
+  return supabase;
 }
 
 export async function GET() {
   const db = await authorize();
-  if (!db) return NextResponse.json({ error: "Not authorized or admin backend not configured." }, { status: 403 });
+  if (!db) return NextResponse.json({ error: "Not authorized." }, { status: 403 });
   const { data, error } = await db.from("admin_settings").select("value").eq("key", SETTINGS_KEY).maybeSingle();
   if (error) return NextResponse.json({ error: "Admin settings storage unavailable." }, { status: 503 });
   return NextResponse.json({ settings: data?.value ?? null }, { headers: { "Cache-Control": "no-store" } });
@@ -30,7 +26,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const db = await authorize();
-  if (!db) return NextResponse.json({ error: "Not authorized or admin backend not configured." }, { status: 403 });
+  if (!db) return NextResponse.json({ error: "Not authorized." }, { status: 403 });
   let body: unknown;
   try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid JSON." }, { status: 400 }); }
   if (!body || typeof body !== "object" || Array.isArray(body)) return NextResponse.json({ error: "Settings must be an object." }, { status: 400 });
