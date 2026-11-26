@@ -151,7 +151,7 @@ const PACKED_ICONS: Partial<Record<PackedIconName, string>> = {
   heart: "heart-outline.png", heartModern: "heart-outline.png", heartFilled: "heart-filled.png",
   comment: "comment.png", commentModern: "messages.png",
   search: "search.png", camera: "media.png", cameraModern: "media.png",
-  plus: "create.png", play: "play.png", phone: "phone.png", mic: "microphone.png",
+  plus: "create.png", play: "play.png", reels: "play.png", filmModern: "play.png", phone: "phone.png", mic: "microphone.png",
   shareModern: "share.png", userPlus: "following.png",
 };
 

@@ -120,16 +120,17 @@ export default function ReelsPanel({
 
   const load = useCallback(async () => {
     try {
-      const [result, relationships] = await Promise.all([
-        fetchReels(supabase, currentUser.id, { limit: 32 }),
-        fetchFollowingState(supabase, currentUser.id),
-      ]);
+      const result = await fetchReels(supabase, currentUser.id, { limit: 32, preferCache: true });
       setReels(result.reels);
       setSaved(result.savedReels);
-      setFollowed(relationships.followed);
-      setRequested(relationships.requested);
       setNotice("");
       lastLoadAtRef.current = Date.now();
+      setLoading(false);
+
+      void fetchFollowingState(supabase, currentUser.id).then((relationships) => {
+        setFollowed(relationships.followed);
+        setRequested(relationships.requested);
+      }).catch(() => undefined);
     } catch {
       setNotice("Reels could not be loaded right now.");
     } finally {

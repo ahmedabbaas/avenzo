@@ -80,6 +80,11 @@ function assertNoError(error: unknown) {
   if (error) throw error;
 }
 
+type ReelFetchOptions = { authorId?: string; limit?: number; ids?: string[]; preferCache?: boolean };
+type ReelFetchResult = { reels: Reel[]; savedReels: string[] };
+const reelsCache = new Map<string, { result: ReelFetchResult; savedAt: number }>();
+const reelsRequests = new Map<string, Promise<ReelFetchResult>>();
+
 export async function fetchProfile(
   supabase: SupabaseClient,
   userId: string
@@ -712,15 +717,11 @@ export async function fetchExplorePosts(
   return hydratePosts(supabase, userId, (data || []) as PostRow[]);
 }
 
-export async function fetchReels(
+async function fetchReelsUncached(
   supabase: SupabaseClient,
   userId: string,
-  options?: {
-    authorId?: string;
-    limit?: number;
-    ids?: string[];
-  }
-): Promise<{ reels: Reel[]; savedReels: string[] }> {
+  options?: ReelFetchOptions
+): Promise<ReelFetchResult> {
   let query = supabase
     .from("reels")
     .select("*");
@@ -869,6 +870,39 @@ export async function fetchReels(
       (row: { reel_id: string }) => row.reel_id
     ),
   };
+}
+
+export async function fetchReels(
+  supabase: SupabaseClient,
+  userId: string,
+  options?: ReelFetchOptions
+): Promise<ReelFetchResult> {
+  const { preferCache = false, ...queryOptions } = options || {};
+  const key = JSON.stringify([
+    userId,
+    queryOptions.authorId || "",
+    queryOptions.limit || 32,
+    queryOptions.ids ? [...queryOptions.ids].sort() : null,
+  ]);
+  const cached = reelsCache.get(key);
+  if (preferCache && cached && Date.now() - cached.savedAt < 20_000) {
+    return cached.result;
+  }
+  const pending = reelsRequests.get(key);
+  if (pending) return pending;
+
+  const request = fetchReelsUncached(supabase, userId, queryOptions)
+    .then((result) => {
+      reelsCache.set(key, { result, savedAt: Date.now() });
+      if (reelsCache.size > 24) {
+        const oldestKey = reelsCache.keys().next().value;
+        if (oldestKey) reelsCache.delete(oldestKey);
+      }
+      return result;
+    })
+    .finally(() => reelsRequests.delete(key));
+  reelsRequests.set(key, request);
+  return request;
 }
 
 export async function fetchStories(
