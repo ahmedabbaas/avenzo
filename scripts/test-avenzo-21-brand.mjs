@@ -12,7 +12,7 @@ assert.match(css, /--av-violet:\s*#d2d7dd/i, "legacy token names must resolve to
 assert.match(css, /html\[data-theme="light"\] \.social-app/);
 assert.match(css, /prefers-reduced-motion:\s*reduce/);
 assert.match(css, /min-width:\s*44px/);
-assert.doesNotMatch(css, /#c6ff45|#d8ff80|#57751b|#3f5910/i, "old lime/olive values must not remain");
+assert.doesNotMatch(css, /#c6ff45|#d8ff80|#57751b|#3f5910|rgba\\(198,\\s*255,\\s*69|rgba\\(87,\\s*117,\\s*27/i, "old lime/olive values must not remain");
 assert.match(css, /AVENZO PREMIUM UI/);
 assert.match(css, /--avenzo-premium-duration/);
 assert.match(css, /:active/);
