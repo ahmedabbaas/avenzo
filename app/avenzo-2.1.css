@@ -29,7 +29,7 @@
     --av-violet-2: #f3f5f7;
     --av-secondary: #8f99a4;
     --av-secondary-hover: #d2d7dd;
-    --av-glow: rgba(198, 255, 69, .10);
+    --av-glow: rgba(210, 215, 221, .10);
     --bg: var(--av-bg);
     --panel: var(--av-surface);
     --panel-2: var(--av-surface-2);
@@ -77,7 +77,7 @@
     --muted-2: var(--av-muted-2);
     --accent: #59636e;
     --accent-strong: #22272d;
-    --accent-soft: rgba(87,117,27,.12);
+    --accent-soft: rgba(89,99,110,.12);
     background:
       radial-gradient(ellipse at 50% -24%, rgba(89,99,110,.045), transparent 38%),
       var(--av-bg);
@@ -173,7 +173,7 @@
   .auth-shell .brand-mark {
     background: var(--accent);
     color: #090a0c;
-    box-shadow: 0 10px 30px rgba(198,255,69,.10);
+    box-shadow: 0 10px 30px rgba(210,215,221,.10);
   }
   .auth-shell .auth-links a { color: #d2d7dd; }
 
