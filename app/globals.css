@@ -16657,3 +16657,29 @@ html[data-theme="light"]{
     max-width:88%;
   }
 }
+
+/* AVENZO motion layer: premium, subtle motion and interaction polish */
+:root{--motion-ease:cubic-bezier(.2,.75,.25,1);--motion-fast:180ms;--motion-mid:420ms}
+@keyframes avz-fade-up{from{opacity:0;transform:translate3d(0,16px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes avz-glow-breathe{0%,100%{opacity:.48;transform:scale(1)}50%{opacity:.8;transform:scale(1.045)}}
+@keyframes avz-soft-pulse{0%,100%{box-shadow:0 0 0 0 rgba(201,243,78,0)}50%{box-shadow:0 0 0 5px rgba(201,243,78,.045)}}
+.social-app{isolation:isolate;position:relative}
+.social-app:before{content:"";position:fixed;inset:-20vh -10vw;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 14% 20%,rgba(201,243,78,.055),transparent 35%),radial-gradient(ellipse at 82% 68%,rgba(201,243,78,.035),transparent 32%);animation:avz-glow-breathe 12s ease-in-out infinite}
+.top{transition:background .3s ease,border-color .3s ease,box-shadow .3s ease;position:sticky}
+.top:after{content:"";position:absolute;bottom:-1px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(201,243,78,.16),transparent);opacity:.65;pointer-events:none}
+.brand i{animation:avz-soft-pulse 4s ease-in-out infinite}.brand:hover i{transform:scale(1.25);transition:transform .25s ease}
+.left-nav button,.top-activity,.top-profile,.icon-button,.btn,.auth-submit,.mini-person button{transition:transform .22s var(--motion-ease),background .22s ease,border-color .22s ease,color .22s ease,box-shadow .22s ease}
+.left-nav button:hover:not(.create-nav){transform:translateX(3px)}.left-nav button.active{box-shadow:inset 2px 0 0 var(--accent)}
+.btn:hover:not(:disabled),.auth-submit:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 24px rgba(201,243,78,.12)}
+.btn:active:not(:disabled),.auth-submit:active:not(:disabled){transform:translateY(0) scale(.985)}
+.icon-button:hover,.top-activity:hover{transform:translateY(-1px) scale(1.035)}
+.side-card,.welcome,.post-card,.feed-card,.story-card,.settings-hub-card,.auth-card,.profile-hero,.profile-content-section,.info-card,.modal-card{animation:avz-fade-up .55s var(--motion-ease) both;transition:transform .28s var(--motion-ease),border-color .28s ease,box-shadow .28s ease,background .28s ease}
+.side-card:hover,.welcome:hover,.post-card:hover,.feed-card:hover,.story-card:hover{border-color:rgba(201,243,78,.18);box-shadow:0 18px 55px rgba(0,0,0,.22)}
+.social-main>*{animation:avz-fade-up .5s var(--motion-ease) both}.social-main>*:nth-child(2){animation-delay:70ms}.social-main>*:nth-child(3){animation-delay:130ms}.social-main>*:nth-child(4){animation-delay:190ms}.social-main>*:nth-child(5){animation-delay:250ms}
+.avatar,.nav-identity img,.side-profile-top img,.mini-person img{transition:transform .25s var(--motion-ease),box-shadow .25s ease}.avatar:hover,.nav-identity img:hover,.side-profile-top img:hover,.mini-person img:hover{transform:scale(1.055);box-shadow:0 0 0 2px rgba(201,243,78,.2)}
+input,textarea{transition:border-color .2s ease,box-shadow .2s ease,background .2s ease}.search-wrap:focus-within{box-shadow:0 0 0 3px rgba(201,243,78,.035)}
+.settings-hub-card:hover{transform:translateY(-3px)}.auth-glow{animation:avz-glow-breathe 9s ease-in-out infinite alternate}.auth-card{animation:avz-fade-up .65s var(--motion-ease) both}
+.brand-mark{transition:transform .28s var(--motion-ease),box-shadow .28s ease}.brand-mark:hover{transform:rotate(-5deg) scale(1.04);box-shadow:0 18px 48px rgba(201,243,78,.18)}
+@media(prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+html[data-reduce-motion="true"] *,html[data-reduce-motion="true"] *:before,html[data-reduce-motion="true"] *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
