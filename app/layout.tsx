@@ -6,9 +6,11 @@ import "./avenzo-design-system.css";
 import "./avenzo-premium.css";
 import "./avenzo-v2.css";
 import "./avenzo-2.1.css";
+import "./avenzo-motion.css";
 import PreferencesBootstrap from "../features/settings/components/preferences-bootstrap";
 import NetworkStatus from "../components/network-status";
 import AuthenticatedRuntime from "../components/authenticated-runtime";
+import ScrollMotion from "../components/scroll-motion";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -61,6 +63,7 @@ export default function RootLayout({
         <PreferencesBootstrap />
         <AuthenticatedRuntime />
         <NetworkStatus />
+        <ScrollMotion />
         <a className="skip-link" href="#main-content">
           Skip to main content
         </a>
