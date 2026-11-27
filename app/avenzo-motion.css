@@ -1,0 +1,109 @@
+/* AVENZO MOTION SYSTEM - global, GPU-friendly and reduced-motion aware */
+:root {
+  --avenzo-motion-fast: 150ms;
+  --avenzo-motion: 240ms;
+  --avenzo-motion-slow: 420ms;
+  --avenzo-ease: cubic-bezier(.2,.75,.25,1);
+  --avenzo-spring: cubic-bezier(.16,1,.3,1);
+}
+html { scroll-behavior: smooth; }
+body, button, a, input, textarea, select, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+button, a, [role="button"] {
+  transition:
+    transform var(--avenzo-motion-fast) var(--avenzo-ease),
+    background-color var(--avenzo-motion-fast) ease,
+    border-color var(--avenzo-motion-fast) ease,
+    color var(--avenzo-motion-fast) ease,
+    box-shadow var(--avenzo-motion-fast) ease,
+    opacity var(--avenzo-motion-fast) ease;
+}
+button:active, [role="button"]:active { transform: scale(.975); }
+a:active { opacity: .82; }
+.post-card, .side-card, .welcome, .auth-card, .settings-card, .settings-section,
+.profile-card, .reel-card, .clip-card, .feature-card, .modal-panel {
+  transition:
+    transform 260ms var(--avenzo-spring),
+    border-color 220ms ease,
+    box-shadow 260ms ease,
+    background-color 220ms ease;
+  transform-origin: center;
+}
+@media (hover:hover) and (pointer:fine) {
+  .post-card:hover { transform: translateY(-3px); border-color: color-mix(in srgb,var(--accent) 22%,var(--line)); box-shadow: 0 20px 55px rgba(0,0,0,.22); }
+  .side-card:hover { border-color: color-mix(in srgb,var(--accent) 18%,var(--line)); }
+  .welcome:hover { border-color: color-mix(in srgb,var(--accent) 25%,var(--line)); }
+  .story:hover { transform: translateY(-3px); }
+  .story-ring { transition: transform 300ms var(--avenzo-spring), filter 240ms ease; }
+  .story:hover .story-ring { transform: scale(1.06); filter: drop-shadow(0 0 10px color-mix(in srgb,var(--accent) 25%,transparent)); }
+  .icon-button:hover, .top-activity:hover { transform: translateY(-2px); }
+  .left-nav button:hover, .mobile-nav button:hover { transform: translateX(2px); }
+}
+.post-actions button, .feed-tabs button, .left-nav button, .mobile-nav button {
+  transition: color 180ms ease, background-color 180ms ease, transform 180ms var(--avenzo-ease);
+}
+.post-actions button:hover svg { transform: scale(1.12); }
+.post-actions svg { transition: transform 180ms var(--avenzo-spring), color 180ms ease; }
+.post-actions button:active svg { transform: scale(.88); }
+.btn, .auth-submit, .mobile-create, .create-nav {
+  position: relative;
+  overflow: hidden;
+}
+.btn::after, .auth-submit::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg,transparent 20%,rgba(255,255,255,.18) 45%,transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 550ms ease;
+  pointer-events: none;
+}
+@media (hover:hover) {
+  .btn:hover::after, .auth-submit:hover::after { transform: translateX(120%); }
+}
+.post-media, .profile-grid img, .reel-media, .clip-media {
+  transition: transform 450ms var(--avenzo-ease), filter 350ms ease;
+}
+@media (hover:hover) {
+  .post-card:hover .post-media { transform: scale(1.012); filter: saturate(1.04); }
+}
+.feed-tabs button.active, .left-nav button.active {
+  animation: avenzo-active-in 220ms var(--avenzo-spring);
+}
+@keyframes avenzo-active-in {
+  from { transform: scale(.97); }
+  to { transform: scale(1); }
+}
+.skeleton-head i, .skeleton-head span, .skeleton-media, .skeleton-lines i {
+  background-size: 240% 100%;
+  animation: avenzo-shimmer 1.55s ease-in-out infinite;
+}
+@keyframes avenzo-shimmer { 0% {background-position: 100% 0} 100% {background-position: -100% 0} }
+.auth-glow { animation: avenzo-glow-drift 12s ease-in-out infinite alternate; }
+.auth-glow-b { animation-delay: -5s; }
+@keyframes avenzo-glow-drift { from { transform: translate3d(0,0,0) scale(.96); } to { transform: translate3d(24px,-18px,0) scale(1.04); } }
+.avenzo-motion-ready [data-motion-in="true"] {
+  opacity: 0;
+  transform: translate3d(0,18px,0) scale(.985);
+  transition: opacity 480ms var(--avenzo-ease), transform 520ms var(--avenzo-spring);
+  will-change: opacity, transform;
+}
+.avenzo-motion-ready [data-motion-visible="true"] {
+  opacity: 1;
+  transform: translate3d(0,0,0) scale(1);
+}
+.modal-backdrop, [data-modal-backdrop] {
+  animation: avenzo-backdrop-in 180ms ease both;
+}
+.modal-panel, [data-modal-panel] {
+  animation: avenzo-modal-in 260ms var(--avenzo-spring) both;
+}
+@keyframes avenzo-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes avenzo-modal-in { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.toast, [role="status"], [role="alert"] { animation: avenzo-toast-in 220ms var(--avenzo-spring) both; }
+@keyframes avenzo-toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  .avenzo-motion-ready [data-motion-in="true"] { opacity: 1 !important; transform: none !important; }
+}
